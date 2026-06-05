@@ -14,7 +14,219 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      ad_accounts: {
+        Row: {
+          access_token: string | null
+          advertiser_id: string
+          advertiser_name: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          token_expires_at: string | null
+          user_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          advertiser_id: string
+          advertiser_name?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          token_expires_at?: string | null
+          user_id: string
+        }
+        Update: {
+          access_token?: string | null
+          advertiser_id?: string
+          advertiser_name?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          token_expires_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ai_insights: {
+        Row: {
+          action: string | null
+          campaign_id: string | null
+          generated_at: string
+          id: string
+          insight_text: string
+          user_id: string
+        }
+        Insert: {
+          action?: string | null
+          campaign_id?: string | null
+          generated_at?: string
+          id?: string
+          insight_text: string
+          user_id: string
+        }
+        Update: {
+          action?: string | null
+          campaign_id?: string | null
+          generated_at?: string
+          id?: string
+          insight_text?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_insights_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaigns: {
+        Row: {
+          ad_account_id: string | null
+          budget: number
+          budget_mode: string
+          created_at: string
+          creative: Json
+          end_date: string | null
+          id: string
+          lead_form: Json | null
+          name: string
+          objective: string
+          start_date: string | null
+          status: string
+          targeting: Json
+          tiktok_ad_id: string | null
+          tiktok_adgroup_id: string | null
+          tiktok_campaign_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ad_account_id?: string | null
+          budget?: number
+          budget_mode?: string
+          created_at?: string
+          creative?: Json
+          end_date?: string | null
+          id?: string
+          lead_form?: Json | null
+          name: string
+          objective?: string
+          start_date?: string | null
+          status?: string
+          targeting?: Json
+          tiktok_ad_id?: string | null
+          tiktok_adgroup_id?: string | null
+          tiktok_campaign_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ad_account_id?: string | null
+          budget?: number
+          budget_mode?: string
+          created_at?: string
+          creative?: Json
+          end_date?: string | null
+          id?: string
+          lead_form?: Json | null
+          name?: string
+          objective?: string
+          start_date?: string | null
+          status?: string
+          targeting?: Json
+          tiktok_ad_id?: string | null
+          tiktok_adgroup_id?: string | null
+          tiktok_campaign_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_ad_account_id_fkey"
+            columns: ["ad_account_id"]
+            isOneToOne: false
+            referencedRelation: "ad_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      performance_data: {
+        Row: {
+          campaign_id: string
+          clicks: number
+          cpl: number
+          created_at: string
+          ctr: number
+          date: string
+          id: string
+          impressions: number
+          leads: number
+          spend: number
+          user_id: string
+        }
+        Insert: {
+          campaign_id: string
+          clicks?: number
+          cpl?: number
+          created_at?: string
+          ctr?: number
+          date: string
+          id?: string
+          impressions?: number
+          leads?: number
+          spend?: number
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string
+          clicks?: number
+          cpl?: number
+          created_at?: string
+          ctr?: number
+          date?: string
+          id?: string
+          impressions?: number
+          leads?: number
+          spend?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_data_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string | null
+          id: string
+          plan: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string | null
+          id: string
+          plan?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          plan?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
