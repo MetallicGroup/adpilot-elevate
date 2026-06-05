@@ -87,6 +87,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "AdPilot — Run TikTok Ads. Effortlessly." },
+      { name: "twitter:description", content: "Launch, manage, and optimize TikTok ad campaigns from one beautifully simple app." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/249a9917-9a92-4073-b39d-dc837228a603/id-preview-c21a02f8--5785506e-f54a-4fa0-9cd0-b98a0a8bf624.lovable.app-1780681513111.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/249a9917-9a92-4073-b39d-dc837228a603/id-preview-c21a02f8--5785506e-f54a-4fa0-9cd0-b98a0a8bf624.lovable.app-1780681513111.png" },
     ],
     links: [
       {
