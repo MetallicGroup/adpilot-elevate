@@ -85,13 +85,13 @@ function MetaConnectionCard() {
         ids.length
           ? supabase
               .from("meta_ad_accounts")
-              .select("id, connection_id, ad_account_id, account_name, currency")
+              .select("id, connection_id, ad_account_id, account_name, currency, is_active")
               .in("connection_id", ids)
           : Promise.resolve({ data: [] }),
         ids.length
           ? supabase
               .from("meta_pages")
-              .select("id, connection_id, page_id, page_name")
+              .select("id, connection_id, page_id, page_name, is_active")
               .in("connection_id", ids)
           : Promise.resolve({ data: [] }),
       ]);
@@ -131,6 +131,36 @@ function MetaConnectionCard() {
     } catch (e: any) {
       toast.error(e?.message ?? "Sync failed");
     }
+  }
+
+  async function selectAdAccount(connectionId: string, adAccountRowId: string) {
+    const { error: e1 } = await supabase
+      .from("meta_ad_accounts")
+      .update({ is_active: false })
+      .eq("connection_id", connectionId);
+    if (e1) return toast.error(e1.message);
+    const { error: e2 } = await supabase
+      .from("meta_ad_accounts")
+      .update({ is_active: true })
+      .eq("id", adAccountRowId);
+    if (e2) return toast.error(e2.message);
+    toast.success("Ad account selected");
+    refetch();
+  }
+
+  async function selectPage(connectionId: string, pageRowId: string) {
+    const { error: e1 } = await supabase
+      .from("meta_pages")
+      .update({ is_active: false })
+      .eq("connection_id", connectionId);
+    if (e1) return toast.error(e1.message);
+    const { error: e2 } = await supabase
+      .from("meta_pages")
+      .update({ is_active: true })
+      .eq("id", pageRowId);
+    if (e2) return toast.error(e2.message);
+    toast.success("Page selected");
+    refetch();
   }
 
   const connections = data ?? [];
@@ -194,9 +224,17 @@ function MetaConnectionCard() {
                 ) : (
                   <ul className="mt-1 space-y-1">
                     {c.ad_accounts.map((a) => (
-                      <li key={a.id} className="text-xs flex justify-between">
-                        <span>{a.account_name ?? a.ad_account_id}</span>
-                        <span className="text-muted-foreground">{a.currency}</span>
+                      <li key={a.id}>
+                        <label className="flex items-center gap-2 text-xs cursor-pointer py-1">
+                          <input
+                            type="radio"
+                            name={`ad-${c.id}`}
+                            checked={!!a.is_active}
+                            onChange={() => selectAdAccount(c.id, a.id)}
+                          />
+                          <span className="flex-1">{a.account_name ?? a.ad_account_id}</span>
+                          <span className="text-muted-foreground">{a.currency}</span>
+                        </label>
                       </li>
                     ))}
                   </ul>
@@ -215,8 +253,16 @@ function MetaConnectionCard() {
                 ) : (
                   <ul className="mt-1 space-y-1">
                     {c.pages.map((p) => (
-                      <li key={p.id} className="text-xs">
-                        {p.page_name ?? p.page_id}
+                      <li key={p.id}>
+                        <label className="flex items-center gap-2 text-xs cursor-pointer py-1">
+                          <input
+                            type="radio"
+                            name={`page-${c.id}`}
+                            checked={!!p.is_active}
+                            onChange={() => selectPage(c.id, p.id)}
+                          />
+                          <span className="flex-1">{p.page_name ?? p.page_id}</span>
+                        </label>
                       </li>
                     ))}
                   </ul>
