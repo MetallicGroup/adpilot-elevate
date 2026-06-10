@@ -44,7 +44,9 @@ export const resyncMetaConnection = createServerFn({ method: "POST" })
       .maybeSingle();
 
     const ads = await fetchAdAccounts(conn.access_token);
-    const adRows = (ads?.data ?? []).map((a: any) => ({
+    const adData = ads?.data ?? [];
+    const fallbackAdAccountId = adData.find((a: any) => a.account_status === 1)?.account_id ?? adData[0]?.account_id;
+    const adRows = adData.map((a: any) => ({
       user_id: userId,
       connection_id: conn.id,
       ad_account_id: a.account_id,
@@ -54,7 +56,7 @@ export const resyncMetaConnection = createServerFn({ method: "POST" })
       status: a.account_status ?? null,
       is_active: selectedAd?.ad_account_id
         ? selectedAd.ad_account_id === a.account_id
-        : a.account_status === 1,
+        : fallbackAdAccountId === a.account_id,
     }));
     if (adRows.length) {
       await supabaseAdmin
@@ -63,14 +65,16 @@ export const resyncMetaConnection = createServerFn({ method: "POST" })
     }
 
     const pages = await fetchPages(conn.access_token);
-    const pageRows = (pages?.data ?? []).map((p: any) => ({
+    const pageData = pages?.data ?? [];
+    const fallbackPageId = pageData[0]?.id;
+    const pageRows = pageData.map((p: any) => ({
       user_id: userId,
       connection_id: conn.id,
       page_id: p.id,
       page_name: p.name ?? null,
       category: p.category ?? null,
       page_access_token: p.access_token ?? null,
-      is_active: selectedPage?.page_id ? selectedPage.page_id === p.id : false,
+      is_active: selectedPage?.page_id ? selectedPage.page_id === p.id : fallbackPageId === p.id,
     }));
     if (pageRows.length) {
       await supabaseAdmin
