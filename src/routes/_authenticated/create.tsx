@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Target, TrendingUp, Calendar, MapPin, Sparkles, Image as ImageIcon, FileText, Check } from "lucide-react";
+import { Target, TrendingUp, Calendar, MapPin, Sparkles, Image as ImageIcon, FileText, Check, Music2, Facebook } from "lucide-react";
 import { WizardShell, FieldLabel, ChoiceCard, Chip } from "@/components/wizard/WizardShell";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,8 +16,10 @@ export const Route = createFileRoute("/_authenticated/create")({
 
 type Objective = "LEAD_GENERATION" | "CONVERSIONS";
 type BudgetMode = "BUDGET_MODE_DAY" | "BUDGET_MODE_TOTAL";
+type Platform = "tiktok" | "meta";
 
 type State = {
+  platform: Platform;
   name: string;
   objective: Objective;
   budget: number;
@@ -54,6 +56,7 @@ function CreateWizard() {
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [s, setS] = useState<State>({
+    platform: "tiktok",
     name: "",
     objective: "LEAD_GENERATION",
     budget: 50,
@@ -111,6 +114,7 @@ function CreateWizard() {
     try {
       await submit({
         data: {
+          platform: s.platform,
           name: s.name.trim(),
           objective: s.objective,
           budget: s.budget,
