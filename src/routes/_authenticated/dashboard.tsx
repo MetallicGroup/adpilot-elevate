@@ -131,17 +131,24 @@ function Dashboard() {
             <Sparkles className="w-4 h-4" /> Recent AI insights
           </h2>
           <div className="mt-3 space-y-2">
-            {recentInsights.map((i) => (
-              <Link
-                key={i.id}
-                to={i.campaign_id ? "/campaigns/$id" : "/dashboard"}
-                params={i.campaign_id ? { id: i.campaign_id } : undefined as any}
-                className="press card-floating p-4 block hover:bg-secondary/40 transition-colors"
-              >
-                <p className="text-sm">{i.insight_text}</p>
-                {i.action && <p className="mt-1.5 text-xs text-muted-foreground">→ {i.action}</p>}
-              </Link>
-            ))}
+            {recentInsights.map((i) =>
+              i.campaign_id ? (
+                <Link
+                  key={i.id}
+                  to="/campaigns/$id"
+                  params={{ id: i.campaign_id }}
+                  className="press card-floating p-4 block hover:bg-secondary/40 transition-colors"
+                >
+                  <p className="text-sm">{i.insight_text}</p>
+                  {i.action && <p className="mt-1.5 text-xs text-muted-foreground">→ {i.action}</p>}
+                </Link>
+              ) : (
+                <div key={i.id} className="card-floating p-4">
+                  <p className="text-sm">{i.insight_text}</p>
+                  {i.action && <p className="mt-1.5 text-xs text-muted-foreground">→ {i.action}</p>}
+                </div>
+              ),
+            )}
           </div>
         </>
       )}
