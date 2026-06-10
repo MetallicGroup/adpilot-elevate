@@ -41,9 +41,11 @@ export const publishMetaCampaign = createServerFn({ method: "POST" })
       .select("ad_account_id, account_name")
       .eq("user_id", userId)
       .eq("connection_id", conn.id)
+      .eq("is_active", true)
+      .order("updated_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (!adAcc?.ad_account_id) throw new Error("No Meta ad account available. Reconnect Meta in Settings.");
+    if (!adAcc?.ad_account_id) throw new Error("Select a Meta ad account in Settings before publishing.");
 
     let pageQuery = supabaseAdmin
       .from("meta_pages")
