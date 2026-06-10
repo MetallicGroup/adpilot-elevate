@@ -79,7 +79,7 @@ export function WizardShell({
         </AnimatePresence>
       </main>
 
-      <div className="fixed bottom-0 inset-x-0 bg-background/95 backdrop-blur border-t border-border z-30">
+      <div className="fixed bottom-16 inset-x-0 bg-background/95 backdrop-blur border-t border-border z-40">
         <div className="max-w-md mx-auto px-5 py-4">
           <Button
             size="lg"
