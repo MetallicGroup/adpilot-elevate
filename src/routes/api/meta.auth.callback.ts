@@ -69,7 +69,10 @@ export const Route = createFileRoute("/api/meta/auth/callback")({
           // Sync ad accounts (best-effort)
           try {
             const ads = await fetchAdAccounts(accessToken);
-            const rows = (ads?.data ?? []).map((a: any) => ({
+            const adData = ads?.data ?? [];
+            const fallbackAdAccountId =
+              adData.find((a: any) => a.account_status === 1)?.account_id ?? adData[0]?.account_id;
+            const rows = adData.map((a: any) => ({
               user_id: userId,
               connection_id: conn.id,
               ad_account_id: a.account_id,
@@ -77,7 +80,7 @@ export const Route = createFileRoute("/api/meta/auth/callback")({
               currency: a.currency ?? null,
               timezone_name: a.timezone_name ?? null,
               status: a.account_status ?? null,
-              is_active: true,
+              is_active: fallbackAdAccountId === a.account_id,
             }));
             if (rows.length) {
               await supabaseAdmin
@@ -91,14 +94,16 @@ export const Route = createFileRoute("/api/meta/auth/callback")({
           // Sync pages (best-effort)
           try {
             const pages = await fetchPages(accessToken);
-            const rows = (pages?.data ?? []).map((p: any) => ({
+            const pageData = pages?.data ?? [];
+            const fallbackPageId = pageData[0]?.id;
+            const rows = pageData.map((p: any) => ({
               user_id: userId,
               connection_id: conn.id,
               page_id: p.id,
               page_name: p.name ?? null,
               category: p.category ?? null,
               page_access_token: p.access_token ?? null,
-              is_active: true,
+              is_active: fallbackPageId === p.id,
             }));
             if (rows.length) {
               await supabaseAdmin
