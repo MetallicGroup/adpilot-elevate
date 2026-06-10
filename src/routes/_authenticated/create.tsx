@@ -132,7 +132,7 @@ function CreateWizard() {
           return;
         }
       }
-      await submit({
+      const saved = await submit({
         data: {
           platform: s.platform,
           name: s.name.trim(),
@@ -164,7 +164,18 @@ function CreateWizard() {
           status: "draft",
         },
       });
-      toast.success("Campaign saved as draft");
+
+      if (s.platform === "meta") {
+        toast.loading("Publishing to Meta…", { id: "publish" });
+        try {
+          await publishMeta({ data: { campaign_id: saved.id } });
+          toast.success("Live on Meta! 🎉", { id: "publish" });
+        } catch (e: any) {
+          toast.error(e?.message ?? "Meta publish failed", { id: "publish", duration: 8000 });
+        }
+      } else {
+        toast.success("Campaign saved as draft");
+      }
       navigate({ to: "/dashboard" });
     } catch (e: any) {
       toast.error(e?.message ?? "Couldn't save campaign");
