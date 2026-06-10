@@ -476,9 +476,47 @@ function StepCreative({ s, update, onUploadMedia, uploadingMedia }: {
   );
 }
 
-function StepLeadForm({ s, update, toggle }: { s: State; update: <K extends keyof State>(k: K, v: State[K]) => void; toggle: <K extends keyof State>(k: K, v: string) => void }) {
+function StepLeadForm({ s, update, toggle, pages, pagesLoading }: {
+  s: State;
+  update: <K extends keyof State>(k: K, v: State[K]) => void;
+  toggle: <K extends keyof State>(k: K, v: string) => void;
+  pages: { page_id: string; page_name: string }[];
+  pagesLoading: boolean;
+}) {
+  const addQuestion = () => update("lf_custom_questions", [...s.lf_custom_questions, ""]);
+  const setQuestion = (i: number, v: string) => {
+    const next = [...s.lf_custom_questions];
+    next[i] = v.slice(0, 200);
+    update("lf_custom_questions", next);
+  };
+  const removeQuestion = (i: number) => {
+    update("lf_custom_questions", s.lf_custom_questions.filter((_, idx) => idx !== i));
+  };
   return (
     <div className="space-y-6">
+      {s.platform === "meta" && (
+        <div>
+          <FieldLabel><Facebook className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />Facebook Page</FieldLabel>
+          {pagesLoading ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground h-12 px-4 rounded-xl border border-border">
+              <Loader2 className="w-4 h-4 animate-spin" /> Loading pages…
+            </div>
+          ) : pages.length === 0 ? (
+            <div className="text-sm text-muted-foreground h-12 px-4 flex items-center rounded-xl border border-dashed border-border">
+              No pages connected. Connect a Page in Settings.
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {pages.map((p) => (
+                <Chip key={p.page_id} active={s.page_id === p.page_id} onClick={() => update("page_id", p.page_id)}>
+                  {p.page_name}
+                </Chip>
+              ))}
+            </div>
+          )}
+          <p className="mt-1.5 text-[11px] text-muted-foreground">Leads will be delivered to this Page.</p>
+        </div>
+      )}
       <div>
         <FieldLabel><FileText className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />Form title</FieldLabel>
         <Input value={s.lf_title} onChange={(e) => update("lf_title", e.target.value.slice(0, 120))} placeholder="Get early access" className="h-12 rounded-xl" />
@@ -488,12 +526,51 @@ function StepLeadForm({ s, update, toggle }: { s: State; update: <K extends keyo
         <Textarea value={s.lf_intro} onChange={(e) => update("lf_intro", e.target.value.slice(0, 500))} placeholder="Tell us a bit about yourself — we'll reach out within 24 hours." className="rounded-xl min-h-20" />
       </div>
       <div>
-        <FieldLabel>Fields to collect</FieldLabel>
+        <FieldLabel>Standard fields</FieldLabel>
         <div className="flex flex-wrap gap-2">
           {LEAD_FIELDS.map((f) => (
             <Chip key={f} active={s.lf_fields.includes(f)} onClick={() => toggle("lf_fields", f)}>{f}</Chip>
           ))}
         </div>
+        <p className="mt-1.5 text-[11px] text-muted-foreground">Pre-filled from the user's Facebook profile when available.</p>
+      </div>
+      <div>
+        <div className="flex items-center justify-between">
+          <FieldLabel>Custom questions</FieldLabel>
+          <button
+            type="button"
+            onClick={addQuestion}
+            className="press inline-flex items-center gap-1 text-xs font-medium text-foreground hover:opacity-70"
+          >
+            <Plus className="w-3.5 h-3.5" /> Add question
+          </button>
+        </div>
+        {s.lf_custom_questions.length === 0 ? (
+          <p className="mt-2 text-[12px] text-muted-foreground">
+            Want to ask more than name & phone? Add your own questions (e.g. "What service are you interested in?", "Best time to call?").
+          </p>
+        ) : (
+          <div className="mt-2 space-y-2">
+            {s.lf_custom_questions.map((q, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <Input
+                  value={q}
+                  onChange={(e) => setQuestion(i, e.target.value)}
+                  placeholder="Type your question…"
+                  className="h-11 rounded-xl"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeQuestion(i)}
+                  className="press w-11 h-11 flex items-center justify-center rounded-xl border border-border hover:bg-secondary text-muted-foreground"
+                  aria-label="Remove question"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       <div>
         <FieldLabel>Privacy policy URL</FieldLabel>
