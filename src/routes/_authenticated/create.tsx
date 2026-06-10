@@ -11,6 +11,17 @@ import { saveCampaign } from "@/lib/campaigns.functions";
 import { checkMetaReady, listMetaPages } from "@/lib/leads.functions";
 import { publishMetaCampaign, uploadAdMedia } from "@/lib/meta-publish.functions";
 import { fmtMoney } from "@/lib/format";
+import { AdPreview } from "@/components/wizard/AdPreview";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/create")({
   component: CreateWizard,
@@ -66,6 +77,7 @@ function CreateWizard() {
   const [uploadingMedia, setUploadingMedia] = useState(false);
   const [pages, setPages] = useState<{ page_id: string; page_name: string }[]>([]);
   const [pagesLoading, setPagesLoading] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [s, setS] = useState<State>({
     platform: "tiktok",
     name: "",
@@ -140,6 +152,12 @@ function CreateWizard() {
 
   const onNext = async () => {
     if (step < total) { setStep(step + 1); return; }
+    // Final step → open confirmation dialog
+    setConfirmOpen(true);
+  };
+
+  const doPublish = async () => {
+    setConfirmOpen(false);
     setSubmitting(true);
     try {
       if (s.platform === "meta") {
@@ -196,6 +214,8 @@ function CreateWizard() {
         try {
           await publishMeta({ data: { campaign_id: saved.id, page_id: s.page_id || undefined } });
           toast.success("Live on Meta! 🎉", { id: "publish" });
+          navigate({ to: "/campaigns/$id", params: { id: saved.id } });
+          return;
         } catch (e: any) {
           toast.error(e?.message ?? "Meta publish failed", { id: "publish", duration: 8000 });
         }
@@ -244,6 +264,7 @@ function CreateWizard() {
   const isLast = step === total;
 
   return (
+    <>
     <WizardShell
       step={step}
       total={total}
@@ -251,7 +272,7 @@ function CreateWizard() {
       subtitle={titles[idx].sub}
       canBack={true}
       canNext={canNext}
-      nextLabel={isLast ? "Save campaign" : "Continue"}
+      nextLabel={isLast ? (s.platform === "meta" ? "Review & publish" : "Save campaign") : "Continue"}
       onBack={onBack}
       onNext={onNext}
       isSubmitting={submitting}
@@ -261,8 +282,40 @@ function CreateWizard() {
       {step === 3 && <StepAudience s={s} toggle={toggle} />}
       {step === 4 && <StepCreative s={s} update={update} onUploadMedia={onUploadMedia} uploadingMedia={uploadingMedia} />}
       {step === 5 && s.objective === "LEAD_GENERATION" && <StepLeadForm s={s} update={update} toggle={toggle} pages={pages} pagesLoading={pagesLoading} />}
-      {((step === 5 && s.objective === "CONVERSIONS") || step === 6) && <StepReview s={s} />}
+      {((step === 5 && s.objective === "CONVERSIONS") || step === 6) && (
+        <StepReview s={s} pageName={pages.find((p) => p.page_id === s.page_id)?.page_name ?? ""} />
+      )}
     </WizardShell>
+
+    <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>
+            {s.platform === "meta" ? "Publish live on Meta?" : "Save this campaign?"}
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            {s.platform === "meta" ? (
+              <>
+                Reclama va deveni <strong>ACTIVĂ</strong> imediat și va începe să cheltuiască buget real:
+                <span className="block mt-1 text-foreground font-medium">
+                  {fmtMoney(s.budget)} {s.budget_mode === "BUDGET_MODE_DAY" ? "pe zi" : "în total"}
+                </span>
+                Poți pune oricând pe pauză din pagina campaniei.
+              </>
+            ) : (
+              "Campania va fi salvată ca draft."
+            )}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Înapoi</AlertDialogCancel>
+          <AlertDialogAction onClick={doPublish}>
+            {s.platform === "meta" ? "Da, publică" : "Salvează"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
 
@@ -580,9 +633,18 @@ function StepLeadForm({ s, update, toggle, pages, pagesLoading }: {
   );
 }
 
-function StepReview({ s }: { s: State }) {
+function StepReview({ s, pageName }: { s: State; pageName: string }) {
   return (
     <div className="space-y-3">
+      <AdPreview
+        pageName={pageName || (s.platform === "meta" ? "Your Facebook Page" : s.name)}
+        headline={s.headline}
+        description={s.description}
+        cta={s.cta}
+        mediaUrl={s.media_url}
+        landingUrl={s.landing_url}
+      />
+      <div className="text-[11px] uppercase tracking-wider text-muted-foreground pt-3">Preview · cum va apărea în feed</div>
       <ReviewRow label="Platform" value={s.platform === "tiktok" ? "TikTok Ads" : "Meta Ads (Facebook & Instagram)"} />
       <ReviewRow label="Name" value={s.name} />
       <ReviewRow label="Objective" value={s.objective === "LEAD_GENERATION" ? "Lead generation" : "Conversions"} />
