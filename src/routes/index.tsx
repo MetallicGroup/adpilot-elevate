@@ -259,5 +259,3 @@ const plans = [
   { name: "Growth", price: "€199", featured: true, items: ["3 ad accounts", "Up to €10k/mo ad spend", "WhatsApp AI assistant", "Priority support"] },
   { name: "Pro", price: "€399", items: ["Unlimited ad accounts", "Unlimited spend", "Dedicated success manager", "Custom integrations"] },
 ];
-  );
-}
