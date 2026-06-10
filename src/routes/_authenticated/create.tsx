@@ -205,7 +205,7 @@ function CreateWizard() {
       {step === 1 && <StepGoal s={s} update={update} />}
       {step === 2 && <StepBudget s={s} update={update} />}
       {step === 3 && <StepAudience s={s} toggle={toggle} />}
-      {step === 4 && <StepCreative s={s} update={update} />}
+      {step === 4 && <StepCreative s={s} update={update} onUploadMedia={onUploadMedia} uploadingMedia={uploadingMedia} />}
       {step === 5 && s.objective === "LEAD_GENERATION" && <StepLeadForm s={s} update={update} toggle={toggle} />}
       {((step === 5 && s.objective === "CONVERSIONS") || step === 6) && <StepReview s={s} />}
     </WizardShell>
