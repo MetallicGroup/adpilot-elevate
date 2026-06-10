@@ -37,12 +37,12 @@ export const publishMetaCampaign = createServerFn({ method: "POST" })
     // 3. Pick first active ad account + page
     const { data: adAcc } = await supabaseAdmin
       .from("meta_ad_accounts")
-      .select("account_id, name")
+      .select("ad_account_id, account_name")
       .eq("user_id", userId)
       .eq("connection_id", conn.id)
       .limit(1)
       .maybeSingle();
-    if (!adAcc?.account_id) throw new Error("No Meta ad account available. Reconnect Meta in Settings.");
+    if (!adAcc?.ad_account_id) throw new Error("No Meta ad account available. Reconnect Meta in Settings.");
 
     const { data: page } = await supabaseAdmin
       .from("meta_pages")
@@ -105,11 +105,11 @@ export const publishMetaCampaign = createServerFn({ method: "POST" })
     });
 
     // 6. Create Campaign
-    const metaCamp = await createCampaign(adAcc.account_id, conn.access_token, campaign.name, STATUS);
+    const metaCamp = await createCampaign(adAcc.ad_account_id, conn.access_token, campaign.name, STATUS);
 
     // 7. Create AdSet
     const budgetCents = Math.round(Number(campaign.budget) * 100);
-    const adset = await createAdSet(adAcc.account_id, conn.access_token, {
+    const adset = await createAdSet(adAcc.ad_account_id, conn.access_token, {
       name: `${campaign.name} — AdSet`,
       campaign_id: metaCamp.id,
       daily_budget_cents: campaign.budget_mode === "BUDGET_MODE_DAY" ? budgetCents : undefined,
@@ -126,7 +126,7 @@ export const publishMetaCampaign = createServerFn({ method: "POST" })
 
     // 8. Upload image → image_hash
     const image_hash = await uploadAdImageFromBytes(
-      adAcc.account_id,
+      adAcc.ad_account_id,
       conn.access_token,
       bytes,
       "ad.jpg",
@@ -134,7 +134,7 @@ export const publishMetaCampaign = createServerFn({ method: "POST" })
     );
 
     // 9. Create Creative
-    const adCreative = await createAdCreative(adAcc.account_id, conn.access_token, {
+    const adCreative = await createAdCreative(adAcc.ad_account_id, conn.access_token, {
       name: `${campaign.name} — Creative`,
       page_id: page.page_id,
       image_hash,
@@ -146,7 +146,7 @@ export const publishMetaCampaign = createServerFn({ method: "POST" })
     });
 
     // 10. Create Ad
-    const ad = await createAd(adAcc.account_id, conn.access_token, {
+    const ad = await createAd(adAcc.ad_account_id, conn.access_token, {
       name: `${campaign.name} — Ad`,
       adset_id: adset.id,
       creative_id: adCreative.id,
