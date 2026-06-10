@@ -184,6 +184,33 @@ function CreateWizard() {
 function StepGoal({ s, update }: { s: State; update: <K extends keyof State>(k: K, v: State[K]) => void }) {
   return (
     <div className="space-y-6">
+      <div className="space-y-3">
+        <FieldLabel>Platform</FieldLabel>
+        <div className="grid grid-cols-2 gap-3">
+          <ChoiceCard active={s.platform === "tiktok"} onClick={() => update("platform", "tiktok")}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-foreground text-background flex items-center justify-center">
+                <Music2 className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="font-semibold text-foreground">TikTok Ads</div>
+                <div className="mt-0.5 text-xs text-muted-foreground">Short-form video, Gen Z reach</div>
+              </div>
+            </div>
+          </ChoiceCard>
+          <ChoiceCard active={s.platform === "meta"} onClick={() => update("platform", "meta")}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-foreground text-background flex items-center justify-center">
+                <Facebook className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="font-semibold text-foreground">Meta Ads</div>
+                <div className="mt-0.5 text-xs text-muted-foreground">Facebook & Instagram</div>
+              </div>
+            </div>
+          </ChoiceCard>
+        </div>
+      </div>
       <div>
         <FieldLabel>Campaign name</FieldLabel>
         <Input
