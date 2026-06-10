@@ -2,13 +2,14 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Target, TrendingUp, Calendar, MapPin, Sparkles, Image as ImageIcon, FileText, Check, Music2, Facebook } from "lucide-react";
+import { Target, TrendingUp, Calendar, MapPin, Sparkles, Image as ImageIcon, FileText, Check, Music2, Facebook, Upload, Loader2 } from "lucide-react";
 import { WizardShell, FieldLabel, ChoiceCard, Chip } from "@/components/wizard/WizardShell";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { saveCampaign } from "@/lib/campaigns.functions";
 import { checkMetaReady } from "@/lib/leads.functions";
+import { publishMetaCampaign, uploadAdMedia } from "@/lib/meta-publish.functions";
 import { fmtMoney } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/create")({
@@ -55,8 +56,11 @@ function CreateWizard() {
   const navigate = useNavigate();
   const submit = useServerFn(saveCampaign);
   const checkMeta = useServerFn(checkMetaReady);
+  const publishMeta = useServerFn(publishMetaCampaign);
+  const uploadMedia = useServerFn(uploadAdMedia);
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
   const [s, setS] = useState<State>({
     platform: "tiktok",
     name: "",
@@ -129,7 +133,7 @@ function CreateWizard() {
           return;
         }
       }
-      await submit({
+      const saved = await submit({
         data: {
           platform: s.platform,
           name: s.name.trim(),
@@ -161,7 +165,18 @@ function CreateWizard() {
           status: "draft",
         },
       });
-      toast.success("Campaign saved as draft");
+
+      if (s.platform === "meta") {
+        toast.loading("Publishing to Meta…", { id: "publish" });
+        try {
+          await publishMeta({ data: { campaign_id: saved.id } });
+          toast.success("Live on Meta! 🎉", { id: "publish" });
+        } catch (e: any) {
+          toast.error(e?.message ?? "Meta publish failed", { id: "publish", duration: 8000 });
+        }
+      } else {
+        toast.success("Campaign saved as draft");
+      }
       navigate({ to: "/dashboard" });
     } catch (e: any) {
       toast.error(e?.message ?? "Couldn't save campaign");
@@ -171,6 +186,34 @@ function CreateWizard() {
   };
 
   const onBack = () => (step > 1 ? setStep(step - 1) : navigate({ to: "/dashboard" }));
+
+  const onUploadMedia = async (file: File) => {
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error("Image must be under 8 MB");
+      return;
+    }
+    setUploadingMedia(true);
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => {
+          const result = r.result as string;
+          resolve(result.split(",")[1]);
+        };
+        r.onerror = () => reject(new Error("Read failed"));
+        r.readAsDataURL(file);
+      });
+      const { url } = await uploadMedia({
+        data: { filename: file.name, contentType: file.type || "image/jpeg", base64 },
+      });
+      update("media_url", url);
+      toast.success("Image uploaded");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Upload failed");
+    } finally {
+      setUploadingMedia(false);
+    }
+  };
 
   const idx = step - 1;
   const isLast = step === total;
@@ -191,7 +234,7 @@ function CreateWizard() {
       {step === 1 && <StepGoal s={s} update={update} />}
       {step === 2 && <StepBudget s={s} update={update} />}
       {step === 3 && <StepAudience s={s} toggle={toggle} />}
-      {step === 4 && <StepCreative s={s} update={update} />}
+      {step === 4 && <StepCreative s={s} update={update} onUploadMedia={onUploadMedia} uploadingMedia={uploadingMedia} />}
       {step === 5 && s.objective === "LEAD_GENERATION" && <StepLeadForm s={s} update={update} toggle={toggle} />}
       {((step === 5 && s.objective === "CONVERSIONS") || step === 6) && <StepReview s={s} />}
     </WizardShell>
@@ -350,13 +393,37 @@ function StepAudience({ s, toggle }: { s: State; toggle: <K extends keyof State>
   );
 }
 
-function StepCreative({ s, update }: { s: State; update: <K extends keyof State>(k: K, v: State[K]) => void }) {
+function StepCreative({ s, update, onUploadMedia, uploadingMedia }: {
+  s: State;
+  update: <K extends keyof State>(k: K, v: State[K]) => void;
+  onUploadMedia: (file: File) => Promise<void>;
+  uploadingMedia: boolean;
+}) {
   return (
     <div className="space-y-6">
       <div>
-        <FieldLabel><ImageIcon className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />Video / image URL</FieldLabel>
-        <Input value={s.media_url} onChange={(e) => update("media_url", e.target.value)} placeholder="https://…" className="h-12 rounded-xl" />
-        <p className="mt-1.5 text-[11px] text-muted-foreground">Paste a hosted video URL. Upload coming soon.</p>
+        <FieldLabel><ImageIcon className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />Image</FieldLabel>
+        <label className="press flex items-center gap-3 h-12 px-4 rounded-xl border border-dashed border-border hover:bg-secondary cursor-pointer">
+          {uploadingMedia ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+          <span className="text-sm text-muted-foreground truncate">
+            {uploadingMedia ? "Uploading…" : s.media_url ? "Replace image" : "Upload image (JPG/PNG, max 8 MB)"}
+          </span>
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) onUploadMedia(f); e.target.value = ""; }}
+          />
+        </label>
+        {s.media_url && (
+          <p className="mt-1.5 text-[11px] text-muted-foreground truncate">Uploaded ✓</p>
+        )}
+        <Input
+          value={s.media_url}
+          onChange={(e) => update("media_url", e.target.value)}
+          placeholder="…or paste an image URL"
+          className="mt-2 h-10 rounded-xl text-xs"
+        />
       </div>
       <div>
         <FieldLabel>Headline</FieldLabel>
