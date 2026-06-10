@@ -64,7 +64,7 @@ export const Route = createFileRoute("/terms-of-service")({
       <P>We may update these Terms from time to time. Material changes will be communicated at least 30 days in advance via email and/or an in-app notice. Your continued use of the Services after the effective date of the update constitutes acceptance of the revised Terms.</P>
 
       <H2>16. Contact</H2>
-      <P>Questions about these Terms? Email legal@adpilot.ro or write to AdPilot SRL, Str. Exemplului 12, Bucharest, Romania.</P>
+      <P>Questions about these Terms? Email support@adpilot.ro or write to AdPilot SRL, Romania.</P>
     </LegalPage>
   ),
 });

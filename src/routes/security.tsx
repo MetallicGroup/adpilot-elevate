@@ -38,7 +38,7 @@ function SecurityPage() {
               "We never sell or share your data with third parties.",
               "We never run ads or campaigns without explicit user approval.",
               "You can revoke AdPilot's access to your TikTok account at any time.",
-              "You can request full data export or deletion via privacy@adpilot.ro.",
+              "You can request full data export or deletion via support@adpilot.ro.",
               "Personal data is processed only as described in our Privacy Policy.",
             ].map((i) => (
               <li key={i} className="flex items-start gap-3 text-sm"><Check className="w-4 h-4 text-success mt-0.5 shrink-0" />{i}</li>

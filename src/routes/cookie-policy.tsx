@@ -25,7 +25,7 @@ export const Route = createFileRoute("/cookie-policy")({
       <P>Some cookies are set by third parties (e.g. Stripe for payments, Google for analytics, TikTok and Meta for advertising measurement). These providers have their own privacy and cookie policies, which we encourage you to review.</P>
 
       <H2>5. Changes to this Policy</H2>
-      <P>We may update this Cookie Policy from time to time. The "Last updated" date above reflects the most recent revision. For questions, contact privacy@adpilot.ro.</P>
+      <P>We may update this Cookie Policy from time to time. The "Last updated" date above reflects the most recent revision. For questions, contact support@adpilot.ro.</P>
     </LegalPage>
   ),
 });

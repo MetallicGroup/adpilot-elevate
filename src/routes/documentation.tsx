@@ -39,7 +39,7 @@ const sections = [
     items: [
       { id: "plans", h: "Plans and billing", body: "Manage your subscription from Settings → Billing. You can upgrade or downgrade at any time. Invoices are emailed automatically and stored under Billing → History." },
       { id: "team", h: "Team members", body: "Pro plan supports unlimited team members. Invite by email from Settings → Team. Roles: Admin, Operator, Viewer." },
-      { id: "delete-account", h: "Delete your account", body: "You can delete your account at any time from Settings → Account → Danger Zone. All personal data is permanently erased within 30 days. You can also request deletion by emailing privacy@adpilot.ro." },
+      { id: "delete-account", h: "Delete your account", body: "You can delete your account at any time from Settings → Account → Danger Zone. All personal data is permanently erased within 30 days. You can also request deletion by emailing support@adpilot.ro." },
     ],
   },
   {
