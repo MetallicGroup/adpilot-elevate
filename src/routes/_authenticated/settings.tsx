@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Facebook, RefreshCw, Trash2, CheckCircle2 } from "lucide-react";
-import { resyncMetaConnection } from "@/lib/meta.functions";
+import { resyncMetaConnection, selectMetaAdAccount, selectMetaPage } from "@/lib/meta.functions";
 
 type MetaSearch = { meta?: string; reason?: string };
 
@@ -70,6 +70,8 @@ function Settings() {
 function MetaConnectionCard() {
   const [busy, setBusy] = useState(false);
   const resync = useServerFn(resyncMetaConnection);
+  const selectAd = useServerFn(selectMetaAdAccount);
+  const selectPg = useServerFn(selectMetaPage);
 
   const { data, refetch, isLoading } = useQuery({
     queryKey: ["meta-connections"],
@@ -134,33 +136,23 @@ function MetaConnectionCard() {
   }
 
   async function selectAdAccount(connectionId: string, adAccountRowId: string) {
-    const { error: e1 } = await supabase
-      .from("meta_ad_accounts")
-      .update({ is_active: false })
-      .eq("connection_id", connectionId);
-    if (e1) return toast.error(e1.message);
-    const { error: e2 } = await supabase
-      .from("meta_ad_accounts")
-      .update({ is_active: true })
-      .eq("id", adAccountRowId);
-    if (e2) return toast.error(e2.message);
-    toast.success("Ad account selected");
-    refetch();
+    try {
+      await selectAd({ data: { connectionId, rowId: adAccountRowId } });
+      toast.success("Ad account selected");
+      refetch();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not save ad account");
+    }
   }
 
   async function selectPage(connectionId: string, pageRowId: string) {
-    const { error: e1 } = await supabase
-      .from("meta_pages")
-      .update({ is_active: false })
-      .eq("connection_id", connectionId);
-    if (e1) return toast.error(e1.message);
-    const { error: e2 } = await supabase
-      .from("meta_pages")
-      .update({ is_active: true })
-      .eq("id", pageRowId);
-    if (e2) return toast.error(e2.message);
-    toast.success("Page selected");
-    refetch();
+    try {
+      await selectPg({ data: { connectionId, rowId: pageRowId } });
+      toast.success("Page selected");
+      refetch();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not save page");
+    }
   }
 
   const connections = data ?? [];
