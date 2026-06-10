@@ -153,6 +153,142 @@ export type Database = {
           },
         ]
       }
+      meta_ad_accounts: {
+        Row: {
+          account_name: string | null
+          ad_account_id: string
+          connection_id: string
+          created_at: string
+          currency: string | null
+          id: string
+          is_active: boolean
+          status: number | null
+          timezone_name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_name?: string | null
+          ad_account_id: string
+          connection_id: string
+          created_at?: string
+          currency?: string | null
+          id?: string
+          is_active?: boolean
+          status?: number | null
+          timezone_name?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_name?: string | null
+          ad_account_id?: string
+          connection_id?: string
+          created_at?: string
+          currency?: string | null
+          id?: string
+          is_active?: boolean
+          status?: number | null
+          timezone_name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_ad_accounts_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "meta_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_connections: {
+        Row: {
+          access_token: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          meta_user_id: string
+          meta_user_name: string | null
+          scopes: string | null
+          token_expires_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          meta_user_id: string
+          meta_user_name?: string | null
+          scopes?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          meta_user_id?: string
+          meta_user_name?: string | null
+          scopes?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      meta_pages: {
+        Row: {
+          category: string | null
+          connection_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          page_access_token: string | null
+          page_id: string
+          page_name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          connection_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          page_access_token?: string | null
+          page_id: string
+          page_name?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          connection_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          page_access_token?: string | null
+          page_id?: string
+          page_name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_pages_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "meta_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       performance_data: {
         Row: {
           campaign_id: string
