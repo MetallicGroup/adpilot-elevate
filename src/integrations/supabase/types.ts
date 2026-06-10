@@ -95,6 +95,7 @@ export type Database = {
           meta_ad_id: string | null
           meta_adset_id: string | null
           meta_campaign_id: string | null
+          meta_lead_form_id: string | null
           name: string
           objective: string
           platform: string
@@ -119,6 +120,7 @@ export type Database = {
           meta_ad_id?: string | null
           meta_adset_id?: string | null
           meta_campaign_id?: string | null
+          meta_lead_form_id?: string | null
           name: string
           objective?: string
           platform?: string
@@ -143,6 +145,7 @@ export type Database = {
           meta_ad_id?: string | null
           meta_adset_id?: string | null
           meta_campaign_id?: string | null
+          meta_lead_form_id?: string | null
           name?: string
           objective?: string
           platform?: string
