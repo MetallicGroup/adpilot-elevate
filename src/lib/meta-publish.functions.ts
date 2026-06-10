@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const PublishInput = z.object({
   campaign_id: z.string().uuid(),
+  page_id: z.string().min(1).optional(),
 });
 
 export const publishMetaCampaign = createServerFn({ method: "POST" })
@@ -44,14 +45,14 @@ export const publishMetaCampaign = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!adAcc?.ad_account_id) throw new Error("No Meta ad account available. Reconnect Meta in Settings.");
 
-    const { data: page } = await supabaseAdmin
+    let pageQuery = supabaseAdmin
       .from("meta_pages")
       .select("page_id, page_name, page_access_token")
       .eq("user_id", userId)
       .eq("connection_id", conn.id)
-      .eq("is_active", true)
-      .limit(1)
-      .maybeSingle();
+      .eq("is_active", true);
+    if (data.page_id) pageQuery = pageQuery.eq("page_id", data.page_id);
+    const { data: page } = await pageQuery.limit(1).maybeSingle();
     if (!page?.page_id || !page.page_access_token)
       throw new Error("No Facebook Page connected. Add a page in Settings.");
 
@@ -99,7 +100,8 @@ export const publishMetaCampaign = createServerFn({ method: "POST" })
     const form = await createLeadForm(page.page_id, page.page_access_token, {
       name: leadForm.title || campaign.name,
       intro: leadForm.intro,
-      fields: leadForm.fields ?? ["Name", "Email"],
+      fields: leadForm.fields ?? ["Name", "Phone"],
+      custom_questions: Array.isArray(leadForm.custom_questions) ? leadForm.custom_questions : [],
       privacy_url: leadForm.privacy_url || creative.landing_url || "https://adpilot.ro/privacy-policy",
       follow_up_url: creative.landing_url,
     });

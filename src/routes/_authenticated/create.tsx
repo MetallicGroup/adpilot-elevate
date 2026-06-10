@@ -1,14 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Target, TrendingUp, Calendar, MapPin, Sparkles, Image as ImageIcon, FileText, Check, Music2, Facebook, Upload, Loader2 } from "lucide-react";
+import { Target, TrendingUp, Calendar, MapPin, Sparkles, Image as ImageIcon, FileText, Check, Music2, Facebook, Upload, Loader2, Plus, X } from "lucide-react";
 import { WizardShell, FieldLabel, ChoiceCard, Chip } from "@/components/wizard/WizardShell";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { saveCampaign } from "@/lib/campaigns.functions";
-import { checkMetaReady } from "@/lib/leads.functions";
+import { checkMetaReady, listMetaPages } from "@/lib/leads.functions";
 import { publishMetaCampaign, uploadAdMedia } from "@/lib/meta-publish.functions";
 import { fmtMoney } from "@/lib/format";
 
@@ -41,7 +41,9 @@ type State = {
   lf_title: string;
   lf_intro: string;
   lf_fields: string[];
+  lf_custom_questions: string[];
   lf_privacy_url: string;
+  page_id: string;
 };
 
 const LOCATIONS = ["United States", "United Kingdom", "Canada", "Australia", "Germany", "France", "Brazil", "Mexico", "Japan", "India"];
@@ -56,11 +58,14 @@ function CreateWizard() {
   const navigate = useNavigate();
   const submit = useServerFn(saveCampaign);
   const checkMeta = useServerFn(checkMetaReady);
+  const fetchPages = useServerFn(listMetaPages);
   const publishMeta = useServerFn(publishMetaCampaign);
   const uploadMedia = useServerFn(uploadAdMedia);
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [pages, setPages] = useState<{ page_id: string; page_name: string }[]>([]);
+  const [pagesLoading, setPagesLoading] = useState(false);
   const [s, setS] = useState<State>({
     platform: "tiktok",
     name: "",
@@ -81,8 +86,10 @@ function CreateWizard() {
     landing_url: "",
     lf_title: "",
     lf_intro: "",
-    lf_fields: ["Name", "Email"],
+    lf_fields: ["Name", "Phone"],
+    lf_custom_questions: [],
     lf_privacy_url: "",
+    page_id: "",
   });
 
   const update = <K extends keyof State>(k: K, v: State[K]) => setS((p) => ({ ...p, [k]: v }));
@@ -90,6 +97,19 @@ function CreateWizard() {
     const arr = s[k] as unknown as string[];
     update(k, (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]) as State[K]);
   };
+
+  // Load pages when Meta is selected
+  useEffect(() => {
+    if (s.platform !== "meta") return;
+    setPagesLoading(true);
+    fetchPages()
+      .then((r) => {
+        setPages(r.pages);
+        setS((p) => (p.page_id || r.pages.length === 0 ? p : { ...p, page_id: r.pages[0].page_id }));
+      })
+      .catch(() => {})
+      .finally(() => setPagesLoading(false));
+  }, [s.platform, fetchPages]);
 
   const total = s.objective === "LEAD_GENERATION" ? 6 : 5;
 
@@ -99,7 +119,11 @@ function CreateWizard() {
       case 2: return s.budget >= 5 && !!s.start_date;
       case 3: return s.locations.length > 0 && s.age_groups.length > 0;
       case 4: return s.headline.trim().length > 0 && s.landing_url.trim().length > 0;
-      case 5: return s.objective === "CONVERSIONS" ? true : (s.lf_title.trim().length > 0 && s.lf_fields.length > 0);
+      case 5: return s.objective === "CONVERSIONS"
+        ? true
+        : (s.lf_title.trim().length > 0
+            && (s.lf_fields.length > 0 || s.lf_custom_questions.some((q) => q.trim().length > 0))
+            && (s.platform !== "meta" || !!s.page_id));
       case 6: return true;
       default: return false;
     }
@@ -160,6 +184,7 @@ function CreateWizard() {
             title: s.lf_title.trim(),
             intro: s.lf_intro.trim(),
             fields: s.lf_fields,
+            custom_questions: s.lf_custom_questions.map((q) => q.trim()).filter(Boolean),
             privacy_url: s.lf_privacy_url.trim(),
           } : null,
           status: "draft",
@@ -169,7 +194,7 @@ function CreateWizard() {
       if (s.platform === "meta") {
         toast.loading("Publishing to Meta…", { id: "publish" });
         try {
-          await publishMeta({ data: { campaign_id: saved.id } });
+          await publishMeta({ data: { campaign_id: saved.id, page_id: s.page_id || undefined } });
           toast.success("Live on Meta! 🎉", { id: "publish" });
         } catch (e: any) {
           toast.error(e?.message ?? "Meta publish failed", { id: "publish", duration: 8000 });
@@ -235,7 +260,7 @@ function CreateWizard() {
       {step === 2 && <StepBudget s={s} update={update} />}
       {step === 3 && <StepAudience s={s} toggle={toggle} />}
       {step === 4 && <StepCreative s={s} update={update} onUploadMedia={onUploadMedia} uploadingMedia={uploadingMedia} />}
-      {step === 5 && s.objective === "LEAD_GENERATION" && <StepLeadForm s={s} update={update} toggle={toggle} />}
+      {step === 5 && s.objective === "LEAD_GENERATION" && <StepLeadForm s={s} update={update} toggle={toggle} pages={pages} pagesLoading={pagesLoading} />}
       {((step === 5 && s.objective === "CONVERSIONS") || step === 6) && <StepReview s={s} />}
     </WizardShell>
   );
@@ -451,9 +476,47 @@ function StepCreative({ s, update, onUploadMedia, uploadingMedia }: {
   );
 }
 
-function StepLeadForm({ s, update, toggle }: { s: State; update: <K extends keyof State>(k: K, v: State[K]) => void; toggle: <K extends keyof State>(k: K, v: string) => void }) {
+function StepLeadForm({ s, update, toggle, pages, pagesLoading }: {
+  s: State;
+  update: <K extends keyof State>(k: K, v: State[K]) => void;
+  toggle: <K extends keyof State>(k: K, v: string) => void;
+  pages: { page_id: string; page_name: string }[];
+  pagesLoading: boolean;
+}) {
+  const addQuestion = () => update("lf_custom_questions", [...s.lf_custom_questions, ""]);
+  const setQuestion = (i: number, v: string) => {
+    const next = [...s.lf_custom_questions];
+    next[i] = v.slice(0, 200);
+    update("lf_custom_questions", next);
+  };
+  const removeQuestion = (i: number) => {
+    update("lf_custom_questions", s.lf_custom_questions.filter((_, idx) => idx !== i));
+  };
   return (
     <div className="space-y-6">
+      {s.platform === "meta" && (
+        <div>
+          <FieldLabel><Facebook className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />Facebook Page</FieldLabel>
+          {pagesLoading ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground h-12 px-4 rounded-xl border border-border">
+              <Loader2 className="w-4 h-4 animate-spin" /> Loading pages…
+            </div>
+          ) : pages.length === 0 ? (
+            <div className="text-sm text-muted-foreground h-12 px-4 flex items-center rounded-xl border border-dashed border-border">
+              No pages connected. Connect a Page in Settings.
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {pages.map((p) => (
+                <Chip key={p.page_id} active={s.page_id === p.page_id} onClick={() => update("page_id", p.page_id)}>
+                  {p.page_name}
+                </Chip>
+              ))}
+            </div>
+          )}
+          <p className="mt-1.5 text-[11px] text-muted-foreground">Leads will be delivered to this Page.</p>
+        </div>
+      )}
       <div>
         <FieldLabel><FileText className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />Form title</FieldLabel>
         <Input value={s.lf_title} onChange={(e) => update("lf_title", e.target.value.slice(0, 120))} placeholder="Get early access" className="h-12 rounded-xl" />
@@ -463,12 +526,51 @@ function StepLeadForm({ s, update, toggle }: { s: State; update: <K extends keyo
         <Textarea value={s.lf_intro} onChange={(e) => update("lf_intro", e.target.value.slice(0, 500))} placeholder="Tell us a bit about yourself — we'll reach out within 24 hours." className="rounded-xl min-h-20" />
       </div>
       <div>
-        <FieldLabel>Fields to collect</FieldLabel>
+        <FieldLabel>Standard fields</FieldLabel>
         <div className="flex flex-wrap gap-2">
           {LEAD_FIELDS.map((f) => (
             <Chip key={f} active={s.lf_fields.includes(f)} onClick={() => toggle("lf_fields", f)}>{f}</Chip>
           ))}
         </div>
+        <p className="mt-1.5 text-[11px] text-muted-foreground">Pre-filled from the user's Facebook profile when available.</p>
+      </div>
+      <div>
+        <div className="flex items-center justify-between">
+          <FieldLabel>Custom questions</FieldLabel>
+          <button
+            type="button"
+            onClick={addQuestion}
+            className="press inline-flex items-center gap-1 text-xs font-medium text-foreground hover:opacity-70"
+          >
+            <Plus className="w-3.5 h-3.5" /> Add question
+          </button>
+        </div>
+        {s.lf_custom_questions.length === 0 ? (
+          <p className="mt-2 text-[12px] text-muted-foreground">
+            Want to ask more than name & phone? Add your own questions (e.g. "What service are you interested in?", "Best time to call?").
+          </p>
+        ) : (
+          <div className="mt-2 space-y-2">
+            {s.lf_custom_questions.map((q, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <Input
+                  value={q}
+                  onChange={(e) => setQuestion(i, e.target.value)}
+                  placeholder="Type your question…"
+                  className="h-11 rounded-xl"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeQuestion(i)}
+                  className="press w-11 h-11 flex items-center justify-center rounded-xl border border-border hover:bg-secondary text-muted-foreground"
+                  aria-label="Remove question"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       <div>
         <FieldLabel>Privacy policy URL</FieldLabel>
