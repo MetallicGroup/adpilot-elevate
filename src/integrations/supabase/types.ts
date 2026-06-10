@@ -92,8 +92,12 @@ export type Database = {
           end_date: string | null
           id: string
           lead_form: Json | null
+          meta_ad_id: string | null
+          meta_adset_id: string | null
+          meta_campaign_id: string | null
           name: string
           objective: string
+          platform: string
           start_date: string | null
           status: string
           targeting: Json
@@ -112,8 +116,12 @@ export type Database = {
           end_date?: string | null
           id?: string
           lead_form?: Json | null
+          meta_ad_id?: string | null
+          meta_adset_id?: string | null
+          meta_campaign_id?: string | null
           name: string
           objective?: string
+          platform?: string
           start_date?: string | null
           status?: string
           targeting?: Json
@@ -132,8 +140,12 @@ export type Database = {
           end_date?: string | null
           id?: string
           lead_form?: Json | null
+          meta_ad_id?: string | null
+          meta_adset_id?: string | null
+          meta_campaign_id?: string | null
           name?: string
           objective?: string
+          platform?: string
           start_date?: string | null
           status?: string
           targeting?: Json

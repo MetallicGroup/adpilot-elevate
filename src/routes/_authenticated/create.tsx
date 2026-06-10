@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Target, TrendingUp, Calendar, MapPin, Sparkles, Image as ImageIcon, FileText, Check } from "lucide-react";
+import { Target, TrendingUp, Calendar, MapPin, Sparkles, Image as ImageIcon, FileText, Check, Music2, Facebook } from "lucide-react";
 import { WizardShell, FieldLabel, ChoiceCard, Chip } from "@/components/wizard/WizardShell";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,8 +16,10 @@ export const Route = createFileRoute("/_authenticated/create")({
 
 type Objective = "LEAD_GENERATION" | "CONVERSIONS";
 type BudgetMode = "BUDGET_MODE_DAY" | "BUDGET_MODE_TOTAL";
+type Platform = "tiktok" | "meta";
 
 type State = {
+  platform: Platform;
   name: string;
   objective: Objective;
   budget: number;
@@ -54,6 +56,7 @@ function CreateWizard() {
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [s, setS] = useState<State>({
+    platform: "tiktok",
     name: "",
     objective: "LEAD_GENERATION",
     budget: 50,
@@ -111,6 +114,7 @@ function CreateWizard() {
     try {
       await submit({
         data: {
+          platform: s.platform,
           name: s.name.trim(),
           objective: s.objective,
           budget: s.budget,
@@ -180,6 +184,33 @@ function CreateWizard() {
 function StepGoal({ s, update }: { s: State; update: <K extends keyof State>(k: K, v: State[K]) => void }) {
   return (
     <div className="space-y-6">
+      <div className="space-y-3">
+        <FieldLabel>Platform</FieldLabel>
+        <div className="grid grid-cols-2 gap-3">
+          <ChoiceCard active={s.platform === "tiktok"} onClick={() => update("platform", "tiktok")}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-foreground text-background flex items-center justify-center">
+                <Music2 className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="font-semibold text-foreground">TikTok Ads</div>
+                <div className="mt-0.5 text-xs text-muted-foreground">Short-form video, Gen Z reach</div>
+              </div>
+            </div>
+          </ChoiceCard>
+          <ChoiceCard active={s.platform === "meta"} onClick={() => update("platform", "meta")}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-foreground text-background flex items-center justify-center">
+                <Facebook className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="font-semibold text-foreground">Meta Ads</div>
+                <div className="mt-0.5 text-xs text-muted-foreground">Facebook & Instagram</div>
+              </div>
+            </div>
+          </ChoiceCard>
+        </div>
+      </div>
       <div>
         <FieldLabel>Campaign name</FieldLabel>
         <Input
@@ -366,6 +397,7 @@ function StepLeadForm({ s, update, toggle }: { s: State; update: <K extends keyo
 function StepReview({ s }: { s: State }) {
   return (
     <div className="space-y-3">
+      <ReviewRow label="Platform" value={s.platform === "tiktok" ? "TikTok Ads" : "Meta Ads (Facebook & Instagram)"} />
       <ReviewRow label="Name" value={s.name} />
       <ReviewRow label="Objective" value={s.objective === "LEAD_GENERATION" ? "Lead generation" : "Conversions"} />
       <ReviewRow label="Budget" value={`${fmtMoney(s.budget)} ${s.budget_mode === "BUDGET_MODE_DAY" ? "/ day" : "lifetime"}`} />
@@ -387,7 +419,7 @@ function StepReview({ s }: { s: State }) {
       <div className="mt-6 card-floating p-4 flex items-start gap-3 text-sm">
         <Check className="w-4 h-4 mt-0.5 text-foreground" />
         <div className="text-muted-foreground">
-          Saved as a draft to your workspace. Connect TikTok in Settings to publish live.
+          Saved as a draft to your workspace. Connect {s.platform === "tiktok" ? "TikTok" : "Meta"} in Settings to publish live.
         </div>
       </div>
     </div>
