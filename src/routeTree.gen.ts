@@ -29,6 +29,7 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCreateRouteImport } from './routes/_authenticated/create'
+import { Route as ApiPublicMetaWebhookRouteImport } from './routes/api/public/meta.webhook'
 import { Route as ApiMetaAuthStartRouteImport } from './routes/api/meta.auth.start'
 import { Route as ApiMetaAuthCallbackRouteImport } from './routes/api/meta.auth.callback'
 
@@ -131,6 +132,11 @@ const AuthenticatedCreateRoute = AuthenticatedCreateRouteImport.update({
   path: '/create',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicMetaWebhookRoute = ApiPublicMetaWebhookRouteImport.update({
+  id: '/api/public/meta/webhook',
+  path: '/api/public/meta/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiMetaAuthStartRoute = ApiMetaAuthStartRouteImport.update({
   id: '/api/meta/auth/start',
   path: '/api/meta/auth/start',
@@ -164,6 +170,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
   '/api/meta/auth/start': typeof ApiMetaAuthStartRoute
+  '/api/public/meta/webhook': typeof ApiPublicMetaWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -187,6 +194,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
   '/api/meta/auth/start': typeof ApiMetaAuthStartRoute
+  '/api/public/meta/webhook': typeof ApiPublicMetaWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -212,6 +220,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
   '/api/meta/auth/start': typeof ApiMetaAuthStartRoute
+  '/api/public/meta/webhook': typeof ApiPublicMetaWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -237,6 +246,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/api/meta/auth/callback'
     | '/api/meta/auth/start'
+    | '/api/public/meta/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -260,6 +270,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/api/meta/auth/callback'
     | '/api/meta/auth/start'
+    | '/api/public/meta/webhook'
   id:
     | '__root__'
     | '/'
@@ -284,6 +295,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/api/meta/auth/callback'
     | '/api/meta/auth/start'
+    | '/api/public/meta/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -305,6 +317,7 @@ export interface RootRouteChildren {
   TermsOfServiceRoute: typeof TermsOfServiceRoute
   ApiMetaAuthCallbackRoute: typeof ApiMetaAuthCallbackRoute
   ApiMetaAuthStartRoute: typeof ApiMetaAuthStartRoute
+  ApiPublicMetaWebhookRoute: typeof ApiPublicMetaWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -449,6 +462,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCreateRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/meta/webhook': {
+      id: '/api/public/meta/webhook'
+      path: '/api/public/meta/webhook'
+      fullPath: '/api/public/meta/webhook'
+      preLoaderRoute: typeof ApiPublicMetaWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/meta/auth/start': {
       id: '/api/meta/auth/start'
       path: '/api/meta/auth/start'
@@ -502,7 +522,18 @@ const rootRouteChildren: RootRouteChildren = {
   TermsOfServiceRoute: TermsOfServiceRoute,
   ApiMetaAuthCallbackRoute: ApiMetaAuthCallbackRoute,
   ApiMetaAuthStartRoute: ApiMetaAuthStartRoute,
+  ApiPublicMetaWebhookRoute: ApiPublicMetaWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
