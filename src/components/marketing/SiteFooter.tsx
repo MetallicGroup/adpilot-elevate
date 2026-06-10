@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import logoAsset from "@/assets/adpilot-logo.png.asset.json";
 
 export function SiteFooter() {
   return (
@@ -6,9 +7,7 @@ export function SiteFooter() {
       <div className="max-w-6xl mx-auto w-full px-6 py-16 grid gap-10 md:grid-cols-4">
         <div>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-foreground flex items-center justify-center">
-              <span className="text-background text-sm font-bold">A</span>
-            </div>
+            <img src={logoAsset.url} alt="AdPilot" className="h-9 w-9 object-contain" />
             <span className="font-semibold tracking-tight">AdPilot</span>
           </div>
           <p className="mt-4 text-sm text-muted-foreground max-w-xs">
@@ -30,6 +29,11 @@ export function SiteFooter() {
           { to: "/features", label: "Features" },
           { to: "/integrations", label: "Integrations" },
           { to: "/security", label: "Security" },
+        ]} />
+        <FooterCol title="Support" links={[
+          { to: "/help-center", label: "Help Center" },
+          { to: "/documentation", label: "Documentation" },
+          { to: "/contact", label: "Contact" },
         ]} />
       </div>
       <div className="border-t border-border">
