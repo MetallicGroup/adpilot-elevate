@@ -30,6 +30,7 @@ import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCreateRouteImport } from './routes/_authenticated/create'
 import { Route as ApiMetaAuthStartRouteImport } from './routes/api/meta.auth.start'
+import { Route as ApiMetaAuthCallbackRouteImport } from './routes/api/meta.auth.callback'
 
 const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
   id: '/terms-of-service',
@@ -135,6 +136,11 @@ const ApiMetaAuthStartRoute = ApiMetaAuthStartRouteImport.update({
   path: '/api/meta/auth/start',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMetaAuthCallbackRoute = ApiMetaAuthCallbackRouteImport.update({
+  id: '/api/meta/auth/callback',
+  path: '/api/meta/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -156,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
   '/api/meta/auth/start': typeof ApiMetaAuthStartRoute
 }
 export interface FileRoutesByTo {
@@ -178,6 +185,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
   '/api/meta/auth/start': typeof ApiMetaAuthStartRoute
 }
 export interface FileRoutesById {
@@ -202,6 +210,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
   '/api/meta/auth/start': typeof ApiMetaAuthStartRoute
 }
 export interface FileRouteTypes {
@@ -226,6 +235,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/reports'
     | '/settings'
+    | '/api/meta/auth/callback'
     | '/api/meta/auth/start'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -248,6 +258,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/reports'
     | '/settings'
+    | '/api/meta/auth/callback'
     | '/api/meta/auth/start'
   id:
     | '__root__'
@@ -271,6 +282,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/reports'
     | '/_authenticated/settings'
+    | '/api/meta/auth/callback'
     | '/api/meta/auth/start'
   fileRoutesById: FileRoutesById
 }
@@ -291,6 +303,7 @@ export interface RootRouteChildren {
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   SecurityRoute: typeof SecurityRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
+  ApiMetaAuthCallbackRoute: typeof ApiMetaAuthCallbackRoute
   ApiMetaAuthStartRoute: typeof ApiMetaAuthStartRoute
 }
 
@@ -443,6 +456,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMetaAuthStartRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/meta/auth/callback': {
+      id: '/api/meta/auth/callback'
+      path: '/api/meta/auth/callback'
+      fullPath: '/api/meta/auth/callback'
+      preLoaderRoute: typeof ApiMetaAuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -480,6 +500,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   SecurityRoute: SecurityRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
+  ApiMetaAuthCallbackRoute: ApiMetaAuthCallbackRoute,
   ApiMetaAuthStartRoute: ApiMetaAuthStartRoute,
 }
 export const routeTree = rootRouteImport
