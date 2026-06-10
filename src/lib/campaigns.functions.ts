@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const CampaignSchema = z.object({
+  platform: z.enum(["tiktok", "meta"]).default("tiktok"),
   name: z.string().trim().min(1).max(120),
   objective: z.enum(["LEAD_GENERATION", "CONVERSIONS"]),
   budget: z.number().min(5).max(1000000),
@@ -43,6 +44,7 @@ export const saveCampaign = createServerFn({ method: "POST" })
       .from("campaigns")
       .insert({
         user_id: userId,
+        platform: data.platform,
         name: data.name,
         objective: data.objective,
         budget: data.budget,
