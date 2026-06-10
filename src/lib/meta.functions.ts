@@ -25,6 +25,24 @@ export const resyncMetaConnection = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     if (!conn || !conn.access_token) throw new Error("Connection not found");
 
+    const { data: selectedAd } = await supabaseAdmin
+      .from("meta_ad_accounts")
+      .select("ad_account_id")
+      .eq("user_id", userId)
+      .eq("connection_id", conn.id)
+      .eq("is_active", true)
+      .limit(1)
+      .maybeSingle();
+
+    const { data: selectedPage } = await supabaseAdmin
+      .from("meta_pages")
+      .select("page_id")
+      .eq("user_id", userId)
+      .eq("connection_id", conn.id)
+      .eq("is_active", true)
+      .limit(1)
+      .maybeSingle();
+
     const ads = await fetchAdAccounts(conn.access_token);
     const adRows = (ads?.data ?? []).map((a: any) => ({
       user_id: userId,
@@ -34,7 +52,9 @@ export const resyncMetaConnection = createServerFn({ method: "POST" })
       currency: a.currency ?? null,
       timezone_name: a.timezone_name ?? null,
       status: a.account_status ?? null,
-      is_active: true,
+      is_active: selectedAd?.ad_account_id
+        ? selectedAd.ad_account_id === a.account_id
+        : a.account_status === 1,
     }));
     if (adRows.length) {
       await supabaseAdmin
@@ -50,7 +70,7 @@ export const resyncMetaConnection = createServerFn({ method: "POST" })
       page_name: p.name ?? null,
       category: p.category ?? null,
       page_access_token: p.access_token ?? null,
-      is_active: true,
+      is_active: selectedPage?.page_id ? selectedPage.page_id === p.id : false,
     }));
     if (pageRows.length) {
       await supabaseAdmin
@@ -59,4 +79,77 @@ export const resyncMetaConnection = createServerFn({ method: "POST" })
     }
 
     return { adAccounts: adRows.length, pages: pageRows.length };
+  });
+
+const SelectMetaItemInput = z.object({
+  connectionId: z.string().uuid(),
+  rowId: z.string().uuid(),
+});
+
+export const selectMetaAdAccount = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => SelectMetaItemInput.parse(input))
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: account, error: findError } = await supabaseAdmin
+      .from("meta_ad_accounts")
+      .select("id")
+      .eq("id", data.rowId)
+      .eq("connection_id", data.connectionId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (findError) throw new Error(findError.message);
+    if (!account) throw new Error("Ad account not found");
+
+    const { error: clearError } = await supabaseAdmin
+      .from("meta_ad_accounts")
+      .update({ is_active: false })
+      .eq("connection_id", data.connectionId)
+      .eq("user_id", userId);
+    if (clearError) throw new Error(clearError.message);
+
+    const { error: selectError } = await supabaseAdmin
+      .from("meta_ad_accounts")
+      .update({ is_active: true })
+      .eq("id", data.rowId)
+      .eq("user_id", userId);
+    if (selectError) throw new Error(selectError.message);
+
+    return { ok: true };
+  });
+
+export const selectMetaPage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => SelectMetaItemInput.parse(input))
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: page, error: findError } = await supabaseAdmin
+      .from("meta_pages")
+      .select("id")
+      .eq("id", data.rowId)
+      .eq("connection_id", data.connectionId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (findError) throw new Error(findError.message);
+    if (!page) throw new Error("Page not found");
+
+    const { error: clearError } = await supabaseAdmin
+      .from("meta_pages")
+      .update({ is_active: false })
+      .eq("connection_id", data.connectionId)
+      .eq("user_id", userId);
+    if (clearError) throw new Error(clearError.message);
+
+    const { error: selectError } = await supabaseAdmin
+      .from("meta_pages")
+      .update({ is_active: true })
+      .eq("id", data.rowId)
+      .eq("user_id", userId);
+    if (selectError) throw new Error(selectError.message);
+
+    return { ok: true };
   });
