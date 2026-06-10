@@ -4,7 +4,7 @@ import logoAsset from "@/assets/adpilot-logo.png.asset.json";
 export function SiteFooter() {
   return (
     <footer className="border-t border-border bg-secondary/30 mt-24">
-      <div className="max-w-6xl mx-auto w-full px-6 py-16 grid gap-10 md:grid-cols-4">
+      <div className="max-w-6xl mx-auto w-full px-6 py-16 grid gap-10 md:grid-cols-5">
         <div>
           <div className="flex items-center gap-2">
             <img src={logoAsset.url} alt="AdPilot" className="h-9 w-9 object-contain" />
