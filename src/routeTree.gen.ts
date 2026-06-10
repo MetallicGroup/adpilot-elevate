@@ -14,8 +14,11 @@ import { Route as SecurityRouteImport } from './routes/security'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as IntegrationsRouteImport } from './routes/integrations'
+import { Route as HelpCenterRouteImport } from './routes/help-center'
+import { Route as HelpRouteImport } from './routes/help'
 import { Route as GdprRouteImport } from './routes/gdpr'
 import { Route as FeaturesRouteImport } from './routes/features'
+import { Route as DocumentationRouteImport } from './routes/documentation'
 import { Route as CookiePolicyRouteImport } from './routes/cookie-policy'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -52,6 +55,16 @@ const IntegrationsRoute = IntegrationsRouteImport.update({
   path: '/integrations',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HelpCenterRoute = HelpCenterRouteImport.update({
+  id: '/help-center',
+  path: '/help-center',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpRoute = HelpRouteImport.update({
+  id: '/help',
+  path: '/help',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GdprRoute = GdprRouteImport.update({
   id: '/gdpr',
   path: '/gdpr',
@@ -60,6 +73,11 @@ const GdprRoute = GdprRouteImport.update({
 const FeaturesRoute = FeaturesRouteImport.update({
   id: '/features',
   path: '/features',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocumentationRoute = DocumentationRouteImport.update({
+  id: '/documentation',
+  path: '/documentation',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CookiePolicyRoute = CookiePolicyRouteImport.update({
@@ -118,8 +136,11 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
+  '/documentation': typeof DocumentationRoute
   '/features': typeof FeaturesRoute
   '/gdpr': typeof GdprRoute
+  '/help': typeof HelpRoute
+  '/help-center': typeof HelpCenterRoute
   '/integrations': typeof IntegrationsRoute
   '/pricing': typeof PricingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -136,8 +157,11 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
+  '/documentation': typeof DocumentationRoute
   '/features': typeof FeaturesRoute
   '/gdpr': typeof GdprRoute
+  '/help': typeof HelpRoute
+  '/help-center': typeof HelpCenterRoute
   '/integrations': typeof IntegrationsRoute
   '/pricing': typeof PricingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -156,8 +180,11 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
+  '/documentation': typeof DocumentationRoute
   '/features': typeof FeaturesRoute
   '/gdpr': typeof GdprRoute
+  '/help': typeof HelpRoute
+  '/help-center': typeof HelpCenterRoute
   '/integrations': typeof IntegrationsRoute
   '/pricing': typeof PricingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -176,8 +203,11 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/cookie-policy'
+    | '/documentation'
     | '/features'
     | '/gdpr'
+    | '/help'
+    | '/help-center'
     | '/integrations'
     | '/pricing'
     | '/privacy-policy'
@@ -194,8 +224,11 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/cookie-policy'
+    | '/documentation'
     | '/features'
     | '/gdpr'
+    | '/help'
+    | '/help-center'
     | '/integrations'
     | '/pricing'
     | '/privacy-policy'
@@ -213,8 +246,11 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/cookie-policy'
+    | '/documentation'
     | '/features'
     | '/gdpr'
+    | '/help'
+    | '/help-center'
     | '/integrations'
     | '/pricing'
     | '/privacy-policy'
@@ -233,8 +269,11 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
   CookiePolicyRoute: typeof CookiePolicyRoute
+  DocumentationRoute: typeof DocumentationRoute
   FeaturesRoute: typeof FeaturesRoute
   GdprRoute: typeof GdprRoute
+  HelpRoute: typeof HelpRoute
+  HelpCenterRoute: typeof HelpCenterRoute
   IntegrationsRoute: typeof IntegrationsRoute
   PricingRoute: typeof PricingRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
@@ -279,6 +318,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IntegrationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/help-center': {
+      id: '/help-center'
+      path: '/help-center'
+      fullPath: '/help-center'
+      preLoaderRoute: typeof HelpCenterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help': {
+      id: '/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof HelpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/gdpr': {
       id: '/gdpr'
       path: '/gdpr'
@@ -291,6 +344,13 @@ declare module '@tanstack/react-router' {
       path: '/features'
       fullPath: '/features'
       preLoaderRoute: typeof FeaturesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/documentation': {
+      id: '/documentation'
+      path: '/documentation'
+      fullPath: '/documentation'
+      preLoaderRoute: typeof DocumentationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cookie-policy': {
@@ -390,8 +450,11 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
   CookiePolicyRoute: CookiePolicyRoute,
+  DocumentationRoute: DocumentationRoute,
   FeaturesRoute: FeaturesRoute,
   GdprRoute: GdprRoute,
+  HelpRoute: HelpRoute,
+  HelpCenterRoute: HelpCenterRoute,
   IntegrationsRoute: IntegrationsRoute,
   PricingRoute: PricingRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,

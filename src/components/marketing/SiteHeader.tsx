@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
+import logoAsset from "@/assets/adpilot-logo.png.asset.json";
 
 const links = [
   { to: "/features", label: "Features" },
@@ -17,9 +18,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/60">
       <div className="max-w-6xl mx-auto w-full px-6 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-foreground flex items-center justify-center">
-            <span className="text-background text-sm font-bold">A</span>
-          </div>
+          <img src={logoAsset.url} alt="AdPilot" className="h-9 w-9 object-contain" />
           <span className="font-semibold tracking-tight">AdPilot</span>
         </Link>
         <nav className="hidden md:flex items-center gap-7">

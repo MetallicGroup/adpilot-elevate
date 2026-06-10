@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { MarketingLayout, PageHero } from "@/components/marketing/MarketingLayout";
 import { toast } from "sonner";
-import { Mail, MapPin, Building2 } from "lucide-react";
+import { Mail, Building2 } from "lucide-react";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({ meta: [
@@ -19,9 +19,12 @@ function ContactPage() {
       <PageHero eyebrow="Contact" title="Talk to us." subtitle="Sales, support, partnerships or press — we typically respond within one business day." />
       <section className="px-6 pb-20 max-w-5xl mx-auto w-full grid gap-8 md:grid-cols-2">
         <div className="space-y-5">
-          <ContactItem icon={Mail} title="Email" value="hello@adpilot.ro" />
-          <ContactItem icon={MapPin} title="Address" value="Str. Exemplului 12, Bucharest, Romania" />
-          <ContactItem icon={Building2} title="Company" value="AdPilot SRL — Reg. J40/0000/2025" />
+          <ContactItem icon={Mail} title="Email" value="support@adpilot.ro" />
+          <ContactItem icon={Building2} title="Company" value="AdPilot SRL" />
+          <div className="card-floating p-6">
+            <p className="text-xs uppercase tracking-widest text-muted-foreground">Response time</p>
+            <p className="mt-1 text-sm">We typically respond within 1 business day.</p>
+          </div>
         </div>
         <form
           onSubmit={(e) => { e.preventDefault(); setSent(true); toast.success("Message sent — we'll be in touch soon."); }}

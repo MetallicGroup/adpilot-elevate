@@ -11,7 +11,7 @@ export const Route = createFileRoute("/gdpr")({
       <P>We process personal data only when one of the GDPR lawful bases applies — most commonly: performance of a contract with you, your consent, our legitimate interests (balanced against your rights), or compliance with a legal obligation.</P>
 
       <H2>2. Data Protection Officer</H2>
-      <P>Although we are not strictly required to appoint a DPO under Article 37, we have nominated a privacy lead who can be reached at privacy@adpilot.ro for all data protection matters.</P>
+      <P>Although we are not strictly required to appoint a DPO under Article 37, we have nominated a privacy lead who can be reached at support@adpilot.ro for all data protection matters.</P>
 
       <H2>3. Your GDPR rights</H2>
       <UL>
@@ -24,10 +24,10 @@ export const Route = createFileRoute("/gdpr")({
         <li><strong>Right to withdraw consent</strong> — at any time, without affecting the lawfulness of prior processing.</li>
         <li><strong>Right to lodge a complaint</strong> — with the Romanian DPA (ANSPDCP) or your local supervisory authority.</li>
       </UL>
-      <P>To exercise any of these rights, email privacy@adpilot.ro. We respond to all requests within 30 days.</P>
+      <P>To exercise any of these rights, email support@adpilot.ro. We respond to all requests within 30 days.</P>
 
       <H2>4. Data Processing Agreement (DPA)</H2>
-      <P>When AdPilot acts as a data processor on your behalf (for example, processing leads collected via your TikTok campaigns), we offer a Data Processing Agreement that incorporates the GDPR-required clauses, including obligations regarding subprocessors, security measures, breach notification, and data subject requests. To request a copy, contact legal@adpilot.ro.</P>
+      <P>When AdPilot acts as a data processor on your behalf (for example, processing leads collected via your TikTok campaigns), we offer a Data Processing Agreement that incorporates the GDPR-required clauses, including obligations regarding subprocessors, security measures, breach notification, and data subject requests. To request a copy, contact support@adpilot.ro.</P>
 
       <H2>5. International data transfers</H2>
       <P>Where personal data is transferred outside the European Economic Area, we rely on European Commission adequacy decisions or Standard Contractual Clauses (SCCs) together with supplementary measures where appropriate.</P>
@@ -39,7 +39,7 @@ export const Route = createFileRoute("/gdpr")({
       <P>In the unlikely event of a personal data breach likely to result in a risk to the rights and freedoms of natural persons, AdPilot will notify the supervisory authority within 72 hours and, when required, inform affected individuals without undue delay.</P>
 
       <H2>8. Contact</H2>
-      <P>For any GDPR-related question, contact privacy@adpilot.ro or write to AdPilot SRL, Str. Exemplului 12, Bucharest, Romania.</P>
+      <P>For any GDPR-related question, contact support@adpilot.ro or write to AdPilot SRL, Romania.</P>
     </LegalPage>
   ),
 });

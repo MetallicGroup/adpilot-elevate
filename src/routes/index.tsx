@@ -191,6 +191,21 @@ function Index() {
         <p className="mt-6 text-center text-sm text-muted-foreground">14-day free trial. Cancel anytime.</p>
       </Section>
 
+      {/* FAQ */}
+      <Section eyebrow="FAQ" title="Questions, answered.">
+        <div className="max-w-3xl mx-auto space-y-3">
+          {faqs.map((f, i) => (
+            <details key={i} className="card-floating p-6 group">
+              <summary className="flex items-center justify-between cursor-pointer font-medium list-none">
+                <span>{f.q}</span>
+                <span className="text-muted-foreground group-open:rotate-45 transition-transform text-xl leading-none">+</span>
+              </summary>
+              <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </Section>
+
       {/* CTA */}
       <section className="px-6 py-24 max-w-4xl mx-auto w-full text-center">
         <h2 className="font-serif text-4xl md:text-5xl font-semibold tracking-tight">Ready to launch your first TikTok ad?</h2>
@@ -258,4 +273,22 @@ const plans = [
   { name: "Starter", price: "€99", items: ["1 ad account", "Up to €2k/mo ad spend", "AI campaign builder", "Email support"] },
   { name: "Growth", price: "€199", featured: true, items: ["3 ad accounts", "Up to €10k/mo ad spend", "WhatsApp AI assistant", "Priority support"] },
   { name: "Pro", price: "€399", items: ["Unlimited ad accounts", "Unlimited spend", "Dedicated success manager", "Custom integrations"] },
+];
+
+const faqs = [
+  { q: "Do I need a marketing agency to use AdPilot?", a: "No. AdPilot is built specifically for businesses that want to run TikTok ads without an agency. The AI handles audience selection, copy and campaign structure for you." },
+  { q: "Do I need previous TikTok advertising experience?", a: "Not at all. If you can answer a few questions about your business and your goal, AdPilot creates and launches the campaign for you." },
+  { q: "Is my data secure?", a: "Yes. AdPilot connects to TikTok via official OAuth, we never store your TikTok password, and all data is encrypted at rest. See our Security page for details." },
+  { q: "Can I connect multiple TikTok ad accounts?", a: "Yes. Growth and Pro plans support multiple ad accounts so agencies and multi-brand companies can manage everything in one place." },
+  { q: "How does the WhatsApp AI Assistant work?", a: "After connecting your WhatsApp Business number, you can send natural-language commands like 'pause the spring campaign' or 'how many leads today?' and the AI executes or replies instantly." },
+  { q: "Who owns the TikTok ad account?", a: "You do. The TikTok Business account always remains in the advertiser's name. AdPilot only acts on your instructions and you can revoke access at any time." },
+  { q: "Does the subscription include TikTok ad spend?", a: "No. AdPilot's subscription covers the platform only. TikTok ad spend is billed separately by TikTok, directly to your TikTok billing account." },
+  { q: "Is there a free trial?", a: "Yes. Every plan includes a 14-day free trial. No credit card required to start." },
+  { q: "Can I cancel anytime?", a: "Yes. You can cancel from your dashboard at any time. Your access continues until the end of the current billing period." },
+  { q: "What kind of businesses use AdPilot?", a: "Service businesses (plumbing, construction, cleaning), eCommerce brands (fashion, beauty, online stores), and local businesses (restaurants, clinics, salons)." },
+  { q: "Where do my leads go?", a: "Every lead generated through your campaigns is delivered into AdPilot's Lead Inbox, with optional instant alerts via WhatsApp and integrations with your CRM." },
+  { q: "Is AdPilot GDPR compliant?", a: "Yes. AdPilot is built and operated in the EU and follows GDPR principles, including data minimization, the right to erasure, and standard contractual clauses for any data transferred outside the EEA." },
+  { q: "Do you offer support?", a: "Yes. Email support on every plan, priority support on Growth, and a dedicated success manager on Pro." },
+  { q: "Can I import existing campaigns?", a: "Yes. Once you connect your TikTok ad account, AdPilot syncs your existing campaigns so you can monitor and optimize them from a single dashboard." },
+  { q: "Is AdPilot an official TikTok partner?", a: "AdPilot integrates with the official TikTok Marketing API. We are currently in the TikTok Marketing Partner application process." },
 ];

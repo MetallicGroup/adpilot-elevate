@@ -8,7 +8,7 @@ export const Route = createFileRoute("/privacy-policy")({
       <P>This Privacy Policy describes how AdPilot SRL ("AdPilot", "we", "us", or "our") collects, uses, stores, shares and protects personal data when you use the AdPilot platform, website and related services (collectively, the "Services"). By using the Services, you agree to the practices described in this Policy.</P>
 
       <H2>1. Who we are</H2>
-      <P>AdPilot SRL is a company incorporated in Romania with its registered office at Str. Exemplului 12, Bucharest, Romania, registered under the trade registry number J40/0000/2025. For the purposes of EU data protection law, AdPilot is the data controller of the personal data described in this Policy. You can contact us at privacy@adpilot.ro for any privacy-related question.</P>
+      <P>AdPilot SRL is a company incorporated in Romania with its registered office at Romania, registered in Romania. For the purposes of EU data protection law, AdPilot is the data controller of the personal data described in this Policy. You can contact us at support@adpilot.ro for any privacy-related question.</P>
 
       <H2>2. Information we collect</H2>
       <P>We collect the following categories of information:</P>
@@ -43,7 +43,7 @@ export const Route = createFileRoute("/privacy-policy")({
       </UL>
 
       <H2>5. International data transfers</H2>
-      <P>Some service providers we use are located outside the European Economic Area. When we transfer personal data outside the EEA, we rely on appropriate safeguards such as the European Commission's Standard Contractual Clauses or adequacy decisions. You can request a copy of the safeguards by contacting privacy@adpilot.ro.</P>
+      <P>Some service providers we use are located outside the European Economic Area. When we transfer personal data outside the EEA, we rely on appropriate safeguards such as the European Commission's Standard Contractual Clauses or adequacy decisions. You can request a copy of the safeguards by contacting support@adpilot.ro.</P>
 
       <H2>6. Data retention</H2>
       <P>We retain personal data for as long as necessary to provide the Services and to comply with our legal obligations. Specifically:</P>
@@ -55,13 +55,13 @@ export const Route = createFileRoute("/privacy-policy")({
       </UL>
 
       <H2>7. Your rights</H2>
-      <P>Under the GDPR you have the right to: access your data; rectify inaccurate data; erase your data; restrict processing; object to processing; data portability; and to withdraw consent at any time. You also have the right to lodge a complaint with the Romanian Data Protection Authority (ANSPDCP) or your local supervisory authority. To exercise any of these rights, email privacy@adpilot.ro and we will respond within 30 days.</P>
+      <P>Under the GDPR you have the right to: access your data; rectify inaccurate data; erase your data; restrict processing; object to processing; data portability; and to withdraw consent at any time. You also have the right to lodge a complaint with the Romanian Data Protection Authority (ANSPDCP) or your local supervisory authority. To exercise any of these rights, email support@adpilot.ro and we will respond within 30 days.</P>
 
       <H2>8. Security</H2>
       <P>We implement industry-standard security measures including TLS in transit, AES-256 encryption at rest, role-based access controls, audit logging, automated backups, and least-privilege production access. Despite these measures, no system is perfectly secure; we encourage you to use a strong, unique password and to enable two-factor authentication where available.</P>
 
       <H2>9. Children</H2>
-      <P>AdPilot is not directed at children under the age of 16, and we do not knowingly collect personal data from children. If you believe a child has provided us with personal data, please contact privacy@adpilot.ro and we will delete it.</P>
+      <P>AdPilot is not directed at children under the age of 16, and we do not knowingly collect personal data from children. If you believe a child has provided us with personal data, please contact support@adpilot.ro and we will delete it.</P>
 
       <H2>10. Cookies</H2>
       <P>We use cookies and similar technologies as described in our Cookie Policy. You can manage your preferences via the cookie banner displayed on first visit.</P>
@@ -73,7 +73,7 @@ export const Route = createFileRoute("/privacy-policy")({
       <P>We may update this Policy from time to time. Material changes will be communicated via email and/or an in-app banner at least 14 days before they take effect. The "Last updated" date at the top reflects the most recent revision.</P>
 
       <H2>13. Contact</H2>
-      <P>If you have any question about this Policy or our data practices, please contact: AdPilot SRL, privacy@adpilot.ro, Str. Exemplului 12, Bucharest, Romania.</P>
+      <P>If you have any question about this Policy or our data practices, please contact: AdPilot SRL, support@adpilot.ro, Romania.</P>
     </LegalPage>
   ),
 });
