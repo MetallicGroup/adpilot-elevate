@@ -165,6 +165,80 @@ export type Database = {
           },
         ]
       }
+      leads: {
+        Row: {
+          assignee: string | null
+          campaign_id: string | null
+          created_at: string
+          email: string | null
+          external_ad_id: string | null
+          external_campaign_id: string | null
+          external_form_id: string | null
+          external_lead_id: string | null
+          full_name: string | null
+          id: string
+          message: string | null
+          notes: string | null
+          phone: string | null
+          platform: string
+          raw: Json
+          source_url: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assignee?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          email?: string | null
+          external_ad_id?: string | null
+          external_campaign_id?: string | null
+          external_form_id?: string | null
+          external_lead_id?: string | null
+          full_name?: string | null
+          id?: string
+          message?: string | null
+          notes?: string | null
+          phone?: string | null
+          platform: string
+          raw?: Json
+          source_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assignee?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          email?: string | null
+          external_ad_id?: string | null
+          external_campaign_id?: string | null
+          external_form_id?: string | null
+          external_lead_id?: string | null
+          full_name?: string | null
+          id?: string
+          message?: string | null
+          notes?: string | null
+          phone?: string | null
+          platform?: string
+          raw?: Json
+          source_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meta_ad_accounts: {
         Row: {
           account_name: string | null
