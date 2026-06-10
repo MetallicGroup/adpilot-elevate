@@ -5,9 +5,21 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
+function readEnv(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  let v = value.trim();
+  if (
+    (v.startsWith('"') && v.endsWith('"')) ||
+    (v.startsWith("'") && v.endsWith("'"))
+  ) {
+    v = v.slice(1, -1).trim();
+  }
+  return v || undefined;
+}
+
 function createSupabaseAdminClient() {
-  const SUPABASE_URL = process.env.SUPABASE_URL;
-  const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const SUPABASE_URL = readEnv(process.env.SUPABASE_URL);
+  const SUPABASE_SERVICE_ROLE_KEY = readEnv(process.env.SUPABASE_SERVICE_ROLE_KEY);
 
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
     const missing = [
