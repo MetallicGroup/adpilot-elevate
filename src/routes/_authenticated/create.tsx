@@ -2,13 +2,14 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Target, TrendingUp, Calendar, MapPin, Sparkles, Image as ImageIcon, FileText, Check, Music2, Facebook } from "lucide-react";
+import { Target, TrendingUp, Calendar, MapPin, Sparkles, Image as ImageIcon, FileText, Check, Music2, Facebook, Upload, Loader2 } from "lucide-react";
 import { WizardShell, FieldLabel, ChoiceCard, Chip } from "@/components/wizard/WizardShell";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { saveCampaign } from "@/lib/campaigns.functions";
 import { checkMetaReady } from "@/lib/leads.functions";
+import { publishMetaCampaign, uploadAdMedia } from "@/lib/meta-publish.functions";
 import { fmtMoney } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/create")({
@@ -55,6 +56,8 @@ function CreateWizard() {
   const navigate = useNavigate();
   const submit = useServerFn(saveCampaign);
   const checkMeta = useServerFn(checkMetaReady);
+  const publishMeta = useServerFn(publishMetaCampaign);
+  const uploadMedia = useServerFn(uploadAdMedia);
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [s, setS] = useState<State>({
