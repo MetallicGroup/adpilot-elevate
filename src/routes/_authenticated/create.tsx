@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { saveCampaign } from "@/lib/campaigns.functions";
+import { checkMetaReady } from "@/lib/leads.functions";
 import { fmtMoney } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/create")({
@@ -53,6 +54,7 @@ const LEAD_FIELDS = ["Name", "Email", "Phone", "City", "Zip Code", "Company", "J
 function CreateWizard() {
   const navigate = useNavigate();
   const submit = useServerFn(saveCampaign);
+  const checkMeta = useServerFn(checkMetaReady);
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [s, setS] = useState<State>({
@@ -112,6 +114,21 @@ function CreateWizard() {
     if (step < total) { setStep(step + 1); return; }
     setSubmitting(true);
     try {
+      if (s.platform === "meta") {
+        const r = await checkMeta();
+        if (!r.ready) {
+          toast.error(
+            r.reason === "no_pages"
+              ? "Connect at least one Facebook Page in Settings before publishing to Meta."
+              : "Connect your Meta account in Settings before publishing to Meta.",
+            {
+              action: { label: "Open Settings", onClick: () => navigate({ to: "/settings" }) },
+            },
+          );
+          setSubmitting(false);
+          return;
+        }
+      }
       await submit({
         data: {
           platform: s.platform,
