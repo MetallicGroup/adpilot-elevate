@@ -62,13 +62,23 @@ export async function createLeadForm(
     fields: string[];
     privacy_url: string;
     follow_up_url?: string;
+    custom_questions?: string[];
   },
 ) {
-  const questions = spec.fields
+  const questions: Array<Record<string, unknown>> = spec.fields
     .map((f) => LEAD_FIELD_MAP[f])
     .filter(Boolean)
     .map((type) => ({ type }));
-  if (!questions.length) questions.push({ type: "EMAIL" });
+  for (const q of spec.custom_questions ?? []) {
+    const label = q.trim().slice(0, 200);
+    if (!label) continue;
+    questions.push({
+      type: "CUSTOM",
+      label,
+      key: label.toLowerCase().replace(/[^a-z0-9]+/g, "_").slice(0, 60) || `q_${questions.length}`,
+    });
+  }
+  if (!questions.length) questions.push({ type: "PHONE" });
 
   return metaPOST(`/${pageId}/leadgen_forms`, pageAccessToken, {
     name: spec.name.slice(0, 256),
