@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, redirect, Link, useRouter } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { Home, Plus, BarChart3, Settings } from "lucide-react";
+import { Home, Plus, BarChart3, Settings, Users } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -25,6 +25,7 @@ function BottomNav() {
   const tabs = [
     { to: "/dashboard", icon: Home, label: "Home" },
     { to: "/create", icon: Plus, label: "Create" },
+    { to: "/leads", icon: Users, label: "Clienți" },
     { to: "/reports", icon: BarChart3, label: "Reports" },
     { to: "/settings", icon: Settings, label: "Settings" },
   ] as const;

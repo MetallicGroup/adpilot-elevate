@@ -1,5 +1,7 @@
-export const fmtMoney = (n: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: n < 10 ? 2 : 0 }).format(n || 0);
+export const fmtMoney = (n: number, currency: "RON" | "USD" = "RON") =>
+  new Intl.NumberFormat("ro-RO", { style: "currency", currency, maximumFractionDigits: n < 10 ? 2 : 0 }).format(n || 0);
+
+export const fmtMoneyRon = (n: number) => fmtMoney(n, "RON");
 
 export const fmtNum = (n: number) => new Intl.NumberFormat("en-US").format(n || 0);
 

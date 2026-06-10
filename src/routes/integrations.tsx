@@ -11,6 +11,7 @@ export const Route = createFileRoute("/integrations")({
 
 const integrations = [
   { name: "TikTok Ads", body: "Official OAuth connection. Create and manage campaigns natively." },
+  { name: "Meta Ads", body: "Connect Facebook & Instagram. Launch lead generation campaigns in minutes." },
   { name: "WhatsApp", body: "Receive lead notifications and control campaigns via chat." },
   { name: "Stripe", body: "Subscription billing and payment management." },
   { name: "Google Analytics", body: "Cross-channel attribution and conversion tracking." },

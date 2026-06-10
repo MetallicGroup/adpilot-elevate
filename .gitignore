@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 .output
+.vercel
 .vinxi
 .tanstack/**
 .nitro
@@ -25,6 +26,8 @@ dist-ssr
 !.vscode/extensions.json
 .idea
 .DS_Store
+._*
+.env
 *.suo
 *.ntvs*
 *.njsproj

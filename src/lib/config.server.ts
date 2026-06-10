@@ -19,8 +19,8 @@ import process from "node:process";
 export function getServerConfig() {
   return {
     nodeEnv: process.env.NODE_ENV,
-    // Add server-only values here, e.g.:
-    //   databaseUrl: process.env.DATABASE_URL,
-    //   stripeSecretKey: process.env.STRIPE_SECRET_KEY,
+    metaAppId: process.env.META_APP_ID,
+    metaApiVersion: process.env.META_API_VERSION ?? "v20.0",
+    // Secrets (META_APP_SECRET) must never be returned from this helper.
   };
 }
