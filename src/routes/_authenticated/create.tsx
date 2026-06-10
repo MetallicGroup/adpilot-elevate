@@ -60,6 +60,7 @@ function CreateWizard() {
   const uploadMedia = useServerFn(uploadAdMedia);
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
   const [s, setS] = useState<State>({
     platform: "tiktok",
     name: "",
@@ -185,6 +186,34 @@ function CreateWizard() {
   };
 
   const onBack = () => (step > 1 ? setStep(step - 1) : navigate({ to: "/dashboard" }));
+
+  const onUploadMedia = async (file: File) => {
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error("Image must be under 8 MB");
+      return;
+    }
+    setUploadingMedia(true);
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => {
+          const result = r.result as string;
+          resolve(result.split(",")[1]);
+        };
+        r.onerror = () => reject(new Error("Read failed"));
+        r.readAsDataURL(file);
+      });
+      const { url } = await uploadMedia({
+        data: { filename: file.name, contentType: file.type || "image/jpeg", base64 },
+      });
+      update("media_url", url);
+      toast.success("Image uploaded");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Upload failed");
+    } finally {
+      setUploadingMedia(false);
+    }
+  };
 
   const idx = step - 1;
   const isLast = step === total;
