@@ -127,3 +127,17 @@ export const checkMetaReady = createServerFn({ method: "GET" })
     if (!pages || pages.length === 0) return { ready: false, reason: "no_pages" as const };
     return { ready: true as const };
   });
+
+/** Lists active Facebook Pages the user has connected, used in the wizard for page selection */
+export const listMetaPages = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("meta_pages")
+      .select("page_id, page_name")
+      .eq("user_id", context.userId)
+      .eq("is_active", true)
+      .order("page_name", { ascending: true });
+    if (error) throw new Error(error.message);
+    return { pages: (data ?? []) as { page_id: string; page_name: string }[] };
+  });
