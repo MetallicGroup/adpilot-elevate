@@ -397,6 +397,7 @@ function StepLeadForm({ s, update, toggle }: { s: State; update: <K extends keyo
 function StepReview({ s }: { s: State }) {
   return (
     <div className="space-y-3">
+      <ReviewRow label="Platform" value={s.platform === "tiktok" ? "TikTok Ads" : "Meta Ads (Facebook & Instagram)"} />
       <ReviewRow label="Name" value={s.name} />
       <ReviewRow label="Objective" value={s.objective === "LEAD_GENERATION" ? "Lead generation" : "Conversions"} />
       <ReviewRow label="Budget" value={`${fmtMoney(s.budget)} ${s.budget_mode === "BUDGET_MODE_DAY" ? "/ day" : "lifetime"}`} />
@@ -418,7 +419,7 @@ function StepReview({ s }: { s: State }) {
       <div className="mt-6 card-floating p-4 flex items-start gap-3 text-sm">
         <Check className="w-4 h-4 mt-0.5 text-foreground" />
         <div className="text-muted-foreground">
-          Saved as a draft to your workspace. Connect TikTok in Settings to publish live.
+          Saved as a draft to your workspace. Connect {s.platform === "tiktok" ? "TikTok" : "Meta"} in Settings to publish live.
         </div>
       </div>
     </div>
