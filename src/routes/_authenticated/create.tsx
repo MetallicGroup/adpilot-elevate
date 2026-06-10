@@ -1,14 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Target, TrendingUp, Calendar, MapPin, Sparkles, Image as ImageIcon, FileText, Check, Music2, Facebook, Upload, Loader2 } from "lucide-react";
+import { Target, TrendingUp, Calendar, MapPin, Sparkles, Image as ImageIcon, FileText, Check, Music2, Facebook, Upload, Loader2, Plus, X } from "lucide-react";
 import { WizardShell, FieldLabel, ChoiceCard, Chip } from "@/components/wizard/WizardShell";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { saveCampaign } from "@/lib/campaigns.functions";
-import { checkMetaReady } from "@/lib/leads.functions";
+import { checkMetaReady, listMetaPages } from "@/lib/leads.functions";
 import { publishMetaCampaign, uploadAdMedia } from "@/lib/meta-publish.functions";
 import { fmtMoney } from "@/lib/format";
 
@@ -41,7 +41,9 @@ type State = {
   lf_title: string;
   lf_intro: string;
   lf_fields: string[];
+  lf_custom_questions: string[];
   lf_privacy_url: string;
+  page_id: string;
 };
 
 const LOCATIONS = ["United States", "United Kingdom", "Canada", "Australia", "Germany", "France", "Brazil", "Mexico", "Japan", "India"];
@@ -56,11 +58,14 @@ function CreateWizard() {
   const navigate = useNavigate();
   const submit = useServerFn(saveCampaign);
   const checkMeta = useServerFn(checkMetaReady);
+  const fetchPages = useServerFn(listMetaPages);
   const publishMeta = useServerFn(publishMetaCampaign);
   const uploadMedia = useServerFn(uploadAdMedia);
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [pages, setPages] = useState<{ page_id: string; page_name: string }[]>([]);
+  const [pagesLoading, setPagesLoading] = useState(false);
   const [s, setS] = useState<State>({
     platform: "tiktok",
     name: "",
@@ -81,8 +86,10 @@ function CreateWizard() {
     landing_url: "",
     lf_title: "",
     lf_intro: "",
-    lf_fields: ["Name", "Email"],
+    lf_fields: ["Name", "Phone"],
+    lf_custom_questions: [],
     lf_privacy_url: "",
+    page_id: "",
   });
 
   const update = <K extends keyof State>(k: K, v: State[K]) => setS((p) => ({ ...p, [k]: v }));
@@ -90,6 +97,19 @@ function CreateWizard() {
     const arr = s[k] as unknown as string[];
     update(k, (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]) as State[K]);
   };
+
+  // Load pages when Meta is selected
+  useEffect(() => {
+    if (s.platform !== "meta") return;
+    setPagesLoading(true);
+    fetchPages()
+      .then((r) => {
+        setPages(r.pages);
+        setS((p) => (p.page_id || r.pages.length === 0 ? p : { ...p, page_id: r.pages[0].page_id }));
+      })
+      .catch(() => {})
+      .finally(() => setPagesLoading(false));
+  }, [s.platform, fetchPages]);
 
   const total = s.objective === "LEAD_GENERATION" ? 6 : 5;
 
@@ -99,7 +119,11 @@ function CreateWizard() {
       case 2: return s.budget >= 5 && !!s.start_date;
       case 3: return s.locations.length > 0 && s.age_groups.length > 0;
       case 4: return s.headline.trim().length > 0 && s.landing_url.trim().length > 0;
-      case 5: return s.objective === "CONVERSIONS" ? true : (s.lf_title.trim().length > 0 && s.lf_fields.length > 0);
+      case 5: return s.objective === "CONVERSIONS"
+        ? true
+        : (s.lf_title.trim().length > 0
+            && (s.lf_fields.length > 0 || s.lf_custom_questions.some((q) => q.trim().length > 0))
+            && (s.platform !== "meta" || !!s.page_id));
       case 6: return true;
       default: return false;
     }
@@ -160,6 +184,7 @@ function CreateWizard() {
             title: s.lf_title.trim(),
             intro: s.lf_intro.trim(),
             fields: s.lf_fields,
+            custom_questions: s.lf_custom_questions.map((q) => q.trim()).filter(Boolean),
             privacy_url: s.lf_privacy_url.trim(),
           } : null,
           status: "draft",
@@ -169,7 +194,7 @@ function CreateWizard() {
       if (s.platform === "meta") {
         toast.loading("Publishing to Meta…", { id: "publish" });
         try {
-          await publishMeta({ data: { campaign_id: saved.id } });
+          await publishMeta({ data: { campaign_id: saved.id, page_id: s.page_id || undefined } });
           toast.success("Live on Meta! 🎉", { id: "publish" });
         } catch (e: any) {
           toast.error(e?.message ?? "Meta publish failed", { id: "publish", duration: 8000 });
@@ -235,7 +260,7 @@ function CreateWizard() {
       {step === 2 && <StepBudget s={s} update={update} />}
       {step === 3 && <StepAudience s={s} toggle={toggle} />}
       {step === 4 && <StepCreative s={s} update={update} onUploadMedia={onUploadMedia} uploadingMedia={uploadingMedia} />}
-      {step === 5 && s.objective === "LEAD_GENERATION" && <StepLeadForm s={s} update={update} toggle={toggle} />}
+      {step === 5 && s.objective === "LEAD_GENERATION" && <StepLeadForm s={s} update={update} toggle={toggle} pages={pages} pagesLoading={pagesLoading} />}
       {((step === 5 && s.objective === "CONVERSIONS") || step === 6) && <StepReview s={s} />}
     </WizardShell>
   );
