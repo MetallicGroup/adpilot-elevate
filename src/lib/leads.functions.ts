@@ -95,7 +95,7 @@ export const updateLead = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => UpdateInput.parse(d))
   .handler(async ({ data, context }) => {
-    const patch: Record<string, unknown> = {};
+    const patch: { status?: LeadStatus; notes?: string } = {};
     if (data.status) patch.status = data.status;
     if (typeof data.notes === "string") patch.notes = data.notes;
     const { error } = await context.supabase
