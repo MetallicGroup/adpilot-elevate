@@ -32,7 +32,6 @@ export const META_SCOPES = [
   "ads_read",
   "business_management",
   "leads_retrieval",
-  "pages_manage_ads",
   "pages_read_engagement",
   "pages_show_list",
 ];
