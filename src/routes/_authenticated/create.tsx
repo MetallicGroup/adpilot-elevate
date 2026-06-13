@@ -306,6 +306,24 @@ function CreateWizard() {
       )}
     </WizardShell>
 
+    <aside className="hidden xl:block fixed top-20 right-6 w-[360px] z-30 max-h-[calc(100vh-7rem)] overflow-y-auto">
+      <div className="rounded-2xl border border-border bg-background/80 backdrop-blur-xl shadow-2xl p-4 space-y-4">
+        <div className="flex items-center justify-between">
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Preview live</p>
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-400/10 text-emerald-300 border border-emerald-400/20">💾 salvat</span>
+        </div>
+        <AdPreview
+          pageName={pages.find((p) => p.page_id === s.page_id)?.page_name || (s.platform === "meta" ? "Pagina ta" : s.name || "Brandul tău")}
+          headline={s.headline}
+          description={s.description}
+          cta={s.cta}
+          mediaUrl={s.media_url}
+          landingUrl={s.landing_url}
+        />
+        <LiveEstimates s={s} />
+      </div>
+    </aside>
+
     <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
       <AlertDialogContent>
         <AlertDialogHeader>
