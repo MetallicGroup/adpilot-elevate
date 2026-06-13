@@ -3,8 +3,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { Search, Filter, Music2, Facebook, Inbox, Mail, Phone, Calendar, X } from "lucide-react";
-import { listLeads, updateLead, LEAD_STATUSES, type LeadRow, type LeadStatus } from "@/lib/leads.functions";
+import { Search, Filter, Music2, Facebook, Inbox, Mail, Phone, Calendar, X, Trash2, CheckSquare } from "lucide-react";
+import { listLeads, updateLead, bulkLeads, LEAD_STATUSES, type LeadRow, type LeadStatus } from "@/lib/leads.functions";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -24,22 +24,26 @@ const STATUS_LABELS: Record<LeadStatus, string> = {
 function LeadsPage() {
   const fetchLeads = useServerFn(listLeads);
   const patchLead = useServerFn(updateLead);
+  const bulkFn = useServerFn(bulkLeads);
 
   const [platform, setPlatform] = useState<"all" | "tiktok" | "meta">("all");
   const [status, setStatus] = useState<"all" | LeadStatus>("all");
   const [campaignId, setCampaignId] = useState<string | null>(null);
+  const [sinceDays, setSinceDays] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const [leads, setLeads] = useState<LeadRow[]>([]);
   const [campaigns, setCampaigns] = useState<{ id: string; name: string; platform: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [openLead, setOpenLead] = useState<LeadRow | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const reload = async () => {
     setLoading(true);
     try {
-      const r = await fetchLeads({ data: { platform, status, campaign_id: campaignId, search } });
+      const r = await fetchLeads({ data: { platform, status, campaign_id: campaignId, search, since_days: sinceDays } });
       setLeads(r.leads);
       setCampaigns(r.campaigns);
+      setSelected(new Set());
     } catch (e: any) {
       toast.error(e?.message ?? "Nu am putut încărca lead-urile");
     } finally {
@@ -51,7 +55,7 @@ function LeadsPage() {
     const t = setTimeout(reload, 200);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [platform, status, campaignId, search]);
+  }, [platform, status, campaignId, search, sinceDays]);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { all: leads.length };
@@ -69,6 +73,37 @@ function LeadsPage() {
       toast.error(e?.message ?? "Actualizare eșuată");
       reload();
     }
+  };
+
+  const toggleSel = (id: string) => {
+    setSelected((p) => {
+      const n = new Set(p);
+      n.has(id) ? n.delete(id) : n.add(id);
+      return n;
+    });
+  };
+  const toggleAll = () => {
+    if (selected.size === leads.length) setSelected(new Set());
+    else setSelected(new Set(leads.map((l) => l.id)));
+  };
+  const bulkStatus = async (s: LeadStatus) => {
+    const ids = Array.from(selected);
+    if (!ids.length) return;
+    try {
+      await bulkFn({ data: { ids, action: "status", status: s } });
+      toast.success(`${ids.length} lead-uri → ${STATUS_LABELS[s]}`);
+      reload();
+    } catch (e: any) { toast.error(e?.message ?? "Eșuat"); }
+  };
+  const bulkDelete = async () => {
+    const ids = Array.from(selected);
+    if (!ids.length) return;
+    if (!confirm(`Ștergi ${ids.length} lead-uri? Acțiunea e definitivă.`)) return;
+    try {
+      await bulkFn({ data: { ids, action: "delete" } });
+      toast.success(`${ids.length} lead-uri șterse`);
+      reload();
+    } catch (e: any) { toast.error(e?.message ?? "Eșuat"); }
   };
 
   const exportCsv = () => {
@@ -152,6 +187,17 @@ function LeadsPage() {
               </option>
             ))}
           </select>
+          <select
+            value={sinceDays ?? ""}
+            onChange={(e) => setSinceDays(e.target.value ? Number(e.target.value) : null)}
+            className="h-9 rounded-lg border border-border bg-background px-3 text-sm"
+          >
+            <option value="">Oricând</option>
+            <option value="1">Azi</option>
+            <option value="7">Ultimele 7 zile</option>
+            <option value="30">Ultimele 30 zile</option>
+            <option value="90">Ultimele 90 zile</option>
+          </select>
         </div>
         <div className="flex flex-wrap gap-2">
           <FilterChip active={status === "all"} onClick={() => setStatus("all")}>
@@ -164,6 +210,28 @@ function LeadsPage() {
           ))}
         </div>
       </div>
+
+      {selected.size > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
+          className="mt-4 card-floating p-3 flex flex-wrap items-center gap-2"
+        >
+          <span className="text-sm font-medium px-2">{selected.size} selectate</span>
+          <div className="mx-1 h-5 w-px bg-border" />
+          {LEAD_STATUSES.map((s) => (
+            <button key={s} onClick={() => bulkStatus(s)} className="press text-xs px-3 py-1.5 rounded-full border border-border hover:bg-secondary">
+              → {STATUS_LABELS[s]}
+            </button>
+          ))}
+          <div className="mx-1 h-5 w-px bg-border" />
+          <button onClick={bulkDelete} className="press text-xs px-3 py-1.5 rounded-full border border-destructive/40 text-destructive hover:bg-destructive/10 inline-flex items-center gap-1.5">
+            <Trash2 className="w-3 h-3" /> Șterge
+          </button>
+          <button onClick={() => setSelected(new Set())} className="ml-auto press text-xs px-3 py-1.5 rounded-full hover:bg-secondary">
+            Anulează
+          </button>
+        </motion.div>
+      )}
 
       {/* List */}
       <div className="mt-6">
@@ -195,8 +263,21 @@ function LeadsPage() {
           </div>
         ) : (
           <div className="card-floating divide-y divide-border overflow-hidden">
+            <div className="px-4 py-2 flex items-center gap-3 bg-secondary/30 text-xs text-muted-foreground">
+              <button onClick={toggleAll} className="press inline-flex items-center gap-1.5 hover:text-foreground">
+                <CheckSquare className="w-3.5 h-3.5" />
+                {selected.size === leads.length ? "Deselectează tot" : "Selectează tot"}
+              </button>
+            </div>
             {leads.map((l) => (
-              <LeadRowItem key={l.id} lead={l} onOpen={() => setOpenLead(l)} onChangeStatus={onChangeStatus} />
+              <LeadRowItem
+                key={l.id}
+                lead={l}
+                selected={selected.has(l.id)}
+                onToggleSelect={() => toggleSel(l.id)}
+                onOpen={() => setOpenLead(l)}
+                onChangeStatus={onChangeStatus}
+              />
             ))}
           </div>
         )}
@@ -225,15 +306,26 @@ function LeadsPage() {
 
 function LeadRowItem({
   lead,
+  selected,
+  onToggleSelect,
   onOpen,
   onChangeStatus,
 }: {
   lead: LeadRow;
+  selected: boolean;
+  onToggleSelect: () => void;
   onOpen: () => void;
   onChangeStatus: (l: LeadRow, s: LeadStatus) => void;
 }) {
   return (
-    <div className="p-4 flex items-center gap-4 hover:bg-secondary/40 transition-colors">
+    <div className={`p-4 flex items-center gap-4 hover:bg-secondary/40 transition-colors ${selected ? "bg-primary/5" : ""}`}>
+      <input
+        type="checkbox"
+        checked={selected}
+        onChange={onToggleSelect}
+        className="w-4 h-4 rounded border-border accent-primary shrink-0"
+        aria-label="Selectează lead"
+      />
       <button onClick={onOpen} className="flex-1 text-left min-w-0">
         <div className="flex items-center gap-2">
           {lead.platform === "meta" ? (
