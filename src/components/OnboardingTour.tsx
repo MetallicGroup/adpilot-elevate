@@ -27,7 +27,7 @@ const STEPS = [
   {
     emoji: "💬",
     title: "Asistent pe WhatsApp",
-    body: "Întreabă „Câte lead-uri azi?" sau „Pornește campania" direct pe WhatsApp. AI-ul răspunde în română.",
+    body: 'Întreabă „Câte lead-uri azi?" sau „Pornește campania" direct pe WhatsApp. AI-ul răspunde în română.',
     icon: MessageCircle,
   },
 ];
