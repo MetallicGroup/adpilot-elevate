@@ -101,7 +101,10 @@ export async function createLeadForm(
     const entry: Record<string, unknown> = { type: "CUSTOM", label, key };
     if (q.type === "choice" && Array.isArray(q.options) && q.options.length) {
       entry.options = q.options
-        .map((o) => ({ value: String(o).trim().slice(0, 100) }))
+        .map((o, idx) => ({
+          key: `option_${idx + 1}`,
+          value: String(o).trim().slice(0, 60),
+        }))
         .filter((o) => o.value);
     }
     questions.push(entry);
