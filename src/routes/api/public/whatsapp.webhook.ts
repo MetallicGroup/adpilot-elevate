@@ -219,6 +219,41 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
                 (text && text.trim()) ||
                 (mediaPath ? "[Userul a trimis o imagine/video]" : "[Mesaj fără text]");
 
+              // Fallback: if no media in this message, use the most recent media
+              // sent by the user in the last 24h so the agent can still create a campaign
+              // when the user confirms in a follow-up text message.
+              let effectiveMedia:
+                | { path: string; mime: string; signedUrl: string }
+                | null =
+                mediaPath && mediaMime && signedUrl
+                  ? { path: mediaPath, mime: mediaMime, signedUrl }
+                  : null;
+              if (!effectiveMedia) {
+                const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+                const { data: lastMedia } = await supabaseAdmin
+                  .from("whatsapp_messages")
+                  .select("media_path, media_mime, created_at")
+                  .eq("user_id", conn.user_id)
+                  .eq("direction", "in")
+                  .not("media_path", "is", null)
+                  .gte("created_at", since)
+                  .order("created_at", { ascending: false })
+                  .limit(1)
+                  .maybeSingle();
+                if (lastMedia?.media_path) {
+                  const { data: signed } = await supabaseAdmin.storage
+                    .from("wa-media")
+                    .createSignedUrl(lastMedia.media_path, 60 * 60 * 24 * 7);
+                  if (signed?.signedUrl) {
+                    effectiveMedia = {
+                      path: lastMedia.media_path,
+                      mime: lastMedia.media_mime || "image/jpeg",
+                      signedUrl: signed.signedUrl,
+                    };
+                  }
+                }
+              }
+
               try {
                 await runWhatsAppAgent(
                   {
@@ -229,10 +264,7 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
                       access_token: central.accessToken,
                     },
                     toPhone: fromPhone,
-                    latestMedia:
-                      mediaPath && mediaMime && signedUrl
-                        ? { path: mediaPath, mime: mediaMime, signedUrl }
-                        : null,
+                    latestMedia: effectiveMedia,
                   },
                   history,
                   userMessage,
