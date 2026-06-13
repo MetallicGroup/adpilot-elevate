@@ -45,7 +45,8 @@ Reguli importante:
 - Când generezi copy, oferă 2-3 variante scurte din care să aleagă.
 - Dacă userul cere ceva ce nu poți face, spune clar și sugerează o alternativă.
 - IMPORTANT pentru imagini: folosește DOAR fotografii trimise direct pe WhatsApp (vor apărea în câmpul "imagine disponibilă" din context). NU cere URL-uri externe și NU accepta link-uri spre site-uri (Pixabay, Google Images, etc.) — sistemul nu le poate descărca. Dacă userul nu a trimis încă o poză, cere-i clar: „Trimite-mi te rog poza pentru reclamă direct aici pe WhatsApp 📸".
-- Dacă pentru create_campaign nu există imagine disponibilă (latestMedia lipsește), NU apela tool-ul — întâi cere fotografia. Imaginea din ultimele 24h rămâne disponibilă pentru confirmări ulterioare.`;
+- Dacă pentru create_campaign nu există imagine disponibilă (latestMedia lipsește), NU apela tool-ul — întâi cere fotografia. Imaginea din ultimele 24h rămâne disponibilă pentru confirmări ulterioare.
+- NU cere niciodată userului URL-ul site-ului (landing_url). Pentru campanii Lead Generation formularul se completează direct pe Facebook/Instagram, nu e nevoie de site extern. Lasă landing_url gol și sistemul va folosi automat un URL valid implicit.`;
 
 export async function runWhatsAppAgent(
   ctx: AgentCtx,
@@ -380,7 +381,7 @@ async function createMetaCampaignFromAgent(
         description: args.description ?? "",
         primary_text: args.primary_text,
         cta: args.cta,
-        landing_url: args.landing_url ?? `https://www.facebook.com/${page.page_id}`,
+        landing_url: args.landing_url ?? "https://adpilot.ro",
         media_url: ctx.latestMedia!.signedUrl,
       },
       lead_form: { title: args.name, fields: ["Name", "Phone"] },
@@ -433,7 +434,7 @@ async function createMetaCampaignFromAgent(
       headline: args.headline,
       description: args.primary_text,
       cta: args.cta,
-      landing_url: args.landing_url ?? "",
+      landing_url: args.landing_url ?? "https://adpilot.ro",
       lead_gen_form_id: form.id,
     });
     const ad = await createAd(adAcc.ad_account_id, conn.access_token, {
