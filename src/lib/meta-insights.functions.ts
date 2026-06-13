@@ -54,3 +54,58 @@ export const refreshCampaignInsights = createServerFn({ method: "POST" })
     );
     return { skipped: false as const, snapshot: snap };
   });
+
+/**
+ * Refreshes insights for ALL of the user's live Meta campaigns (status active/paused
+ * with a meta_campaign_id). Used by the dashboard to keep totals current.
+ */
+export const refreshAllLiveCampaignInsights = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: campaigns } = await supabase
+      .from("campaigns")
+      .select("id, meta_campaign_id")
+      .eq("user_id", userId)
+      .eq("platform", "meta")
+      .not("meta_campaign_id", "is", null);
+    if (!campaigns || campaigns.length === 0) return { refreshed: 0 };
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: conn } = await supabaseAdmin
+      .from("meta_connections")
+      .select("access_token")
+      .eq("user_id", userId)
+      .eq("is_active", true)
+      .maybeSingle();
+    if (!conn?.access_token) return { refreshed: 0 };
+
+    const { fetchCampaignInsights } = await import("./meta-insights.server");
+    const today = new Date().toISOString().slice(0, 10);
+    let ok = 0;
+    await Promise.all(
+      campaigns.map(async (c) => {
+        try {
+          const snap = await fetchCampaignInsights(c.meta_campaign_id!, conn.access_token!);
+          await supabaseAdmin.from("performance_data").upsert(
+            {
+              user_id: userId,
+              campaign_id: c.id,
+              date: today,
+              spend: snap.spend,
+              impressions: snap.impressions,
+              clicks: snap.clicks,
+              ctr: snap.ctr,
+              leads: snap.leads,
+              cpl: snap.cpl,
+            },
+            { onConflict: "campaign_id,date" },
+          );
+          ok++;
+        } catch {
+          // ignore per-campaign failures
+        }
+      }),
+    );
+    return { refreshed: ok };
+  });
