@@ -798,6 +798,7 @@ async function publishCampaignToMeta(
         privacy_url: "https://adpilot.ro/privacy-policy",
         custom_questions: input.args.custom_questions,
       });
+      await supabaseAdmin.from("campaigns").update({ meta_lead_form_id: form.id }).eq("id", input.campaignRowId);
     }
     const metaCamp = await createCampaign(
       input.adAccountId,
@@ -806,6 +807,7 @@ async function publishCampaignToMeta(
       "ACTIVE",
       input.objective === "traffic" ? "OUTCOME_TRAFFIC" : "OUTCOME_LEADS",
     );
+    await supabaseAdmin.from("campaigns").update({ meta_campaign_id: metaCamp.id }).eq("id", input.campaignRowId);
     const adset = await createAdSet(input.adAccountId, input.accessToken, {
       name: `${input.args.name} — AdSet`,
       campaign_id: metaCamp.id,
@@ -820,6 +822,7 @@ async function publishCampaignToMeta(
       status: "ACTIVE",
       objective: input.objective,
     });
+    await supabaseAdmin.from("campaigns").update({ meta_adset_id: adset.id }).eq("id", input.campaignRowId);
     const isVideo = (input.mediaMime || "").toLowerCase().startsWith("video/");
     let image_hash: string | undefined;
     let video_id: string | undefined;
@@ -851,6 +854,7 @@ async function publishCampaignToMeta(
       creative_id: adCreative.id,
       status: "ACTIVE",
     });
+    await supabaseAdmin.from("campaigns").update({ meta_ad_id: ad.id }).eq("id", input.campaignRowId);
     await supabaseAdmin
       .from("campaigns")
       .update({
