@@ -57,13 +57,13 @@ type State = {
   page_id: string;
 };
 
-const LOCATIONS = ["United States", "United Kingdom", "Canada", "Australia", "Germany", "France", "Brazil", "Mexico", "Japan", "India"];
+const LOCATIONS = ["România", "Republica Moldova", "Marea Britanie", "Germania", "Italia", "Spania", "Franța", "SUA"];
 const AGES = ["13-17", "18-24", "25-34", "35-44", "45-54", "55+"];
-const GENDERS = ["All", "Female", "Male"];
-const INTERESTS = ["Beauty", "Fashion", "Fitness", "Food", "Gaming", "Tech", "Travel", "Finance", "Education", "Home", "Pets", "Auto"];
-const LANGUAGES = ["English", "Spanish", "French", "German", "Portuguese", "Japanese"];
-const CTAS = ["Learn More", "Sign Up", "Shop Now", "Download", "Apply Now", "Book Now"];
-const LEAD_FIELDS = ["Name", "Email", "Phone", "City", "Zip Code", "Company", "Job Title"];
+const GENDERS = ["Toți", "Femei", "Bărbați"];
+const INTERESTS = ["Frumusețe", "Modă", "Fitness", "Food", "Gaming", "Tech", "Călătorii", "Finanțe", "Educație", "Casă", "Animale", "Auto"];
+const LANGUAGES = ["Română", "Engleză", "Maghiară", "Germană"];
+const CTAS = ["Află mai mult", "Înscrie-te", "Cumpără acum", "Descarcă", "Aplică acum", "Rezervă acum"];
+const LEAD_FIELDS = ["Nume", "Email", "Telefon", "Oraș", "Cod poștal", "Companie", "Funcție"];
 
 function CreateWizard() {
   const navigate = useNavigate();
@@ -165,10 +165,10 @@ function CreateWizard() {
         if (!r.ready) {
           toast.error(
             r.reason === "no_pages"
-              ? "Connect at least one Facebook Page in Settings before publishing to Meta."
-              : "Connect your Meta account in Settings before publishing to Meta.",
+              ? "Conectează cel puțin o pagină Facebook în Setări înainte de a publica pe Meta."
+              : "Conectează contul Meta în Setări înainte de a publica.",
             {
-              action: { label: "Open Settings", onClick: () => navigate({ to: "/settings" }) },
+              action: { label: "Deschide Setări", onClick: () => navigate({ to: "/settings" }) },
             },
           );
           setSubmitting(false);
@@ -213,18 +213,18 @@ function CreateWizard() {
         toast.loading("Publishing to Meta…", { id: "publish" });
         try {
           await publishMeta({ data: { campaign_id: saved.id, page_id: s.page_id || undefined } });
-          toast.success("Live on Meta! 🎉", { id: "publish" });
+          toast.success("Live pe Meta! 🎉", { id: "publish" });
           navigate({ to: "/campaigns/$id", params: { id: saved.id } });
           return;
         } catch (e: any) {
-          toast.error(e?.message ?? "Meta publish failed", { id: "publish", duration: 8000 });
+          toast.error(e?.message ?? "Publicare Meta eșuată", { id: "publish", duration: 8000 });
         }
       } else {
-        toast.success("Campaign saved as draft");
+        toast.success("Campanie salvată ca draft 💾");
       }
       navigate({ to: "/dashboard" });
     } catch (e: any) {
-      toast.error(e?.message ?? "Couldn't save campaign");
+      toast.error(e?.message ?? "Nu am putut salva campania");
     } finally {
       setSubmitting(false);
     }
@@ -234,7 +234,7 @@ function CreateWizard() {
 
   const onUploadMedia = async (file: File) => {
     if (file.size > 8 * 1024 * 1024) {
-      toast.error("Image must be under 8 MB");
+      toast.error("Imaginea trebuie să fie sub 8 MB");
       return;
     }
     setUploadingMedia(true);
@@ -252,9 +252,9 @@ function CreateWizard() {
         data: { filename: file.name, contentType: file.type || "image/jpeg", base64 },
       });
       update("media_url", url);
-      toast.success("Image uploaded");
+      toast.success("Imagine încărcată ✨");
     } catch (e: any) {
-      toast.error(e?.message ?? "Upload failed");
+      toast.error(e?.message ?? "Încărcare eșuată");
     } finally {
       setUploadingMedia(false);
     }
