@@ -27,7 +27,11 @@ function Settings() {
       toast.success("Meta account connected");
       navigate({ to: "/settings", replace: true, search: {} as MetaSearch });
     } else if (search.meta === "error") {
-      toast.error(`Could not connect Meta${search.reason ? `: ${search.reason}` : ""}`);
+      const reason =
+        search.reason === "pages_manage_ads_missing"
+          ? "Meta did not grant pages_manage_ads. Add yourself as app tester/admin or submit the Meta app for App Review, then reconnect."
+          : search.reason;
+      toast.error(`Could not connect Meta${reason ? `: ${reason}` : ""}`);
       navigate({ to: "/settings", replace: true, search: {} as MetaSearch });
     }
   }, [search.meta, search.reason, navigate]);

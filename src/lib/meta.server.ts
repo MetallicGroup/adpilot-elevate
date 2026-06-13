@@ -32,6 +32,7 @@ export const META_SCOPES = [
   "ads_read",
   "business_management",
   "leads_retrieval",
+  "pages_manage_ads",
   "pages_read_engagement",
   "pages_show_list",
 ];
@@ -43,6 +44,7 @@ export function buildAuthorizeUrl(state: string) {
   url.searchParams.set("state", state);
   url.searchParams.set("scope", META_SCOPES.join(","));
   url.searchParams.set("response_type", "code");
+  url.searchParams.set("auth_type", "rerequest");
   return url.toString();
 }
 
@@ -82,6 +84,10 @@ export async function metaGet(path: string, accessToken: string) {
 
 export async function fetchMetaUser(accessToken: string) {
   return metaGet("/me?fields=id,name", accessToken);
+}
+
+export async function fetchMetaPermissions(accessToken: string) {
+  return metaGet("/me/permissions", accessToken);
 }
 
 export async function fetchAdAccounts(accessToken: string) {
