@@ -19,7 +19,7 @@ async function logAudit(
   details?: any,
 ) {
   try {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin: _sa } = await import("@/integrations/supabase/client.server"); const supabaseAdmin = _sa as any;
     const { data: au } = await supabaseAdmin.auth.admin.getUserById(actorId);
     await (supabaseAdmin as any).from("audit_log").insert({
       actor_id: actorId,
@@ -64,7 +64,7 @@ export const listAdminUsers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin: _sa } = await import("@/integrations/supabase/client.server"); const supabaseAdmin = _sa as any;
 
     const { data: profiles } = await supabaseAdmin
       .from("profiles")
@@ -156,7 +156,7 @@ export const getAdminUserDetail = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => UserIdInput.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin: _sa } = await import("@/integrations/supabase/client.server"); const supabaseAdmin = _sa as any;
 
     const { data: profile } = await supabaseAdmin
       .from("profiles")
@@ -227,7 +227,7 @@ export const listAllTickets = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin: _sa } = await import("@/integrations/supabase/client.server"); const supabaseAdmin = _sa as any;
 
     const { data: tickets } = await supabaseAdmin
       .from("support_tickets")
@@ -253,7 +253,7 @@ export const getTicketThread = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => TicketIdInput.parse(d))
   .handler(async ({ data, context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin: _sa } = await import("@/integrations/supabase/client.server"); const supabaseAdmin = _sa as any;
     const admin = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
     const isAdminUser = !!admin.data;
 
@@ -290,7 +290,7 @@ export const adminReplyTicket = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => AdminReplyInput.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin: _sa } = await import("@/integrations/supabase/client.server"); const supabaseAdmin = _sa as any;
     const { getCentralWhatsApp, sendWhatsAppMessage } = await import("@/lib/whatsapp.server");
 
     const { data: ticket } = await supabaseAdmin
@@ -360,7 +360,7 @@ export const setTicketStatus = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => SetStatusInput.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin: _sa } = await import("@/integrations/supabase/client.server"); const supabaseAdmin = _sa as any;
     const { error } = await supabaseAdmin
       .from("support_tickets")
       .update({ status: data.status })
@@ -381,7 +381,7 @@ export const setUserPlan = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => SetPlanInput.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin: _sa } = await import("@/integrations/supabase/client.server"); const supabaseAdmin = _sa as any;
     const patch: any = { plan: data.plan, subscription_status: data.subscription_status };
     if (data.trial_ends_at !== undefined) patch.trial_ends_at = data.trial_ends_at;
     const { error } = await supabaseAdmin.from("profiles").update(patch).eq("id", data.user_id);
@@ -395,7 +395,7 @@ export const getAdminDashboard = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin: _sa } = await import("@/integrations/supabase/client.server"); const supabaseAdmin = _sa as any;
 
     const now = new Date();
     const sevenDaysAgo = new Date(now.getTime() - 7 * 86400_000).toISOString();
@@ -487,7 +487,7 @@ export const updateUserAdmin = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => UpdateUserAdminInput.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin: _sa } = await import("@/integrations/supabase/client.server"); const supabaseAdmin = _sa as any;
     const patch: any = {};
     if (data.admin_notes !== undefined) patch.admin_notes = data.admin_notes;
     if (data.suspended !== undefined) patch.suspended = data.suspended;
@@ -513,7 +513,7 @@ export const listAllCampaigns = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin: _sa } = await import("@/integrations/supabase/client.server"); const supabaseAdmin = _sa as any;
     const { data: campaigns } = await supabaseAdmin
       .from("campaigns")
       .select("id, user_id, name, platform, status, budget, objective, created_at, meta_campaign_id")
@@ -558,7 +558,7 @@ export const getUserWhatsAppConversation = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => ConvInput.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin: _sa } = await import("@/integrations/supabase/client.server"); const supabaseAdmin = _sa as any;
     const { data: messages } = await supabaseAdmin
       .from("whatsapp_messages")
       .select("id, direction, msg_type, text, created_at, meta")
@@ -579,7 +579,7 @@ export const adminSendWhatsApp = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => AdminSendWAInput.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin: _sa } = await import("@/integrations/supabase/client.server"); const supabaseAdmin = _sa as any;
     const { getCentralWhatsApp, sendWhatsAppMessage } = await import("@/lib/whatsapp.server");
     const wa = getCentralWhatsApp();
     if (!wa) throw new Error("WhatsApp central neconfigurat");
@@ -615,7 +615,7 @@ export const createBroadcast = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => BroadcastInput.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin: _sa } = await import("@/integrations/supabase/client.server"); const supabaseAdmin = _sa as any;
     const { getCentralWhatsApp, sendWhatsAppMessage } = await import("@/lib/whatsapp.server");
     const wa = getCentralWhatsApp();
     if (!wa) throw new Error("WhatsApp central neconfigurat");
@@ -701,7 +701,7 @@ export const listBroadcasts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin: _sa } = await import("@/integrations/supabase/client.server"); const supabaseAdmin = _sa as any;
     const { data } = await (supabaseAdmin as any)
       .from("broadcasts")
       .select("*")
@@ -715,7 +715,7 @@ export const listAuditLog = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin: _sa } = await import("@/integrations/supabase/client.server"); const supabaseAdmin = _sa as any;
     const { data } = await (supabaseAdmin as any)
       .from("audit_log")
       .select("*")
@@ -735,7 +735,7 @@ export const setTicketPriority = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => TicketPriorityInput.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin: _sa } = await import("@/integrations/supabase/client.server"); const supabaseAdmin = _sa as any;
     const { error } = await supabaseAdmin
       .from("support_tickets")
       .update({ priority: data.priority })
@@ -756,7 +756,7 @@ export const adminSetCampaignStatus = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => CampaignStatusInput.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin: _sa } = await import("@/integrations/supabase/client.server"); const supabaseAdmin = _sa as any;
     const { error } = await supabaseAdmin
       .from("campaigns")
       .update({ status: data.status })
