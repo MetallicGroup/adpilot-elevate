@@ -85,9 +85,9 @@ export async function runWhatsAppAgent(
 
   if (isRetryPublishRequest(userMessage)) {
     const retry = await retryLastDraftCampaign(supabaseAdmin, ctx);
-    const text = "ok" in retry && retry.ok
-      ? "Gata — campania este LIVE acum ✅"
-      : `Nu a mers încă. Motivul real: ${retry.error}`;
+    const text = "error" in retry
+      ? `Nu a mers încă. Motivul real: ${retry.error}`
+      : "Gata — campania este LIVE acum ✅";
     await sendChunked(ctx, text);
     return { text };
   }
