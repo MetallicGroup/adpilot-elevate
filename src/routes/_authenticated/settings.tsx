@@ -120,7 +120,7 @@ function MetaConnectionCard() {
     setBusy(true);
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) {
-      toast.error("Not signed in");
+      toast.error("Nu ești autentificat");
       setBusy(false);
       return;
     }
@@ -128,40 +128,40 @@ function MetaConnectionCard() {
   }
 
   async function disconnect(id: string) {
-    if (!confirm("Disconnect this Meta account?")) return;
+    if (!confirm("Deconectezi acest cont Meta?")) return;
     const { error } = await supabase.from("meta_connections").delete().eq("id", id);
     if (error) return toast.error(error.message);
-    toast.success("Disconnected");
+    toast.success("Deconectat");
     refetch();
   }
 
   async function handleResync(connectionId: string) {
     try {
       const res = await resync({ data: { connectionId } });
-      toast.success(`Synced ${res.adAccounts} ad accounts, ${res.pages} pages`);
+      toast.success(`Sincronizat: ${res.adAccounts} conturi, ${res.pages} pagini`);
       refetch();
     } catch (e: any) {
-      toast.error(e?.message ?? "Sync failed");
+      toast.error(e?.message ?? "Sincronizare eșuată");
     }
   }
 
   async function selectAdAccount(connectionId: string, adAccountRowId: string) {
     try {
       await selectAd({ data: { connectionId, rowId: adAccountRowId } });
-      toast.success("Ad account selected");
+      toast.success("Cont de reclamă selectat");
       refetch();
     } catch (e: any) {
-      toast.error(e?.message ?? "Could not save ad account");
+      toast.error(e?.message ?? "Nu am putut salva contul");
     }
   }
 
   async function selectPage(connectionId: string, pageRowId: string) {
     try {
       await selectPg({ data: { connectionId, rowId: pageRowId } });
-      toast.success("Page selected");
+      toast.success("Pagină selectată");
       refetch();
     } catch (e: any) {
-      toast.error(e?.message ?? "Could not save page");
+      toast.error(e?.message ?? "Nu am putut salva pagina");
     }
   }
 
@@ -175,16 +175,16 @@ function MetaConnectionCard() {
       </div>
 
       {isLoading ? (
-        <p className="mt-3 text-sm text-muted-foreground">Loading…</p>
+        <p className="mt-3 text-sm text-muted-foreground">Se încarcă…</p>
       ) : connections.length === 0 ? (
         <>
-          <p className="mt-1 text-sm">No Meta account connected yet.</p>
+          <p className="mt-1 text-sm">Niciun cont Meta conectat încă.</p>
           <button
             onClick={connect}
             disabled={busy}
             className="press mt-4 w-full py-3 rounded-xl bg-[#1877F2] text-white text-sm font-medium hover:bg-[#1666d4] disabled:opacity-60"
           >
-            {busy ? "Redirecting…" : "Connect Meta Account"}
+            {busy ? "Redirecționare…" : "Conectează contul Meta"}
           </button>
         </>
       ) : (
@@ -203,14 +203,14 @@ function MetaConnectionCard() {
                   <button
                     onClick={() => handleResync(c.id)}
                     className="press p-2 rounded-lg hover:bg-secondary"
-                    title="Resync"
+                    title="Resincronizează"
                   >
                     <RefreshCw className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => disconnect(c.id)}
                     className="press p-2 rounded-lg hover:bg-secondary text-destructive"
-                    title="Disconnect"
+                    title="Deconectează"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -219,16 +219,16 @@ function MetaConnectionCard() {
 
               <div className="mt-3">
                 <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                  Ad accounts ({c.ad_accounts.length})
+                  Conturi de reclamă ({c.ad_accounts.length})
                 </p>
                 {c.ad_accounts.length === 0 ? (
                   <div className="mt-2 space-y-2">
-                    <p className="text-xs text-muted-foreground">None found.</p>
+                    <p className="text-xs text-muted-foreground">Niciun cont găsit.</p>
                     <button
                       onClick={() => handleResync(c.id)}
                       className="press w-full py-2 rounded-lg border border-border text-xs font-medium hover:bg-secondary"
                     >
-                      Sync ad accounts
+                      Sincronizează conturile
                     </button>
                   </div>
                 ) : (
@@ -253,11 +253,11 @@ function MetaConnectionCard() {
 
               <div className="mt-3">
                 <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                  Pages ({c.pages.length})
+                  Pagini ({c.pages.length})
                 </p>
                 {c.pages.length === 0 ? (
                   <p className="text-xs text-muted-foreground mt-1">
-                    No Facebook Pages found. Lead Ads require a Page linked to your
+                    Nicio pagină Facebook găsită. Lead Ads necesită o pagină legată la
                     Business Manager.
                   </p>
                 ) : (
@@ -285,7 +285,7 @@ function MetaConnectionCard() {
             disabled={busy}
             className="press w-full py-2.5 rounded-xl border border-border text-xs font-medium hover:bg-secondary"
           >
-            Connect another Meta account
+            Conectează alt cont Meta
           </button>
         </div>
       )}
