@@ -47,7 +47,22 @@ Reguli importante:
 - IMPORTANT pentru imagini: folosește DOAR fotografii trimise direct pe WhatsApp (vor apărea în câmpul "imagine disponibilă" din context). NU cere URL-uri externe și NU accepta link-uri spre site-uri (Pixabay, Google Images, etc.) — sistemul nu le poate descărca. Dacă userul nu a trimis încă o poză, cere-i clar: „Trimite-mi te rog poza pentru reclamă direct aici pe WhatsApp 📸".
 - Dacă pentru create_campaign nu există imagine disponibilă (latestMedia lipsește), NU apela tool-ul — întâi cere fotografia. Imaginea din ultimele 24h rămâne disponibilă pentru confirmări ulterioare.
 - NU cere niciodată userului URL-ul site-ului (landing_url). Pentru campanii Lead Generation formularul se completează direct pe Facebook/Instagram, nu e nevoie de site extern. Lasă landing_url gol și sistemul va folosi automat un URL valid implicit.
-- ATENȚIE LOCAȚIE: dacă userul menționează un oraș (ex: „pe București", „în Cluj", „target Timișoara") — FOLOSEȘTE parametrul "cities" la create_campaign cu numele orașului (ex: ["Bucharest"]). NU lăsa doar countries=["RO"] când userul a cerut explicit un oraș. Confirmă în mesajul de confirmare locația exactă (oraș + rază km).`;
+- ATENȚIE LOCAȚIE: dacă userul menționează un oraș (ex: „pe București", „în Cluj", „target Timișoara") — FOLOSEȘTE parametrul "cities" la create_campaign cu numele orașului (ex: ["Bucharest"]). NU lăsa doar countries=["RO"] când userul a cerut explicit un oraș. Confirmă în mesajul de confirmare locația exactă (oraș + rază km).
+
+FLOW OBLIGATORIU pentru CAMPANII NOI (înainte să apelezi create_campaign):
+1. Întreabă userul ce vrea să obțină din reclamă:
+   a) „Clienți potențiali" (lead form direct pe Facebook/Instagram — userul nu părăsește app-ul) → objective="leads"
+   b) „Trafic pe site" (trimite oamenii pe website-ul lui) → objective="traffic" (în acest caz cere URL-ul site-ului)
+2. Dacă a ales „clienți potențiali", întreabă-l dacă vrea să afle DOAR nume + telefon SAU și alte informații (ex: oraș, serviciu dorit, buget, dată preferată).
+3. Dacă vrea informații suplimentare, întreabă-l CONCRET ce vrea să afle. Pentru fiecare info propune userului dacă e mai bine cu „răspuns scurt" (user tastează) sau „grilă" (user alege dintr-o listă de opțiuni). Sugerează tu opțiunile când e logic (ex: pentru „serviciu" propune lista de servicii din contextul lui).
+4. Înainte să trimiți întrebările la Meta, REFORMULEAZĂ-le frumos și fără greșeli gramaticale, scurte (max 90 caractere fiecare), clare, profesioniste. Userul nu trebuie să vadă întrebări brute cu typos.
+5. Confirmă cu userul lista finală de întrebări (1 mesaj scurt cu bullet-uri) și abia apoi apelează create_campaign cu "custom_questions".
+
+Reguli pentru întrebări custom:
+- Max 8 întrebări per formular (limita practică Meta).
+- Întrebare scurtă: { label: "...", type: "short" }.
+- Întrebare grilă (multiple choice): { label: "...", type: "choice", options: ["Opțiunea 1", "Opțiunea 2", ...] } — max 6 opțiuni, fiecare max 60 caractere.
+- NU pune întrebări lungi (peste 90 caractere) — Meta le respinge sau apar urât în formular.`;
 
 export async function runWhatsAppAgent(
   ctx: AgentCtx,
@@ -246,15 +261,34 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
 
     create_campaign: tool({
       description:
-        "Creează și lansează o campanie Meta Lead Generation completă. Necesită imagine (folosește latestMedia trimis de user). Cere mereu CONFIRMAREA user-ului înainte să apelezi.",
+          "Creează și lansează o campanie Meta completă (Lead Generation SAU Traffic). Necesită imagine (latestMedia). Cere mereu CONFIRMAREA user-ului înainte să apelezi (inclusiv obiectiv, locație, întrebări).",
       inputSchema: z.object({
         name: z.string().max(80),
         daily_budget: z.number().positive().describe("Buget zilnic în RON/valuta cont"),
+          objective: z
+            .enum(["leads", "traffic"])
+            .default("leads")
+            .describe("'leads' = formular pe Facebook/IG, 'traffic' = trimite pe site (necesită landing_url)"),
         headline: z.string().max(40),
         primary_text: z.string().max(500),
         description: z.string().max(50).optional(),
         cta: z.enum(["Learn More", "Sign Up", "Shop Now", "Book Now", "Apply Now"]).default("Learn More"),
-        landing_url: z.string().url().optional(),
+          landing_url: z
+            .string()
+            .url()
+            .optional()
+            .describe("Obligatoriu doar pentru objective='traffic'. Pentru 'leads' lasă gol."),
+          custom_questions: z
+            .array(
+              z.object({
+                label: z.string().max(90),
+                type: z.enum(["short", "choice"]).default("short"),
+                options: z.array(z.string().max(60)).max(6).optional(),
+              }),
+            )
+            .max(8)
+            .optional()
+            .describe("Întrebări extra în formular peste nume+telefon. Doar pentru objective='leads'."),
         countries: z.array(z.string()).default(["RO"]).describe("Coduri ISO 2-litere, ex ['RO']"),
           cities: z
             .array(z.string())
@@ -270,6 +304,9 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
         if (!ctx.latestMedia) {
           return { error: "Userul nu a trimis imagine. Cere-i să trimită o poză pentru reclamă." };
         }
+          if (args.objective === "traffic" && (!args.landing_url || !/^https?:\/\//i.test(args.landing_url))) {
+            return { error: "Pentru objective='traffic' ai nevoie de landing_url valid (https://...). Cere-l userului." };
+          }
         return await createMetaCampaignFromAgent(supabaseAdmin, ctx, args);
       },
     }),
@@ -327,11 +364,13 @@ async function createMetaCampaignFromAgent(
   args: {
     name: string;
     daily_budget: number;
+    objective?: "leads" | "traffic";
     headline: string;
     primary_text: string;
     description?: string;
     cta: string;
     landing_url?: string;
+    custom_questions?: Array<{ label: string; type?: "short" | "choice"; options?: string[] }>;
     countries: string[];
     cities?: string[];
     city_radius_km?: number;
@@ -339,6 +378,7 @@ async function createMetaCampaignFromAgent(
     age_max: number;
   },
 ) {
+  const objective: "leads" | "traffic" = args.objective ?? "leads";
   // Resolve connection / ad account / page
   const { data: conn } = await supabaseAdmin
     .from("meta_connections")
@@ -400,7 +440,7 @@ async function createMetaCampaignFromAgent(
       user_id: ctx.userId,
       name: args.name,
       platform: "meta",
-      objective: "LEAD_GENERATION",
+      objective: objective === "traffic" ? "LINK_CLICKS" : "LEAD_GENERATION",
       status: "draft",
       budget: args.daily_budget,
       budget_mode: "BUDGET_MODE_DAY",
@@ -412,7 +452,14 @@ async function createMetaCampaignFromAgent(
         landing_url: args.landing_url ?? "https://adpilot.ro",
         media_url: ctx.latestMedia!.signedUrl,
       },
-      lead_form: { title: args.name, fields: ["Name", "Phone"] },
+      lead_form:
+        objective === "leads"
+          ? {
+              title: args.name,
+              fields: ["Name", "Phone"],
+              custom_questions: args.custom_questions ?? [],
+            }
+          : null,
       targeting: {
         locations: resolvedCityNames.length ? resolvedCityNames : args.countries,
         age_groups: [`${args.age_min}-${args.age_max}`],
@@ -434,12 +481,22 @@ async function createMetaCampaignFromAgent(
   } = await import("./meta-publish.server");
 
   try {
-    const form = await createLeadForm(page.page_id, page.page_access_token, {
-      name: args.name,
-      fields: ["Name", "Phone"],
-      privacy_url: "https://adpilot.ro/privacy-policy",
-    });
-    const metaCamp = await createCampaign(adAcc.ad_account_id, conn.access_token, args.name, "ACTIVE");
+    let form: { id: string } | null = null;
+    if (objective === "leads") {
+      form = await createLeadForm(page.page_id, page.page_access_token, {
+        name: args.name,
+        fields: ["Name", "Phone"],
+        privacy_url: "https://adpilot.ro/privacy-policy",
+        custom_questions: args.custom_questions,
+      });
+    }
+    const metaCamp = await createCampaign(
+      adAcc.ad_account_id,
+      conn.access_token,
+      args.name,
+      "ACTIVE",
+      objective === "traffic" ? "OUTCOME_TRAFFIC" : "OUTCOME_LEADS",
+    );
     const adset = await createAdSet(adAcc.ad_account_id, conn.access_token, {
       name: `${args.name} — AdSet`,
       campaign_id: metaCamp.id,
@@ -452,6 +509,7 @@ async function createMetaCampaignFromAgent(
         cities: cityKeys.length ? cityKeys : undefined,
       },
       status: "ACTIVE",
+      objective,
     });
     const image_hash = await uploadAdImageFromBytes(
       adAcc.ad_account_id,
@@ -468,7 +526,7 @@ async function createMetaCampaignFromAgent(
       description: args.primary_text,
       cta: args.cta,
       landing_url: args.landing_url ?? "https://adpilot.ro",
-      lead_gen_form_id: form.id,
+      lead_gen_form_id: form?.id,
     });
     const ad = await createAd(adAcc.ad_account_id, conn.access_token, {
       name: `${args.name} — Ad`,
@@ -482,7 +540,7 @@ async function createMetaCampaignFromAgent(
         meta_campaign_id: metaCamp.id,
         meta_adset_id: adset.id,
         meta_ad_id: ad.id,
-        meta_lead_form_id: form.id,
+        meta_lead_form_id: form?.id ?? null,
         status: "active",
       })
       .eq("id", campRow.id);
@@ -490,7 +548,10 @@ async function createMetaCampaignFromAgent(
       ok: true,
       campaign_id: campRow.id,
       meta_campaign_id: metaCamp.id,
-      message: "Campanie LIVE pe Meta ✅",
+      message:
+        objective === "traffic"
+          ? "Campanie LIVE (trafic pe site) ✅"
+          : "Campanie LIVE (lead form) ✅",
     };
   } catch (e: any) {
     return { error: e?.message ?? "Publish failed" };
