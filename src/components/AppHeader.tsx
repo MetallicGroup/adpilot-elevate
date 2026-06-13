@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Bell, Search, Sparkles } from "lucide-react";
+import { Bell, Search, Sparkles, LifeBuoy, Shield } from "lucide-react";
 import { openCommandPalette } from "@/components/CommandPalette";
+import { useServerFn } from "@tanstack/react-start";
+import { isAdmin as isAdminFn } from "@/lib/admin.functions";
 
 type Notif = { id: string; emoji: string; title: string; body: string; time: string };
 
@@ -39,10 +41,16 @@ export function applyAccent(hue: string) {
 export function AppHeader() {
   const [openNotif, setOpenNotif] = useState(false);
   const [accent, setAccent] = useState<string>("290");
+  const [admin, setAdmin] = useState(false);
+  const checkAdmin = useServerFn(isAdminFn);
 
   useEffect(() => {
     const saved = typeof window !== "undefined" ? localStorage.getItem(ACCENT_KEY) : null;
     if (saved) { setAccent(saved); applyAccent(saved); }
+  }, []);
+
+  useEffect(() => {
+    checkAdmin().then((r) => setAdmin(r.admin)).catch(() => {});
   }, []);
 
   const pickAccent = (hue: string) => {
@@ -72,6 +80,14 @@ export function AppHeader() {
         </button>
 
         <div className="flex items-center gap-1">
+          <Link to="/support" className="press w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary border border-transparent hover:border-border" title="Suport" aria-label="Suport">
+            <LifeBuoy className="w-4 h-4" />
+          </Link>
+          {admin && (
+            <Link to="/admin" className="press w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary border border-transparent hover:border-border text-primary" title="Admin" aria-label="Admin">
+              <Shield className="w-4 h-4" />
+            </Link>
+          )}
           <details className="relative">
             <summary className="press list-none cursor-pointer w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary border border-transparent hover:border-border" title="Accent">
               <span className="w-4 h-4 rounded-full ring-2 ring-background" style={{ background: `oklch(0.62 0.22 ${accent})` }} />
