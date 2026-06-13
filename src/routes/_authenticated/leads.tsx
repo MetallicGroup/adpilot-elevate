@@ -13,12 +13,12 @@ export const Route = createFileRoute("/_authenticated/leads")({
 });
 
 const STATUS_LABELS: Record<LeadStatus, string> = {
-  new: "New",
-  contacted: "Contacted",
-  qualified: "Qualified",
-  appointment_scheduled: "Appointment",
-  won: "Won",
-  lost: "Lost",
+  new: "Nou",
+  contacted: "Contactat",
+  qualified: "Calificat",
+  appointment_scheduled: "Programare",
+  won: "Câștigat",
+  lost: "Pierdut",
 };
 
 function LeadsPage() {
@@ -41,7 +41,7 @@ function LeadsPage() {
       setLeads(r.leads);
       setCampaigns(r.campaigns);
     } catch (e: any) {
-      toast.error(e?.message ?? "Couldn't load leads");
+      toast.error(e?.message ?? "Nu am putut încărca lead-urile");
     } finally {
       setLoading(false);
     }
@@ -64,15 +64,15 @@ function LeadsPage() {
     setLeads((prev) => prev.map((l) => (l.id === lead.id ? { ...l, status: next } : l)));
     try {
       await patchLead({ data: { id: lead.id, status: next } });
-      toast.success(`Marked as ${STATUS_LABELS[next]}`);
+      toast.success(`Marcat ca: ${STATUS_LABELS[next]}`);
     } catch (e: any) {
-      toast.error(e?.message ?? "Update failed");
+      toast.error(e?.message ?? "Actualizare eșuată");
       reload();
     }
   };
 
   const exportCsv = () => {
-    const header = ["Created", "Platform", "Campaign", "Name", "Email", "Phone", "Status", "Message"];
+    const header = ["Creat", "Platformă", "Campanie", "Nume", "Email", "Telefon", "Status", "Mesaj"];
     const lines = [header.join(",")];
     for (const l of leads) {
       lines.push(
@@ -107,16 +107,16 @@ function LeadsPage() {
       <div className="flex items-end justify-between gap-4">
         <div>
           <p className="text-sm text-muted-foreground">CRM</p>
-          <h1 className="font-serif text-3xl font-semibold mt-1">Leads</h1>
+          <h1 className="text-3xl font-bold tracking-tight mt-1">Lead-uri 📋</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {leads.length} {leads.length === 1 ? "lead" : "leads"} across TikTok & Meta
+            {leads.length} {leads.length === 1 ? "lead" : "lead-uri"} de pe TikTok & Meta
           </p>
         </div>
         <button
           onClick={exportCsv}
           className="press text-sm px-4 py-2 rounded-lg border border-border hover:bg-secondary"
         >
-          Export CSV
+          Exportă CSV
         </button>
       </div>
 
@@ -127,12 +127,12 @@ function LeadsPage() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search name, email or phone…"
+            placeholder="Caută după nume, email sau telefon…"
             className="h-11 pl-9 rounded-xl"
           />
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <FilterChip active={platform === "all"} onClick={() => setPlatform("all")}>All platforms</FilterChip>
+          <FilterChip active={platform === "all"} onClick={() => setPlatform("all")}>Toate platformele</FilterChip>
           <FilterChip active={platform === "tiktok"} onClick={() => setPlatform("tiktok")}>
             <Music2 className="w-3.5 h-3.5" /> TikTok
           </FilterChip>
@@ -145,7 +145,7 @@ function LeadsPage() {
             onChange={(e) => setCampaignId(e.target.value || null)}
             className="h-9 rounded-lg border border-border bg-background px-3 text-sm"
           >
-            <option value="">All campaigns</option>
+            <option value="">Toate campaniile</option>
             {campaigns.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name} ({c.platform})
@@ -155,7 +155,7 @@ function LeadsPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <FilterChip active={status === "all"} onClick={() => setStatus("all")}>
-            <Filter className="w-3.5 h-3.5" /> All ({counts.all})
+            <Filter className="w-3.5 h-3.5" /> Toate ({counts.all})
           </FilterChip>
           {LEAD_STATUSES.map((s) => (
             <FilterChip key={s} active={status === s} onClick={() => setStatus(s)}>
@@ -168,22 +168,30 @@ function LeadsPage() {
       {/* List */}
       <div className="mt-6">
         {loading ? (
-          <p className="text-sm text-muted-foreground text-center py-12">Loading…</p>
+          <div className="space-y-2">
+            {[1,2,3,4].map(i => (
+              <div key={i} className="card-floating p-4 animate-pulse">
+                <div className="h-4 w-1/3 bg-muted rounded" />
+                <div className="mt-2 h-3 w-1/2 bg-muted/60 rounded" />
+              </div>
+            ))}
+          </div>
         ) : leads.length === 0 ? (
           <div className="card-floating p-10 text-center">
-            <div className="w-12 h-12 rounded-full bg-secondary mx-auto flex items-center justify-center">
-              <Inbox className="w-5 h-5 text-muted-foreground" />
-            </div>
-            <h3 className="mt-4 font-semibold">No leads yet</h3>
+            <div className="text-5xl">📭</div>
+            <h3 className="mt-4 font-semibold">Niciun lead încă</h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              Lead-uri vor apărea aici automat când campaniile tale TikTok/Meta colectează contacte.
+              Lead-urile vor apărea aici automat când campaniile tale TikTok/Meta colectează contacte. ✨
             </p>
             <Link
               to="/create"
-              className="press mt-5 inline-flex items-center gap-2 px-5 py-3 bg-foreground text-background rounded-xl text-sm font-medium"
+              className="press mt-5 inline-flex items-center gap-2 px-5 py-3 btn-primary rounded-xl text-sm font-medium"
             >
-              Create campaign
+              Creează campanie
             </Link>
+            <div className="hidden">
+              <Inbox />
+            </div>
           </div>
         ) : (
           <div className="card-floating divide-y divide-border overflow-hidden">
@@ -289,10 +297,10 @@ function LeadDrawer({
         <div className="p-5 flex items-center justify-between border-b border-border">
           <div>
             <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
-              {lead.platform === "meta" ? "Meta lead" : "TikTok lead"}
+              {lead.platform === "meta" ? "Lead Meta" : "Lead TikTok"}
             </p>
             <h2 className="font-serif text-xl font-semibold mt-0.5">
-              {lead.full_name || lead.email || lead.phone || "Unnamed lead"}
+              {lead.full_name || lead.email || lead.phone || "Lead fără nume"}
             </h2>
           </div>
           <button onClick={onClose} className="press p-2 rounded-lg hover:bg-secondary"><X className="w-4 h-4" /></button>
@@ -300,10 +308,10 @@ function LeadDrawer({
 
         <div className="p-5 space-y-4 text-sm">
           <Field label="Email" value={lead.email} />
-          <Field label="Phone" value={lead.phone} />
-          <Field label="Campaign" value={lead.campaign_name ?? "—"} />
-          <Field label="Received" value={new Date(lead.created_at).toLocaleString()} />
-          {lead.message && <Field label="Message" value={lead.message} />}
+          <Field label="Telefon" value={lead.phone} />
+          <Field label="Campanie" value={lead.campaign_name ?? "—"} />
+          <Field label="Primit" value={new Date(lead.created_at).toLocaleString("ro-RO")} />
+          {lead.message && <Field label="Mesaj" value={lead.message} />}
 
           <div>
             <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Status</p>
@@ -323,18 +331,18 @@ function LeadDrawer({
           </div>
 
           <div>
-            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Notes</p>
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Notițe</p>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value.slice(0, 2000))}
-              placeholder="Add a follow-up note…"
+              placeholder="Adaugă o notiță de follow-up…"
               className="mt-2 rounded-xl min-h-28"
             />
             <button
               onClick={() => onSaveNotes(notes)}
               className="press mt-2 text-sm px-4 py-2 rounded-lg bg-foreground text-background"
             >
-              Save note
+              Salvează nota
             </button>
           </div>
         </div>
