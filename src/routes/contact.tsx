@@ -7,8 +7,11 @@ import { Mail, Building2 } from "lucide-react";
 export const Route = createFileRoute("/contact")({
   head: () => ({ meta: [
     { title: "Contact — AdPilot" },
-    { name: "description", content: "Get in touch with the AdPilot team. Sales, support, partnerships and press inquiries." },
-  ] }),
+    { name: "description", content: "Contactează echipa AdPilot. Vânzări, suport, parteneriate și presă." },
+    { property: "og:title", content: "Contact — AdPilot" },
+    { property: "og:description", content: "Răspundem în maxim o zi lucrătoare." },
+    { property: "og:url", content: "https://adpilot.ro/contact" },
+  ], links: [{ rel: "canonical", href: "https://adpilot.ro/contact" }] }),
   component: ContactPage,
 });
 
