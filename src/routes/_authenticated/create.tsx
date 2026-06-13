@@ -323,7 +323,7 @@ function StepGoal({ s, update }: { s: State; update: <K extends keyof State>(k: 
   return (
     <div className="space-y-6">
       <div className="space-y-3">
-        <FieldLabel>Platform</FieldLabel>
+        <FieldLabel>Platformă</FieldLabel>
         <div className="grid grid-cols-2 gap-3">
           <ChoiceCard active={s.platform === "tiktok"} onClick={() => update("platform", "tiktok")}>
             <div className="flex items-center gap-3">
@@ -332,7 +332,7 @@ function StepGoal({ s, update }: { s: State; update: <K extends keyof State>(k: 
               </div>
               <div>
                 <div className="font-semibold text-foreground">TikTok Ads</div>
-                <div className="mt-0.5 text-xs text-muted-foreground">Short-form video, Gen Z reach</div>
+                <div className="mt-0.5 text-xs text-muted-foreground">Video scurt, audiență Gen Z</div>
               </div>
             </div>
           </ChoiceCard>
@@ -350,24 +350,24 @@ function StepGoal({ s, update }: { s: State; update: <K extends keyof State>(k: 
         </div>
       </div>
       <div>
-        <FieldLabel>Campaign name</FieldLabel>
+        <FieldLabel>Numele campaniei</FieldLabel>
         <Input
           value={s.name}
           onChange={(e) => update("name", e.target.value.slice(0, 120))}
-          placeholder="Summer launch — leads"
+          placeholder="Lansare vară — lead-uri"
           className="h-12 rounded-xl"
         />
       </div>
       <div className="space-y-3">
-        <FieldLabel>Objective</FieldLabel>
+        <FieldLabel>Obiectiv</FieldLabel>
         <ChoiceCard active={s.objective === "LEAD_GENERATION"} onClick={() => update("objective", "LEAD_GENERATION")}>
           <div className="flex items-start gap-4">
             <div className="w-10 h-10 rounded-xl bg-foreground text-background flex items-center justify-center">
               <Target className="w-5 h-5" />
             </div>
             <div>
-              <div className="font-semibold text-foreground">Lead generation</div>
-              <div className="mt-0.5 text-sm text-muted-foreground">Collect contact info with an in-app form.</div>
+              <div className="font-semibold text-foreground">Generare lead-uri</div>
+              <div className="mt-0.5 text-sm text-muted-foreground">Colectează contacte printr-un formular integrat.</div>
             </div>
           </div>
         </ChoiceCard>
@@ -377,8 +377,8 @@ function StepGoal({ s, update }: { s: State; update: <K extends keyof State>(k: 
               <TrendingUp className="w-5 h-5" />
             </div>
             <div>
-              <div className="font-semibold text-foreground">Conversions</div>
-              <div className="mt-0.5 text-sm text-muted-foreground">Drive purchases or sign-ups on your site.</div>
+              <div className="font-semibold text-foreground">Conversii</div>
+              <div className="mt-0.5 text-sm text-muted-foreground">Generează achiziții sau înscrieri pe site-ul tău.</div>
             </div>
           </div>
         </ChoiceCard>
@@ -391,15 +391,15 @@ function StepBudget({ s, update }: { s: State; update: <K extends keyof State>(k
   return (
     <div className="space-y-8">
       <div>
-        <FieldLabel>Budget type</FieldLabel>
+        <FieldLabel>Tip buget</FieldLabel>
         <div className="flex gap-2">
-          <Chip active={s.budget_mode === "BUDGET_MODE_DAY"} onClick={() => update("budget_mode", "BUDGET_MODE_DAY")}>Daily</Chip>
-          <Chip active={s.budget_mode === "BUDGET_MODE_TOTAL"} onClick={() => update("budget_mode", "BUDGET_MODE_TOTAL")}>Lifetime</Chip>
+          <Chip active={s.budget_mode === "BUDGET_MODE_DAY"} onClick={() => update("budget_mode", "BUDGET_MODE_DAY")}>Zilnic</Chip>
+          <Chip active={s.budget_mode === "BUDGET_MODE_TOTAL"} onClick={() => update("budget_mode", "BUDGET_MODE_TOTAL")}>Total</Chip>
         </div>
       </div>
       <div>
         <div className="flex items-baseline justify-between">
-          <FieldLabel>{s.budget_mode === "BUDGET_MODE_DAY" ? "Daily budget" : "Lifetime budget"}</FieldLabel>
+          <FieldLabel>{s.budget_mode === "BUDGET_MODE_DAY" ? "Buget zilnic" : "Buget total"}</FieldLabel>
           <div className="font-serif text-3xl font-semibold tabular-nums">{fmtMoney(s.budget)}</div>
         </div>
         <Slider
@@ -417,11 +417,11 @@ function StepBudget({ s, update }: { s: State; update: <K extends keyof State>(k
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <FieldLabel><Calendar className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />Start</FieldLabel>
+          <FieldLabel><Calendar className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />Început</FieldLabel>
           <Input type="date" value={s.start_date} onChange={(e) => update("start_date", e.target.value)} className="h-12 rounded-xl" />
         </div>
         <div>
-          <FieldLabel><Calendar className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />End (optional)</FieldLabel>
+          <FieldLabel><Calendar className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />Sfârșit (opțional)</FieldLabel>
           <Input type="date" value={s.end_date} onChange={(e) => update("end_date", e.target.value)} className="h-12 rounded-xl" />
         </div>
       </div>
@@ -432,35 +432,35 @@ function StepBudget({ s, update }: { s: State; update: <K extends keyof State>(k
 function StepAudience({ s, toggle }: { s: State; toggle: <K extends keyof State>(k: K, v: string) => void }) {
   return (
     <div className="space-y-7">
-      <Section icon={<MapPin className="w-4 h-4" />} label="Locations">
+      <Section icon={<MapPin className="w-4 h-4" />} label="Locații">
         <div className="flex flex-wrap gap-2">
           {LOCATIONS.map((l) => (
             <Chip key={l} active={s.locations.includes(l)} onClick={() => toggle("locations", l)}>{l}</Chip>
           ))}
         </div>
       </Section>
-      <Section label="Age">
+      <Section label="Vârstă">
         <div className="flex flex-wrap gap-2">
           {AGES.map((a) => (
             <Chip key={a} active={s.age_groups.includes(a)} onClick={() => toggle("age_groups", a)}>{a}</Chip>
           ))}
         </div>
       </Section>
-      <Section label="Gender">
+      <Section label="Gen">
         <div className="flex flex-wrap gap-2">
           {GENDERS.map((g) => (
             <Chip key={g} active={s.genders.includes(g)} onClick={() => toggle("genders", g)}>{g}</Chip>
           ))}
         </div>
       </Section>
-      <Section icon={<Sparkles className="w-4 h-4" />} label="Interests">
+      <Section icon={<Sparkles className="w-4 h-4" />} label="Interese">
         <div className="flex flex-wrap gap-2">
           {INTERESTS.map((i) => (
             <Chip key={i} active={s.interests.includes(i)} onClick={() => toggle("interests", i)}>{i}</Chip>
           ))}
         </div>
       </Section>
-      <Section label="Languages">
+      <Section label="Limbi">
         <div className="flex flex-wrap gap-2">
           {LANGUAGES.map((l) => (
             <Chip key={l} active={s.languages.includes(l)} onClick={() => toggle("languages", l)}>{l}</Chip>
@@ -480,11 +480,11 @@ function StepCreative({ s, update, onUploadMedia, uploadingMedia }: {
   return (
     <div className="space-y-6">
       <div>
-        <FieldLabel><ImageIcon className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />Image</FieldLabel>
+        <FieldLabel><ImageIcon className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />Imagine</FieldLabel>
         <label className="press flex items-center gap-3 h-12 px-4 rounded-xl border border-dashed border-border hover:bg-secondary cursor-pointer">
           {uploadingMedia ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
           <span className="text-sm text-muted-foreground truncate">
-            {uploadingMedia ? "Uploading…" : s.media_url ? "Replace image" : "Upload image (JPG/PNG, max 8 MB)"}
+            {uploadingMedia ? "Se încarcă…" : s.media_url ? "Înlocuiește imaginea" : "Încarcă imagine (JPG/PNG, max 8 MB)"}
           </span>
           <input
             type="file"
@@ -494,27 +494,27 @@ function StepCreative({ s, update, onUploadMedia, uploadingMedia }: {
           />
         </label>
         {s.media_url && (
-          <p className="mt-1.5 text-[11px] text-muted-foreground truncate">Uploaded ✓</p>
+          <p className="mt-1.5 text-[11px] text-muted-foreground truncate">Încărcată ✓</p>
         )}
         <Input
           value={s.media_url}
           onChange={(e) => update("media_url", e.target.value)}
-          placeholder="…or paste an image URL"
+          placeholder="…sau lipește un URL"
           className="mt-2 h-10 rounded-xl text-xs"
         />
       </div>
       <div>
-        <FieldLabel>Headline</FieldLabel>
-        <Input value={s.headline} onChange={(e) => update("headline", e.target.value.slice(0, 80))} placeholder="The smarter way to launch" className="h-12 rounded-xl" />
+        <FieldLabel>Titlu</FieldLabel>
+        <Input value={s.headline} onChange={(e) => update("headline", e.target.value.slice(0, 80))} placeholder="Modul mai inteligent de a lansa" className="h-12 rounded-xl" />
         <p className="mt-1.5 text-[11px] text-muted-foreground">{s.headline.length}/80</p>
       </div>
       <div>
-        <FieldLabel>Description</FieldLabel>
-        <Textarea value={s.description} onChange={(e) => update("description", e.target.value.slice(0, 280))} placeholder="Tell people why they should care." className="rounded-xl min-h-24" />
+        <FieldLabel>Descriere</FieldLabel>
+        <Textarea value={s.description} onChange={(e) => update("description", e.target.value.slice(0, 280))} placeholder="Spune-le oamenilor de ce ar trebui să le pese." className="rounded-xl min-h-24" />
         <p className="mt-1.5 text-[11px] text-muted-foreground">{s.description.length}/280</p>
       </div>
       <div>
-        <FieldLabel>Call to action</FieldLabel>
+        <FieldLabel>Buton acțiune</FieldLabel>
         <div className="flex flex-wrap gap-2">
           {CTAS.map((c) => (
             <Chip key={c} active={s.cta === c} onClick={() => update("cta", c)}>{c}</Chip>
@@ -522,8 +522,8 @@ function StepCreative({ s, update, onUploadMedia, uploadingMedia }: {
         </div>
       </div>
       <div>
-        <FieldLabel>Landing URL</FieldLabel>
-        <Input value={s.landing_url} onChange={(e) => update("landing_url", e.target.value)} placeholder="https://yourbrand.com/offer" className="h-12 rounded-xl" />
+        <FieldLabel>URL landing page</FieldLabel>
+        <Input value={s.landing_url} onChange={(e) => update("landing_url", e.target.value)} placeholder="https://brandul-tau.ro/oferta" className="h-12 rounded-xl" />
       </div>
     </div>
   );
