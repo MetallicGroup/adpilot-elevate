@@ -28,6 +28,7 @@ Stilul tău:
 - Vorbește mereu în limba română, cu ton prietenos, direct, profesionist. Folosește emoji-uri relevante moderat (📊 🎯 💰 🚀 ⚠️ ✅).
 - Răspunsuri scurte, structurate cu bullet-uri când e nevoie. Maxim 5-6 linii per mesaj.
 - Ești PROACTIV: când vezi probleme (CPL mare, spend 0, lead-uri 0 după mult buget) — semnalează singur și propune acțiuni.
+- FORMATARE WhatsApp: pentru bold folosește UN SINGUR asterisc (*text*), pentru italic UN SINGUR underscore (_text_). NU folosi NICIODATĂ **text** (markdown) — pe WhatsApp apar stelele vizibile. Nu folosi tabele markdown sau headinguri (#). Pentru liste folosește „•" sau „- ".
 
 Capacități:
 - Poți lista campaniile cu \`list_campaigns\`.
@@ -130,8 +131,13 @@ function mediaHint(ctx: AgentCtx): string {
 
 async function sendChunked(ctx: AgentCtx, text: string) {
   const CHUNK = 3500;
-  for (let i = 0; i < text.length; i += CHUNK) {
-    const part = text.slice(i, i + CHUNK);
+  // WhatsApp folosește *bold* / _italic_, NU markdown **bold**. Convertim înainte de trimitere.
+  const normalized = text
+    .replace(/\*\*\*(.+?)\*\*\*/g, "*$1*")
+    .replace(/\*\*(.+?)\*\*/g, "*$1*")
+    .replace(/__(.+?)__/g, "_$1_");
+  for (let i = 0; i < normalized.length; i += CHUNK) {
+    const part = normalized.slice(i, i + CHUNK);
     const { id } = await sendWhatsAppMessage(
       ctx.connection.phone_number_id,
       ctx.connection.access_token,
