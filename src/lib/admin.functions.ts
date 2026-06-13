@@ -231,7 +231,7 @@ export const listAllTickets = createServerFn({ method: "GET" })
 
     const { data: tickets } = await supabaseAdmin
       .from("support_tickets")
-      .select("id, user_id, subject, status, last_message_at, created_at")
+      .select("id, user_id, subject, status, priority, last_message_at, created_at")
       .order("last_message_at", { ascending: false })
       .limit(200);
 
