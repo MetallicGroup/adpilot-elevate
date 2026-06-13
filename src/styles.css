@@ -240,3 +240,18 @@
   animation: float-orb 8s ease-in-out infinite;
 }
 
+
+/* Skeleton shimmer */
+.skeleton {
+  background: linear-gradient(90deg,
+    oklch(0.25 0.02 280 / 0.4) 0%,
+    oklch(0.35 0.04 290 / 0.5) 50%,
+    oklch(0.25 0.02 280 / 0.4) 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
