@@ -231,6 +231,43 @@ function Index() {
         </div>
       </Section>
 
+      {/* TESTIMONIALS */}
+      <Section eyebrow="❤️ Iubit de antreprenori" title="Rezultate reale, în 30 de zile.">
+        <div className="grid md:grid-cols-3 gap-5">
+          {testimonials.map((t, i) => (
+            <motion.div
+              key={t.name}
+              initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }} transition={{ delay: i * 0.08 }}
+              className="card-floating p-6 flex flex-col"
+            >
+              <div className="flex gap-0.5">
+                {[1,2,3,4,5].map(s => <Star key={s} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />)}
+              </div>
+              <p className="mt-4 text-sm leading-relaxed text-foreground/90 flex-1">„{t.quote}"</p>
+              <div className="mt-5 flex items-center gap-3 pt-4 border-t border-border">
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm shrink-0"
+                  style={{ background: `linear-gradient(135deg, oklch(0.62 0.22 ${t.hue}), oklch(0.7 0.2 ${t.hue + 30}))` }}
+                >
+                  {t.name.split(" ").map(n => n[0]).slice(0,2).join("")}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-medium text-sm truncate">{t.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{t.role}</p>
+                </div>
+                <span className="ml-auto text-[10px] uppercase tracking-wider font-mono text-primary">{t.metric}</span>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+        <div className="mt-12 flex flex-wrap items-center justify-center gap-x-10 gap-y-4 opacity-60">
+          {["Glamora", "MaxAuto", "Casa Verde", "Petshop.ro", "EduPlus", "FitZone"].map((b) => (
+            <span key={b} className="font-serif text-lg text-muted-foreground tracking-tight">{b}</span>
+          ))}
+        </div>
+      </Section>
+
       {/* PRICING */}
       <Section eyebrow="Prețuri" title="Simple. Transparente.">
         <p className="text-center text-muted-foreground -mt-6 mb-12">Începe gratuit. Upgrade când ești gata. 💎</p>
