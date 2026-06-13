@@ -155,12 +155,23 @@ export async function createAdSet(
       age_min: number;
       age_max: number;
       genders?: number[];
+      cities?: Array<{ key: string; radius?: number; distance_unit?: "kilometer" | "mile" }>;
     };
     status: "ACTIVE" | "PAUSED";
   },
 ) {
+  const geo_locations: Record<string, unknown> = {};
+  if (args.targeting.cities && args.targeting.cities.length) {
+    geo_locations.cities = args.targeting.cities.map((c) => ({
+      key: c.key,
+      radius: c.radius ?? 25,
+      distance_unit: c.distance_unit ?? "kilometer",
+    }));
+  } else {
+    geo_locations.countries = args.targeting.countries;
+  }
   const targeting: Record<string, unknown> = {
-    geo_locations: { countries: args.targeting.countries },
+    geo_locations,
     age_min: args.targeting.age_min,
     age_max: args.targeting.age_max,
     publisher_platforms: ["facebook", "instagram"],
@@ -189,6 +200,29 @@ export async function createAdSet(
     body.start_time = new Date().toISOString();
   }
   return metaPOST(`/act_${adAccountId}/adsets`, accessToken, body);
+}
+
+/** Search Meta's targeting database for a city by free-text name. Returns the first match. */
+export async function findCityKey(
+  accessToken: string,
+  query: string,
+  countryCode?: string,
+): Promise<{ key: string; name: string; country_code: string } | null> {
+  const params = new URLSearchParams({
+    location_types: JSON.stringify(["city"]),
+    type: "adgeolocation",
+    q: query,
+    limit: "10",
+    access_token: accessToken,
+  });
+  if (countryCode) params.set("country_code", countryCode);
+  const res = await fetch(`${GRAPH}/${metaApiVersion()}/search?${params.toString()}`);
+  const json = await res.json();
+  if (!res.ok || !Array.isArray(json.data) || !json.data.length) return null;
+  const preferred = countryCode
+    ? json.data.find((c: any) => c.country_code === countryCode) ?? json.data[0]
+    : json.data[0];
+  return { key: String(preferred.key), name: preferred.name, country_code: preferred.country_code };
 }
 
 export async function createAdCreative(

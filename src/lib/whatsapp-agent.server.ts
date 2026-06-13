@@ -46,7 +46,8 @@ Reguli importante:
 - Dacă userul cere ceva ce nu poți face, spune clar și sugerează o alternativă.
 - IMPORTANT pentru imagini: folosește DOAR fotografii trimise direct pe WhatsApp (vor apărea în câmpul "imagine disponibilă" din context). NU cere URL-uri externe și NU accepta link-uri spre site-uri (Pixabay, Google Images, etc.) — sistemul nu le poate descărca. Dacă userul nu a trimis încă o poză, cere-i clar: „Trimite-mi te rog poza pentru reclamă direct aici pe WhatsApp 📸".
 - Dacă pentru create_campaign nu există imagine disponibilă (latestMedia lipsește), NU apela tool-ul — întâi cere fotografia. Imaginea din ultimele 24h rămâne disponibilă pentru confirmări ulterioare.
-- NU cere niciodată userului URL-ul site-ului (landing_url). Pentru campanii Lead Generation formularul se completează direct pe Facebook/Instagram, nu e nevoie de site extern. Lasă landing_url gol și sistemul va folosi automat un URL valid implicit.`;
+- NU cere niciodată userului URL-ul site-ului (landing_url). Pentru campanii Lead Generation formularul se completează direct pe Facebook/Instagram, nu e nevoie de site extern. Lasă landing_url gol și sistemul va folosi automat un URL valid implicit.
+- ATENȚIE LOCAȚIE: dacă userul menționează un oraș (ex: „pe București", „în Cluj", „target Timișoara") — FOLOSEȘTE parametrul "cities" la create_campaign cu numele orașului (ex: ["Bucharest"]). NU lăsa doar countries=["RO"] când userul a cerut explicit un oraș. Confirmă în mesajul de confirmare locația exactă (oraș + rază km).`;
 
 export async function runWhatsAppAgent(
   ctx: AgentCtx,
@@ -255,6 +256,13 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
         cta: z.enum(["Learn More", "Sign Up", "Shop Now", "Book Now", "Apply Now"]).default("Learn More"),
         landing_url: z.string().url().optional(),
         countries: z.array(z.string()).default(["RO"]).describe("Coduri ISO 2-litere, ex ['RO']"),
+          cities: z
+            .array(z.string())
+            .optional()
+            .describe(
+              "Nume orașe pentru targetare locală (ex ['Bucharest','Cluj-Napoca']). Folosește în engleză sau română — sistemul caută cheia oficială Meta. Dacă e setat, countries e ignorat.",
+            ),
+          city_radius_km: z.number().int().min(10).max(80).default(25).describe("Raza în km în jurul orașelor"),
         age_min: z.number().int().min(13).max(65).default(18),
         age_max: z.number().int().min(13).max(65).default(65),
       }),
@@ -325,6 +333,8 @@ async function createMetaCampaignFromAgent(
     cta: string;
     landing_url?: string;
     countries: string[];
+    cities?: string[];
+    city_radius_km?: number;
     age_min: number;
     age_max: number;
   },
@@ -365,6 +375,24 @@ async function createMetaCampaignFromAgent(
   if (dlErr || !file) return { error: `Nu pot citi imaginea: ${dlErr?.message}` };
   const bytes = new Uint8Array(await file.arrayBuffer());
 
+  // Resolve city names → Meta city keys (if any)
+  const { findCityKey } = await import("./meta-publish.server");
+  const cityKeys: Array<{ key: string; radius?: number }> = [];
+  const resolvedCityNames: string[] = [];
+  if (args.cities && args.cities.length) {
+    const country = (args.countries?.[0] ?? "RO").toUpperCase();
+    for (const cityName of args.cities) {
+      const hit = await findCityKey(conn.access_token, cityName, country);
+      if (hit) {
+        cityKeys.push({ key: hit.key, radius: args.city_radius_km ?? 25 });
+        resolvedCityNames.push(hit.name);
+      }
+    }
+    if (!cityKeys.length) {
+      return { error: `Nu am găsit orașele cerute (${args.cities.join(", ")}) în Meta. Verifică numele.` };
+    }
+  }
+
   // Insert campaign row first
   const { data: campRow, error: insErr } = await supabaseAdmin
     .from("campaigns")
@@ -386,7 +414,7 @@ async function createMetaCampaignFromAgent(
       },
       lead_form: { title: args.name, fields: ["Name", "Phone"] },
       targeting: {
-        locations: args.countries,
+        locations: resolvedCityNames.length ? resolvedCityNames : args.countries,
         age_groups: [`${args.age_min}-${args.age_max}`],
         genders: ["All"],
       },
@@ -417,7 +445,12 @@ async function createMetaCampaignFromAgent(
       campaign_id: metaCamp.id,
       daily_budget_cents: Math.round(args.daily_budget * 100),
       page_id: page.page_id,
-      targeting: { countries: args.countries, age_min: args.age_min, age_max: args.age_max },
+      targeting: {
+        countries: args.countries,
+        age_min: args.age_min,
+        age_max: args.age_max,
+        cities: cityKeys.length ? cityKeys : undefined,
+      },
       status: "ACTIVE",
     });
     const image_hash = await uploadAdImageFromBytes(
