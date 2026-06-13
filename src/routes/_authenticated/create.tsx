@@ -549,14 +549,14 @@ function StepLeadForm({ s, update, toggle, pages, pagesLoading }: {
     <div className="space-y-6">
       {s.platform === "meta" && (
         <div>
-          <FieldLabel><Facebook className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />Facebook Page</FieldLabel>
+          <FieldLabel><Facebook className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />Pagină Facebook</FieldLabel>
           {pagesLoading ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground h-12 px-4 rounded-xl border border-border">
-              <Loader2 className="w-4 h-4 animate-spin" /> Loading pages…
+              <Loader2 className="w-4 h-4 animate-spin" /> Se încarcă paginile…
             </div>
           ) : pages.length === 0 ? (
             <div className="text-sm text-muted-foreground h-12 px-4 flex items-center rounded-xl border border-dashed border-border">
-              No pages connected. Connect a Page in Settings.
+              Nicio pagină conectată. Conectează una în Setări.
             </div>
           ) : (
             <div className="flex flex-wrap gap-2">
@@ -567,40 +567,40 @@ function StepLeadForm({ s, update, toggle, pages, pagesLoading }: {
               ))}
             </div>
           )}
-          <p className="mt-1.5 text-[11px] text-muted-foreground">Leads will be delivered to this Page.</p>
+          <p className="mt-1.5 text-[11px] text-muted-foreground">Lead-urile vor fi livrate către această pagină.</p>
         </div>
       )}
       <div>
-        <FieldLabel><FileText className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />Form title</FieldLabel>
-        <Input value={s.lf_title} onChange={(e) => update("lf_title", e.target.value.slice(0, 120))} placeholder="Get early access" className="h-12 rounded-xl" />
+        <FieldLabel><FileText className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />Titlu formular</FieldLabel>
+        <Input value={s.lf_title} onChange={(e) => update("lf_title", e.target.value.slice(0, 120))} placeholder="Primește acces în avanpremieră" className="h-12 rounded-xl" />
       </div>
       <div>
-        <FieldLabel>Intro message</FieldLabel>
-        <Textarea value={s.lf_intro} onChange={(e) => update("lf_intro", e.target.value.slice(0, 500))} placeholder="Tell us a bit about yourself — we'll reach out within 24 hours." className="rounded-xl min-h-20" />
+        <FieldLabel>Mesaj de intro</FieldLabel>
+        <Textarea value={s.lf_intro} onChange={(e) => update("lf_intro", e.target.value.slice(0, 500))} placeholder="Spune-ne câte ceva despre tine — te contactăm în 24 de ore." className="rounded-xl min-h-20" />
       </div>
       <div>
-        <FieldLabel>Standard fields</FieldLabel>
+        <FieldLabel>Câmpuri standard</FieldLabel>
         <div className="flex flex-wrap gap-2">
           {LEAD_FIELDS.map((f) => (
             <Chip key={f} active={s.lf_fields.includes(f)} onClick={() => toggle("lf_fields", f)}>{f}</Chip>
           ))}
         </div>
-        <p className="mt-1.5 text-[11px] text-muted-foreground">Pre-filled from the user's Facebook profile when available.</p>
+        <p className="mt-1.5 text-[11px] text-muted-foreground">Pre-completate din profilul Facebook al utilizatorului când e posibil.</p>
       </div>
       <div>
         <div className="flex items-center justify-between">
-          <FieldLabel>Custom questions</FieldLabel>
+          <FieldLabel>Întrebări personalizate</FieldLabel>
           <button
             type="button"
             onClick={addQuestion}
             className="press inline-flex items-center gap-1 text-xs font-medium text-foreground hover:opacity-70"
           >
-            <Plus className="w-3.5 h-3.5" /> Add question
+            <Plus className="w-3.5 h-3.5" /> Adaugă întrebare
           </button>
         </div>
         {s.lf_custom_questions.length === 0 ? (
           <p className="mt-2 text-[12px] text-muted-foreground">
-            Want to ask more than name & phone? Add your own questions (e.g. "What service are you interested in?", "Best time to call?").
+            Vrei să afli mai mult decât nume și telefon? Adaugă întrebări proprii (ex: „Ce serviciu te interesează?", „Când e cel mai bine să te sunăm?").
           </p>
         ) : (
           <div className="mt-2 space-y-2">
@@ -609,14 +609,14 @@ function StepLeadForm({ s, update, toggle, pages, pagesLoading }: {
                 <Input
                   value={q}
                   onChange={(e) => setQuestion(i, e.target.value)}
-                  placeholder="Type your question…"
+                  placeholder="Scrie întrebarea ta…"
                   className="h-11 rounded-xl"
                 />
                 <button
                   type="button"
                   onClick={() => removeQuestion(i)}
                   className="press w-11 h-11 flex items-center justify-center rounded-xl border border-border hover:bg-secondary text-muted-foreground"
-                  aria-label="Remove question"
+                  aria-label="Șterge întrebarea"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -626,8 +626,8 @@ function StepLeadForm({ s, update, toggle, pages, pagesLoading }: {
         )}
       </div>
       <div>
-        <FieldLabel>Privacy policy URL</FieldLabel>
-        <Input value={s.lf_privacy_url} onChange={(e) => update("lf_privacy_url", e.target.value)} placeholder="https://yourbrand.com/privacy" className="h-12 rounded-xl" />
+        <FieldLabel>URL politică de confidențialitate</FieldLabel>
+        <Input value={s.lf_privacy_url} onChange={(e) => update("lf_privacy_url", e.target.value)} placeholder="https://brandul-tau.ro/privacy" className="h-12 rounded-xl" />
       </div>
     </div>
   );
