@@ -78,8 +78,31 @@ export async function runWhatsAppAgent(
 
   const tools = buildTools(ctx, supabaseAdmin);
 
+  // Pull pending anomaly action proposed in last outbound message, if any.
+  const { data: lastOut } = await supabaseAdmin
+    .from("whatsapp_messages")
+    .select("meta, created_at")
+    .eq("user_id", ctx.userId)
+    .eq("direction", "out")
+    .not("meta", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const pendingAction =
+    lastOut?.meta && (lastOut.meta as any).anomaly_action
+      ? (lastOut.meta as any).anomaly_action
+      : null;
+
   const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
-    { role: "system", content: SYSTEM_PROMPT + mediaHint(ctx) },
+    {
+      role: "system",
+      content:
+        SYSTEM_PROMPT +
+        mediaHint(ctx) +
+        (pendingAction
+          ? `\n\n[Acțiune sugerată în așteptare] ${JSON.stringify(pendingAction)}. Dacă userul răspunde afirmativ (da/ok/yes/rezolvă/fă), execută-o direct prin tool-ul corespunzător (pause_campaign pentru kind=pause, generate_copy pentru regen_copy, generate_image+create_campaign sau update creative pentru regen_image) și confirmă scurt. Dacă userul refuză, lasă-o.`
+          : ""),
+    },
     ...history.map((m) => ({ role: m.role, content: m.content })),
     { role: "user", content: userMessage },
   ];
