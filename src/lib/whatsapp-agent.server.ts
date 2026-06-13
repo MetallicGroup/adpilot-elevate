@@ -511,17 +511,37 @@ async function createMetaCampaignFromAgent(
       status: "ACTIVE",
       objective,
     });
-    const image_hash = await uploadAdImageFromBytes(
-      adAcc.ad_account_id,
-      conn.access_token,
-      bytes,
-      "ad.jpg",
-      ctx.latestMedia!.mime || "image/jpeg",
-    );
+    const isVideo = (ctx.latestMedia!.mime || "").toLowerCase().startsWith("video/");
+    let image_hash: string | undefined;
+    let video_id: string | undefined;
+    let thumbnail_url: string | null | undefined;
+    if (isVideo) {
+      const { uploadAdVideoFromBytes } = await import("./meta-publish.server");
+      const ext = (ctx.latestMedia!.mime.split("/")[1] || "mp4").split(";")[0];
+      const v = await uploadAdVideoFromBytes(
+        adAcc.ad_account_id,
+        conn.access_token,
+        bytes,
+        `ad.${ext}`,
+        ctx.latestMedia!.mime || "video/mp4",
+      );
+      video_id = v.video_id;
+      thumbnail_url = v.thumbnail_url;
+    } else {
+      image_hash = await uploadAdImageFromBytes(
+        adAcc.ad_account_id,
+        conn.access_token,
+        bytes,
+        "ad.jpg",
+        ctx.latestMedia!.mime || "image/jpeg",
+      );
+    }
     const adCreative = await createAdCreative(adAcc.ad_account_id, conn.access_token, {
       name: `${args.name} — Creative`,
       page_id: page.page_id,
       image_hash,
+      video_id,
+      thumbnail_url,
       headline: args.headline,
       description: args.primary_text,
       cta: args.cta,
