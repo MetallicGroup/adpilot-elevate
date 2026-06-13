@@ -11,6 +11,29 @@ async function assertAdmin(ctx: { supabase: any; userId: string }) {
   if (!data) throw new Error("Forbidden");
 }
 
+async function logAudit(
+  actorId: string,
+  action: string,
+  target_type: string | null,
+  target_id: string | null,
+  details?: any,
+) {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: au } = await supabaseAdmin.auth.admin.getUserById(actorId);
+    await supabaseAdmin.from("audit_log").insert({
+      actor_id: actorId,
+      actor_email: au?.user?.email ?? null,
+      action,
+      target_type,
+      target_id,
+      details: details ?? null,
+    });
+  } catch (e) {
+    console.error("[audit] failed", e);
+  }
+}
+
 export const isAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
