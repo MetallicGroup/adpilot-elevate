@@ -173,6 +173,27 @@ function WhatsAppConnectionCard() {
             )}
           </div>
 
+          <div className="rounded-lg bg-muted/40 p-3 text-xs space-y-2">
+            <p className="text-muted-foreground">
+              Folosește datele de mai jos în Meta → WhatsApp → Configuration → Webhook:
+            </p>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-muted-foreground">Callback URL</span>
+              <button onClick={() => copyToClipboard(webhookUrl, "URL")} className="press flex items-center gap-1">
+                <Copy className="w-3 h-3" /> Copy
+              </button>
+            </div>
+            <code className="block break-all text-foreground">{webhookUrl}</code>
+            <div className="flex items-center justify-between gap-2 pt-2">
+              <span className="text-muted-foreground">Verify token</span>
+              <button onClick={() => copyToClipboard(conn.verify_token, "Token")} className="press flex items-center gap-1">
+                <Copy className="w-3 h-3" /> Copy
+              </button>
+            </div>
+            <code className="block break-all text-foreground">{conn.verify_token}</code>
+            <p className="text-muted-foreground">Subscribe la field <b>messages</b>.</p>
+          </div>
+
           <div className="rounded-xl border border-border p-3 space-y-2">
             <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Trimite test</p>
             <input
