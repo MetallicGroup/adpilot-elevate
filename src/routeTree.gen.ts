@@ -41,6 +41,7 @@ import { Route as ApiPublicHooksAnomalyScanRouteImport } from './routes/api/publ
 import { Route as ApiMetaAuthStartRouteImport } from './routes/api/meta.auth.start'
 import { Route as ApiMetaAuthCallbackRouteImport } from './routes/api/meta.auth.callback'
 import { Route as AuthenticatedAdminUsersIdRouteImport } from './routes/_authenticated/admin.users.$id'
+import { Route as AuthenticatedAdminTicketsIdRouteImport } from './routes/_authenticated/admin.tickets.$id'
 
 const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
   id: '/terms-of-service',
@@ -206,6 +207,12 @@ const AuthenticatedAdminUsersIdRoute =
     path: '/users/$id',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminTicketsIdRoute =
+  AuthenticatedAdminTicketsIdRouteImport.update({
+    id: '/tickets/$id',
+    path: '/tickets/$id',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -232,6 +239,7 @@ export interface FileRoutesByFullPath {
   '/whatsapp': typeof AuthenticatedWhatsappRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/api/public/admin-bootstrap': typeof ApiPublicAdminBootstrapRoute
+  '/admin/tickets/$id': typeof AuthenticatedAdminTicketsIdRoute
   '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
   '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
   '/api/meta/auth/start': typeof ApiMetaAuthStartRoute
@@ -265,6 +273,7 @@ export interface FileRoutesByTo {
   '/whatsapp': typeof AuthenticatedWhatsappRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/api/public/admin-bootstrap': typeof ApiPublicAdminBootstrapRoute
+  '/admin/tickets/$id': typeof AuthenticatedAdminTicketsIdRoute
   '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
   '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
   '/api/meta/auth/start': typeof ApiMetaAuthStartRoute
@@ -300,6 +309,7 @@ export interface FileRoutesById {
   '/_authenticated/whatsapp': typeof AuthenticatedWhatsappRoute
   '/_authenticated/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/api/public/admin-bootstrap': typeof ApiPublicAdminBootstrapRoute
+  '/_authenticated/admin/tickets/$id': typeof AuthenticatedAdminTicketsIdRoute
   '/_authenticated/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
   '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
   '/api/meta/auth/start': typeof ApiMetaAuthStartRoute
@@ -335,6 +345,7 @@ export interface FileRouteTypes {
     | '/whatsapp'
     | '/campaigns/$id'
     | '/api/public/admin-bootstrap'
+    | '/admin/tickets/$id'
     | '/admin/users/$id'
     | '/api/meta/auth/callback'
     | '/api/meta/auth/start'
@@ -368,6 +379,7 @@ export interface FileRouteTypes {
     | '/whatsapp'
     | '/campaigns/$id'
     | '/api/public/admin-bootstrap'
+    | '/admin/tickets/$id'
     | '/admin/users/$id'
     | '/api/meta/auth/callback'
     | '/api/meta/auth/start'
@@ -402,6 +414,7 @@ export interface FileRouteTypes {
     | '/_authenticated/whatsapp'
     | '/_authenticated/campaigns/$id'
     | '/api/public/admin-bootstrap'
+    | '/_authenticated/admin/tickets/$id'
     | '/_authenticated/admin/users/$id'
     | '/api/meta/auth/callback'
     | '/api/meta/auth/start'
@@ -663,14 +676,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminUsersIdRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/tickets/$id': {
+      id: '/_authenticated/admin/tickets/$id'
+      path: '/tickets/$id'
+      fullPath: '/admin/tickets/$id'
+      preLoaderRoute: typeof AuthenticatedAdminTicketsIdRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
   }
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminTicketsIdRoute: typeof AuthenticatedAdminTicketsIdRoute
   AuthenticatedAdminUsersIdRoute: typeof AuthenticatedAdminUsersIdRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminTicketsIdRoute: AuthenticatedAdminTicketsIdRoute,
   AuthenticatedAdminUsersIdRoute: AuthenticatedAdminUsersIdRoute,
 }
 
