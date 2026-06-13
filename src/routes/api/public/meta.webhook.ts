@@ -109,6 +109,41 @@ export const Route = createFileRoute("/api/public/meta/webhook")({
               .from("leads")
               .upsert(insert, { onConflict: "platform,external_lead_id", ignoreDuplicates: true });
             if (error) console.error("[meta webhook] insert error", error.message);
+
+            // Notify on WhatsApp if user has a connection
+            try {
+              const { data: waConn } = await supabaseAdmin
+                .from("whatsapp_connections")
+                .select("phone_number_id, access_token, display_phone")
+                .eq("user_id", page.user_id)
+                .eq("status", "active")
+                .maybeSingle();
+              if (waConn?.phone_number_id && waConn.access_token && waConn.display_phone) {
+                const { sendWhatsAppMessage } = await import("@/lib/whatsapp.server");
+                const campName = campaign_id
+                  ? (await supabaseAdmin.from("campaigns").select("name").eq("id", campaign_id).maybeSingle()).data?.name
+                  : "—";
+                const lines = [
+                  "🎯 *Lead nou*",
+                  campName ? `📣 Campania: ${campName}` : "",
+                  mapped.full_name ? `👤 ${mapped.full_name}` : "",
+                  mapped.phone ? `📞 ${mapped.phone}` : "",
+                  mapped.email ? `✉️ ${mapped.email}` : "",
+                  mapped.message ? `💬 "${mapped.message}"` : "",
+                  "",
+                  "Scrie *lead-uri* să vezi ultimele sau întreabă-mă orice 🚀",
+                ].filter(Boolean).join("\n");
+                const toPhone = waConn.display_phone.replace(/\D/g, "");
+                if (toPhone) {
+                  await sendWhatsAppMessage(waConn.phone_number_id, waConn.access_token, toPhone, {
+                    type: "text",
+                    text: lines,
+                  });
+                }
+              }
+            } catch (e) {
+              console.error("[meta webhook] WA notify failed", e);
+            }
           }
         }
 
