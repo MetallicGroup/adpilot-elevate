@@ -46,6 +46,8 @@ function CampaignDetail() {
   // Auto-refresh insights every 60s if it's a live Meta campaign
   useEffect(() => {
     if (!data?.campaign?.meta_campaign_id) return;
+    // Fire one immediately on mount, then every 60s
+    onRefresh(true);
     const t = setInterval(() => { onRefresh(true); }, 60_000);
     return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
