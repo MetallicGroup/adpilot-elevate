@@ -82,6 +82,81 @@ export type Database = {
           },
         ]
       }
+      audit_log: {
+        Row: {
+          action: string
+          actor_email: string | null
+          actor_id: string | null
+          created_at: string
+          details: Json | null
+          id: string
+          target_id: string | null
+          target_type: string | null
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Relationships: []
+      }
+      broadcasts: {
+        Row: {
+          body: string
+          channel: string
+          created_at: string
+          created_by: string | null
+          details: Json | null
+          id: string
+          segment: string
+          status: string
+          total_failed: number
+          total_recipients: number
+          total_sent: number
+        }
+        Insert: {
+          body: string
+          channel?: string
+          created_at?: string
+          created_by?: string | null
+          details?: Json | null
+          id?: string
+          segment?: string
+          status?: string
+          total_failed?: number
+          total_recipients?: number
+          total_sent?: number
+        }
+        Update: {
+          body?: string
+          channel?: string
+          created_at?: string
+          created_by?: string | null
+          details?: Json | null
+          id?: string
+          segment?: string
+          status?: string
+          total_failed?: number
+          total_recipients?: number
+          total_sent?: number
+        }
+        Relationships: []
+      }
       campaigns: {
         Row: {
           ad_account_id: string | null
@@ -433,29 +508,35 @@ export type Database = {
       }
       profiles: {
         Row: {
+          admin_notes: string | null
           created_at: string
           full_name: string | null
           id: string
           plan: string
           subscription_status: string
+          suspended: boolean
           trial_ends_at: string | null
           updated_at: string
         }
         Insert: {
+          admin_notes?: string | null
           created_at?: string
           full_name?: string | null
           id: string
           plan?: string
           subscription_status?: string
+          suspended?: boolean
           trial_ends_at?: string | null
           updated_at?: string
         }
         Update: {
+          admin_notes?: string | null
           created_at?: string
           full_name?: string | null
           id?: string
           plan?: string
           subscription_status?: string
+          suspended?: boolean
           trial_ends_at?: string | null
           updated_at?: string
         }
@@ -498,27 +579,33 @@ export type Database = {
       }
       support_tickets: {
         Row: {
+          assigned_to: string | null
           created_at: string
           id: string
           last_message_at: string
+          priority: string
           status: string
           subject: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          assigned_to?: string | null
           created_at?: string
           id?: string
           last_message_at?: string
+          priority?: string
           status?: string
           subject: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          assigned_to?: string | null
           created_at?: string
           id?: string
           last_message_at?: string
+          priority?: string
           status?: string
           subject?: string
           updated_at?: string

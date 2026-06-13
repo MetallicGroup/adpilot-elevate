@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { getTicketThread, adminReplyTicket, setTicketStatus, isAdmin } from "@/lib/admin.functions";
+import { getTicketThread, adminReplyTicket, setTicketStatus, setTicketPriority, isAdmin } from "@/lib/admin.functions";
 import { ArrowLeft, Loader2, Send } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/tickets/$id")({
@@ -14,6 +14,7 @@ function TicketPage() {
   const load = useServerFn(getTicketThread);
   const reply = useServerFn(adminReplyTicket);
   const toggle = useServerFn(setTicketStatus);
+  const setPrio = useServerFn(setTicketPriority);
 
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -60,6 +61,11 @@ function TicketPage() {
     await refresh();
   };
 
+  const changePriority = async (priority: string) => {
+    await setPrio({ data: { ticket_id: id, priority: priority as any } });
+    await refresh();
+  };
+
   if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="w-6 h-6 animate-spin" /></div>;
   if (data?.forbidden) return <div className="p-8 text-center">Acces interzis.</div>;
 
@@ -74,12 +80,24 @@ function TicketPage() {
           <h1 className="font-bold">{data.ticket.subject}</h1>
           <p className="text-xs text-muted-foreground">de la {data.user_name || data.ticket.user_id.slice(0, 8)}</p>
         </div>
-        <button
-          onClick={toggleStatus}
-          className="text-xs px-3 py-1.5 rounded-full border border-border hover:bg-secondary"
-        >
-          {data.ticket.status === "open" ? "Închide tichetul" : "Redeschide"}
-        </button>
+        <div className="flex items-center gap-2">
+          <select
+            value={data.ticket.priority ?? "normal"}
+            onChange={(e) => changePriority(e.target.value)}
+            className="h-8 text-xs rounded-md border border-border bg-secondary/40 px-2"
+          >
+            <option value="low">Low</option>
+            <option value="normal">Normal</option>
+            <option value="high">High</option>
+            <option value="urgent">Urgent</option>
+          </select>
+          <button
+            onClick={toggleStatus}
+            className="text-xs px-3 py-1.5 rounded-full border border-border hover:bg-secondary"
+          >
+            {data.ticket.status === "open" ? "Închide" : "Redeschide"}
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto rounded-xl border border-border bg-card p-4 space-y-3">
