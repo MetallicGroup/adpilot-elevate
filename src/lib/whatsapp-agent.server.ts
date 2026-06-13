@@ -46,8 +46,8 @@ Reguli importante:
 - Dacă userul cere ceva ce nu poți face, spune clar și sugerează o alternativă.
 - IMPORTANT pentru imagini: folosește DOAR fotografii trimise direct pe WhatsApp (vor apărea în câmpul "imagine disponibilă" din context). NU cere URL-uri externe și NU accepta link-uri spre site-uri (Pixabay, Google Images, etc.) — sistemul nu le poate descărca. Dacă userul nu a trimis încă o poză, cere-i clar: „Trimite-mi te rog poza pentru reclamă direct aici pe WhatsApp 📸".
 - Dacă pentru create_campaign nu există imagine disponibilă (latestMedia lipsește), NU apela tool-ul — întâi cere fotografia. Imaginea din ultimele 24h rămâne disponibilă pentru confirmări ulterioare.
-- NU cere niciodată userului URL-ul site-ului (landing_url). Pentru campanii Lead Generation formularul se completează direct pe Facebook/Instagram, nu e nevoie de site extern. Lasă landing_url gol și sistemul va folosi automat un URL valid implicit.`;
-ATENȚIE LOCAȚIE: dacă userul menționează un oraș (ex: „pe București", „în Cluj", „target Timișoara") — FOLOSEȘTE parametrul \`cities\` la create_campaign cu numele orașului (ex: ["Bucharest"]). NU lăsa doar countries=["RO"] când userul a cerut explicit un oraș. Confirmă în mesajul de confirmare locația exactă (oraș + rază km).`;
+- NU cere niciodată userului URL-ul site-ului (landing_url). Pentru campanii Lead Generation formularul se completează direct pe Facebook/Instagram, nu e nevoie de site extern. Lasă landing_url gol și sistemul va folosi automat un URL valid implicit.
+- ATENȚIE LOCAȚIE: dacă userul menționează un oraș (ex: „pe București", „în Cluj", „target Timișoara") — FOLOSEȘTE parametrul "cities" la create_campaign cu numele orașului (ex: ["Bucharest"]). NU lăsa doar countries=["RO"] când userul a cerut explicit un oraș. Confirmă în mesajul de confirmare locația exactă (oraș + rază km).`;
 
 export async function runWhatsAppAgent(
   ctx: AgentCtx,
