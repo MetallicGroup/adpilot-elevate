@@ -452,6 +452,98 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_connections: {
+        Row: {
+          access_token: string
+          created_at: string
+          display_phone: string | null
+          id: string
+          last_message_at: string | null
+          phone_number_id: string
+          status: string
+          updated_at: string
+          user_id: string
+          verify_token: string
+          waba_id: string | null
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          display_phone?: string | null
+          id?: string
+          last_message_at?: string | null
+          phone_number_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          verify_token: string
+          waba_id?: string | null
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          display_phone?: string | null
+          id?: string
+          last_message_at?: string | null
+          phone_number_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          verify_token?: string
+          waba_id?: string | null
+        }
+        Relationships: []
+      }
+      whatsapp_messages: {
+        Row: {
+          connection_id: string | null
+          created_at: string
+          direction: string
+          id: string
+          media_mime: string | null
+          media_path: string | null
+          msg_type: string
+          text: string | null
+          tool_calls: Json | null
+          user_id: string
+          wa_message_id: string | null
+        }
+        Insert: {
+          connection_id?: string | null
+          created_at?: string
+          direction: string
+          id?: string
+          media_mime?: string | null
+          media_path?: string | null
+          msg_type?: string
+          text?: string | null
+          tool_calls?: Json | null
+          user_id: string
+          wa_message_id?: string | null
+        }
+        Update: {
+          connection_id?: string | null
+          created_at?: string
+          direction?: string
+          id?: string
+          media_mime?: string | null
+          media_path?: string | null
+          msg_type?: string
+          text?: string | null
+          tool_calls?: Json | null
+          user_id?: string
+          wa_message_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_messages_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
