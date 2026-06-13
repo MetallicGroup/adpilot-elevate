@@ -454,42 +454,51 @@ export type Database = {
       }
       whatsapp_connections: {
         Row: {
-          access_token: string
+          access_token: string | null
+          activated_at: string | null
+          activation_code: string | null
           created_at: string
           display_phone: string | null
           id: string
           last_message_at: string | null
-          phone_number_id: string
+          phone_number_id: string | null
           status: string
           updated_at: string
           user_id: string
-          verify_token: string
+          user_phone: string | null
+          verify_token: string | null
           waba_id: string | null
         }
         Insert: {
-          access_token: string
+          access_token?: string | null
+          activated_at?: string | null
+          activation_code?: string | null
           created_at?: string
           display_phone?: string | null
           id?: string
           last_message_at?: string | null
-          phone_number_id: string
+          phone_number_id?: string | null
           status?: string
           updated_at?: string
           user_id: string
-          verify_token: string
+          user_phone?: string | null
+          verify_token?: string | null
           waba_id?: string | null
         }
         Update: {
-          access_token?: string
+          access_token?: string | null
+          activated_at?: string | null
+          activation_code?: string | null
           created_at?: string
           display_phone?: string | null
           id?: string
           last_message_at?: string | null
-          phone_number_id?: string
+          phone_number_id?: string | null
           status?: string
           updated_at?: string
           user_id?: string
-          verify_token?: string
+          user_phone?: string | null
+          verify_token?: string | null
           waba_id?: string | null
         }
         Relationships: []
