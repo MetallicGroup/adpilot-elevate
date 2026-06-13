@@ -333,6 +333,8 @@ async function createMetaCampaignFromAgent(
     cta: string;
     landing_url?: string;
     countries: string[];
+    cities?: string[];
+    city_radius_km?: number;
     age_min: number;
     age_max: number;
   },
@@ -373,6 +375,24 @@ async function createMetaCampaignFromAgent(
   if (dlErr || !file) return { error: `Nu pot citi imaginea: ${dlErr?.message}` };
   const bytes = new Uint8Array(await file.arrayBuffer());
 
+  // Resolve city names → Meta city keys (if any)
+  const { findCityKey } = await import("./meta-publish.server");
+  const cityKeys: Array<{ key: string; radius?: number }> = [];
+  const resolvedCityNames: string[] = [];
+  if (args.cities && args.cities.length) {
+    const country = (args.countries?.[0] ?? "RO").toUpperCase();
+    for (const cityName of args.cities) {
+      const hit = await findCityKey(conn.access_token, cityName, country);
+      if (hit) {
+        cityKeys.push({ key: hit.key, radius: args.city_radius_km ?? 25 });
+        resolvedCityNames.push(hit.name);
+      }
+    }
+    if (!cityKeys.length) {
+      return { error: `Nu am găsit orașele cerute (${args.cities.join(", ")}) în Meta. Verifică numele.` };
+    }
+  }
+
   // Insert campaign row first
   const { data: campRow, error: insErr } = await supabaseAdmin
     .from("campaigns")
@@ -394,7 +414,7 @@ async function createMetaCampaignFromAgent(
       },
       lead_form: { title: args.name, fields: ["Name", "Phone"] },
       targeting: {
-        locations: args.countries,
+        locations: resolvedCityNames.length ? resolvedCityNames : args.countries,
         age_groups: [`${args.age_min}-${args.age_max}`],
         genders: ["All"],
       },
@@ -425,7 +445,12 @@ async function createMetaCampaignFromAgent(
       campaign_id: metaCamp.id,
       daily_budget_cents: Math.round(args.daily_budget * 100),
       page_id: page.page_id,
-      targeting: { countries: args.countries, age_min: args.age_min, age_max: args.age_max },
+      targeting: {
+        countries: args.countries,
+        age_min: args.age_min,
+        age_max: args.age_max,
+        cities: cityKeys.length ? cityKeys : undefined,
+      },
       status: "ACTIVE",
     });
     const image_hash = await uploadAdImageFromBytes(
