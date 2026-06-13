@@ -47,6 +47,7 @@ Reguli importante:
 - IMPORTANT pentru imagini: folosește DOAR fotografii trimise direct pe WhatsApp (vor apărea în câmpul "imagine disponibilă" din context). NU cere URL-uri externe și NU accepta link-uri spre site-uri (Pixabay, Google Images, etc.) — sistemul nu le poate descărca. Dacă userul nu a trimis încă o poză, cere-i clar: „Trimite-mi te rog poza pentru reclamă direct aici pe WhatsApp 📸".
 - Dacă pentru create_campaign nu există imagine disponibilă (latestMedia lipsește), NU apela tool-ul — întâi cere fotografia. Imaginea din ultimele 24h rămâne disponibilă pentru confirmări ulterioare.
 - NU cere niciodată userului URL-ul site-ului (landing_url). Pentru campanii Lead Generation formularul se completează direct pe Facebook/Instagram, nu e nevoie de site extern. Lasă landing_url gol și sistemul va folosi automat un URL valid implicit.`;
+ATENȚIE LOCAȚIE: dacă userul menționează un oraș (ex: „pe București", „în Cluj", „target Timișoara") — FOLOSEȘTE parametrul \`cities\` la create_campaign cu numele orașului (ex: ["Bucharest"]). NU lăsa doar countries=["RO"] când userul a cerut explicit un oraș. Confirmă în mesajul de confirmare locația exactă (oraș + rază km).`;
 
 export async function runWhatsAppAgent(
   ctx: AgentCtx,
@@ -255,6 +256,13 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
         cta: z.enum(["Learn More", "Sign Up", "Shop Now", "Book Now", "Apply Now"]).default("Learn More"),
         landing_url: z.string().url().optional(),
         countries: z.array(z.string()).default(["RO"]).describe("Coduri ISO 2-litere, ex ['RO']"),
+          cities: z
+            .array(z.string())
+            .optional()
+            .describe(
+              "Nume orașe pentru targetare locală (ex ['Bucharest','Cluj-Napoca']). Folosește în engleză sau română — sistemul caută cheia oficială Meta. Dacă e setat, countries e ignorat.",
+            ),
+          city_radius_km: z.number().int().min(10).max(80).default(25).describe("Raza în km în jurul orașelor"),
         age_min: z.number().int().min(13).max(65).default(18),
         age_max: z.number().int().min(13).max(65).default(65),
       }),
