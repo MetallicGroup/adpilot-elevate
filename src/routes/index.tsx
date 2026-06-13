@@ -5,6 +5,7 @@ import {
   Star, PlayCircle,
 } from "lucide-react";
 import { MarketingLayout } from "@/components/marketing/MarketingLayout";
+import { IphoneWhatsAppMockup } from "@/components/marketing/IphoneWhatsAppMockup";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -30,45 +31,51 @@ function Index() {
              style={{ background: "radial-gradient(circle, oklch(0.7 0.2 320 / 0.15), transparent 70%)" }} />
 
         <div className="relative max-w-6xl mx-auto w-full">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center max-w-4xl mx-auto"
-          >
+          <div className="grid md:grid-cols-2 gap-12 md:gap-8 items-center">
             <motion.div
-              initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass text-xs font-medium text-muted-foreground"
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="text-center md:text-left"
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-success pulse-dot text-success" />
-              ✨ Live acum — campanii în 60 de secunde
+              <motion.div
+                initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass text-xs font-medium text-muted-foreground"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-success pulse-dot text-success" />
+                ✨ Live acum — campanii în 60 de secunde
+              </motion.div>
+
+              <h1 className="mt-8 text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight">
+                Reclame TikTok.<br/>
+                <span className="gradient-text">Fără agenție.</span>
+              </h1>
+
+              <p className="mt-6 text-lg text-muted-foreground leading-relaxed max-w-xl mx-auto md:mx-0">
+                AdPilot creează, lansează și optimizează campaniile tale TikTok în câteva minute — iar fiecare lead ajunge direct pe WhatsApp-ul tău. ✨
+              </p>
+
+              <div className="mt-10 flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
+                <Link to="/auth" className="press btn-primary inline-flex items-center justify-center gap-2 px-7 py-4 rounded-xl font-semibold">
+                  Începe gratuit <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link to="/contact" className="press inline-flex items-center justify-center gap-2 px-7 py-4 glass rounded-xl font-medium text-foreground hover:bg-card transition-colors">
+                  <PlayCircle className="w-4 h-4" /> Vezi demo
+                </Link>
+              </div>
+
+              <div className="mt-10 flex items-center justify-center md:justify-start gap-3 text-sm text-muted-foreground">
+                <div className="flex">
+                  {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />)}
+                </div>
+                <span>Iubit de 200+ afaceri din România 🇷🇴</span>
+              </div>
             </motion.div>
 
-            <h1 className="mt-8 text-5xl md:text-7xl font-extrabold leading-[1.05] tracking-tight">
-              Reclame TikTok.<br/>
-              <span className="gradient-text">Fără agenție.</span>
-            </h1>
-
-            <p className="mt-6 text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-              AdPilot creează, lansează și optimizează campaniile tale TikTok în câteva minute — iar fiecare lead ajunge direct pe WhatsApp-ul tău. ✨
-            </p>
-
-            <div className="mt-10 flex flex-col sm:flex-row gap-3 justify-center">
-              <Link to="/auth" className="press btn-primary inline-flex items-center justify-center gap-2 px-7 py-4 rounded-xl font-semibold">
-                Începe gratuit <ArrowRight className="w-4 h-4" />
-              </Link>
-              <Link to="/contact" className="press inline-flex items-center justify-center gap-2 px-7 py-4 glass rounded-xl font-medium text-foreground hover:bg-card transition-colors">
-                <PlayCircle className="w-4 h-4" /> Vezi demo
-              </Link>
+            <div className="flex justify-center md:justify-end">
+              <IphoneWhatsAppMockup />
             </div>
-
-            <div className="mt-10 flex items-center justify-center gap-3 text-sm text-muted-foreground">
-              <div className="flex">
-                {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />)}
-              </div>
-              <span>Iubit de 200+ afaceri din România 🇷🇴</span>
-            </div>
-          </motion.div>
+          </div>
 
           {/* Dashboard mockup */}
           <motion.div
