@@ -31,6 +31,7 @@ import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCreateRouteImport } from './routes/_authenticated/create'
+import { Route as ApiPublicAdminBootstrapRouteImport } from './routes/api/public/admin-bootstrap'
 import { Route as AuthenticatedCampaignsIdRouteImport } from './routes/_authenticated/campaigns.$id'
 import { Route as ApiPublicWhatsappWebhookRouteImport } from './routes/api/public/whatsapp.webhook'
 import { Route as ApiPublicMetaWebhookRouteImport } from './routes/api/public/meta.webhook'
@@ -148,6 +149,11 @@ const AuthenticatedCreateRoute = AuthenticatedCreateRouteImport.update({
   path: '/create',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicAdminBootstrapRoute = ApiPublicAdminBootstrapRouteImport.update({
+  id: '/api/public/admin-bootstrap',
+  path: '/api/public/admin-bootstrap',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedCampaignsIdRoute =
   AuthenticatedCampaignsIdRouteImport.update({
     id: '/campaigns/$id',
@@ -211,6 +217,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/whatsapp': typeof AuthenticatedWhatsappRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
+  '/api/public/admin-bootstrap': typeof ApiPublicAdminBootstrapRoute
   '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
   '/api/meta/auth/start': typeof ApiMetaAuthStartRoute
   '/api/public/hooks/anomaly-scan': typeof ApiPublicHooksAnomalyScanRoute
@@ -241,6 +248,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/whatsapp': typeof AuthenticatedWhatsappRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
+  '/api/public/admin-bootstrap': typeof ApiPublicAdminBootstrapRoute
   '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
   '/api/meta/auth/start': typeof ApiMetaAuthStartRoute
   '/api/public/hooks/anomaly-scan': typeof ApiPublicHooksAnomalyScanRoute
@@ -273,6 +281,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/whatsapp': typeof AuthenticatedWhatsappRoute
   '/_authenticated/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
+  '/api/public/admin-bootstrap': typeof ApiPublicAdminBootstrapRoute
   '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
   '/api/meta/auth/start': typeof ApiMetaAuthStartRoute
   '/api/public/hooks/anomaly-scan': typeof ApiPublicHooksAnomalyScanRoute
@@ -305,6 +314,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/whatsapp'
     | '/campaigns/$id'
+    | '/api/public/admin-bootstrap'
     | '/api/meta/auth/callback'
     | '/api/meta/auth/start'
     | '/api/public/hooks/anomaly-scan'
@@ -335,6 +345,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/whatsapp'
     | '/campaigns/$id'
+    | '/api/public/admin-bootstrap'
     | '/api/meta/auth/callback'
     | '/api/meta/auth/start'
     | '/api/public/hooks/anomaly-scan'
@@ -366,6 +377,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/whatsapp'
     | '/_authenticated/campaigns/$id'
+    | '/api/public/admin-bootstrap'
     | '/api/meta/auth/callback'
     | '/api/meta/auth/start'
     | '/api/public/hooks/anomaly-scan'
@@ -391,6 +403,7 @@ export interface RootRouteChildren {
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   SecurityRoute: typeof SecurityRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
+  ApiPublicAdminBootstrapRoute: typeof ApiPublicAdminBootstrapRoute
   ApiMetaAuthCallbackRoute: typeof ApiMetaAuthCallbackRoute
   ApiMetaAuthStartRoute: typeof ApiMetaAuthStartRoute
   ApiPublicHooksAnomalyScanRoute: typeof ApiPublicHooksAnomalyScanRoute
@@ -555,6 +568,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCreateRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/admin-bootstrap': {
+      id: '/api/public/admin-bootstrap'
+      path: '/api/public/admin-bootstrap'
+      fullPath: '/api/public/admin-bootstrap'
+      preLoaderRoute: typeof ApiPublicAdminBootstrapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/campaigns/$id': {
       id: '/_authenticated/campaigns/$id'
       path: '/campaigns/$id'
@@ -647,6 +667,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   SecurityRoute: SecurityRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
+  ApiPublicAdminBootstrapRoute: ApiPublicAdminBootstrapRoute,
   ApiMetaAuthCallbackRoute: ApiMetaAuthCallbackRoute,
   ApiMetaAuthStartRoute: ApiMetaAuthStartRoute,
   ApiPublicHooksAnomalyScanRoute: ApiPublicHooksAnomalyScanRoute,
