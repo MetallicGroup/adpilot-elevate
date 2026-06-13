@@ -645,6 +645,71 @@ async function setMetaStatus(
   return { ok: true, status };
 }
 
+function isRetryPublishRequest(message: string): boolean {
+  const normalized = message.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return /\b(incearca|reincearca|retry)\b/.test(normalized) && /\b(iar|din nou|inca o data|retry)?\b/.test(normalized);
+}
+
+async function retryLastDraftCampaign(supabaseAdmin: any, ctx: AgentCtx) {
+  if (!ctx.latestMedia) return { error: "Nu mai găsesc poza/clipul pentru reclamă. Trimite media încă o dată pe WhatsApp." };
+  const { data: draft } = await supabaseAdmin
+    .from("campaigns")
+    .select("id, name, objective, budget, targeting, creative, lead_form")
+    .eq("user_id", ctx.userId)
+    .eq("platform", "meta")
+    .eq("status", "draft")
+    .is("meta_campaign_id", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!draft) return { error: "Nu am găsit o campanie eșuată recentă pe care să o reîncerc." };
+
+  const creative = (draft.creative ?? {}) as any;
+  const leadForm = (draft.lead_form ?? {}) as any;
+  const targeting = (draft.targeting ?? {}) as any;
+  const age = String(targeting.age_groups?.[0] ?? "18-65").match(/(\d+)\D+(\d+)/);
+  const locations = Array.isArray(targeting.locations) ? targeting.locations : ["RO"];
+  const countries = locations.filter((l: string) => /^[A-Z]{2}$/.test(l));
+  const cities = locations.filter((l: string) => !/^[A-Z]{2}$/.test(l));
+  const { data: file, error: dlErr } = await supabaseAdmin.storage.from("wa-media").download(ctx.latestMedia.path);
+  if (dlErr || !file) return { error: `Nu pot citi poza/clipul: ${dlErr?.message ?? "fișier lipsă"}` };
+
+  const conn = await getActiveMetaSetup(supabaseAdmin, ctx.userId);
+  if ("error" in conn) return conn;
+
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const args = {
+    name: draft.name,
+    daily_budget: Number(draft.budget),
+    objective: draft.objective === "LINK_CLICKS" ? "traffic" as const : "leads" as const,
+    headline: String(creative.headline ?? draft.name).slice(0, 40),
+    primary_text: String(creative.primary_text ?? creative.description ?? ""),
+    description: String(creative.description ?? ""),
+    cta: creative.cta ?? "Learn More",
+    landing_url: creative.landing_url ?? "https://adpilot.ro",
+    custom_questions: leadForm.custom_questions ?? [],
+    countries: countries.length ? countries : ["RO"],
+    cities: cities.length ? cities : undefined,
+    age_min: age ? Number(age[1]) : 18,
+    age_max: age ? Number(age[2]) : 65,
+  };
+
+  const cityKeys = await resolveCityKeys(conn.accessToken, args.cities, args.countries, 25);
+  if (args.cities?.length && !cityKeys.length) return { error: `Nu am găsit orașele cerute (${args.cities.join(", ")}) în Meta.` };
+  return publishCampaignToMeta(supabaseAdmin, {
+    campaignRowId: draft.id,
+    adAccountId: conn.adAccountId,
+    accessToken: conn.accessToken,
+    pageId: conn.pageId,
+    pageAccessToken: conn.pageAccessToken,
+    bytes,
+    mediaMime: ctx.latestMedia.mime,
+    args,
+    objective: args.objective,
+    cityKeys,
+  });
+}
+
 async function createMetaCampaignFromAgent(
   supabaseAdmin: any,
   ctx: AgentCtx,
