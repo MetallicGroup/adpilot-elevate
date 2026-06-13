@@ -12,6 +12,8 @@ import { checkMetaReady, listMetaPages } from "@/lib/leads.functions";
 import { publishMetaCampaign, uploadAdMedia } from "@/lib/meta-publish.functions";
 import { fmtMoney } from "@/lib/format";
 import { AdPreview } from "@/components/wizard/AdPreview";
+import { loadDraft, saveDraft, clearDraft } from "@/lib/wizard-draft";
+import { fmtMoney as _fmtMoneyAlias } from "@/lib/format";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -103,6 +105,22 @@ function CreateWizard() {
     lf_privacy_url: "",
     page_id: "",
   });
+
+  // Hydrate draft from localStorage once
+  const [draftRestored, setDraftRestored] = useState(false);
+  useEffect(() => {
+    const d = loadDraft<State>();
+    if (d) { setS(d); toast.success("Draft restaurat ✨", { duration: 2000 }); }
+    setDraftRestored(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Autosave on change (debounced)
+  useEffect(() => {
+    if (!draftRestored) return;
+    const t = setTimeout(() => saveDraft(s), 400);
+    return () => clearTimeout(t);
+  }, [s, draftRestored]);
 
   const update = <K extends keyof State>(k: K, v: State[K]) => setS((p) => ({ ...p, [k]: v }));
   const toggle = <K extends keyof State>(k: K, v: string) => {
@@ -214,6 +232,7 @@ function CreateWizard() {
         try {
           await publishMeta({ data: { campaign_id: saved.id, page_id: s.page_id || undefined } });
           toast.success("Live pe Meta! 🎉", { id: "publish" });
+          clearDraft();
           navigate({ to: "/campaigns/$id", params: { id: saved.id } });
           return;
         } catch (e: any) {
@@ -221,6 +240,7 @@ function CreateWizard() {
         }
       } else {
         toast.success("Campanie salvată ca draft 💾");
+        clearDraft();
       }
       navigate({ to: "/dashboard" });
     } catch (e: any) {
