@@ -720,6 +720,32 @@ function ReviewRow({ label, value }: { label: string; value: string }) {
   );
 }
 
+function LiveEstimates({ s }: { s: State }) {
+  const dailyBudget = s.budget_mode === "BUDGET_MODE_DAY" ? s.budget : s.budget / 14;
+  const cpm = s.platform === "tiktok" ? 4.2 : 6.8;
+  const reachLow = Math.round((dailyBudget / cpm) * 1000 * 0.8);
+  const reachHigh = Math.round((dailyBudget / cpm) * 1000 * 1.4);
+  const fmt = (n: number) => n >= 1000 ? `${(n / 1000).toFixed(1)}k` : `${n}`;
+  return (
+    <div className="rounded-xl border border-border bg-secondary/40 p-3 space-y-2.5">
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">📊 Estimări zilnice</p>
+      <div className="grid grid-cols-2 gap-2 text-center">
+        <div className="rounded-lg bg-background/60 p-2">
+          <p className="text-[10px] text-muted-foreground">Reach</p>
+          <p className="font-mono text-sm font-semibold mt-0.5">{fmt(reachLow)}–{fmt(reachHigh)}</p>
+        </div>
+        <div className="rounded-lg bg-background/60 p-2">
+          <p className="text-[10px] text-muted-foreground">CPM estimat</p>
+          <p className="font-mono text-sm font-semibold mt-0.5">€{cpm.toFixed(2)}</p>
+        </div>
+      </div>
+      <p className="text-[10px] text-muted-foreground leading-relaxed">
+        Bazat pe medii {s.platform === "tiktok" ? "TikTok" : "Meta"} pentru audiențe similare. Reach real variază în funcție de creative.
+      </p>
+    </div>
+  );
+}
+
 function Section({ icon, label, children }: { icon?: React.ReactNode; label: string; children: React.ReactNode }) {
   return (
     <div>
