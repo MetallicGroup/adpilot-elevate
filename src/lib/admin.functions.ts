@@ -72,7 +72,7 @@ export const listAdminUsers = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(500);
 
-    const ids = (profiles ?? []).map((p) => p.id);
+    const ids = (profiles ?? []).map((p: any) => p.id);
     if (ids.length === 0) return { users: [] as AdminUserRow[] };
 
     const { data: authList } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 200 });
@@ -84,7 +84,7 @@ export const listAdminUsers = createServerFn({ method: "GET" })
       .select("id, user_id, status")
       .in("user_id", ids);
     const campaignsByUser = new Map<string, { total: number; active: number; ids: string[] }>();
-    for (const c of campaigns ?? []) {
+    for (const c of (campaigns ?? []) as any[]) {
       const acc = campaignsByUser.get(c.user_id) ?? { total: 0, active: 0, ids: [] };
       acc.total += 1;
       if (c.status === "active") acc.active += 1;
@@ -92,7 +92,7 @@ export const listAdminUsers = createServerFn({ method: "GET" })
       campaignsByUser.set(c.user_id, acc);
     }
 
-    const allCampaignIds = (campaigns ?? []).map((c) => c.id);
+    const allCampaignIds = (campaigns ?? []).map((c: any) => c.id);
     const spendByUser = new Map<string, { spend: number; leads: number }>();
     if (allCampaignIds.length) {
       const { data: perf } = await supabaseAdmin
@@ -126,7 +126,7 @@ export const listAdminUsers = createServerFn({ method: "GET" })
     const tixByUser = new Map<string, number>();
     for (const t of tix ?? []) tixByUser.set(t.user_id, (tixByUser.get(t.user_id) ?? 0) + 1);
 
-    const users: AdminUserRow[] = (profiles ?? []).map((p) => {
+    const users: AdminUserRow[] = (profiles ?? []).map((p: any) => {
       const c = campaignsByUser.get(p.id) ?? { total: 0, active: 0, ids: [] };
       const s = spendByUser.get(p.id) ?? { spend: 0, leads: 0 };
       return {
@@ -173,7 +173,7 @@ export const getAdminUserDetail = createServerFn({ method: "POST" })
       .eq("user_id", data.user_id)
       .order("created_at", { ascending: false });
 
-    const ids = (campaigns ?? []).map((c) => c.id);
+    const ids = (campaigns ?? []).map((c: any) => c.id);
     const perfByCampaign = new Map<string, { spend: number; impressions: number; clicks: number; leads: number }>();
     if (ids.length) {
       const { data: perf } = await supabaseAdmin
@@ -190,7 +190,7 @@ export const getAdminUserDetail = createServerFn({ method: "POST" })
         perfByCampaign.set(k, acc);
       }
     }
-    const campaignsOut = (campaigns ?? []).map((c) => ({
+    const campaignsOut = (campaigns ?? []).map((c: any) => ({
       ...c,
       ...(perfByCampaign.get(c.id) ?? { spend: 0, impressions: 0, clicks: 0, leads: 0 }),
     }));
@@ -235,7 +235,7 @@ export const listAllTickets = createServerFn({ method: "GET" })
       .order("last_message_at", { ascending: false })
       .limit(200);
 
-    const ids = Array.from(new Set((tickets ?? []).map((t) => t.user_id)));
+    const ids = Array.from(new Set((tickets ?? []).map((t: any) => t.user_id)));
     const { data: profiles } = ids.length
       ? await supabaseAdmin.from("profiles").select("id, full_name").in("id", ids)
       : { data: [] as any[] };
@@ -243,7 +243,7 @@ export const listAllTickets = createServerFn({ method: "GET" })
     for (const p of profiles ?? []) nameById.set(p.id, p.full_name ?? "");
 
     return {
-      tickets: (tickets ?? []).map((t) => ({ ...t, user_name: nameById.get(t.user_id) ?? "" })),
+      tickets: (tickets ?? []).map((t: any) => ({ ...t, user_name: nameById.get(t.user_id) ?? "" })),
     };
   });
 
@@ -418,7 +418,7 @@ export const getAdminDashboard = createServerFn({ method: "GET" })
     const tickets = ticketsRes.data ?? [];
     const waConns = waConnsRes.data ?? [];
 
-    const totalSpend = perf.reduce((s, p) => s + Number(p.spend ?? 0), 0);
+    const totalSpend = perf.reduce((s: number, p: any) => s + Number(p.spend ?? 0), 0);
     const totalLeads = leads.length;
     const trialUsers = profiles.filter((p: any) => p.subscription_status === "trial").length;
     const activeSubs = profiles.filter((p: any) => p.subscription_status === "active").length;
@@ -519,14 +519,14 @@ export const listAllCampaigns = createServerFn({ method: "GET" })
       .select("id, user_id, name, platform, status, budget, objective, created_at, meta_campaign_id")
       .order("created_at", { ascending: false })
       .limit(300);
-    const ids = Array.from(new Set((campaigns ?? []).map((c) => c.user_id)));
+    const ids = Array.from(new Set((campaigns ?? []).map((c: any) => c.user_id)));
     const { data: profs } = ids.length
       ? await supabaseAdmin.from("profiles").select("id, full_name").in("id", ids)
       : { data: [] as any[] };
     const nameById = new Map<string, string>();
     for (const p of profs ?? []) nameById.set(p.id, p.full_name ?? "");
 
-    const cIds = (campaigns ?? []).map((c) => c.id);
+    const cIds = (campaigns ?? []).map((c: any) => c.id);
     const spendByCampaign = new Map<string, number>();
     const leadsByCampaign = new Map<string, number>();
     if (cIds.length) {
@@ -541,7 +541,7 @@ export const listAllCampaigns = createServerFn({ method: "GET" })
       }
     }
     return {
-      campaigns: (campaigns ?? []).map((c) => ({
+      campaigns: (campaigns ?? []).map((c: any) => ({
         ...c,
         user_name: nameById.get(c.user_id) ?? "",
         spend: spendByCampaign.get(c.id) ?? 0,
