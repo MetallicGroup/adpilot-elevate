@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 /**
- * WhatsApp Cloud API webhook (per-user verify token via DB).
- *  - GET: hub.challenge verification
- *  - POST: receive messages, store, call AI agent
+ * Shared-number WhatsApp webhook (Meta Cloud API).
+ * - GET: hub.challenge verification with ADPILOT_WA_VERIFY_TOKEN.
+ * - POST: verifies signature, maps sender phone (or activation code in
+ *   first message) to a user, persists conversation, runs AI agent.
  */
 export const Route = createFileRoute("/api/public/whatsapp/webhook")({
   server: {
@@ -13,17 +14,11 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
         const mode = url.searchParams.get("hub.mode");
         const token = url.searchParams.get("hub.verify_token");
         const challenge = url.searchParams.get("hub.challenge");
-        if (mode !== "subscribe" || !token) return new Response("Forbidden", { status: 403 });
-
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { data } = await supabaseAdmin
-          .from("whatsapp_connections")
-          .select("id")
-          .eq("verify_token", token)
-          .limit(1)
-          .maybeSingle();
-        if (!data) return new Response("Forbidden", { status: 403 });
-        return new Response(challenge ?? "", { status: 200 });
+        const expected = process.env.ADPILOT_WA_VERIFY_TOKEN;
+        if (mode === "subscribe" && token && expected && token === expected) {
+          return new Response(challenge ?? "", { status: 200 });
+        }
+        return new Response("Forbidden", { status: 403 });
       },
 
       POST: async ({ request }) => {
@@ -32,11 +27,20 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
         const appSecret = process.env.META_APP_SECRET;
         if (!appSecret) return new Response("Server misconfigured", { status: 500 });
 
-        const { verifyWaSignature, getWhatsAppMediaUrl, downloadWhatsAppMedia } = await import(
-          "@/lib/whatsapp.server"
-        );
+        const {
+          verifyWaSignature,
+          getWhatsAppMediaUrl,
+          downloadWhatsAppMedia,
+          getCentralWhatsApp,
+          sendWhatsAppMessage,
+          normalizePhone,
+        } = await import("@/lib/whatsapp.server");
+
         const ok = await verifyWaSignature(raw, sig, appSecret);
         if (!ok) return new Response("Invalid signature", { status: 401 });
+
+        const central = getCentralWhatsApp();
+        if (!central) return new Response("WA not configured", { status: 500 });
 
         let payload: any;
         try {
@@ -57,19 +61,10 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
           for (const change of changes) {
             if (change?.field !== "messages") continue;
             const value = change.value ?? {};
-            const phoneNumberId: string | undefined = value?.metadata?.phone_number_id;
-            if (!phoneNumberId) continue;
-
-            const { data: conn } = await supabaseAdmin
-              .from("whatsapp_connections")
-              .select("id, user_id, phone_number_id, access_token")
-              .eq("phone_number_id", phoneNumberId)
-              .maybeSingle();
-            if (!conn) continue;
-
             const msgs: any[] = Array.isArray(value.messages) ? value.messages : [];
+
             for (const m of msgs) {
-              const fromPhone: string = m.from;
+              const fromPhone: string = normalizePhone(m.from);
               const waMsgId: string = m.id;
               const type: string = m.type;
 
@@ -84,10 +79,13 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
                 const mediaId = m[type]?.id as string | undefined;
                 if (mediaId) {
                   try {
-                    const { url, mime_type } = await getWhatsAppMediaUrl(mediaId, conn.access_token);
-                    const bytes = await downloadWhatsAppMedia(url, conn.access_token);
+                    const { url, mime_type } = await getWhatsAppMediaUrl(
+                      mediaId,
+                      central.accessToken,
+                    );
+                    const bytes = await downloadWhatsAppMedia(url, central.accessToken);
                     const ext = mime_type.split("/")[1]?.split(";")[0] || "bin";
-                    const path = `${conn.user_id}/${Date.now()}_${mediaId}.${ext}`;
+                    const path = `inbox/${fromPhone}/${Date.now()}_${mediaId}.${ext}`;
                     const { error: upErr } = await supabaseAdmin.storage
                       .from("wa-media")
                       .upload(path, bytes, { contentType: mime_type, upsert: false });
@@ -106,6 +104,54 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
                 }
               }
 
+              // Map sender → user
+              let { data: conn } = await supabaseAdmin
+                .from("whatsapp_connections")
+                .select("id, user_id, user_phone, status, activation_code")
+                .eq("user_phone", fromPhone)
+                .maybeSingle();
+
+              // If unknown phone, try matching by activation code in message text
+              if (!conn && text) {
+                const codeMatch = text.match(/\b([A-F0-9]{8})\b/i);
+                if (codeMatch) {
+                  const code = codeMatch[1].toUpperCase();
+                  const { data: byCode } = await supabaseAdmin
+                    .from("whatsapp_connections")
+                    .select("id, user_id, user_phone, status, activation_code")
+                    .eq("activation_code", code)
+                    .maybeSingle();
+                  if (byCode) {
+                    // Bind the sender phone to this account
+                    await supabaseAdmin
+                      .from("whatsapp_connections")
+                      .update({ user_phone: fromPhone })
+                      .eq("id", byCode.id);
+                    conn = { ...byCode, user_phone: fromPhone };
+                  }
+                }
+              }
+
+              if (!conn) {
+                // Unknown sender — politely ask them to register on AdPilot
+                try {
+                  await sendWhatsAppMessage(
+                    central.phoneNumberId,
+                    central.accessToken,
+                    fromPhone,
+                    {
+                      type: "text",
+                      text: "👋 Salut! Acest număr nu e încă legat de un cont AdPilot. Intră în aplicație → Settings → WhatsApp și apasă „Activează asistentul pe WhatsApp”.",
+                    },
+                  );
+                } catch {
+                  /* ignore */
+                }
+                continue;
+              }
+
+              const justActivated = conn.status !== "active";
+
               // Persist incoming
               await supabaseAdmin.from("whatsapp_messages").insert({
                 user_id: conn.user_id,
@@ -117,10 +163,41 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
                 media_path: mediaPath,
                 media_mime: mediaMime,
               });
+
               await supabaseAdmin
                 .from("whatsapp_connections")
-                .update({ last_message_at: new Date().toISOString() })
+                .update({
+                  last_message_at: new Date().toISOString(),
+                  ...(justActivated
+                    ? { status: "active", activated_at: new Date().toISOString() }
+                    : {}),
+                })
                 .eq("id", conn.id);
+
+              // First-time activation → send welcome and stop (don't run agent on the activation msg)
+              if (justActivated) {
+                try {
+                  const welcome =
+                    "Salut 👋 Sunt asistentul tău AdPilot. De aici poți primi lead-uri, rapoarte și poți controla campaniile tale direct pe WhatsApp.\n\nScrie-mi: *„arată-mi campaniile”* sau *„vreau o campanie nouă”* 🚀";
+                  const { id } = await sendWhatsAppMessage(
+                    central.phoneNumberId,
+                    central.accessToken,
+                    fromPhone,
+                    { type: "text", text: welcome },
+                  );
+                  await supabaseAdmin.from("whatsapp_messages").insert({
+                    user_id: conn.user_id,
+                    connection_id: conn.id,
+                    wa_message_id: id,
+                    direction: "out",
+                    msg_type: "text",
+                    text: welcome,
+                  });
+                } catch (e) {
+                  console.error("[wa] welcome send failed", e);
+                }
+                continue;
+              }
 
               // Load history
               const { data: hist } = await supabaseAdmin
@@ -136,7 +213,6 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
                   role: (h.direction === "in" ? "user" : "assistant") as "user" | "assistant",
                   content: h.text as string,
                 }));
-              // Drop last (current msg already included via userMessage)
               if (history.length && history[history.length - 1].role === "user") history.pop();
 
               const userMessage =
@@ -149,8 +225,8 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
                     userId: conn.user_id,
                     connection: {
                       id: conn.id,
-                      phone_number_id: conn.phone_number_id,
-                      access_token: conn.access_token,
+                      phone_number_id: central.phoneNumberId,
+                      access_token: central.accessToken,
                     },
                     toPhone: fromPhone,
                     latestMedia:
@@ -163,11 +239,10 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
                 );
               } catch (e) {
                 console.error("[wa agent] failed", e);
-                const { sendWhatsAppMessage } = await import("@/lib/whatsapp.server");
                 try {
                   await sendWhatsAppMessage(
-                    conn.phone_number_id,
-                    conn.access_token,
+                    central.phoneNumberId,
+                    central.accessToken,
                     fromPhone,
                     { type: "text", text: "⚠️ Eroare la procesarea mesajului. Încearcă din nou." },
                   );

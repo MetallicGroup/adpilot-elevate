@@ -2,87 +2,105 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-export const getWhatsAppConnection = createServerFn({ method: "GET" })
+/**
+ * Shared-number WhatsApp model.
+ * AdPilot owns ONE WhatsApp Business number (env: ADPILOT_WA_*).
+ * Users only save their own phone number, then tap "Activează" → wa.me
+ * link opens WhatsApp with a prefilled activation message containing
+ * a short code. The webhook maps the sender phone → user, persists the
+ * activation, and the bot replies with a welcome message.
+ */
+
+export const getMyWhatsApp = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase } = context;
     const { data } = await supabase
       .from("whatsapp_connections")
-      .select("id, phone_number_id, waba_id, display_phone, status, verify_token, last_message_at, created_at")
+      .select("id, user_phone, status, activation_code, activated_at, last_message_at")
       .maybeSingle();
-    return data ?? null;
+    const { getCentralWhatsApp, buildWaMeLink } = await import("./whatsapp.server");
+    const central = getCentralWhatsApp();
+    let activation_link: string | null = null;
+    if (central && data?.activation_code && data.status !== "active") {
+      const text = `Salut, vreau să activez AdPilot pentru contul meu. Cod: ${data.activation_code}`;
+      activation_link = buildWaMeLink(central.displayNumber, text);
+    }
+    return {
+      connection: data ?? null,
+      central_number: central?.displayNumber ?? null,
+      activation_link,
+      configured: !!central,
+    };
   });
 
-const SaveInput = z.object({
-  phone_number_id: z.string().min(5),
-  waba_id: z.string().optional(),
-  display_phone: z.string().optional(),
-  access_token: z.string().min(20),
+const SavePhoneInput = z.object({
+  phone: z
+    .string()
+    .trim()
+    .min(8, "Număr prea scurt")
+    .max(20, "Număr prea lung")
+    .regex(/^[+0-9\s().-]+$/, "Caractere invalide"),
 });
 
-export const saveWhatsAppConnection = createServerFn({ method: "POST" })
+export const saveMyWhatsAppPhone = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => SaveInput.parse(d))
+  .inputValidator((d: unknown) => SavePhoneInput.parse(d))
   .handler(async ({ data, context }) => {
     const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { generateVerifyToken } = await import("./whatsapp.server");
-    // Delete previous (one per user for now)
-    await supabaseAdmin.from("whatsapp_connections").delete().eq("user_id", userId);
-    const verify_token = generateVerifyToken();
-    const { data: row, error } = await supabaseAdmin
+    const { normalizePhone, generateActivationCode, getCentralWhatsApp, buildWaMeLink } =
+      await import("./whatsapp.server");
+    const phone = normalizePhone(data.phone);
+    if (phone.length < 8) throw new Error("Număr invalid");
+
+    const { data: existing } = await supabaseAdmin
       .from("whatsapp_connections")
-      .insert({
-        user_id: userId,
-        phone_number_id: data.phone_number_id,
-        waba_id: data.waba_id ?? null,
-        display_phone: data.display_phone ?? null,
-        access_token: data.access_token,
-        verify_token,
-        status: "active",
-      })
-      .select("id, verify_token")
-      .single();
+      .select("user_id")
+      .eq("user_phone", phone)
+      .maybeSingle();
+    if (existing && existing.user_id !== userId) {
+      throw new Error("Acest număr e deja folosit de alt cont AdPilot");
+    }
+
+    const activation_code = generateActivationCode();
+    const { error } = await supabaseAdmin
+      .from("whatsapp_connections")
+      .upsert(
+        {
+          user_id: userId,
+          user_phone: phone,
+          activation_code,
+          status: "pending",
+          activated_at: null,
+        },
+        { onConflict: "user_id" },
+      );
     if (error) throw new Error(error.message);
-    return row;
+
+    const central = getCentralWhatsApp();
+    const activation_link = central
+      ? buildWaMeLink(
+          central.displayNumber,
+          `Salut, vreau să activez AdPilot pentru contul meu. Cod: ${activation_code}`,
+        )
+      : null;
+
+    return {
+      ok: true,
+      activation_code,
+      activation_link,
+      central_number: central?.displayNumber ?? null,
+    };
   });
 
-export const disconnectWhatsApp = createServerFn({ method: "POST" })
+export const disconnectMyWhatsApp = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase } = context;
-    await supabase.from("whatsapp_connections").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-    return { ok: true };
-  });
-
-const TestInput = z.object({ to_phone: z.string().min(8) });
-
-export const sendWhatsAppTest = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => TestInput.parse(d))
-  .handler(async ({ data, context }) => {
-    const { userId } = context;
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: conn } = await supabaseAdmin
+    await supabase
       .from("whatsapp_connections")
-      .select("phone_number_id, access_token, id")
-      .eq("user_id", userId)
-      .maybeSingle();
-    if (!conn) throw new Error("Nu există conexiune WhatsApp");
-    const { sendWhatsAppMessage } = await import("./whatsapp.server");
-    const { id } = await sendWhatsAppMessage(
-      conn.phone_number_id,
-      conn.access_token,
-      data.to_phone.replace(/\D/g, ""),
-      { type: "text", text: "👋 Salut! Sunt asistentul tău AdPilot. Scrie-mi orice — pot să-ți arăt campaniile, să generez copy nou, să pun pe pauză reclame sau să creez una nouă (trimite-mi o poză 📸)." },
-    );
-    await supabaseAdmin.from("whatsapp_messages").insert({
-      user_id: userId,
-      connection_id: conn.id,
-      wa_message_id: id,
-      direction: "out",
-      msg_type: "text",
-      text: "Test message",
-    });
+      .delete()
+      .neq("id", "00000000-0000-0000-0000-000000000000");
     return { ok: true };
   });

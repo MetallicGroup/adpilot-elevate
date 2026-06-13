@@ -114,12 +114,15 @@ export const Route = createFileRoute("/api/public/meta/webhook")({
             try {
               const { data: waConn } = await supabaseAdmin
                 .from("whatsapp_connections")
-                .select("phone_number_id, access_token, display_phone")
+                .select("user_phone")
                 .eq("user_id", page.user_id)
                 .eq("status", "active")
                 .maybeSingle();
-              if (waConn?.phone_number_id && waConn.access_token && waConn.display_phone) {
-                const { sendWhatsAppMessage } = await import("@/lib/whatsapp.server");
+              const { getCentralWhatsApp, sendWhatsAppMessage } = await import(
+                "@/lib/whatsapp.server"
+              );
+              const central = getCentralWhatsApp();
+              if (waConn?.user_phone && central) {
                 const campName = campaign_id
                   ? (await supabaseAdmin.from("campaigns").select("name").eq("id", campaign_id).maybeSingle()).data?.name
                   : "—";
@@ -133,9 +136,9 @@ export const Route = createFileRoute("/api/public/meta/webhook")({
                   "",
                   "Scrie *lead-uri* să vezi ultimele sau întreabă-mă orice 🚀",
                 ].filter(Boolean).join("\n");
-                const toPhone = waConn.display_phone.replace(/\D/g, "");
+                const toPhone = waConn.user_phone.replace(/\D/g, "");
                 if (toPhone) {
-                  await sendWhatsAppMessage(waConn.phone_number_id, waConn.access_token, toPhone, {
+                  await sendWhatsAppMessage(central.phoneNumberId, central.accessToken, toPhone, {
                     type: "text",
                     text: lines,
                   });
