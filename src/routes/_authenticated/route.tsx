@@ -2,6 +2,8 @@ import { createFileRoute, Outlet, redirect, Link, useRouterState } from "@tansta
 import { AnimatePresence, motion, LayoutGroup } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Home, Plus, Inbox, MessageCircle, Settings } from "lucide-react";
+import { AppHeader } from "@/components/AppHeader";
+import { CommandPalette } from "@/components/CommandPalette";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -17,6 +19,8 @@ function AuthLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   return (
     <div className="min-h-screen bg-background pb-24 text-foreground">
+      <AppHeader />
+      <CommandPalette />
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={pathname}
