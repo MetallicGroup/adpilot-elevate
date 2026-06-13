@@ -81,24 +81,6 @@ function Settings() {
 }
 
 function WhatsAppConnectionCard() {
-  const qc = useQueryClient();
-  const save = useServerFn(saveWhatsAppConnection);
-  const disconnect = useServerFn(disconnectWhatsApp);
-  const sendTest = useServerFn(sendWhatsAppTest);
-
-  const { data: conn, isLoading } = useQuery({
-    queryKey: ["wa-connection"],
-    queryFn: async () => {
-      const fn = useServerFn(getWhatsAppConnection);
-      return await fn();
-    },
-  });
-  // Replace useQuery body — useServerFn cannot be used inside queryFn, fetch via direct call
-  return <WhatsAppCardInner key={String(conn?.id ?? "new")} />;
-}
-
-function WhatsAppCardInner() {
-  const qc = useQueryClient();
   const get = useServerFn(getWhatsAppConnection);
   const save = useServerFn(saveWhatsAppConnection);
   const disconnect = useServerFn(disconnectWhatsApp);
