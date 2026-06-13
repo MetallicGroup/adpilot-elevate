@@ -91,6 +91,7 @@ export type Database = {
           creative: Json
           end_date: string | null
           id: string
+          last_anomaly_check_at: string | null
           lead_form: Json | null
           meta_ad_id: string | null
           meta_adset_id: string | null
@@ -116,6 +117,7 @@ export type Database = {
           creative?: Json
           end_date?: string | null
           id?: string
+          last_anomaly_check_at?: string | null
           lead_form?: Json | null
           meta_ad_id?: string | null
           meta_adset_id?: string | null
@@ -141,6 +143,7 @@ export type Database = {
           creative?: Json
           end_date?: string | null
           id?: string
+          last_anomaly_check_at?: string | null
           lead_form?: Json | null
           meta_ad_id?: string | null
           meta_adset_id?: string | null
@@ -460,6 +463,7 @@ export type Database = {
           created_at: string
           display_phone: string | null
           id: string
+          last_daily_report_at: string | null
           last_message_at: string | null
           phone_number_id: string | null
           status: string
@@ -476,6 +480,7 @@ export type Database = {
           created_at?: string
           display_phone?: string | null
           id?: string
+          last_daily_report_at?: string | null
           last_message_at?: string | null
           phone_number_id?: string | null
           status?: string
@@ -492,6 +497,7 @@ export type Database = {
           created_at?: string
           display_phone?: string | null
           id?: string
+          last_daily_report_at?: string | null
           last_message_at?: string | null
           phone_number_id?: string | null
           status?: string
@@ -511,6 +517,7 @@ export type Database = {
           id: string
           media_mime: string | null
           media_path: string | null
+          meta: Json | null
           msg_type: string
           text: string | null
           tool_calls: Json | null
@@ -524,6 +531,7 @@ export type Database = {
           id?: string
           media_mime?: string | null
           media_path?: string | null
+          meta?: Json | null
           msg_type?: string
           text?: string | null
           tool_calls?: Json | null
@@ -537,6 +545,7 @@ export type Database = {
           id?: string
           media_mime?: string | null
           media_path?: string | null
+          meta?: Json | null
           msg_type?: string
           text?: string | null
           tool_calls?: Json | null

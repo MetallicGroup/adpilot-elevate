@@ -98,6 +98,16 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
                       signedUrl = signed?.signedUrl ?? null;
                     }
                     if (m[type]?.caption) text = m[type].caption;
+                    // Audio → transcribe with Lovable AI and treat as user text
+                    if (type === "audio") {
+                      try {
+                        const { transcribeWaAudio } = await import("@/lib/wa-ai-extras.server");
+                        const transcript = await transcribeWaAudio(bytes, mime_type);
+                        if (transcript) text = `🎙️ ${transcript}`;
+                      } catch (e) {
+                        console.error("[wa] transcribe failed", e);
+                      }
+                    }
                   } catch (e) {
                     console.error("[wa] media download failed", e);
                   }
