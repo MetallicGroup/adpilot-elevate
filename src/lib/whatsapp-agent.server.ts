@@ -798,7 +798,7 @@ async function publishCampaignToMeta(
         privacy_url: "https://adpilot.ro/privacy-policy",
         custom_questions: input.args.custom_questions,
       });
-      await supabaseAdmin.from("campaigns").update({ meta_lead_form_id: form.id }).eq("id", input.campaignRowId);
+      await supabaseAdmin.from("campaigns").update({ meta_lead_form_id: form?.id ?? null }).eq("id", input.campaignRowId);
     }
     const metaCamp = await createCampaign(
       input.adAccountId,
