@@ -142,12 +142,12 @@ function CreateWizard() {
   }, [step, s]);
 
   const titles = [
-    { t: "What's your goal?", sub: "We'll optimize delivery around this objective." },
-    { t: "Set your budget", sub: "Start small — you can scale anytime." },
-    { t: "Who should see this?", sub: "Refine your audience by location, age and interests." },
-    { t: "Build your creative", sub: "Make something that stops the scroll." },
-    { t: s.objective === "LEAD_GENERATION" ? "Design your lead form" : "Review your campaign", sub: s.objective === "LEAD_GENERATION" ? "Capture the info you need — keep it short." : "Double-check everything before you launch." },
-    { t: "Review your campaign", sub: "Double-check everything before you launch." },
+    { t: "Care e obiectivul tău? 🎯", sub: "Optimizăm livrarea în funcție de ce vrei să obții." },
+    { t: "Setează bugetul 💰", sub: "Începe mic — poți scala oricând." },
+    { t: "Cine să vadă reclama? 👥", sub: "Rafinează audiența după locație, vârstă și interese." },
+    { t: "Creativul tău ✨", sub: "Fă ceva ce oprește scrollul." },
+    { t: s.objective === "LEAD_GENERATION" ? "Designul formularului 📋" : "Verifică campania 🚀", sub: s.objective === "LEAD_GENERATION" ? "Cere doar info esențiale — păstrează-l scurt." : "Verifică totul înainte de lansare." },
+    { t: "Verifică campania 🚀", sub: "Verifică totul înainte de lansare." },
   ];
 
   const onNext = async () => {
@@ -273,6 +273,7 @@ function CreateWizard() {
       canBack={true}
       canNext={canNext}
       nextLabel={isLast ? (s.platform === "meta" ? "Review & publish" : "Save campaign") : "Continue"}
+      // labels translated below via inline expression
       onBack={onBack}
       onNext={onNext}
       isSubmitting={submitting}
