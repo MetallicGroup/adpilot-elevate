@@ -62,7 +62,15 @@ export async function createLeadForm(
     fields: string[];
     privacy_url: string;
     follow_up_url?: string;
-    custom_questions?: string[];
+    custom_questions?: Array<
+      | string
+      | {
+          label: string;
+          /** "short" = răspuns text scurt; "choice" = grilă cu opțiuni */
+          type?: "short" | "choice";
+          options?: string[];
+        }
+    >;
   },
 ) {
   const formName = spec.name.slice(0, 256);
@@ -83,14 +91,20 @@ export async function createLeadForm(
     .map((f) => LEAD_FIELD_MAP[f])
     .filter(Boolean)
     .map((type) => ({ type }));
-  for (const q of spec.custom_questions ?? []) {
-    const label = q.trim().slice(0, 200);
+  for (const raw of spec.custom_questions ?? []) {
+    const q = typeof raw === "string" ? { label: raw, type: "short" as const } : raw;
+    const label = (q.label ?? "").trim().slice(0, 200);
     if (!label) continue;
-    questions.push({
-      type: "CUSTOM",
-      label,
-      key: label.toLowerCase().replace(/[^a-z0-9]+/g, "_").slice(0, 60) || `q_${questions.length}`,
-    });
+    const key =
+      label.toLowerCase().replace(/[^a-z0-9]+/g, "_").slice(0, 60) ||
+      `q_${questions.length}`;
+    const entry: Record<string, unknown> = { type: "CUSTOM", label, key };
+    if (q.type === "choice" && Array.isArray(q.options) && q.options.length) {
+      entry.options = q.options
+        .map((o) => ({ value: String(o).trim().slice(0, 100) }))
+        .filter((o) => o.value);
+    }
+    questions.push(entry);
   }
   if (!questions.length) questions.push({ type: "PHONE" });
 
@@ -129,10 +143,11 @@ export async function createCampaign(
   accessToken: string,
   name: string,
   status: "ACTIVE" | "PAUSED" = "ACTIVE",
+  objective: "OUTCOME_LEADS" | "OUTCOME_TRAFFIC" = "OUTCOME_LEADS",
 ) {
   return metaPOST(`/act_${adAccountId}/campaigns`, accessToken, {
     name,
-    objective: "OUTCOME_LEADS",
+    objective,
     status,
     special_ad_categories: [],
     buying_type: "AUCTION",
@@ -158,6 +173,7 @@ export async function createAdSet(
       cities?: Array<{ key: string; radius?: number; distance_unit?: "kilometer" | "mile" }>;
     };
     status: "ACTIVE" | "PAUSED";
+    objective?: "leads" | "traffic";
   },
 ) {
   const geo_locations: Record<string, unknown> = {};
@@ -184,14 +200,16 @@ export async function createAdSet(
   const body: Record<string, unknown> = {
     name: args.name,
     campaign_id: args.campaign_id,
-    optimization_goal: "LEAD_GENERATION",
+    optimization_goal: args.objective === "traffic" ? "LINK_CLICKS" : "LEAD_GENERATION",
     billing_event: "IMPRESSIONS",
     bid_strategy: "LOWEST_COST_WITHOUT_CAP",
     targeting,
-    promoted_object: { page_id: args.page_id },
     status: args.status,
-    destination_type: "ON_AD",
+    destination_type: args.objective === "traffic" ? "WEBSITE" : "ON_AD",
   };
+  if (args.objective !== "traffic") {
+    body.promoted_object = { page_id: args.page_id };
+  }
   if (args.daily_budget_cents) body.daily_budget = args.daily_budget_cents;
   if (args.lifetime_budget_cents) body.lifetime_budget = args.lifetime_budget_cents;
   if (args.end_time) body.end_time = args.end_time;
@@ -236,25 +254,30 @@ export async function createAdCreative(
     description: string;
     cta: string;
     landing_url: string;
-    lead_gen_form_id: string;
+    lead_gen_form_id?: string;
   },
 ) {
   const cta_type = CTA_MAP[args.cta] || "LEARN_MORE";
+  const link =
+    args.landing_url && /^https?:\/\//i.test(args.landing_url) && !/facebook\.com/i.test(args.landing_url)
+      ? args.landing_url
+      : "https://adpilot.ro";
+  const call_to_action: Record<string, unknown> = { type: cta_type };
+  if (args.lead_gen_form_id) {
+    call_to_action.value = { lead_gen_form_id: args.lead_gen_form_id };
+  } else {
+    call_to_action.value = { link };
+  }
   return metaPOST(`/act_${adAccountId}/adcreatives`, accessToken, {
     name: args.name.slice(0, 200),
     object_story_spec: {
       page_id: args.page_id,
       link_data: {
         image_hash: args.image_hash,
-        link: args.landing_url && /^https?:\/\//i.test(args.landing_url) && !/facebook\.com/i.test(args.landing_url)
-          ? args.landing_url
-          : "https://adpilot.ro",
+        link,
         message: args.description,
         name: args.headline,
-        call_to_action: {
-          type: cta_type,
-          value: { lead_gen_form_id: args.lead_gen_form_id },
-        },
+        call_to_action,
       },
     },
   });
