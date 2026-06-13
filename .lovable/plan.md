@@ -1,86 +1,71 @@
 
-# Integrare WhatsApp Business + AI Agent
+# Extindere agent WhatsApp AdPilot
 
-## 1. Conectare WhatsApp (Meta Cloud API)
+## 1. Alertă lead instant (push, nu pull)
+- În `src/routes/api/public/meta.webhook.ts` (handler leadgen): după ce inserăm lead-ul în DB, dacă userul are `whatsapp_connections.status = 'active'`, trimitem imediat un mesaj WhatsApp formatat:
+  > 🎯 **Lead nou** — *{campanie}*
+  > 👤 {nume}
+  > 📞 {telefon}
+  > 💬 {primul răspuns custom, dacă există}
+  >
+  > Răspunde *"sună"* să-l contactăm sau *"detalii"* pentru tot formularul.
+- Folosim `sendWhatsAppMessage` (central) din `whatsapp.server.ts`.
+- Eșec silent (try/catch + log) — nu blocăm webhook-ul Meta.
 
-Pagină nouă **Settings → WhatsApp** unde userul introduce:
-- **Phone Number ID** (din Meta Business → WhatsApp → API Setup)
-- **WhatsApp Business Account ID (WABA ID)**
-- **Permanent Access Token** (system user token cu permisiuni `whatsapp_business_messaging` + `whatsapp_business_management`)
-- Verify token pentru webhook (generat automat de noi)
+## 2. Raport zilnic 09:00
+- Server route public `src/routes/api/public/hooks/daily-report.ts` (POST, verifică `apikey` header = anon key).
+- Iterează userii cu WhatsApp conectat + Meta conectat, pentru fiecare:
+  - Cheamă insights ultimele 24h (impressions, click-uri, leaduri, cheltuit).
+  - Compune mesaj în română simplă, fără jargon:
+    > 📊 **Raport ieri**
+    > • Ai cheltuit **{x} lei**
+    > • Ai primit **{n} clienți noi**
+    > • Fiecare client te-a costat **{y} lei**
+    > • Cea mai bună reclamă: *{nume}* — {n} clienți
+    >
+    > {1 propunere acționabilă în limbaj simplu}
+- Cron job în Supabase via `pg_cron` + `pg_net` la `0 6 * * *` UTC (= 09:00 RO vara).
 
-Tabel nou `whatsapp_connections`: user_id, phone_number_id, waba_id, display_phone, access_token (encrypted), verify_token, status, last_message_at.
+## 3. Anomalii cu auto-fix
+- Același cron rulează verificări la fiecare oră (sau separat la `15 * * * *`):
+  - Spend zero >12h pe campanie ACTIVE → "Reclama ta «X» nu a cheltuit nimic azi. Probabil e prea îngustă sau e oprită."
+  - Cost per client x2 față de media 7 zile → "Clienții te costă **dublu** azi față de săptămâna trecută la «X»."
+  - CTR sub 0.5% → "Foarte puțină lume dă click pe «X». Probabil poza/textul nu mai prind."
+- Mesajul se termină cu: "Vrei să rezolv eu? Răspunde **da**."
+- În agent (`whatsapp-agent.server.ts`):
+  - Detectăm dacă ultimul mesaj outbound a fost o propunere de anomalie (marker în DB — coloană nouă `whatsapp_messages.meta jsonb` cu `{anomaly_action: {...}}`).
+  - La răspuns "da/ok/rezolvă", agentul execută acțiunea propusă (pause, lărgire targeting, schimbare buget) — fără confirmare nouă.
 
-În UI afișăm și URL-ul webhook + verify token-ul pe care trebuie să-l lipească în Meta Dashboard → WhatsApp → Configuration.
+## 4. Tool-uri noi pentru agent
+În `src/lib/whatsapp-agent.server.ts` adăugăm:
+- `duplicate_campaign({ campaign_id, new_name?, new_copy? })` — citește campania existentă, recreează cu copy nou și pornește pe PAUSED.
+- `ab_test_creative({ campaign_id, media_ids: [a, b] })` — creează 2 ad-uri în același adset, nume "A" / "B".
+- `change_targeting({ campaign_id, age_min?, age_max?, cities?, genders? })` — PATCH pe adset existent.
+- `blacklist_placement({ campaign_id, exclude: ["audience_network" | "stories" | ...] })` — update `publisher_platforms` / `facebook_positions`.
+- `reply_to_lead({ lead_id, text })` — trimite mesaj WhatsApp către lead-ul respectiv (doar dacă `lead.phone` și consimțământ înregistrat; verifică fereastra 24h Meta — dacă expirat, refuză cu explicație).
+- `get_invoice({ month? })` — Graph API `act_{id}/transactions` ultima lună, returnează link / sumă.
+- Helpers Meta corespunzători în `meta-publish.server.ts`.
 
-## 2. Webhook receiver
+## 5. Generare poze statice AI
+- Tool nou `generate_creative_image({ prompt, brand_colors? })` în agent.
+- Implementare: chemă Lovable AI Gateway `/v1/images/generations` cu `google/gemini-2.5-flash-image` (sau `nano-banana`), salvează rezultat în bucket `wa-media`, returnează URL + media_id WA pentru preview imediat clientului.
+- Agentul propune: "Nu ai poză? Pot să-ți generez una. Descrie-mi produsul."
 
-`src/routes/api/public/whatsapp/webhook.ts`:
-- **GET**: hub.challenge verification (pe baza verify_token din DB după phone_number_id)
-- **POST**: verify `x-hub-signature-256` cu app_secret, parsează mesaje (text/image/video/audio), descarcă media de pe Meta Graph și salvează în storage bucket `wa-media`, apoi cheamă agent-ul AI.
+## 6. Mesaje vocale (voice notes)
+- În `src/routes/api/public/whatsapp.webhook.ts`: tratăm `messages[].type === 'audio'`.
+- Descărcăm fișierul WA (deja avem `downloadWhatsAppMedia`), trimitem la Lovable AI Gateway `/v1/chat/completions` cu `google/gemini-2.5-flash` și `input_audio` (format webm/ogg) → transcriere.
+- Tratam transcriptul ca text user normal în agent loop.
+- Salvăm și audio-ul în `wa-media` pentru istoric, plus `text` cu transcriptul + prefix "🎙️ ".
 
-Tabel `whatsapp_messages`: user_id, wa_message_id, direction (in/out), type, text, media_url, role (user/assistant/tool), created_at. Folosit ca memoria conversației.
+## Detalii tehnice rapide
+- **Migrație DB**: 
+  - `whatsapp_messages` + coloană `meta jsonb` (anomaly actions, audio refs).
+  - `campaigns` + coloană `last_anomaly_check_at timestamptz`.
+- **Cron**: 2 joburi noi (`adpilot-daily-report` la 06:00 UTC, `adpilot-anomaly-scan` la fiecare oră).
+- **Limbaj**: toate mesajele automate în română, fără termeni gen "CPL", "CTR", "ROAS" — folosim "cost per client", "câți dau click", "cât scoți la 1 leu investit".
 
-## 3. AI Agent (Lovable AI Gateway)
+## Ce nu fac acum
+- Calendar/Stripe/Shopify/TikTok/Twilio — în alt round, după ce confirmi că ce e mai sus merge.
+- UI dedicat anomalii — totul prin chat WhatsApp.
 
-Server function `chatWithAgent` care:
-- Încarcă ultimele ~30 mesaje din `whatsapp_messages` ca history
-- Folosește `streamText` (google/gemini-3-flash-preview) cu **tools**:
-  - `list_campaigns()` — campaniile userului + status + buget
-  - `get_campaign_insights(campaign_id)` — spend/leads/CPL ultimele N zile
-  - `pause_campaign(id)` / `resume_campaign(id)` — call la Meta Graph
-  - `update_campaign_budget(id, daily_budget_ron)`
-  - `generate_ad_copy(product_description, tone)` — headline + primary text + description cu emoji-uri relevante (folosește AI-ul intern)
-  - `create_campaign(name, objective, daily_budget, copy, creative_media_id, page_id)` — full flow Meta (campaign → adset → creative → ad), pornit pe PAUSED by default cu confirm prin mesaj
-  - `get_recent_leads(limit)`
-- System prompt în română: marketer expert, proactiv, dă insights nu doar răspunde, sugerează optimizări când vede CPL mare/spend zero, confirmă acțiunile destructive înainte de execuție.
-- Când userul trimite poză/video → salvate în `wa-media`, devin disponibile ca `latest_creative` pentru `create_campaign`.
-
-Răspunsurile agentului se trimit înapoi prin Meta Graph `/messages` (suport text + image din storage).
-
-## 4. Notificări lead-uri pe WhatsApp
-
-Modific `meta-webhook` (cel existent care primește leadgen): după ce salvează lead-ul, dacă userul are `whatsapp_connections` activ, trimite mesaj formatat:
-> 🎯 Lead nou — Campania *X*
-> 👤 Ion Popescu
-> 📞 0712...
-> 💬 "Vreau ofertă"
-> 
-> Răspunde aici cu *"detalii"* să vezi tot lead-ul sau *"call"* să-l sunăm.
-
-Agentul recunoaște comenzile follow-up pe leads.
-
-## 5. UI
-
-- **Settings → WhatsApp**: form conectare, status, webhook URL + verify token, test "trimite mesaj de test către numărul meu"
-- **WhatsApp Inbox** (opțional acum): listă conversații cu preview ultim mesaj, click → fereastră tip chat unde vezi conversația AI ↔ user. Util pentru debug/transparență.
-
-## 6. Secrets necesare
-
-Avem deja `META_APP_SECRET` (refolosit pentru semnătură webhook) și `META_API_VERSION`. Trebuie:
-- `WHATSAPP_WEBHOOK_VERIFY_TOKEN_FALLBACK` (opțional, default per-user din DB) — nu e strict necesar dacă citim din DB.
-
-Nu cer secrets noi acum — totul vine de la user prin UI.
-
-## Detalii tehnice
-
-- **Storage**: bucket nou `wa-media` (private), policies: user vede doar fișierele cu `metadata->>user_id = auth.uid()`.
-- **Encryption token**: pentru simplitate la început îl stocăm plain (RLS scoped la owner) ca și `meta_connections.access_token` care e deja așa. Pot trece pe pgsodium ulterior dacă vrei.
-- **Rate limiting Meta**: cache `list_campaigns` 30s în memorie per request.
-- **Agent loop**: `stopWhen: stepCountIs(50)`, fiecare tool result revine în context.
-- **Limbă**: agentul detectează limba primului mesaj, default română.
-
-## Ce livrez în prima iterație
-
-1. DB: `whatsapp_connections`, `whatsapp_messages`, bucket `wa-media` + RLS
-2. Webhook public `/api/public/whatsapp/webhook` (verify + receive + send media handling)
-3. Agent server function cu toate tool-urile listate
-4. Pagina Settings → WhatsApp cu form conectare + webhook URL afișat
-5. Integrare în `meta-webhook` pentru notificare lead → WhatsApp
-6. Pagina simplă WhatsApp Inbox (read-only) pentru debug
-
-După ce userul conectează și testează, iterăm pe UX agent (tonalitate, ce insights proactive, frecvență sugestii).
-
-## Întrebare înainte să încep
-
-Vrei ca agentul să **execute direct** acțiuni de buget/start/pauză, sau să-ți **ceară confirmare** pe WhatsApp înainte (răspunzi "da")? Recomand confirmare pentru: create campaign nouă și schimbări buget >20%. Restul direct.
+Confirmi planul ca să încep să implementez?
