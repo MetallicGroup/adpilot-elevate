@@ -1,19 +1,18 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import {
-  ArrowRight, Sparkles, BarChart3, Zap, Check, MessageCircle,
-  ShieldCheck, Bot, Megaphone, Target, Rocket, Inbox, LineChart,
+  ArrowRight, Check, MessageCircle, Bot, Inbox, LineChart, Zap, Rocket, Target,
+  Star, PlayCircle,
 } from "lucide-react";
 import { MarketingLayout } from "@/components/marketing/MarketingLayout";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "AdPilot — Launch TikTok Ads in under 5 minutes" },
-      { name: "description", content: "AdPilot is the AI platform that lets businesses create, manage and optimize TikTok ads — no agency, no technical skills required." },
-      { property: "og:title", content: "AdPilot — Launch TikTok Ads in under 5 minutes" },
-      { property: "og:description", content: "AI-powered TikTok ads platform with WhatsApp lead alerts, audience suggestions and one-click campaign launches." },
+      { title: "AdPilot — Reclame TikTok. Fără agenție." },
+      { name: "description", content: "Platforma AI care creează, lansează și optimizează reclame TikTok în minute. Lead-urile vin direct pe WhatsApp." },
+      { property: "og:title", content: "AdPilot — Reclame TikTok. Fără agenție." },
+      { property: "og:description", content: "Platforma AI care creează, lansează și optimizează reclame TikTok. Lead-urile vin direct pe WhatsApp." },
     ],
   }),
   component: Index,
@@ -23,179 +22,251 @@ function Index() {
   return (
     <MarketingLayout>
       {/* HERO */}
-      <section className="px-6 pt-20 pb-24 max-w-6xl mx-auto w-full">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="text-center max-w-3xl mx-auto"
-        >
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary text-xs font-medium">
-            <span className="w-1.5 h-1.5 rounded-full bg-tiktok" />
-            Official TikTok Marketing Partner Application
-          </div>
-          <h1 className="mt-6 font-serif text-5xl md:text-7xl font-semibold leading-[1.02] tracking-tight">
-            Launch TikTok Ads in under <span className="text-tiktok">5 minutes</span>.
-          </h1>
-          <p className="mt-6 text-lg text-muted-foreground leading-relaxed">
-            AdPilot is the AI platform that lets businesses create, manage and optimize TikTok ads — without an agency, without technical skills.
-          </p>
-          <div className="mt-10 flex flex-col sm:flex-row gap-3 justify-center">
-            <Link to="/auth" className="press inline-flex items-center justify-center gap-2 px-8 py-4 bg-foreground text-background rounded-xl font-medium">
-              Start Free Trial <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link to="/contact" className="press inline-flex items-center justify-center gap-2 px-8 py-4 border border-border rounded-xl font-medium hover:bg-secondary transition-colors">
-              Book a Demo
-            </Link>
-          </div>
-        </motion.div>
+      <section className="relative px-6 pt-24 pb-32 overflow-hidden">
+        <div className="absolute inset-0 grid-bg opacity-40 pointer-events-none" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] rounded-full pointer-events-none float-orb"
+             style={{ background: "var(--gradient-glow)" }} />
+        <div className="absolute top-40 right-0 w-[500px] h-[500px] rounded-full pointer-events-none opacity-50"
+             style={{ background: "radial-gradient(circle, oklch(0.7 0.2 320 / 0.15), transparent 70%)" }} />
 
-        {/* Product mockup */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
-          className="mt-16 relative max-w-5xl mx-auto"
-        >
-          <div className="card-floating-lg p-6 md:p-10 grid md:grid-cols-3 gap-5">
-            <StatTile label="Spend today" value="$1,284" delta="+12%" />
-            <StatTile label="Leads today" value="47" delta="+23%" />
-            <StatTile label="Avg. CPL" value="$2.74" delta="-8%" good />
-            <div className="md:col-span-2 rounded-2xl bg-secondary p-6">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">Active campaign</p>
-              <p className="mt-2 font-semibold text-lg">Spring Sale — Lead Gen</p>
-              <div className="mt-4 flex items-center gap-3">
-                <div className="h-2 flex-1 rounded-full bg-background overflow-hidden">
-                  <div className="h-full w-3/4 bg-tiktok" />
+        <div className="relative max-w-6xl mx-auto w-full">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center max-w-4xl mx-auto"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass text-xs font-medium text-muted-foreground"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-success pulse-dot text-success" />
+              🚀 Acum în Beta — gratuit 14 zile
+            </motion.div>
+
+            <h1 className="mt-8 text-5xl md:text-7xl font-extrabold leading-[1.05] tracking-tight">
+              Reclame TikTok.<br/>
+              <span className="gradient-text">Fără agenție.</span>
+            </h1>
+
+            <p className="mt-6 text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+              AdPilot creează, lansează și optimizează campaniile tale TikTok în câteva minute — iar fiecare lead ajunge direct pe WhatsApp-ul tău. ✨
+            </p>
+
+            <div className="mt-10 flex flex-col sm:flex-row gap-3 justify-center">
+              <Link to="/auth" className="press btn-primary inline-flex items-center justify-center gap-2 px-7 py-4 rounded-xl font-semibold">
+                Începe gratuit <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link to="/contact" className="press inline-flex items-center justify-center gap-2 px-7 py-4 glass rounded-xl font-medium text-foreground hover:bg-card transition-colors">
+                <PlayCircle className="w-4 h-4" /> Vezi demo
+              </Link>
+            </div>
+
+            <div className="mt-10 flex items-center justify-center gap-3 text-sm text-muted-foreground">
+              <div className="flex">
+                {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />)}
+              </div>
+              <span>Iubit de 200+ afaceri din România 🇷🇴</span>
+            </div>
+          </motion.div>
+
+          {/* Dashboard mockup */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="mt-20 relative max-w-5xl mx-auto"
+            style={{ perspective: "2000px" }}
+          >
+            <div className="card-floating-lg p-6 md:p-8 grid md:grid-cols-3 gap-4"
+                 style={{ transform: "rotateX(6deg)", boxShadow: "0 50px 100px -20px oklch(0.62 0.22 295 / 0.4), 0 30px 60px -30px oklch(0 0 0 / 0.7)" }}>
+              <KpiTile label="Cheltuiți azi" value="€1.284" delta="+12%" />
+              <KpiTile label="Lead-uri azi" value="47" delta="+23%" />
+              <KpiTile label="CPL mediu" value="€6,40" delta="-8%" />
+              <div className="md:col-span-2 rounded-xl bg-secondary p-6 border border-border">
+                <p className="text-xs uppercase tracking-widest text-muted-foreground">Campanie activă</p>
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-success pulse-dot text-success" />
+                  <p className="font-semibold">Reduceri de Primăvară · Lead Gen</p>
                 </div>
-                <span className="text-xs text-muted-foreground">$750 / $1,000</span>
+                <div className="mt-4 flex items-center gap-3">
+                  <div className="h-2 flex-1 rounded-full bg-background overflow-hidden">
+                    <div className="h-full w-3/4 rounded-full" style={{ background: "var(--gradient-primary)" }} />
+                  </div>
+                  <span className="text-xs text-muted-foreground font-mono">€750 / €1.000</span>
+                </div>
+                <div className="mt-6 grid grid-cols-3 gap-3 text-center">
+                  <Mini label="CTR" value="3,2%" />
+                  <Mini label="CPL" value="€6,40" />
+                  <Mini label="ROAS" value="4,1x" />
+                </div>
               </div>
-              <div className="mt-6 grid grid-cols-3 gap-3 text-center">
-                <Mini label="CTR" value="3.2%" />
-                <Mini label="CPL" value="$2.41" />
-                <Mini label="ROAS" value="4.1x" />
+              <div className="rounded-xl p-5 flex flex-col border border-border" style={{ background: "linear-gradient(160deg, oklch(0.18 0.02 285), oklch(0.14 0.012 285))" }}>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <MessageCircle className="w-3.5 h-3.5" /> WhatsApp AI
+                </div>
+                <div className="mt-4 space-y-3 text-sm flex-1">
+                  <div className="bg-secondary rounded-2xl rounded-tl-sm p-3">Câte lead-uri azi?</div>
+                  <div className="rounded-2xl rounded-tr-sm p-3 ml-6 text-white" style={{ background: "var(--gradient-primary)" }}>
+                    47 lead-uri — cu 23% mai mult decât ieri 🚀
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="rounded-2xl bg-foreground text-background p-6 flex flex-col">
-              <div className="flex items-center gap-2 text-xs opacity-70">
-                <MessageCircle className="w-3.5 h-3.5" /> WhatsApp AI
-              </div>
-              <div className="mt-4 space-y-3 text-sm flex-1">
-                <div className="bg-white/10 rounded-2xl rounded-tl-sm p-3">How many leads today?</div>
-                <div className="bg-tiktok rounded-2xl rounded-tr-sm p-3 ml-6">47 leads — up 23% vs yesterday 🚀</div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
       </section>
 
       {/* HOW IT WORKS */}
-      <Section eyebrow="How it works" title="From zero to live campaign in 5 steps">
+      <Section eyebrow="Cum funcționează" title="De la zero la campanie live în 5 minute">
+        <p className="text-center text-muted-foreground -mt-6 mb-12 max-w-xl mx-auto">Fără agenție. Fără curbă de învățare. Doar rezultate.</p>
         <div className="grid md:grid-cols-5 gap-4">
           {steps.map((s, i) => (
-            <div key={s.title} className="card-floating p-5">
-              <div className="w-7 h-7 rounded-full bg-foreground text-background text-xs font-semibold flex items-center justify-center">{i + 1}</div>
-              <h3 className="mt-4 font-semibold text-sm">{s.title}</h3>
+            <motion.div
+              key={s.title}
+              initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }} transition={{ delay: i * 0.08 }}
+              className="glass p-6 rounded-2xl"
+            >
+              <div className="font-mono text-2xl gradient-text font-bold">0{i + 1}</div>
+              <s.icon className="w-5 h-5 mt-4 text-primary" />
+              <h3 className="mt-3 font-semibold">{s.title}</h3>
               <p className="mt-1 text-sm text-muted-foreground">{s.body}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </Section>
 
-      {/* FEATURES */}
-      <Section eyebrow="Features" title="Everything you need to run TikTok ads">
-        <div className="grid md:grid-cols-2 gap-5">
-          {features.map((f) => (
-            <div key={f.title} className="card-floating p-6">
-              <f.icon className="w-5 h-5 text-tiktok" />
-              <h3 className="mt-4 font-semibold">{f.title}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">{f.body}</p>
-              <ul className="mt-4 space-y-2">
-                {f.items.map((it) => (
-                  <li key={it} className="flex items-center gap-2 text-sm">
-                    <Check className="w-4 h-4 text-success" /> {it}
-                  </li>
-                ))}
-              </ul>
+      {/* FEATURES BENTO */}
+      <Section eyebrow="Funcționalități" title="Tot ce ai nevoie. Nimic în plus.">
+        <div className="grid md:grid-cols-3 gap-4">
+          <BentoCard className="md:col-span-2 md:row-span-2 min-h-[320px]" icon={LineChart} title="Dashboard în timp real">
+            <p>Vezi tot ce contează într-un singur loc: cheltuieli, lead-uri, CTR, CPL, ROAS. Actualizat la fiecare minut.</p>
+            <div className="mt-6 grid grid-cols-3 gap-3">
+              <Mini label="Spend" value="€148" />
+              <Mini label="Lead-uri" value="23" />
+              <Mini label="CPL" value="€6,40" />
             </div>
-          ))}
-        </div>
-      </Section>
-
-      {/* AUDIENCE */}
-      <Section eyebrow="Built for" title="Service, eCommerce, and Local businesses">
-        <div className="grid md:grid-cols-3 gap-5">
-          {audiences.map((a) => (
-            <div key={a.title} className="card-floating p-6">
-              <h3 className="font-semibold">{a.title}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">{a.body}</p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {a.tags.map((t) => (
-                  <span key={t} className="text-xs px-2.5 py-1 rounded-full bg-secondary">{t}</span>
-                ))}
+            <div className="mt-4 h-24 rounded-xl bg-background border border-border flex items-end gap-1 p-3">
+              {[40, 65, 50, 80, 45, 90, 70].map((h, i) => (
+                <div key={i} className="flex-1 rounded-t" style={{ height: `${h}%`, background: "var(--gradient-primary)" }} />
+              ))}
+            </div>
+          </BentoCard>
+          <BentoCard icon={Bot} title="AI Campaign Builder">
+            <p>AI-ul generează audiențe, text și structura campaniei pe baza obiectivului tău. Tu doar dai launch. ✨</p>
+          </BentoCard>
+          <BentoCard icon={MessageCircle} title="WhatsApp AI">
+            <p>«Pornește reclama» · «Câte lead-uri azi?» — AdPilot înțelege română și execută instant.</p>
+            <div className="mt-4 space-y-2 text-xs">
+              <div className="bg-secondary rounded-lg p-2 max-w-[80%]">Câte lead-uri azi?</div>
+              <div className="rounded-lg p-2 max-w-[80%] ml-auto text-white" style={{ background: "var(--gradient-primary)" }}>
+                47 lead-uri 🚀
               </div>
             </div>
-          ))}
+          </BentoCard>
+          <BentoCard icon={Inbox} title="Lead Inbox">
+            <p>Fiecare lead ajunge instant în inbox + notificare WhatsApp. Nu mai pierzi niciun client. 📨</p>
+          </BentoCard>
+          <BentoCard icon={Zap} title="Optimizare automată">
+            <p>AdPilot identifică reclamele performante și redistribuie bugetul automat. Tu dormi, el optimizează. 😴</p>
+          </BentoCard>
         </div>
       </Section>
 
-      {/* SECURITY */}
-      <Section eyebrow="Security & Privacy" title="Your data. Your ad account. Your control.">
-        <div className="card-floating-lg p-8 md:p-12">
-          <div className="grid md:grid-cols-2 gap-8">
-            <div>
-              <ShieldCheck className="w-8 h-8 text-tiktok" />
-              <p className="mt-4 text-muted-foreground leading-relaxed">
-                AdPilot connects via secure TikTok OAuth. We never store your TikTok password, we never share your data with third parties, and your ad account always remains under your ownership.
-              </p>
-            </div>
-            <ul className="space-y-3">
-              {["OAuth Authentication", "GDPR Compliant", "Secure Encrypted Storage", "No Third-Party Data Sharing", "Advertiser owns the ad account"].map((i) => (
-                <li key={i} className="flex items-center gap-3 text-sm">
-                  <Check className="w-4 h-4 text-success" /> {i}
+      {/* STATS */}
+      <section className="px-6 py-20">
+        <div className="max-w-6xl mx-auto relative rounded-3xl p-12 md:p-16 overflow-hidden border" style={{ borderColor: "oklch(0.62 0.22 295 / 0.3)", background: "linear-gradient(135deg, oklch(0.16 0.014 285), oklch(0.13 0.012 285))" }}>
+          <div className="absolute inset-0 grid-bg opacity-30 pointer-events-none" />
+          <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full pointer-events-none"
+               style={{ background: "var(--gradient-glow)" }} />
+          <div className="relative grid md:grid-cols-3 gap-10 text-center">
+            {[
+              { v: "200+", l: "Afaceri din România" },
+              { v: "€2.4M+", l: "Buget gestionat" },
+              { v: "4,2x", l: "ROAS mediu" },
+            ].map((s) => (
+              <div key={s.l} className="md:border-r md:last:border-r-0 border-border">
+                <p className="font-mono text-5xl md:text-6xl font-bold gradient-text">{s.v}</p>
+                <p className="mt-3 text-sm text-muted-foreground">{s.l}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* WHATSAPP SECTION */}
+      <Section eyebrow="💬 Asistent WhatsApp AI" title="Manager-ul tău de reclame. Pe WhatsApp.">
+        <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <p className="text-lg text-muted-foreground leading-relaxed">
+              Trimite un mesaj. Primești rezultate. AdPilot înțelege română și engleză — și execută instant.
+            </p>
+            <ul className="mt-8 space-y-4">
+              {[
+                "«Pornește reclama» — pornește campania instant",
+                "«Câte lead-uri azi?» — statistici în timp real",
+                "Alertă instant când vine un lead nou",
+                "Raport zilnic dimineața, automat",
+              ].map((t) => (
+                <li key={t} className="flex items-start gap-3 text-sm">
+                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                  <span>{t}</span>
                 </li>
               ))}
             </ul>
           </div>
+          <div className="relative">
+            <div className="absolute -inset-10 pointer-events-none" style={{ background: "var(--gradient-glow)" }} />
+            <div className="relative mx-auto max-w-xs rounded-[2.5rem] border-8 p-2 shadow-2xl" style={{ borderColor: "oklch(0.2 0.014 285)", background: "oklch(0.1 0.012 285)" }}>
+              <div className="rounded-[1.8rem] p-4 space-y-3 text-sm" style={{ background: "oklch(0.12 0.012 285)", minHeight: "440px" }}>
+                <div className="text-center text-xs text-muted-foreground pb-2 border-b border-border">AdPilot AI · azi</div>
+                <div className="bg-secondary rounded-2xl rounded-tl-sm p-3 max-w-[85%]">Salut! 👋 Cum te pot ajuta azi?</div>
+                <div className="rounded-2xl rounded-tr-sm p-3 max-w-[85%] ml-auto text-white" style={{ background: "var(--gradient-primary)" }}>Câte lead-uri azi?</div>
+                <div className="bg-secondary rounded-2xl rounded-tl-sm p-3 max-w-[85%]">23 lead-uri 📈<br/>+5 față de ieri</div>
+                <div className="rounded-2xl rounded-tr-sm p-3 max-w-[85%] ml-auto text-white" style={{ background: "var(--gradient-primary)" }}>Pornește campania nouă</div>
+                <div className="bg-secondary rounded-2xl rounded-tl-sm p-3 max-w-[85%]">✅ Gata! Campania e live.<br/>Reach estimat: 80.000/zi</div>
+              </div>
+            </div>
+          </div>
         </div>
       </Section>
 
-      {/* INTEGRATIONS */}
-      <Section eyebrow="Integrations" title="Works with the tools you use">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          {["TikTok Ads", "WhatsApp", "Stripe", "Google Analytics", "Meta Pixel"].map((n) => (
-            <div key={n} className="card-floating p-6 text-center text-sm font-medium">{n}</div>
-          ))}
-        </div>
-      </Section>
-
-      {/* PRICING TEASE */}
-      <Section eyebrow="Pricing" title="Simple plans that scale with you">
-        <div className="grid md:grid-cols-3 gap-5">
+      {/* PRICING */}
+      <Section eyebrow="Prețuri" title="Simple. Transparente.">
+        <p className="text-center text-muted-foreground -mt-6 mb-12">Începe gratuit. Upgrade când ești gata. 💎</p>
+        <div className="grid md:grid-cols-3 gap-5 max-w-5xl mx-auto">
           {plans.map((p) => (
-            <div key={p.name} className={`card-floating p-7 ${p.featured ? "ring-2 ring-foreground" : ""}`}>
-              {p.featured && <p className="text-xs font-medium text-tiktok mb-2">Most popular</p>}
+            <div key={p.name} className={`relative rounded-2xl p-8 ${p.featured ? "border-2" : "border card-floating"}`}
+                 style={p.featured ? { borderColor: "oklch(0.62 0.22 295 / 0.6)", background: "linear-gradient(160deg, oklch(0.18 0.02 285), oklch(0.14 0.012 285))", boxShadow: "var(--shadow-glow)" } : {}}>
+              {p.featured && (
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-semibold text-white" style={{ background: "var(--gradient-primary)" }}>
+                  Cel mai popular
+                </span>
+              )}
               <h3 className="font-semibold text-lg">{p.name}</h3>
-              <p className="mt-2 font-serif text-4xl">{p.price}<span className="text-base text-muted-foreground font-sans">/mo</span></p>
-              <ul className="mt-5 space-y-2">
+              <p className="mt-1 text-sm text-muted-foreground">{p.tagline}</p>
+              <p className="mt-6 font-bold text-5xl">{p.price}<span className="text-base text-muted-foreground font-normal">/lună</span></p>
+              <ul className="mt-6 space-y-3">
                 {p.items.map((it) => (
-                  <li key={it} className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-success" />{it}</li>
+                  <li key={it} className="flex items-start gap-2 text-sm">
+                    <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />{it}
+                  </li>
                 ))}
               </ul>
-              <Link to="/auth" className="press mt-6 inline-flex w-full items-center justify-center px-4 py-2.5 rounded-lg bg-foreground text-background text-sm font-medium">
-                Start Free Trial
+              <Link to="/auth" className={`press mt-7 inline-flex w-full items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold ${p.featured ? "btn-primary" : "glass hover:bg-card text-foreground"}`}>
+                Începe gratuit
               </Link>
+              <p className="mt-3 text-xs text-center text-muted-foreground">14 zile gratuit · fără card</p>
             </div>
           ))}
         </div>
-        <p className="mt-6 text-center text-sm text-muted-foreground">14-day free trial. Cancel anytime.</p>
       </Section>
 
       {/* FAQ */}
-      <Section eyebrow="FAQ" title="Questions, answered.">
+      <Section eyebrow="Întrebări frecvente" title="Răspunsuri rapide. Promitem.">
         <div className="max-w-3xl mx-auto space-y-3">
           {faqs.map((f, i) => (
-            <details key={i} className="card-floating p-6 group">
+            <details key={i} className="glass rounded-xl p-6 group">
               <summary className="flex items-center justify-between cursor-pointer font-medium list-none">
                 <span>{f.q}</span>
                 <span className="text-muted-foreground group-open:rotate-45 transition-transform text-xl leading-none">+</span>
@@ -206,13 +277,20 @@ function Index() {
         </div>
       </Section>
 
-      {/* CTA */}
-      <section className="px-6 py-24 max-w-4xl mx-auto w-full text-center">
-        <h2 className="font-serif text-4xl md:text-5xl font-semibold tracking-tight">Ready to launch your first TikTok ad?</h2>
-        <p className="mt-4 text-muted-foreground">Free to start. No credit card required.</p>
-        <Link to="/auth" className="press mt-8 inline-flex items-center gap-2 px-8 py-4 bg-foreground text-background rounded-xl font-medium">
-          Start Free Trial <ArrowRight className="w-4 h-4" />
-        </Link>
+      {/* FINAL CTA */}
+      <section className="relative px-6 py-32 overflow-hidden">
+        <div className="absolute inset-0 grid-bg opacity-30 pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[600px] rounded-full pointer-events-none"
+             style={{ background: "var(--gradient-glow)" }} />
+        <div className="relative max-w-4xl mx-auto text-center">
+          <h2 className="text-4xl md:text-6xl font-extrabold tracking-tight">
+            Gata să lansezi <span className="gradient-text">prima ta reclamă?</span>
+          </h2>
+          <p className="mt-5 text-lg text-muted-foreground">Gratuit 14 zile. Fără card. Anulezi oricând. 🎉</p>
+          <Link to="/auth" className="press btn-primary mt-10 inline-flex items-center gap-2 px-8 py-4 rounded-xl text-lg font-semibold">
+            Începe acum <ArrowRight className="w-5 h-5" />
+          </Link>
+        </div>
       </section>
     </MarketingLayout>
   );
@@ -220,75 +298,72 @@ function Index() {
 
 function Section({ eyebrow, title, children }: { eyebrow: string; title: string; children: React.ReactNode }) {
   return (
-    <section className="px-6 py-20 max-w-6xl mx-auto w-full">
+    <section className="px-6 py-24 max-w-6xl mx-auto w-full">
       <div className="text-center max-w-2xl mx-auto mb-12">
-        <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3">{eyebrow}</p>
-        <h2 className="font-serif text-4xl md:text-5xl font-semibold tracking-tight">{title}</h2>
+        <p className="text-xs uppercase tracking-[0.2em] gradient-text font-semibold mb-4">{eyebrow}</p>
+        <h2 className="text-4xl md:text-5xl font-bold tracking-tight">{title}</h2>
       </div>
       {children}
     </section>
   );
 }
 
-function StatTile({ label, value, delta, good }: { label: string; value: string; delta: string; good?: boolean }) {
+function KpiTile({ label, value, delta }: { label: string; value: string; delta: string }) {
   return (
-    <div className="rounded-2xl bg-secondary p-6">
+    <div className="rounded-xl bg-secondary p-5 border border-border">
       <p className="text-xs uppercase tracking-widest text-muted-foreground">{label}</p>
-      <p className="mt-2 font-serif text-3xl">{value}</p>
-      <p className={`mt-1 text-xs ${good ? "text-success" : "text-foreground/70"}`}>{delta}</p>
+      <p className="mt-2 font-mono text-3xl font-bold">{value}</p>
+      <p className="mt-1 text-xs text-success">{delta} față de ieri</p>
     </div>
   );
 }
+
 function Mini({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl bg-background p-3">
+    <div className="rounded-lg bg-background p-3 border border-border">
       <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</p>
-      <p className="mt-1 font-semibold">{value}</p>
+      <p className="mt-1 font-mono font-bold">{value}</p>
     </div>
+  );
+}
+
+function BentoCard({ icon: Icon, title, children, className = "" }: { icon: any; title: string; children: React.ReactNode; className?: string }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }} transition={{ duration: 0.4 }}
+      className={`rounded-2xl p-7 border border-border bg-card hover:border-border/80 transition-all hover:-translate-y-1 ${className}`}
+    >
+      <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style={{ background: "oklch(0.62 0.22 295 / 0.15)" }}>
+        <Icon className="w-5 h-5 text-primary" />
+      </div>
+      <h3 className="font-semibold text-lg">{title}</h3>
+      <div className="mt-2 text-sm text-muted-foreground leading-relaxed">{children}</div>
+    </motion.div>
   );
 }
 
 const steps = [
-  { title: "Connect TikTok", body: "Secure OAuth — no passwords stored." },
-  { title: "Configure campaign", body: "Website, budget, objective." },
-  { title: "AI builds it", body: "Audiences, copy, structure." },
-  { title: "Launch", body: "One click and you're live." },
-  { title: "Receive leads", body: "In-app + WhatsApp alerts." },
-];
-
-const features = [
-  { icon: Megaphone, title: "TikTok Ads Management", body: "Create, monitor and control campaigns natively.", items: ["Create campaigns", "Manage in bulk", "Budget control", "Real-time monitoring"] },
-  { icon: Bot, title: "AI Campaign Builder", body: "Skip the guesswork with AI-generated assets.", items: ["AI audience suggestions", "AI ad copy", "AI campaign setup", "AI recommendations"] },
-  { icon: Inbox, title: "Lead Generation", body: "Every form submission, instantly delivered.", items: ["Lead collection", "Lead notifications", "CRM integration", "WhatsApp alerts"] },
-  { icon: LineChart, title: "Analytics", body: "All the metrics that matter, no spreadsheets.", items: ["Spend & CTR", "CPL & ROAS", "Conversion tracking", "Daily reports"] },
-];
-
-const audiences = [
-  { title: "Service Businesses", body: "Generate qualified leads for trades & local services.", tags: ["Plumbing", "Construction", "Cleaning"] },
-  { title: "eCommerce", body: "Drive sales for online stores with ROAS-focused campaigns.", tags: ["Online Stores", "Fashion", "Beauty"] },
-  { title: "Local Businesses", body: "Fill your tables, chairs and bookings with local reach.", tags: ["Restaurants", "Clinics", "Salons"] },
+  { icon: Zap, title: "Conectează TikTok", body: "OAuth securizat. Durează 30 de secunde." },
+  { icon: Target, title: "Spune-ne obiectivul", body: "Lead-uri sau vânzări? Buget? Restul rezolvăm noi." },
+  { icon: Bot, title: "AI construiește campania", body: "Audiențe, text, structură — totul generat." },
+  { icon: Rocket, title: "Lansează", body: "Un click și ești live pe TikTok." },
+  { icon: MessageCircle, title: "Primești lead-uri", body: "Direct pe WhatsApp, instant." },
 ];
 
 const plans = [
-  { name: "Starter", price: "€99", items: ["1 ad account", "Up to €2k/mo ad spend", "AI campaign builder", "Email support"] },
-  { name: "Growth", price: "€199", featured: true, items: ["3 ad accounts", "Up to €10k/mo ad spend", "WhatsApp AI assistant", "Priority support"] },
-  { name: "Pro", price: "€399", items: ["Unlimited ad accounts", "Unlimited spend", "Dedicated success manager", "Custom integrations"] },
+  { name: "Starter", tagline: "Pentru afaceri mici care încep.", price: "€99", items: ["1 cont de reclame", "Buget până la €2.000/lună", "AI Campaign Builder", "Suport pe email"] },
+  { name: "Growth", tagline: "Pentru afaceri care cresc rapid.", price: "€199", featured: true, items: ["3 conturi de reclame", "Buget până la €10.000/lună", "Asistent WhatsApp AI", "Optimizare automată", "Suport prioritar"] },
+  { name: "Pro", tagline: "Pentru agenții și branduri mari.", price: "€399", items: ["Conturi nelimitate", "Buget nelimitat", "Success manager dedicat", "Integrări personalizate", "SLA 99,9%"] },
 ];
 
 const faqs = [
-  { q: "Do I need a marketing agency to use AdPilot?", a: "No. AdPilot is built specifically for businesses that want to run TikTok ads without an agency. The AI handles audience selection, copy and campaign structure for you." },
-  { q: "Do I need previous TikTok advertising experience?", a: "Not at all. If you can answer a few questions about your business and your goal, AdPilot creates and launches the campaign for you." },
-  { q: "Is my data secure?", a: "Yes. AdPilot connects to TikTok via official OAuth, we never store your TikTok password, and all data is encrypted at rest. See our Security page for details." },
-  { q: "Can I connect multiple TikTok ad accounts?", a: "Yes. Growth and Pro plans support multiple ad accounts so agencies and multi-brand companies can manage everything in one place." },
-  { q: "How does the WhatsApp AI Assistant work?", a: "After connecting your WhatsApp Business number, you can send natural-language commands like 'pause the spring campaign' or 'how many leads today?' and the AI executes or replies instantly." },
-  { q: "Who owns the TikTok ad account?", a: "You do. The TikTok Business account always remains in the advertiser's name. AdPilot only acts on your instructions and you can revoke access at any time." },
-  { q: "Does the subscription include TikTok ad spend?", a: "No. AdPilot's subscription covers the platform only. TikTok ad spend is billed separately by TikTok, directly to your TikTok billing account." },
-  { q: "Is there a free trial?", a: "Yes. Every plan includes a 14-day free trial. No credit card required to start." },
-  { q: "Can I cancel anytime?", a: "Yes. You can cancel from your dashboard at any time. Your access continues until the end of the current billing period." },
-  { q: "What kind of businesses use AdPilot?", a: "Service businesses (plumbing, construction, cleaning), eCommerce brands (fashion, beauty, online stores), and local businesses (restaurants, clinics, salons)." },
-  { q: "Where do my leads go?", a: "Every lead generated through your campaigns is delivered into AdPilot's Lead Inbox, with optional instant alerts via WhatsApp and integrations with your CRM." },
-  { q: "Is AdPilot GDPR compliant?", a: "Yes. AdPilot is built and operated in the EU and follows GDPR principles, including data minimization, the right to erasure, and standard contractual clauses for any data transferred outside the EEA." },
-  { q: "Do you offer support?", a: "Yes. Email support on every plan, priority support on Growth, and a dedicated success manager on Pro." },
-  { q: "Can I import existing campaigns?", a: "Yes. Once you connect your TikTok ad account, AdPilot syncs your existing campaigns so you can monitor and optimize them from a single dashboard." },
-  { q: "Is AdPilot an official TikTok partner?", a: "AdPilot integrates with the official TikTok Marketing API. We are currently in the TikTok Marketing Partner application process." },
+  { q: "Am nevoie de o agenție de marketing ca să folosesc AdPilot?", a: "Nu. AdPilot e construit exact pentru afacerile care vor să facă reclame TikTok fără agenție. AI-ul se ocupă de audiențe, text și structura campaniei." },
+  { q: "Trebuie să am experiență cu reclame TikTok?", a: "Deloc. Dacă poți răspunde la câteva întrebări despre afacerea ta și obiectiv, AdPilot creează și lansează campania pentru tine." },
+  { q: "Cum funcționează asistentul WhatsApp?", a: "Conectezi numărul tău de WhatsApp, iar apoi poți trimite comenzi în limbaj natural: «câte lead-uri azi?» sau «pornește campania nouă». AdPilot înțelege și execută instant." },
+  { q: "Sunt datele mele în siguranță?", a: "Da. Ne conectăm prin OAuth oficial TikTok, nu stocăm nicio parolă, iar toate datele sunt criptate. Suntem 100% conformi GDPR." },
+  { q: "Cine deține contul de reclame TikTok?", a: "Tu. Contul TikTok Business rămâne mereu pe numele tău. AdPilot doar acționează la instrucțiunile tale și poți retrage accesul oricând." },
+  { q: "Costul include bugetul de reclame?", a: "Nu. Abonamentul AdPilot acoperă doar platforma. Bugetul de reclame e plătit direct către TikTok, din contul tău." },
+  { q: "Pot anula oricând?", a: "Da. Anulezi din dashboard în orice moment. Accesul continuă până la finalul perioadei plătite." },
+  { q: "În ce limbi vorbește AI-ul?", a: "Română și engleză. Tot AdPilot e localizat în română — interfață, asistent, rapoarte, totul." },
 ];
