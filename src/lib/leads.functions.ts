@@ -33,6 +33,7 @@ const ListInput = z.object({
   status: z.enum(["all", ...LEAD_STATUSES]).default("all"),
   campaign_id: z.string().nullable().default(null),
   search: z.string().trim().max(120).default(""),
+  since_days: z.number().int().min(0).max(365).nullable().default(null),
 });
 
 export const listLeads = createServerFn({ method: "POST" })
@@ -52,6 +53,10 @@ export const listLeads = createServerFn({ method: "POST" })
     if (data.platform !== "all") q = q.eq("platform", data.platform);
     if (data.status !== "all") q = q.eq("status", data.status);
     if (data.campaign_id) q = q.eq("campaign_id", data.campaign_id);
+    if (data.since_days && data.since_days > 0) {
+      const since = new Date(Date.now() - data.since_days * 24 * 60 * 60 * 1000).toISOString();
+      q = q.gte("created_at", since);
+    }
     if (data.search) {
       const s = `%${data.search.replace(/[%_]/g, "")}%`;
       q = q.or(`full_name.ilike.${s},email.ilike.${s},phone.ilike.${s}`);
@@ -105,6 +110,27 @@ export const updateLead = createServerFn({ method: "POST" })
       .eq("user_id", context.userId);
     if (error) throw new Error(error.message);
     return { ok: true };
+  });
+
+const BulkInput = z.object({
+  ids: z.array(z.string().uuid()).min(1).max(500),
+  action: z.enum(["status", "delete"]),
+  status: z.enum(LEAD_STATUSES).optional(),
+});
+
+export const bulkLeads = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => BulkInput.parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    if (data.action === "delete") {
+      const { error } = await supabase.from("leads").delete().in("id", data.ids).eq("user_id", userId);
+      if (error) throw new Error(error.message);
+    } else if (data.action === "status" && data.status) {
+      const { error } = await supabase.from("leads").update({ status: data.status }).in("id", data.ids).eq("user_id", userId);
+      if (error) throw new Error(error.message);
+    }
+    return { ok: true, count: data.ids.length };
   });
 
 /** Used by wizard to verify Meta connection before publish */
