@@ -272,8 +272,7 @@ function CreateWizard() {
       subtitle={titles[idx].sub}
       canBack={true}
       canNext={canNext}
-      nextLabel={isLast ? (s.platform === "meta" ? "Review & publish" : "Save campaign") : "Continue"}
-      // labels translated below via inline expression
+      nextLabel={isLast ? (s.platform === "meta" ? "Verifică și publică" : "Salvează campania") : "Continuă"}
       onBack={onBack}
       onNext={onNext}
       isSubmitting={submitting}
@@ -292,7 +291,7 @@ function CreateWizard() {
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            {s.platform === "meta" ? "Publish live on Meta?" : "Save this campaign?"}
+            {s.platform === "meta" ? "Publici live pe Meta? 🚀" : "Salvezi campania?"}
           </AlertDialogTitle>
           <AlertDialogDescription>
             {s.platform === "meta" ? (
