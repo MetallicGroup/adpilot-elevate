@@ -757,112 +757,16 @@ async function createMetaCampaignFromAgent(
     .single();
   if (insErr || !campRow) return { error: insErr?.message || "Nu pot crea campania în DB" };
 
-  // Use existing meta-publish helpers
-  const {
-    createLeadForm,
-    uploadAdImageFromBytes,
-    createCampaign,
-    createAdSet,
-    createAdCreative,
-    createAd,
-  } = await import("./meta-publish.server");
-
-  try {
-    let form: { id: string } | null = null;
-    if (objective === "leads") {
-      form = await createLeadForm(page.page_id, page.page_access_token, {
-        name: args.name,
-        fields: ["Name", "Phone"],
-        privacy_url: "https://adpilot.ro/privacy-policy",
-        custom_questions: args.custom_questions,
-      });
-    }
-    const metaCamp = await createCampaign(
-      adAcc.ad_account_id,
-      conn.access_token,
-      args.name,
-      "ACTIVE",
-      objective === "traffic" ? "OUTCOME_TRAFFIC" : "OUTCOME_LEADS",
-    );
-    const adset = await createAdSet(adAcc.ad_account_id, conn.access_token, {
-      name: `${args.name} — AdSet`,
-      campaign_id: metaCamp.id,
-      daily_budget_cents: Math.round(args.daily_budget * 100),
-      page_id: page.page_id,
-      targeting: {
-        countries: args.countries,
-        age_min: args.age_min,
-        age_max: args.age_max,
-        cities: cityKeys.length ? cityKeys : undefined,
-      },
-      status: "ACTIVE",
-      objective,
-    });
-    const isVideo = (ctx.latestMedia!.mime || "").toLowerCase().startsWith("video/");
-    let image_hash: string | undefined;
-    let video_id: string | undefined;
-    let thumbnail_url: string | null | undefined;
-    if (isVideo) {
-      const { uploadAdVideoFromBytes } = await import("./meta-publish.server");
-      const ext = (ctx.latestMedia!.mime.split("/")[1] || "mp4").split(";")[0];
-      const v = await uploadAdVideoFromBytes(
-        adAcc.ad_account_id,
-        conn.access_token,
-        bytes,
-        `ad.${ext}`,
-        ctx.latestMedia!.mime || "video/mp4",
-      );
-      video_id = v.video_id;
-      thumbnail_url = v.thumbnail_url;
-    } else {
-      image_hash = await uploadAdImageFromBytes(
-        adAcc.ad_account_id,
-        conn.access_token,
-        bytes,
-        "ad.jpg",
-        ctx.latestMedia!.mime || "image/jpeg",
-      );
-    }
-    const adCreative = await createAdCreative(adAcc.ad_account_id, conn.access_token, {
-      name: `${args.name} — Creative`,
-      page_id: page.page_id,
-      image_hash,
-      video_id,
-      thumbnail_url,
-      headline: args.headline,
-      description: args.primary_text,
-      cta: args.cta,
-      landing_url: args.landing_url ?? "https://adpilot.ro",
-      lead_gen_form_id: form?.id,
-    });
-    const ad = await createAd(adAcc.ad_account_id, conn.access_token, {
-      name: `${args.name} — Ad`,
-      adset_id: adset.id,
-      creative_id: adCreative.id,
-      status: "ACTIVE",
-    });
-    await supabaseAdmin
-      .from("campaigns")
-      .update({
-        meta_campaign_id: metaCamp.id,
-        meta_adset_id: adset.id,
-        meta_ad_id: ad.id,
-        meta_lead_form_id: form?.id ?? null,
-        status: "active",
-      })
-      .eq("id", campRow.id);
-    return {
-      ok: true,
-      campaign_id: campRow.id,
-      meta_campaign_id: metaCamp.id,
-      message:
-        objective === "traffic"
-          ? "Campanie LIVE (trafic pe site) ✅"
-          : "Campanie LIVE (lead form) ✅",
-    };
-  } catch (e: any) {
-    const msg = e?.message ?? "Publish failed";
-    console.error("[wa-agent] create_campaign publish failed:", msg, e);
-    return { error: msg };
-  }
+  return publishCampaignToMeta(supabaseAdmin, {
+    campaignRowId: campRow.id,
+    adAccountId: adAcc.ad_account_id,
+    accessToken: conn.access_token,
+    pageId: page.page_id,
+    pageAccessToken: page.page_access_token,
+    bytes,
+    mediaMime: ctx.latestMedia!.mime,
+    args,
+    objective,
+    cityKeys,
+  });
 }
