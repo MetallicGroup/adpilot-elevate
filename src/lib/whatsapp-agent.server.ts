@@ -44,8 +44,8 @@ Reguli importante:
 - Dacă userul îți trimite o poză fără context, întreabă-l ce vrea să facă cu ea (campanie nouă? doar copy?).
 - Când generezi copy, oferă 2-3 variante scurte din care să aleagă.
 - Dacă userul cere ceva ce nu poți face, spune clar și sugerează o alternativă.
-- IMPORTANT pentru imagini: folosește DOAR fotografii trimise direct pe WhatsApp (vor apărea în câmpul "imagine disponibilă" din context). NU cere URL-uri externe și NU accepta link-uri spre site-uri (Pixabay, Google Images, etc.) — sistemul nu le poate descărca. Dacă userul nu a trimis încă o poză, cere-i clar: „Trimite-mi te rog poza pentru reclamă direct aici pe WhatsApp 📸".
-- Dacă pentru create_campaign nu există imagine disponibilă (latestMedia lipsește), NU apela tool-ul — întâi cere fotografia. Imaginea din ultimele 24h rămâne disponibilă pentru confirmări ulterioare.
+- IMPORTANT pentru creative (poză SAU video): folosește DOAR fișiere trimise direct pe WhatsApp (vor apărea în „media disponibilă" din context). Acceptăm imagine (JPG/PNG) sau video (MP4/MOV — max ~100MB, 9:16/1:1/16:9). NU cere URL-uri externe și NU accepta link-uri spre site-uri (Pixabay, YouTube, etc.) — sistemul nu le poate descărca. Dacă userul nu a trimis nimic, cere-i clar: „Trimite-mi te rog poza SAU clipul pentru reclamă direct aici pe WhatsApp 📸🎬".
+- Dacă pentru create_campaign nu există media disponibilă (latestMedia lipsește), NU apela tool-ul — întâi cere fișierul. Media din ultimele 24h rămâne disponibilă pentru confirmări ulterioare.
 - NU cere niciodată userului URL-ul site-ului (landing_url). Pentru campanii Lead Generation formularul se completează direct pe Facebook/Instagram, nu e nevoie de site extern. Lasă landing_url gol și sistemul va folosi automat un URL valid implicit.
 - ATENȚIE LOCAȚIE: dacă userul menționează un oraș (ex: „pe București", „în Cluj", „target Timișoara") — FOLOSEȘTE parametrul "cities" la create_campaign cu numele orașului (ex: ["Bucharest"]). NU lăsa doar countries=["RO"] când userul a cerut explicit un oraș. Confirmă în mesajul de confirmare locația exactă (oraș + rază km).
 
@@ -99,9 +99,10 @@ export async function runWhatsAppAgent(
 
 function mediaHint(ctx: AgentCtx): string {
   if (!ctx.latestMedia) {
-    return "\n\n[Context imagine] Nu există nicio fotografie disponibilă în conversație. Dacă userul vrea o campanie nouă, cere-i să trimită poza direct pe WhatsApp.";
+    return "\n\n[Context media] Nu există nicio fotografie sau clip disponibil. Dacă userul vrea o campanie nouă, cere-i să trimită direct pe WhatsApp o poză sau un clip video.";
   }
-  return `\n\n[Context imagine] Userul a trimis o imagine (${ctx.latestMedia.mime}) — disponibilă pentru create_campaign. NU cere URL, folosește direct tool-ul.`;
+  const kind = ctx.latestMedia.mime.toLowerCase().startsWith("video/") ? "VIDEO" : "imagine";
+  return `\n\n[Context media] Userul a trimis un ${kind} (${ctx.latestMedia.mime}) — disponibil pentru create_campaign. NU cere URL, folosește direct tool-ul. Procesarea video la Meta durează ~30-60s — anunță userul să aștepte.`;
 }
 
 async function sendChunked(ctx: AgentCtx, text: string) {
@@ -511,17 +512,37 @@ async function createMetaCampaignFromAgent(
       status: "ACTIVE",
       objective,
     });
-    const image_hash = await uploadAdImageFromBytes(
-      adAcc.ad_account_id,
-      conn.access_token,
-      bytes,
-      "ad.jpg",
-      ctx.latestMedia!.mime || "image/jpeg",
-    );
+    const isVideo = (ctx.latestMedia!.mime || "").toLowerCase().startsWith("video/");
+    let image_hash: string | undefined;
+    let video_id: string | undefined;
+    let thumbnail_url: string | null | undefined;
+    if (isVideo) {
+      const { uploadAdVideoFromBytes } = await import("./meta-publish.server");
+      const ext = (ctx.latestMedia!.mime.split("/")[1] || "mp4").split(";")[0];
+      const v = await uploadAdVideoFromBytes(
+        adAcc.ad_account_id,
+        conn.access_token,
+        bytes,
+        `ad.${ext}`,
+        ctx.latestMedia!.mime || "video/mp4",
+      );
+      video_id = v.video_id;
+      thumbnail_url = v.thumbnail_url;
+    } else {
+      image_hash = await uploadAdImageFromBytes(
+        adAcc.ad_account_id,
+        conn.access_token,
+        bytes,
+        "ad.jpg",
+        ctx.latestMedia!.mime || "image/jpeg",
+      );
+    }
     const adCreative = await createAdCreative(adAcc.ad_account_id, conn.access_token, {
       name: `${args.name} — Creative`,
       page_id: page.page_id,
       image_hash,
+      video_id,
+      thumbnail_url,
       headline: args.headline,
       description: args.primary_text,
       cta: args.cta,

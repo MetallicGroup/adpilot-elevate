@@ -138,6 +138,52 @@ export async function uploadAdImageFromBytes(
   return first.hash;
 }
 
+/** Upload a video to Meta ad account, wait briefly for processing, return { video_id, thumbnail_url }. */
+export async function uploadAdVideoFromBytes(
+  adAccountId: string,
+  accessToken: string,
+  bytes: Uint8Array,
+  filename = "ad.mp4",
+  contentType = "video/mp4",
+): Promise<{ video_id: string; thumbnail_url: string | null }> {
+  const upUrl = `${GRAPH}/${metaApiVersion()}/act_${adAccountId}/advideos?access_token=${encodeURIComponent(accessToken)}`;
+  const form = new FormData();
+  form.append("source", new Blob([bytes as BlobPart], { type: contentType }), filename);
+  const upRes = await fetch(upUrl, { method: "POST", body: form });
+  const upJson = await upRes.json();
+  if (!upRes.ok || !upJson.id) {
+    throw new Error(upJson?.error?.message || `advideos upload failed (${upRes.status})`);
+  }
+  const video_id: string = upJson.id;
+
+  // Poll processing status up to ~60s
+  for (let i = 0; i < 20; i++) {
+    await new Promise((r) => setTimeout(r, 3000));
+    const statusRes = await fetch(
+      `${GRAPH}/${metaApiVersion()}/${video_id}?fields=status&access_token=${encodeURIComponent(accessToken)}`,
+    );
+    const statusJson = await statusRes.json();
+    const phase = statusJson?.status?.video_status;
+    if (phase === "ready") break;
+    if (phase === "error") throw new Error("Meta video processing failed");
+  }
+
+  // Fetch a thumbnail (preferred one if present)
+  let thumbnail_url: string | null = null;
+  try {
+    const thRes = await fetch(
+      `${GRAPH}/${metaApiVersion()}/${video_id}/thumbnails?access_token=${encodeURIComponent(accessToken)}`,
+    );
+    const thJson = await thRes.json();
+    const thumbs: any[] = Array.isArray(thJson?.data) ? thJson.data : [];
+    const preferred = thumbs.find((t) => t.is_preferred) ?? thumbs[0];
+    thumbnail_url = preferred?.uri ?? null;
+  } catch {
+    /* ignore */
+  }
+  return { video_id, thumbnail_url };
+}
+
 export async function createCampaign(
   adAccountId: string,
   accessToken: string,
@@ -249,7 +295,9 @@ export async function createAdCreative(
   args: {
     name: string;
     page_id: string;
-    image_hash: string;
+    image_hash?: string;
+    video_id?: string;
+    thumbnail_url?: string | null;
     headline: string;
     description: string;
     cta: string;
@@ -267,6 +315,25 @@ export async function createAdCreative(
     call_to_action.value = { lead_gen_form_id: args.lead_gen_form_id };
   } else {
     call_to_action.value = { link };
+  }
+  if (args.video_id) {
+    const video_data: Record<string, unknown> = {
+      video_id: args.video_id,
+      title: args.headline,
+      message: args.description,
+      call_to_action,
+    };
+    if (args.thumbnail_url) video_data.image_url = args.thumbnail_url;
+    return metaPOST(`/act_${adAccountId}/adcreatives`, accessToken, {
+      name: args.name.slice(0, 200),
+      object_story_spec: {
+        page_id: args.page_id,
+        video_data,
+      },
+    });
+  }
+  if (!args.image_hash) {
+    throw new Error("createAdCreative needs image_hash or video_id");
   }
   return metaPOST(`/act_${adAccountId}/adcreatives`, accessToken, {
     name: args.name.slice(0, 200),
