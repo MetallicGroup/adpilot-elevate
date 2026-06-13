@@ -850,6 +850,8 @@ async function createMetaCampaignFromAgent(
           : "Campanie LIVE (lead form) ✅",
     };
   } catch (e: any) {
-    return { error: e?.message ?? "Publish failed" };
+    const msg = e?.message ?? "Publish failed";
+    console.error("[wa-agent] create_campaign publish failed:", msg, e);
+    return { error: msg };
   }
 }
