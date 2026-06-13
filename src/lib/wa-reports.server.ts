@@ -61,7 +61,7 @@ async function persistOut(
     direction: "out",
     msg_type: "text",
     text,
-    meta: metaPayload ?? null,
+    meta: (metaPayload as any) ?? null,
   });
 }
 
