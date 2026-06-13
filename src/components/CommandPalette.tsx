@@ -28,7 +28,10 @@ export function CommandPalette() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(CmdCtx.get());
 
-  useEffect(() => CmdCtx.subscribe(() => setOpen(CmdCtx.get())), []);
+  useEffect(() => {
+    const unsub = CmdCtx.subscribe(() => setOpen(CmdCtx.get()));
+    return () => { unsub(); };
+  }, []);
   useEffect(() => { CmdCtx.set(open); }, [open]);
 
   useEffect(() => {
