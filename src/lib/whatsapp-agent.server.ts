@@ -364,11 +364,13 @@ async function createMetaCampaignFromAgent(
   args: {
     name: string;
     daily_budget: number;
+    objective?: "leads" | "traffic";
     headline: string;
     primary_text: string;
     description?: string;
     cta: string;
     landing_url?: string;
+    custom_questions?: Array<{ label: string; type?: "short" | "choice"; options?: string[] }>;
     countries: string[];
     cities?: string[];
     city_radius_km?: number;
@@ -376,6 +378,7 @@ async function createMetaCampaignFromAgent(
     age_max: number;
   },
 ) {
+  const objective: "leads" | "traffic" = args.objective ?? "leads";
   // Resolve connection / ad account / page
   const { data: conn } = await supabaseAdmin
     .from("meta_connections")
@@ -437,7 +440,7 @@ async function createMetaCampaignFromAgent(
       user_id: ctx.userId,
       name: args.name,
       platform: "meta",
-      objective: "LEAD_GENERATION",
+      objective: objective === "traffic" ? "LINK_CLICKS" : "LEAD_GENERATION",
       status: "draft",
       budget: args.daily_budget,
       budget_mode: "BUDGET_MODE_DAY",
@@ -449,7 +452,14 @@ async function createMetaCampaignFromAgent(
         landing_url: args.landing_url ?? "https://adpilot.ro",
         media_url: ctx.latestMedia!.signedUrl,
       },
-      lead_form: { title: args.name, fields: ["Name", "Phone"] },
+      lead_form:
+        objective === "leads"
+          ? {
+              title: args.name,
+              fields: ["Name", "Phone"],
+              custom_questions: args.custom_questions ?? [],
+            }
+          : null,
       targeting: {
         locations: resolvedCityNames.length ? resolvedCityNames : args.countries,
         age_groups: [`${args.age_min}-${args.age_max}`],
@@ -471,12 +481,22 @@ async function createMetaCampaignFromAgent(
   } = await import("./meta-publish.server");
 
   try {
-    const form = await createLeadForm(page.page_id, page.page_access_token, {
-      name: args.name,
-      fields: ["Name", "Phone"],
-      privacy_url: "https://adpilot.ro/privacy-policy",
-    });
-    const metaCamp = await createCampaign(adAcc.ad_account_id, conn.access_token, args.name, "ACTIVE");
+    let form: { id: string } | null = null;
+    if (objective === "leads") {
+      form = await createLeadForm(page.page_id, page.page_access_token, {
+        name: args.name,
+        fields: ["Name", "Phone"],
+        privacy_url: "https://adpilot.ro/privacy-policy",
+        custom_questions: args.custom_questions,
+      });
+    }
+    const metaCamp = await createCampaign(
+      adAcc.ad_account_id,
+      conn.access_token,
+      args.name,
+      "ACTIVE",
+      objective === "traffic" ? "OUTCOME_TRAFFIC" : "OUTCOME_LEADS",
+    );
     const adset = await createAdSet(adAcc.ad_account_id, conn.access_token, {
       name: `${args.name} — AdSet`,
       campaign_id: metaCamp.id,
@@ -489,6 +509,7 @@ async function createMetaCampaignFromAgent(
         cities: cityKeys.length ? cityKeys : undefined,
       },
       status: "ACTIVE",
+      objective,
     });
     const image_hash = await uploadAdImageFromBytes(
       adAcc.ad_account_id,
@@ -505,7 +526,7 @@ async function createMetaCampaignFromAgent(
       description: args.primary_text,
       cta: args.cta,
       landing_url: args.landing_url ?? "https://adpilot.ro",
-      lead_gen_form_id: form.id,
+      lead_gen_form_id: form?.id,
     });
     const ad = await createAd(adAcc.ad_account_id, conn.access_token, {
       name: `${args.name} — Ad`,
@@ -519,7 +540,7 @@ async function createMetaCampaignFromAgent(
         meta_campaign_id: metaCamp.id,
         meta_adset_id: adset.id,
         meta_ad_id: ad.id,
-        meta_lead_form_id: form.id,
+        meta_lead_form_id: form?.id ?? null,
         status: "active",
       })
       .eq("id", campRow.id);
@@ -527,7 +548,10 @@ async function createMetaCampaignFromAgent(
       ok: true,
       campaign_id: campRow.id,
       meta_campaign_id: metaCamp.id,
-      message: "Campanie LIVE pe Meta ✅",
+      message:
+        objective === "traffic"
+          ? "Campanie LIVE (trafic pe site) ✅"
+          : "Campanie LIVE (lead form) ✅",
     };
   } catch (e: any) {
     return { error: e?.message ?? "Publish failed" };
