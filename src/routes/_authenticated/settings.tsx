@@ -6,6 +6,13 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Facebook, RefreshCw, Trash2, CheckCircle2 } from "lucide-react";
 import { resyncMetaConnection, selectMetaAdAccount, selectMetaPage } from "@/lib/meta.functions";
+import {
+  getWhatsAppConnection,
+  saveWhatsAppConnection,
+  disconnectWhatsApp,
+  sendWhatsAppTest,
+} from "@/lib/whatsapp.functions";
+import { MessageCircle, Copy } from "lucide-react";
 
 type MetaSearch = { meta?: string; reason?: string };
 
@@ -60,6 +67,8 @@ function Settings() {
       </div>
 
       <MetaConnectionCard />
+
+      <WhatsAppConnectionCard />
 
       <button
         onClick={signOut}
