@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Plus, TrendingUp, Inbox, ArrowRight, Sparkles } from "lucide-react";
 import { fmtMoney, fmtNum } from "@/lib/format";
 import { listCampaigns, type CampaignListRow } from "@/lib/campaigns.functions";
+import { refreshAllLiveCampaignInsights } from "@/lib/meta-insights.functions";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -16,6 +17,7 @@ function Dashboard() {
   const [campaigns, setCampaigns] = useState<CampaignListRow[]>([]);
   const [recentInsights, setRecentInsights] = useState<{ id: string; campaign_id: string | null; insight_text: string; action: string | null; generated_at: string }[]>([]);
   const loadCampaigns = useServerFn(listCampaigns);
+  const refreshAll = useServerFn(refreshAllLiveCampaignInsights);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -33,6 +35,22 @@ function Dashboard() {
       .limit(5)
       .then(({ data }) => setRecentInsights((data as any) ?? []));
   }, [loadCampaigns]);
+
+  // Auto-refresh Meta insights for all live campaigns every 60s
+  useEffect(() => {
+    const tick = async () => {
+      try {
+        await refreshAll();
+        const r = await loadCampaigns();
+        setCampaigns(r.campaigns);
+      } catch {
+        // silent
+      }
+    };
+    tick();
+    const t = setInterval(tick, 60_000);
+    return () => clearInterval(t);
+  }, [refreshAll, loadCampaigns]);
 
   const active = campaigns.filter((c) => c.status === "active");
   const totalSpend = campaigns.reduce((a, c) => a + c.spend, 0);
