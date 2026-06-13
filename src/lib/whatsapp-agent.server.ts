@@ -5,7 +5,7 @@
 import { generateText, tool, stepCountIs } from "ai";
 import { z } from "zod";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
-import { sendWhatsAppMessage } from "./whatsapp.server";
+import { sendWhatsAppMessage, uploadWhatsAppMedia } from "./whatsapp.server";
 import { metaApiVersion } from "./meta.server";
 
 const GRAPH = "https://graph.facebook.com";
