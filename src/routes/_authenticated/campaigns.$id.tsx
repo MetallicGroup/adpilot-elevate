@@ -7,6 +7,7 @@ import { ArrowLeft, RefreshCw, Sparkles, TrendingUp, DollarSign, Eye, MousePoint
 import { getCampaign } from "@/lib/campaigns.functions";
 import { refreshCampaignInsights } from "@/lib/meta-insights.functions";
 import { generateAiInsights } from "@/lib/ai-optimize.functions";
+import { publishMetaCampaign } from "@/lib/meta-publish.functions";
 import { AdPreview } from "@/components/wizard/AdPreview";
 import { fmtMoney, fmtNum } from "@/lib/format";
 
@@ -22,10 +23,12 @@ function CampaignDetail() {
   const load = useServerFn(getCampaign);
   const refresh = useServerFn(refreshCampaignInsights);
   const aiGen = useServerFn(generateAiInsights);
+  const publishFn = useServerFn(publishMetaCampaign);
   const [data, setData] = useState<Data | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [aiBusy, setAiBusy] = useState(false);
+  const [publishing, setPublishing] = useState(false);
 
   const fetchAll = useCallback(async () => {
     try {
@@ -72,6 +75,19 @@ function CampaignDetail() {
       toast.error(e?.message ?? "AI failed");
     } finally {
       setAiBusy(false);
+    }
+  };
+
+  const onPublish = async () => {
+    setPublishing(true);
+    try {
+      await publishFn({ data: { campaign_id: id } });
+      toast.success("Campanie publicată pe Meta");
+      await fetchAll();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Publish failed");
+    } finally {
+      setPublishing(false);
     }
   };
 
@@ -126,6 +142,22 @@ function CampaignDetail() {
           Refresh
         </button>
       </div>
+
+      {campaign.status === "draft" && campaign.platform === "meta" && (
+        <div className="mt-4 card-floating p-4 flex items-center justify-between gap-3">
+          <div className="text-sm">
+            <div className="font-medium">Draft</div>
+            <div className="text-xs text-muted-foreground">Publică pe Meta pentru a activa campania.</div>
+          </div>
+          <button
+            onClick={onPublish}
+            disabled={publishing}
+            className="press shrink-0 inline-flex items-center gap-1.5 px-4 h-9 rounded-full bg-foreground text-background text-xs font-medium disabled:opacity-50"
+          >
+            {publishing ? "Public…" : "Publică acum"}
+          </button>
+        </div>
+      )}
 
       <div className="mt-5 grid grid-cols-2 gap-3">
         {stats.map((s) => (
