@@ -122,6 +122,7 @@ export async function createCampaign(
     status,
     special_ad_categories: [],
     buying_type: "AUCTION",
+    is_adset_budget_sharing_enabled: false,
   });
 }
 
