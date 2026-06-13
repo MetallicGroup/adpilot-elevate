@@ -212,7 +212,9 @@ export async function createAdCreative(
       page_id: args.page_id,
       link_data: {
         image_hash: args.image_hash,
-        link: args.landing_url || `https://facebook.com/${args.page_id}`,
+        link: args.landing_url && /^https?:\/\//i.test(args.landing_url) && !/facebook\.com/i.test(args.landing_url)
+          ? args.landing_url
+          : "https://adpilot.ro",
         message: args.description,
         name: args.headline,
         call_to_action: {
