@@ -5,6 +5,41 @@ import { metaApiVersion } from "./meta.server";
 
 const GRAPH = "https://graph.facebook.com";
 
+/** Central AdPilot WhatsApp credentials (one number serves all users). */
+export function getCentralWhatsApp(): {
+  phoneNumberId: string;
+  accessToken: string;
+  displayNumber: string;
+  verifyToken: string;
+} | null {
+  const phoneNumberId = process.env.ADPILOT_WA_PHONE_ID;
+  const accessToken = process.env.ADPILOT_WA_TOKEN;
+  const displayNumber = process.env.ADPILOT_WA_DISPLAY_NUMBER;
+  const verifyToken = process.env.ADPILOT_WA_VERIFY_TOKEN;
+  if (!phoneNumberId || !accessToken || !displayNumber || !verifyToken) return null;
+  return {
+    phoneNumberId,
+    accessToken,
+    displayNumber: displayNumber.replace(/\D/g, ""),
+    verifyToken,
+  };
+}
+
+export function normalizePhone(input: string): string {
+  return (input || "").replace(/\D/g, "");
+}
+
+export function buildWaMeLink(displayNumber: string, prefilledText: string): string {
+  const digits = displayNumber.replace(/\D/g, "");
+  return `https://wa.me/${digits}?text=${encodeURIComponent(prefilledText)}`;
+}
+
+export function generateActivationCode(): string {
+  const bytes = new Uint8Array(4);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("").toUpperCase();
+}
+
 export type WAMessageContent =
   | { type: "text"; text: string }
   | { type: "image"; mediaId: string; caption?: string }
