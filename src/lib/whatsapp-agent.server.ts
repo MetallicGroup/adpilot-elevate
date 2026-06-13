@@ -83,6 +83,15 @@ export async function runWhatsAppAgent(
 
   const tools = buildTools(ctx, supabaseAdmin);
 
+  if (isRetryPublishRequest(userMessage)) {
+    const retry = await retryLastDraftCampaign(supabaseAdmin, ctx);
+    const text = retry.ok
+      ? "Gata — campania este LIVE acum ✅"
+      : `Nu a mers încă. Motivul real: ${retry.error}`;
+    await sendChunked(ctx, text);
+    return { text };
+  }
+
   // Pull pending anomaly action proposed in last outbound message, if any.
   const { data: lastOut } = await supabaseAdmin
     .from("whatsapp_messages")
