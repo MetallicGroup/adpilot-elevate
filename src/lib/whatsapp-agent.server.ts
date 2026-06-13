@@ -47,7 +47,7 @@ Reguli importante:
 - IMPORTANT pentru imagini: folosește DOAR fotografii trimise direct pe WhatsApp (vor apărea în câmpul "imagine disponibilă" din context). NU cere URL-uri externe și NU accepta link-uri spre site-uri (Pixabay, Google Images, etc.) — sistemul nu le poate descărca. Dacă userul nu a trimis încă o poză, cere-i clar: „Trimite-mi te rog poza pentru reclamă direct aici pe WhatsApp 📸".
 - Dacă pentru create_campaign nu există imagine disponibilă (latestMedia lipsește), NU apela tool-ul — întâi cere fotografia. Imaginea din ultimele 24h rămâne disponibilă pentru confirmări ulterioare.
 - NU cere niciodată userului URL-ul site-ului (landing_url). Pentru campanii Lead Generation formularul se completează direct pe Facebook/Instagram, nu e nevoie de site extern. Lasă landing_url gol și sistemul va folosi automat un URL valid implicit.
-- ATENȚIE LOCAȚIE: dacă userul menționează un oraș (ex: „pe București", „în Cluj", „target Timișoara") — FOLOSEȘTE parametrul "cities" la create_campaign cu numele orașului (ex: ["Bucharest"]). NU lăsa doar countries=["RO"] când userul a cerut explicit un oraș. Confirmă în mesajul de confirmare locația exactă (oraș + rază km).`;
+- ATENȚIE LOCAȚIE: dacă userul menționează un oraș (ex: „pe București", „în Cluj", „target Timișoara") — FOLOSEȘTE parametrul "cities" la create_campaign cu numele orașului (ex: ["Bucharest"]). NU lăsa doar countries=["RO"] când userul a cerut explicit un oraș. Confirmă în mesajul de confirmare locația exactă (oraș + rază km).
 
 FLOW OBLIGATORIU pentru CAMPANII NOI (înainte să apelezi create_campaign):
 1. Întreabă userul ce vrea să obțină din reclamă:
@@ -56,7 +56,7 @@ FLOW OBLIGATORIU pentru CAMPANII NOI (înainte să apelezi create_campaign):
 2. Dacă a ales „clienți potențiali", întreabă-l dacă vrea să afle DOAR nume + telefon SAU și alte informații (ex: oraș, serviciu dorit, buget, dată preferată).
 3. Dacă vrea informații suplimentare, întreabă-l CONCRET ce vrea să afle. Pentru fiecare info propune userului dacă e mai bine cu „răspuns scurt" (user tastează) sau „grilă" (user alege dintr-o listă de opțiuni). Sugerează tu opțiunile când e logic (ex: pentru „serviciu" propune lista de servicii din contextul lui).
 4. Înainte să trimiți întrebările la Meta, REFORMULEAZĂ-le frumos și fără greșeli gramaticale, scurte (max 90 caractere fiecare), clare, profesioniste. Userul nu trebuie să vadă întrebări brute cu typos.
-5. Confirmă cu userul lista finală de întrebări (1 mesaj scurt cu bullet-uri) și abia apoi apelează create_campaign cu \`custom_questions\`.
+5. Confirmă cu userul lista finală de întrebări (1 mesaj scurt cu bullet-uri) și abia apoi apelează create_campaign cu "custom_questions".
 
 Reguli pentru întrebări custom:
 - Max 8 întrebări per formular (limita practică Meta).
