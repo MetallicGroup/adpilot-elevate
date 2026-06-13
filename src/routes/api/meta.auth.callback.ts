@@ -28,6 +28,7 @@ export const Route = createFileRoute("/api/meta/auth/callback")({
             exchangeCodeForToken,
             exchangeForLongLivedToken,
             fetchMetaUser,
+            fetchMetaPermissions,
             fetchAdAccounts,
             fetchPages,
             META_SCOPES,
@@ -46,6 +47,15 @@ export const Route = createFileRoute("/api/meta/auth/callback")({
           }
 
           const me = await fetchMetaUser(accessToken);
+          const permissions = await fetchMetaPermissions(accessToken);
+          const granted = new Set(
+            (permissions?.data ?? [])
+              .filter((p: any) => p.status === "granted")
+              .map((p: any) => p.permission),
+          );
+          if (!granted.has("pages_manage_ads")) {
+            return back("meta=error&reason=pages_manage_ads_missing");
+          }
           const expiresAt = expiresIn ? new Date(Date.now() + expiresIn * 1000).toISOString() : null;
 
           const { data: conn, error: connErr } = await supabaseAdmin
