@@ -637,7 +637,7 @@ function StepReview({ s, pageName }: { s: State; pageName: string }) {
   return (
     <div className="space-y-3">
       <AdPreview
-        pageName={pageName || (s.platform === "meta" ? "Your Facebook Page" : s.name)}
+        pageName={pageName || (s.platform === "meta" ? "Pagina ta Facebook" : s.name)}
         headline={s.headline}
         description={s.description}
         cta={s.cta}
@@ -645,29 +645,29 @@ function StepReview({ s, pageName }: { s: State; pageName: string }) {
         landingUrl={s.landing_url}
       />
       <div className="text-[11px] uppercase tracking-wider text-muted-foreground pt-3">Preview · cum va apărea în feed</div>
-      <ReviewRow label="Platform" value={s.platform === "tiktok" ? "TikTok Ads" : "Meta Ads (Facebook & Instagram)"} />
-      <ReviewRow label="Name" value={s.name} />
-      <ReviewRow label="Objective" value={s.objective === "LEAD_GENERATION" ? "Lead generation" : "Conversions"} />
-      <ReviewRow label="Budget" value={`${fmtMoney(s.budget)} ${s.budget_mode === "BUDGET_MODE_DAY" ? "/ day" : "lifetime"}`} />
-      <ReviewRow label="Schedule" value={`${s.start_date}${s.end_date ? ` → ${s.end_date}` : " · ongoing"}`} />
-      <ReviewRow label="Locations" value={s.locations.join(", ") || "—"} />
-      <ReviewRow label="Age" value={s.age_groups.join(", ") || "—"} />
-      <ReviewRow label="Gender" value={s.genders.join(", ") || "—"} />
-      <ReviewRow label="Interests" value={s.interests.length ? s.interests.join(", ") : "Any"} />
-      <ReviewRow label="Languages" value={s.languages.join(", ") || "—"} />
-      <ReviewRow label="Headline" value={s.headline} />
+      <ReviewRow label="Platformă" value={s.platform === "tiktok" ? "TikTok Ads" : "Meta Ads (Facebook & Instagram)"} />
+      <ReviewRow label="Nume" value={s.name} />
+      <ReviewRow label="Obiectiv" value={s.objective === "LEAD_GENERATION" ? "Generare lead-uri" : "Conversii"} />
+      <ReviewRow label="Buget" value={`${fmtMoney(s.budget)} ${s.budget_mode === "BUDGET_MODE_DAY" ? "/ zi" : "total"}`} />
+      <ReviewRow label="Program" value={`${s.start_date}${s.end_date ? ` → ${s.end_date}` : " · continuu"}`} />
+      <ReviewRow label="Locații" value={s.locations.join(", ") || "—"} />
+      <ReviewRow label="Vârstă" value={s.age_groups.join(", ") || "—"} />
+      <ReviewRow label="Gen" value={s.genders.join(", ") || "—"} />
+      <ReviewRow label="Interese" value={s.interests.length ? s.interests.join(", ") : "Oricare"} />
+      <ReviewRow label="Limbi" value={s.languages.join(", ") || "—"} />
+      <ReviewRow label="Titlu" value={s.headline} />
       <ReviewRow label="CTA" value={s.cta} />
-      <ReviewRow label="Landing URL" value={s.landing_url} />
+      <ReviewRow label="URL landing" value={s.landing_url} />
       {s.objective === "LEAD_GENERATION" && (
         <>
-          <ReviewRow label="Form" value={s.lf_title} />
-          <ReviewRow label="Fields" value={s.lf_fields.join(", ")} />
+          <ReviewRow label="Formular" value={s.lf_title} />
+          <ReviewRow label="Câmpuri" value={s.lf_fields.join(", ")} />
         </>
       )}
       <div className="mt-6 card-floating p-4 flex items-start gap-3 text-sm">
         <Check className="w-4 h-4 mt-0.5 text-foreground" />
         <div className="text-muted-foreground">
-          Saved as a draft to your workspace. Connect {s.platform === "tiktok" ? "TikTok" : "Meta"} in Settings to publish live.
+          Salvată ca draft în workspace-ul tău. Conectează {s.platform === "tiktok" ? "TikTok" : "Meta"} în Setări pentru publicare live.
         </div>
       </div>
     </div>
