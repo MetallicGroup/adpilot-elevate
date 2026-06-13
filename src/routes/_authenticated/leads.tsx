@@ -212,9 +212,9 @@ function LeadsPage() {
               await patchLead({ data: { id: openLead.id, notes } });
               setLeads((prev) => prev.map((x) => (x.id === openLead.id ? { ...x, notes } : x)));
               setOpenLead({ ...openLead, notes });
-              toast.success("Note saved");
+              toast.success("Notiță salvată ✓");
             } catch (e: any) {
-              toast.error(e?.message ?? "Couldn't save");
+              toast.error(e?.message ?? "Nu am putut salva");
             }
           }}
         />
