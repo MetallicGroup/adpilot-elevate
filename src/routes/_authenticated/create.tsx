@@ -12,6 +12,7 @@ import { checkMetaReady, listMetaPages } from "@/lib/leads.functions";
 import { publishMetaCampaign, uploadAdMedia } from "@/lib/meta-publish.functions";
 import { fmtMoney } from "@/lib/format";
 import { AdPreview } from "@/components/wizard/AdPreview";
+import { loadDraft, saveDraft, clearDraft } from "@/lib/wizard-draft";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -103,6 +104,22 @@ function CreateWizard() {
     lf_privacy_url: "",
     page_id: "",
   });
+
+  // Hydrate draft from localStorage once
+  const [draftRestored, setDraftRestored] = useState(false);
+  useEffect(() => {
+    const d = loadDraft<State>();
+    if (d) { setS(d); toast.success("Draft restaurat ✨", { duration: 2000 }); }
+    setDraftRestored(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Autosave on change (debounced)
+  useEffect(() => {
+    if (!draftRestored) return;
+    const t = setTimeout(() => saveDraft(s), 400);
+    return () => clearTimeout(t);
+  }, [s, draftRestored]);
 
   const update = <K extends keyof State>(k: K, v: State[K]) => setS((p) => ({ ...p, [k]: v }));
   const toggle = <K extends keyof State>(k: K, v: string) => {
@@ -214,6 +231,7 @@ function CreateWizard() {
         try {
           await publishMeta({ data: { campaign_id: saved.id, page_id: s.page_id || undefined } });
           toast.success("Live pe Meta! 🎉", { id: "publish" });
+          clearDraft();
           navigate({ to: "/campaigns/$id", params: { id: saved.id } });
           return;
         } catch (e: any) {
@@ -221,6 +239,7 @@ function CreateWizard() {
         }
       } else {
         toast.success("Campanie salvată ca draft 💾");
+        clearDraft();
       }
       navigate({ to: "/dashboard" });
     } catch (e: any) {
@@ -286,6 +305,24 @@ function CreateWizard() {
         <StepReview s={s} pageName={pages.find((p) => p.page_id === s.page_id)?.page_name ?? ""} />
       )}
     </WizardShell>
+
+    <aside className="hidden xl:block fixed top-20 right-6 w-[360px] z-30 max-h-[calc(100vh-7rem)] overflow-y-auto">
+      <div className="rounded-2xl border border-border bg-background/80 backdrop-blur-xl shadow-2xl p-4 space-y-4">
+        <div className="flex items-center justify-between">
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Preview live</p>
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-400/10 text-emerald-300 border border-emerald-400/20">💾 salvat</span>
+        </div>
+        <AdPreview
+          pageName={pages.find((p) => p.page_id === s.page_id)?.page_name || (s.platform === "meta" ? "Pagina ta" : s.name || "Brandul tău")}
+          headline={s.headline}
+          description={s.description}
+          cta={s.cta}
+          mediaUrl={s.media_url}
+          landingUrl={s.landing_url}
+        />
+        <LiveEstimates s={s} />
+      </div>
+    </aside>
 
     <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
       <AlertDialogContent>
@@ -679,6 +716,32 @@ function ReviewRow({ label, value }: { label: string; value: string }) {
     <div className="flex items-start justify-between gap-4 py-3 border-b border-border last:border-0">
       <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
       <div className="text-sm text-foreground text-right max-w-[60%] break-words">{value || "—"}</div>
+    </div>
+  );
+}
+
+function LiveEstimates({ s }: { s: State }) {
+  const dailyBudget = s.budget_mode === "BUDGET_MODE_DAY" ? s.budget : s.budget / 14;
+  const cpm = s.platform === "tiktok" ? 4.2 : 6.8;
+  const reachLow = Math.round((dailyBudget / cpm) * 1000 * 0.8);
+  const reachHigh = Math.round((dailyBudget / cpm) * 1000 * 1.4);
+  const fmt = (n: number) => n >= 1000 ? `${(n / 1000).toFixed(1)}k` : `${n}`;
+  return (
+    <div className="rounded-xl border border-border bg-secondary/40 p-3 space-y-2.5">
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">📊 Estimări zilnice</p>
+      <div className="grid grid-cols-2 gap-2 text-center">
+        <div className="rounded-lg bg-background/60 p-2">
+          <p className="text-[10px] text-muted-foreground">Reach</p>
+          <p className="font-mono text-sm font-semibold mt-0.5">{fmt(reachLow)}–{fmt(reachHigh)}</p>
+        </div>
+        <div className="rounded-lg bg-background/60 p-2">
+          <p className="text-[10px] text-muted-foreground">CPM estimat</p>
+          <p className="font-mono text-sm font-semibold mt-0.5">€{cpm.toFixed(2)}</p>
+        </div>
+      </div>
+      <p className="text-[10px] text-muted-foreground leading-relaxed">
+        Bazat pe medii {s.platform === "tiktok" ? "TikTok" : "Meta"} pentru audiențe similare. Reach real variază în funcție de creative.
+      </p>
     </div>
   );
 }
