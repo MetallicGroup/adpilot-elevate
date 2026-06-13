@@ -39,7 +39,7 @@ function WhatsAppPage() {
         <FeatureRow
           icon={<Sparkles className="w-4 h-4" />}
           title="Comenzi AI 🤖"
-          desc="„cât am cheltuit săptămâna asta?", „pauză campania X", „arată-mi top lead-uri”."
+          desc={'„cât am cheltuit săptămâna asta?", „pauză campania X", „arată-mi top lead-uri".'}
         />
         <FeatureRow
           icon={<Zap className="w-4 h-4" />}
