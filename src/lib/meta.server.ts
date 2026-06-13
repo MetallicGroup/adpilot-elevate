@@ -85,10 +85,46 @@ export async function fetchMetaUser(accessToken: string) {
 }
 
 export async function fetchAdAccounts(accessToken: string) {
-  return metaGet(
-    "/me/adaccounts?fields=account_id,name,currency,timezone_name,account_status&limit=200",
-    accessToken,
-  );
+  const fields = "account_id,name,currency,timezone_name,account_status";
+  const seen = new Set<string>();
+  const data: any[] = [];
+
+  const addAccounts = (rows: any[] = []) => {
+    for (const row of rows) {
+      const id = row?.account_id ?? String(row?.id ?? "").replace(/^act_/, "");
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      data.push({ ...row, account_id: id });
+    }
+  };
+
+  try {
+    const direct = await metaGet(`/me/adaccounts?fields=${fields}&limit=200`, accessToken);
+    addAccounts(direct?.data ?? []);
+  } catch (e) {
+    console.warn("Meta direct ad accounts lookup failed", e);
+  }
+
+  try {
+    const businesses = await metaGet("/me/businesses?fields=id,name&limit=100", accessToken);
+    for (const business of businesses?.data ?? []) {
+      for (const edge of ["owned_ad_accounts", "client_ad_accounts"]) {
+        try {
+          const accounts = await metaGet(
+            `/${business.id}/${edge}?fields=${fields}&limit=200`,
+            accessToken,
+          );
+          addAccounts(accounts?.data ?? []);
+        } catch (e) {
+          console.warn(`Meta ${edge} lookup failed for business ${business.id}`, e);
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("Meta business lookup failed", e);
+  }
+
+  return { data };
 }
 
 export async function fetchPages(accessToken: string) {
