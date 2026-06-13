@@ -53,7 +53,7 @@ export async function runWhatsAppAgent(
   const apiKey = process.env.LOVABLE_API_KEY;
   if (!apiKey) throw new Error("LOVABLE_API_KEY missing");
 
-  const { supabaseAdmin } = await import("./client.server-import");
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const provider = createLovableAiGatewayProvider(apiKey);
   const model = provider("google/gemini-2.5-flash");
 
@@ -93,7 +93,7 @@ async function sendChunked(ctx: AgentCtx, text: string) {
       ctx.toPhone,
       { type: "text", text: part },
     );
-    const { supabaseAdmin } = await import("./client.server-import");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("whatsapp_messages").insert({
       user_id: ctx.userId,
       connection_id: ctx.connection.id,
