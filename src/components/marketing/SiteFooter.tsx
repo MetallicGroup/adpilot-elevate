@@ -3,43 +3,45 @@ import logoAsset from "@/assets/adpilot-logo.png.asset.json";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-border bg-secondary/30 mt-24">
+    <footer className="border-t border-border bg-card/40 mt-24">
       <div className="max-w-6xl mx-auto w-full px-6 py-16 grid gap-10 md:grid-cols-5">
         <div>
           <div className="flex items-center gap-2">
-            <img src={logoAsset.url} alt="AdPilot" className="h-9 w-9 object-contain" />
+            <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ background: "var(--gradient-primary)" }}>
+              <img src={logoAsset.url} alt="" className="h-6 w-6 object-contain" />
+            </div>
             <span className="font-semibold tracking-tight">AdPilot</span>
           </div>
           <p className="mt-4 text-sm text-muted-foreground max-w-xs">
-            The AI platform to launch, manage, and optimize TikTok ads — without an agency.
+            Platforma AI care lansează, gestionează și optimizează reclame TikTok — fără agenție, fără bătăi de cap.
           </p>
         </div>
-        <FooterCol title="Company" links={[
-          { to: "/about", label: "About" },
+        <FooterCol title="Companie" links={[
+          { to: "/about", label: "Despre noi" },
           { to: "/contact", label: "Contact" },
-          { to: "/pricing", label: "Pricing" },
+          { to: "/pricing", label: "Prețuri" },
         ]} />
         <FooterCol title="Legal" links={[
-          { to: "/privacy-policy", label: "Privacy Policy" },
-          { to: "/terms-of-service", label: "Terms of Service" },
-          { to: "/cookie-policy", label: "Cookie Policy" },
-          { to: "/gdpr", label: "GDPR Compliance" },
+          { to: "/privacy-policy", label: "Politica de confidențialitate" },
+          { to: "/terms-of-service", label: "Termeni și condiții" },
+          { to: "/cookie-policy", label: "Politica cookies" },
+          { to: "/gdpr", label: "Conformitate GDPR" },
         ]} />
-        <FooterCol title="Product" links={[
-          { to: "/features", label: "Features" },
-          { to: "/integrations", label: "Integrations" },
-          { to: "/security", label: "Security" },
+        <FooterCol title="Produs" links={[
+          { to: "/features", label: "Funcționalități" },
+          { to: "/integrations", label: "Integrări" },
+          { to: "/security", label: "Securitate" },
         ]} />
-        <FooterCol title="Support" links={[
-          { to: "/help-center", label: "Help Center" },
-          { to: "/documentation", label: "Documentation" },
+        <FooterCol title="Suport" links={[
+          { to: "/help-center", label: "Centru de ajutor" },
+          { to: "/documentation", label: "Documentație" },
           { to: "/contact", label: "Contact" },
         ]} />
       </div>
       <div className="border-t border-border">
         <div className="max-w-6xl mx-auto w-full px-6 py-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs text-muted-foreground">
-          <p>© {new Date().getFullYear()} AdPilot. All rights reserved.</p>
-          <p>Made for ad creators. Not affiliated with TikTok Inc.</p>
+          <p>© {new Date().getFullYear()} AdPilot. Toate drepturile rezervate.</p>
+          <p>Construit în România 🇷🇴 · Neafiliat cu TikTok Inc.</p>
         </div>
       </div>
     </footer>
