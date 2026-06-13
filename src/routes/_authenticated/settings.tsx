@@ -4,9 +4,11 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Facebook, RefreshCw, Trash2, CheckCircle2 } from "lucide-react";
+import { Facebook, RefreshCw, Trash2, CheckCircle2, User, Plug, Users, Webhook, Palette, Copy, Plus, Music2 } from "lucide-react";
 import { resyncMetaConnection, selectMetaAdAccount, selectMetaPage } from "@/lib/meta.functions";
 import { WhatsAppConnectionCard } from "@/components/whatsapp/WhatsAppConnectionCard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { applyAccent } from "@/components/AppHeader";
 
 type MetaSearch = { meta?: string; reason?: string };
 
@@ -46,36 +48,270 @@ function Settings() {
   }
 
   return (
-    <div className="max-w-md mx-auto px-5 pt-10 space-y-6">
+    <div className="max-w-4xl mx-auto px-5 pt-8 pb-32 space-y-6">
       <div>
         <p className="text-sm text-muted-foreground">Cont</p>
         <h1 className="text-3xl font-bold tracking-tight mt-1">Setări ⚙️</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Tot ce ține de cont, integrări, echipă și aspect — într-un loc.</p>
       </div>
 
-      <div className="card-floating p-5">
-        <p className="text-xs text-muted-foreground">Plan</p>
-        <p className="mt-1 font-semibold">Starter · $49/mo</p>
-        <p className="mt-2 text-xs text-muted-foreground">Portal de facturare Stripe — în curând.</p>
-      </div>
+      <Tabs defaultValue="cont" className="w-full">
+        <TabsList className="bg-secondary/40 p-1 rounded-full h-auto flex flex-wrap gap-1 justify-start w-full">
+          <TabTrig value="cont" icon={<User className="w-3.5 h-3.5" />}>Cont</TabTrig>
+          <TabTrig value="integrari" icon={<Plug className="w-3.5 h-3.5" />}>Integrări</TabTrig>
+          <TabTrig value="echipa" icon={<Users className="w-3.5 h-3.5" />}>Echipă</TabTrig>
+          <TabTrig value="api" icon={<Webhook className="w-3.5 h-3.5" />}>API & Webhooks</TabTrig>
+          <TabTrig value="aspect" icon={<Palette className="w-3.5 h-3.5" />}>Aspect</TabTrig>
+        </TabsList>
 
-      <div className="card-floating p-5">
-        <p className="text-xs text-muted-foreground">Conturi TikTok Ads</p>
-        <p className="mt-1 text-sm">Niciun cont conectat încă.</p>
-      </div>
+        <TabsContent value="cont" className="mt-6 space-y-4">
+          <Card title="Plan & facturare" subtitle="Abonament curent și acces la portalul Stripe.">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="font-semibold">Growth · €199/lună</p>
+                <p className="text-xs text-muted-foreground mt-1">Reînnoire pe 24 dec 2026 · card •••• 4242</p>
+              </div>
+              <button className="press text-sm px-4 py-2 rounded-lg border border-border hover:bg-secondary">
+                Deschide portal
+              </button>
+            </div>
+            <div className="mt-4 grid grid-cols-3 gap-3">
+              <Stat label="Lead-uri" value="312" cap="/ ∞" />
+              <Stat label="Campanii" value="8" cap="/ ∞" />
+              <Stat label="Buget AI" value="€8.4k" cap="/ €10k" />
+            </div>
+          </Card>
 
-      <MetaConnectionCard />
+          <Card title="Profil" subtitle="Datele tale de afișare în AdPilot.">
+            <div className="space-y-3">
+              <Row label="Nume afișat" defaultValue="Cont AdPilot" />
+              <Row label="Email" defaultValue="tu@adpilot.ro" disabled />
+              <Row label="Telefon" defaultValue="+40 722 123 456" />
+            </div>
+            <button className="press mt-4 text-sm px-4 py-2 rounded-lg bg-foreground text-background">Salvează</button>
+          </Card>
 
-      <WhatsAppConnectionCard />
+          <button
+            onClick={signOut}
+            className="press w-full py-3 rounded-xl border border-border text-sm font-medium hover:bg-secondary text-destructive"
+          >
+            Deconectare
+          </button>
+        </TabsContent>
 
+        <TabsContent value="integrari" className="mt-6 space-y-4">
+          <div className="card-floating p-5">
+            <div className="flex items-center gap-2">
+              <Music2 className="w-4 h-4" />
+              <p className="text-xs text-muted-foreground">TikTok Ads</p>
+            </div>
+            <p className="mt-1 text-sm">Niciun cont conectat încă.</p>
+            <button className="press mt-3 w-full py-2.5 rounded-xl border border-border hover:bg-secondary text-xs font-medium">
+              Conectează TikTok
+            </button>
+          </div>
+          <MetaConnectionCard />
+          <WhatsAppConnectionCard />
+        </TabsContent>
+
+        <TabsContent value="echipa" className="mt-6 space-y-4">
+          <Card title="Membri echipă" subtitle="Invită colegii — poți seta roluri și permisiuni.">
+            <div className="divide-y divide-border">
+              {MEMBERS.map((m) => (
+                <div key={m.email} className="py-3 flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full text-white text-xs font-semibold flex items-center justify-center" style={{ background: `linear-gradient(135deg, oklch(0.62 0.22 ${m.hue}), oklch(0.7 0.2 ${m.hue + 30}))` }}>
+                    {m.name.split(" ").map(n => n[0]).slice(0,2).join("")}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate">{m.name} {m.you && <span className="text-[10px] text-primary font-normal">(tu)</span>}</p>
+                    <p className="text-xs text-muted-foreground truncate">{m.email}</p>
+                  </div>
+                  <span className="text-[10px] uppercase tracking-wider px-2 py-1 rounded-full border border-border text-muted-foreground">{m.role}</span>
+                </div>
+              ))}
+            </div>
+            <form
+              onSubmit={(e) => { e.preventDefault(); toast.success("Invitație trimisă ✉️"); (e.currentTarget as HTMLFormElement).reset(); }}
+              className="mt-4 flex gap-2"
+            >
+              <input type="email" required placeholder="coleg@firma.ro" className="flex-1 h-10 px-3 rounded-lg bg-secondary/60 border border-border text-sm outline-none focus:border-primary" />
+              <select className="h-10 px-3 rounded-lg bg-secondary/60 border border-border text-sm">
+                <option>Editor</option>
+                <option>Admin</option>
+                <option>Viewer</option>
+              </select>
+              <button className="press inline-flex items-center gap-1 px-4 rounded-lg text-white text-sm font-medium" style={{ background: "var(--gradient-primary)" }}>
+                <Plus className="w-4 h-4" /> Invită
+              </button>
+            </form>
+          </Card>
+
+          <Card title="Roluri & permisiuni" subtitle="Cine ce poate face.">
+            <div className="grid sm:grid-cols-3 gap-3 text-xs">
+              {[
+                { r: "Admin", d: "Acces total: cont, plată, echipă, integrări." },
+                { r: "Editor", d: "Creează și editează campanii, vede lead-uri." },
+                { r: "Viewer", d: "Doar citire — dashboard și rapoarte." },
+              ].map((x) => (
+                <div key={x.r} className="rounded-xl border border-border p-3">
+                  <p className="font-semibold">{x.r}</p>
+                  <p className="mt-1 text-muted-foreground">{x.d}</p>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="api" className="mt-6 space-y-4">
+          <Card title="Chei API" subtitle="Folosește pentru integrări custom cu CRM-ul tău.">
+            <div className="space-y-2">
+              <KeyRow label="Production" value="adp_live_8K2j•••••••••••••••••••sX9q" />
+              <KeyRow label="Test" value="adp_test_W1a•••••••••••••••••••pL4z" />
+            </div>
+            <button className="press mt-4 inline-flex items-center gap-1 text-sm px-3 py-2 rounded-lg border border-border hover:bg-secondary">
+              <Plus className="w-3.5 h-3.5" /> Generează cheie nouă
+            </button>
+          </Card>
+
+          <Card title="Webhooks" subtitle="Primește notificări pe URL-ul tău când vin lead-uri sau se schimbă statusuri.">
+            <div className="space-y-2">
+              {WEBHOOKS.map((w) => (
+                <div key={w.url} className="flex items-center gap-3 p-3 rounded-xl border border-border">
+                  <span className={`w-2 h-2 rounded-full ${w.active ? "bg-emerald-400" : "bg-muted-foreground"}`} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-mono truncate">{w.url}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">{w.events.join(" · ")}</p>
+                  </div>
+                  <button className="text-[11px] text-muted-foreground hover:text-foreground">Editează</button>
+                </div>
+              ))}
+            </div>
+            <button className="press mt-3 w-full py-2.5 rounded-xl border border-dashed border-border hover:bg-secondary text-xs font-medium">
+              + Adaugă webhook
+            </button>
+          </Card>
+
+          <Card title="Documentație">
+            <p className="text-sm text-muted-foreground">
+              Endpoint-uri REST și ghid de integrare disponibile la{" "}
+              <a className="text-primary underline" href="#">docs.adpilot.ro/api</a>.
+            </p>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="aspect" className="mt-6 space-y-4">
+          <Card title="Culoare accent" subtitle="Păstrăm dark mode peste tot — tu alegi nuanța accentului.">
+            <AccentPicker />
+          </Card>
+          <Card title="Densitate interfață" subtitle="Cât de aerisită să fie aplicația.">
+            <div className="flex gap-2">
+              {["Confortabilă", "Standard", "Compactă"].map((d, i) => (
+                <button key={d} className={`press flex-1 text-sm py-2 rounded-lg border ${i === 1 ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-secondary"}`}>{d}</button>
+              ))}
+            </div>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function TabTrig({ value, icon, children }: { value: string; icon: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <TabsTrigger
+      value={value}
+      className="rounded-full px-3 py-1.5 text-xs data-[state=active]:bg-background data-[state=active]:shadow data-[state=active]:text-foreground text-muted-foreground gap-1.5"
+    >
+      {icon} {children}
+    </TabsTrigger>
+  );
+}
+
+function Card({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
+  return (
+    <div className="card-floating p-5">
+      <p className="font-semibold text-sm">{title}</p>
+      {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
+      <div className="mt-4">{children}</div>
+    </div>
+  );
+}
+
+function Row({ label, defaultValue, disabled }: { label: string; defaultValue: string; disabled?: boolean }) {
+  return (
+    <label className="flex flex-col sm:flex-row sm:items-center gap-2">
+      <span className="text-xs text-muted-foreground w-32">{label}</span>
+      <input
+        defaultValue={defaultValue}
+        disabled={disabled}
+        className="flex-1 h-10 px-3 rounded-lg bg-secondary/60 border border-border text-sm outline-none focus:border-primary disabled:opacity-60"
+      />
+    </label>
+  );
+}
+
+function Stat({ label, value, cap }: { label: string; value: string; cap: string }) {
+  return (
+    <div className="rounded-xl bg-secondary/50 border border-border p-3">
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="mt-1 font-mono text-lg font-semibold">{value} <span className="text-muted-foreground text-xs">{cap}</span></p>
+    </div>
+  );
+}
+
+function KeyRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center gap-2 p-3 rounded-xl border border-border bg-secondary/30">
+      <span className="text-[10px] uppercase tracking-wider text-muted-foreground w-20">{label}</span>
+      <span className="font-mono text-xs flex-1 truncate">{value}</span>
       <button
-        onClick={signOut}
-        className="press w-full py-3 rounded-xl border border-border text-sm font-medium hover:bg-secondary"
+        onClick={() => { navigator.clipboard?.writeText(value); toast.success("Copiat în clipboard"); }}
+        className="press p-1.5 rounded-md hover:bg-background text-muted-foreground"
+        aria-label="Copiază"
       >
-        Deconectare
+        <Copy className="w-3.5 h-3.5" />
       </button>
     </div>
   );
 }
+
+function AccentPicker() {
+  const accents = [
+    { hue: "290", label: "Violet" },
+    { hue: "250", label: "Albastru" },
+    { hue: "155", label: "Verde" },
+    { hue: "340", label: "Roz" },
+    { hue: "60", label: "Amber" },
+    { hue: "20", label: "Coral" },
+  ];
+  const [active, setActive] = useState<string>(() => (typeof window !== "undefined" && localStorage.getItem("adpilot:accent")) || "290");
+  return (
+    <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+      {accents.map((a) => (
+        <button
+          key={a.hue}
+          onClick={() => { setActive(a.hue); localStorage.setItem("adpilot:accent", a.hue); applyAccent(a.hue); toast.success(`Accent: ${a.label}`); }}
+          className={`press relative aspect-square rounded-2xl flex flex-col items-center justify-end p-3 border transition-all ${active === a.hue ? "border-foreground scale-105" : "border-border hover:border-muted-foreground"}`}
+          style={{ background: `linear-gradient(135deg, oklch(0.62 0.22 ${a.hue}), oklch(0.7 0.2 ${Number(a.hue) + 25}))` }}
+        >
+          <span className="text-[10px] font-medium text-white drop-shadow">{a.label}</span>
+          {active === a.hue && <CheckCircle2 className="absolute top-2 right-2 w-3.5 h-3.5 text-white" />}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+const MEMBERS = [
+  { name: "Cont AdPilot", email: "tu@adpilot.ro", role: "Admin", you: true, hue: 290 },
+  { name: "Andreea Marin", email: "andreea@firma.ro", role: "Editor", hue: 320 },
+  { name: "Radu Constantin", email: "radu@firma.ro", role: "Viewer", hue: 250 },
+];
+
+const WEBHOOKS = [
+  { url: "https://hooks.firma.ro/leads", events: ["lead.new", "lead.updated"], active: true },
+  { url: "https://crm.firma.ro/api/adpilot", events: ["campaign.live", "campaign.paused"], active: false },
+];
 
 function MetaConnectionCard() {
   const [busy, setBusy] = useState(false);
