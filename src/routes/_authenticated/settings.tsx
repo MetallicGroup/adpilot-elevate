@@ -212,7 +212,15 @@ function MetaConnectionCard() {
                   Ad accounts ({c.ad_accounts.length})
                 </p>
                 {c.ad_accounts.length === 0 ? (
-                  <p className="text-xs text-muted-foreground mt-1">None found.</p>
+                  <div className="mt-2 space-y-2">
+                    <p className="text-xs text-muted-foreground">None found.</p>
+                    <button
+                      onClick={() => handleResync(c.id)}
+                      className="press w-full py-2 rounded-lg border border-border text-xs font-medium hover:bg-secondary"
+                    >
+                      Sync ad accounts
+                    </button>
+                  </div>
                 ) : (
                   <ul className="mt-1 space-y-1">
                     {c.ad_accounts.map((a) => (
