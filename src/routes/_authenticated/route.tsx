@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Home, Plus, Inbox, MessageCircle, Settings } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { CommandPalette } from "@/components/CommandPalette";
+import { OnboardingTour } from "@/components/OnboardingTour";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -21,6 +22,7 @@ function AuthLayout() {
     <div className="min-h-screen bg-background pb-24 text-foreground">
       <AppHeader />
       <CommandPalette />
+      <OnboardingTour />
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={pathname}
