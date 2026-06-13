@@ -6,12 +6,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Facebook, RefreshCw, Trash2, CheckCircle2 } from "lucide-react";
 import { resyncMetaConnection, selectMetaAdAccount, selectMetaPage } from "@/lib/meta.functions";
-import {
-  getMyWhatsApp,
-  saveMyWhatsAppPhone,
-  disconnectMyWhatsApp,
-} from "@/lib/whatsapp.functions";
-import { MessageCircle, ExternalLink } from "lucide-react";
+import { WhatsAppConnectionCard } from "@/components/whatsapp/WhatsAppConnectionCard";
 
 type MetaSearch = { meta?: string; reason?: string };
 
@@ -30,14 +25,14 @@ function Settings() {
 
   useEffect(() => {
     if (search.meta === "connected") {
-      toast.success("Meta account connected");
+      toast.success("Cont Meta conectat ✅");
       navigate({ to: "/settings", replace: true, search: {} as MetaSearch });
     } else if (search.meta === "error") {
       const reason =
         search.reason === "pages_manage_ads_missing"
-          ? "Meta did not grant pages_manage_ads. Add yourself as app tester/admin or submit the Meta app for App Review, then reconnect."
+          ? "Meta nu a acordat pages_manage_ads. Adaugă-te ca tester/admin sau trimite aplicația în review, apoi reconectează."
           : search.reason;
-      toast.error(`Could not connect Meta${reason ? `: ${reason}` : ""}`);
+      toast.error(`Nu am putut conecta Meta${reason ? `: ${reason}` : ""}`);
       navigate({ to: "/settings", replace: true, search: {} as MetaSearch });
     }
   }, [search.meta, search.reason, navigate]);
@@ -46,23 +41,26 @@ function Settings() {
     await qc.cancelQueries();
     qc.clear();
     await supabase.auth.signOut();
-    toast.success("Signed out");
+    toast.success("Te-ai deconectat 👋");
     navigate({ to: "/auth", replace: true });
   }
 
   return (
     <div className="max-w-md mx-auto px-5 pt-10 space-y-6">
-      <h1 className="font-serif text-3xl font-semibold">Settings</h1>
+      <div>
+        <p className="text-sm text-muted-foreground">Cont</p>
+        <h1 className="text-3xl font-bold tracking-tight mt-1">Setări ⚙️</h1>
+      </div>
 
       <div className="card-floating p-5">
         <p className="text-xs text-muted-foreground">Plan</p>
         <p className="mt-1 font-semibold">Starter · $49/mo</p>
-        <p className="mt-2 text-xs text-muted-foreground">Stripe billing portal coming soon.</p>
+        <p className="mt-2 text-xs text-muted-foreground">Portal de facturare Stripe — în curând.</p>
       </div>
 
       <div className="card-floating p-5">
-        <p className="text-xs text-muted-foreground">TikTok ad accounts</p>
-        <p className="mt-1 text-sm">No accounts connected yet.</p>
+        <p className="text-xs text-muted-foreground">Conturi TikTok Ads</p>
+        <p className="mt-1 text-sm">Niciun cont conectat încă.</p>
       </div>
 
       <MetaConnectionCard />
@@ -73,142 +71,8 @@ function Settings() {
         onClick={signOut}
         className="press w-full py-3 rounded-xl border border-border text-sm font-medium hover:bg-secondary"
       >
-        Sign out
+        Deconectare
       </button>
-    </div>
-  );
-}
-
-function WhatsAppConnectionCard() {
-  const get = useServerFn(getMyWhatsApp);
-  const save = useServerFn(saveMyWhatsAppPhone);
-  const disconnect = useServerFn(disconnectMyWhatsApp);
-
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ["wa-me"],
-    queryFn: () => get(),
-  });
-
-  const [phone, setPhone] = useState("");
-  const [busy, setBusy] = useState(false);
-
-  async function handleSave() {
-    if (!phone.trim()) return toast.error("Introdu numărul tău de telefon");
-    setBusy(true);
-    try {
-      await save({ data: { phone: phone.trim() } });
-      toast.success("Număr salvat — apasă „Activează” să trimiți mesajul");
-      setPhone("");
-      refetch();
-    } catch (e: any) {
-      toast.error(e?.message ?? "Eroare salvare");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function handleDisconnect() {
-    if (!confirm("Deconectezi WhatsApp?")) return;
-    await disconnect({});
-    toast.success("Deconectat");
-    refetch();
-  }
-
-  const conn = data?.connection ?? null;
-  const activationLink = data?.activation_link ?? null;
-  const isActive = conn?.status === "active";
-
-  return (
-    <div className="card-floating p-5">
-      <div className="flex items-center gap-2">
-        <MessageCircle className="w-4 h-4 text-[#25D366]" />
-        <p className="text-xs text-muted-foreground">Asistent AdPilot pe WhatsApp</p>
-      </div>
-
-      {isLoading ? (
-        <p className="mt-3 text-sm text-muted-foreground">Loading…</p>
-      ) : !conn ? (
-        <div className="mt-3 space-y-3">
-          <p className="text-sm">
-            Primește lead-uri, rapoarte și controlează campaniile direct pe WhatsApp.
-            Introdu numărul tău de telefon — asta e tot.
-          </p>
-          <input
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="+40 712 345 678"
-            className="w-full px-3 py-2 rounded-lg border border-border text-sm"
-          />
-          <button
-            onClick={handleSave}
-            disabled={busy || !phone.trim()}
-            className="press w-full py-3 rounded-xl bg-[#25D366] text-white text-sm font-medium disabled:opacity-60"
-          >
-            {busy ? "Salvez…" : "Salvează numărul"}
-          </button>
-        </div>
-      ) : (
-        <div className="mt-3 space-y-3">
-          <div className="rounded-xl border border-border p-4">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className={`w-4 h-4 ${isActive ? "text-emerald-600" : "text-amber-500"}`} />
-              <p className="font-medium text-sm">+{conn.user_phone}</p>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {isActive
-                ? `Activ${conn.activated_at ? ` din ${new Date(conn.activated_at).toLocaleDateString("ro-RO")}` : ""}`
-                : "În așteptarea activării"}
-            </p>
-            {conn.last_message_at && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Ultimul mesaj: {new Date(conn.last_message_at).toLocaleString("ro-RO")}
-              </p>
-            )}
-          </div>
-
-          {!isActive && activationLink && (
-            <>
-              <a
-                href={activationLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="press w-full py-3 rounded-xl bg-[#25D366] text-white text-sm font-medium flex items-center justify-center gap-2"
-              >
-                <ExternalLink className="w-4 h-4" />
-                Activează asistentul pe WhatsApp
-              </a>
-              <p className="text-xs text-muted-foreground text-center">
-                Se va deschide WhatsApp cu un mesaj pregătit. Trimite-l ca să primești
-                instant un răspuns de bun-venit de la AdPilot.
-              </p>
-            </>
-          )}
-
-          {!isActive && !activationLink && !data?.configured && (
-            <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 p-3 text-xs text-amber-800 dark:text-amber-200">
-              Asistentul WhatsApp nu e configurat încă la nivel de platformă.
-              Reveniți curând.
-            </div>
-          )}
-
-          {isActive && (
-            <div className="rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground">
-              Scrie-i botului pe WhatsApp orice:
-              <br />• „arată-mi campaniile”
-              <br />• „cât am cheltuit săptămâna asta?”
-              <br />• „vreau o campanie nouă” (trimite și o poză 📸)
-            </div>
-          )}
-
-          <button
-            onClick={handleDisconnect}
-            className="press w-full py-2 rounded-lg border border-border text-xs font-medium hover:bg-secondary text-destructive"
-          >
-            Deconectează WhatsApp
-          </button>
-        </div>
-      )}
     </div>
   );
 }
