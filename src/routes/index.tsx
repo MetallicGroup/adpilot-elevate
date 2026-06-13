@@ -404,3 +404,11 @@ const faqs = [
   { q: "Pot anula oricând?", a: "Da. Anulezi din dashboard în orice moment. Accesul continuă până la finalul perioadei plătite." },
   { q: "În ce limbi vorbește AI-ul?", a: "Română și engleză. Tot AdPilot e localizat în română — interfață, asistent, rapoarte, totul." },
 ];
+
+type Testimonial = { name: string; role: string; quote: string; metric: string; hue: number };
+
+const testimonials: Testimonial[] = [
+  { name: "Andreea Marin", role: "Fondator · Glamora Beauty", quote: "Am lansat prima campanie TikTok în 4 minute. În 2 săptămâni: 312 lead-uri și 18 cliente noi.", metric: "+312 lead-uri", hue: 320 },
+  { name: "Radu Constantin", role: "CEO · MaxAuto Service", quote: "AdPilot mi-a tăiat costurile cu 40% față de agenția anterioară. Și răspunde pe WhatsApp în 2 secunde.", metric: "−40% cost", hue: 250 },
+  { name: "Mihaela Popa", role: "Marketing · Casa Verde", quote: "Lead-urile vin direct pe telefon. Nu mai stau să verific dashboard-ul de 10 ori pe zi. E magie.", metric: "ROAS 5,2x", hue: 155 },
+];
