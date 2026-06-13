@@ -334,6 +334,250 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
         return await createMetaCampaignFromAgent(supabaseAdmin, ctx, args);
       },
     }),
+
+    generate_image: tool({
+      description:
+        "Generează o imagine pentru reclamă cu AI (1024x1024 JPG). Folosește când userul nu are poză. După generare, imaginea devine 'latestMedia' și poate fi folosită direct la create_campaign.",
+      inputSchema: z.object({
+        prompt: z.string().min(10).max(600).describe("Descriere detaliată a imaginii dorite, în engleză sau română"),
+      }),
+      execute: async ({ prompt }) => {
+        try {
+          const { generateCreativeImage } = await import("./wa-ai-extras.server");
+          const img = await generateCreativeImage(ctx.userId, prompt);
+          ctx.latestMedia = img;
+          // Send preview to user on WhatsApp
+          try {
+            const r = await fetch(img.signedUrl);
+            const bytes = new Uint8Array(await r.arrayBuffer());
+            const mediaId = await uploadWhatsAppMedia(
+              ctx.connection.phone_number_id,
+              ctx.connection.access_token,
+              bytes,
+              "image/jpeg",
+              "ad.jpg",
+            );
+            await sendWhatsAppMessage(
+              ctx.connection.phone_number_id,
+              ctx.connection.access_token,
+              ctx.toPhone,
+              { type: "image", mediaId, caption: "🎨 Iată o variantă. Vrei să o folosim?" },
+            );
+          } catch (e) {
+            console.error("[generate_image] preview send", e);
+          }
+          return { ok: true, message: "Imagine generată și disponibilă pentru create_campaign." };
+        } catch (e: any) {
+          return { error: e?.message ?? "Generarea imaginii a eșuat" };
+        }
+      },
+    }),
+
+    duplicate_campaign: tool({
+      description: "Duplică o campanie existentă (același target/buget). Opțional cu copy nou. Rezultatul e PAUSED ca să-l confirme userul.",
+      inputSchema: z.object({
+        campaign_id: z.string(),
+        new_name: z.string().optional(),
+        new_headline: z.string().max(40).optional(),
+        new_primary_text: z.string().max(500).optional(),
+      }),
+      execute: async ({ campaign_id, new_name, new_headline, new_primary_text }) => {
+        const camp = await getCampaign(supabaseAdmin, ctx.userId, campaign_id);
+        if (!camp?.meta_campaign_id || !camp.meta_adset_id || !camp.meta_ad_id)
+          return { error: "Campania nu e publicată complet pe Meta." };
+        const token = await getMetaToken(supabaseAdmin, ctx.userId);
+        if (!token) return { error: "Fără Meta" };
+        const { data: adAcc } = await supabaseAdmin
+          .from("meta_ad_accounts").select("ad_account_id")
+          .eq("user_id", ctx.userId).eq("is_active", true).limit(1).maybeSingle();
+        const { data: page } = await supabaseAdmin
+          .from("meta_pages").select("page_id")
+          .eq("user_id", ctx.userId).eq("is_active", true).limit(1).maybeSingle();
+        if (!adAcc?.ad_account_id || !page?.page_id) return { error: "Lipsesc ad account/page." };
+        const { duplicateCampaign } = await import("./meta-ops.server");
+        try {
+          const res = await duplicateCampaign({
+            adAccountId: adAcc.ad_account_id,
+            accessToken: token,
+            sourceMetaCampaignId: camp.meta_campaign_id,
+            sourceMetaAdsetId: camp.meta_adset_id,
+            sourceMetaAdId: camp.meta_ad_id,
+            pageId: page.page_id,
+            newName: new_name || `${camp.name} (copie)`,
+            newCopy: { headline: new_headline, primary_text: new_primary_text },
+          });
+          await supabaseAdmin.from("campaigns").insert({
+            user_id: ctx.userId, name: new_name || `${camp.name} (copie)`,
+            platform: "meta", objective: camp.objective, status: "paused",
+            budget: camp.budget, budget_mode: camp.budget_mode,
+            targeting: camp.targeting, creative: camp.creative, lead_form: camp.lead_form,
+            meta_campaign_id: res.campaign_id, meta_adset_id: res.adset_id,
+            meta_ad_id: res.ad_id, meta_lead_form_id: res.lead_form_id,
+          });
+          return { ok: true, message: "Campanie duplicată pe PAUSED. Pornește-o când vrei.", ...res };
+        } catch (e: any) {
+          return { error: e?.message ?? "Duplicare eșuată" };
+        }
+      },
+    }),
+
+    change_targeting: tool({
+      description: "Modifică targeting-ul (vârstă, oraș, gen) pe o campanie EXISTENTĂ — fără să o refaci.",
+      inputSchema: z.object({
+        campaign_id: z.string(),
+        age_min: z.number().int().min(13).max(65).optional(),
+        age_max: z.number().int().min(13).max(65).optional(),
+        cities: z.array(z.string()).optional(),
+        city_radius_km: z.number().int().min(10).max(80).default(25),
+        countries: z.array(z.string()).optional(),
+        genders: z.enum(["all", "male", "female"]).optional(),
+      }),
+      execute: async (args) => {
+        const camp = await getCampaign(supabaseAdmin, ctx.userId, args.campaign_id);
+        if (!camp?.meta_adset_id) return { error: "Adset Meta lipsă." };
+        const token = await getMetaToken(supabaseAdmin, ctx.userId);
+        if (!token) return { error: "Fără Meta" };
+        const { patchAdSetTargeting, findCityKey } = await import("./meta-ops.server");
+        const cityKeys: Array<{ key: string; radius?: number }> = [];
+        if (args.cities?.length) {
+          for (const name of args.cities) {
+            const hit = await findCityKey(token, name, (args.countries?.[0] ?? "RO").toUpperCase());
+            if (hit) cityKeys.push({ key: hit.key, radius: args.city_radius_km });
+          }
+        }
+        const genders = args.genders === "male" ? [1] : args.genders === "female" ? [2] : args.genders === "all" ? [] : undefined;
+        try {
+          await patchAdSetTargeting(camp.meta_adset_id, token, {
+            age_min: args.age_min, age_max: args.age_max,
+            cities: cityKeys.length ? cityKeys : undefined,
+            countries: !cityKeys.length ? args.countries : undefined,
+            genders,
+          });
+          return { ok: true, message: "Targeting actualizat ✅" };
+        } catch (e: any) {
+          return { error: e?.message ?? "Update targeting eșuat" };
+        }
+      },
+    }),
+
+    blacklist_placement: tool({
+      description: "Scoate o categorie de plasare (audience_network, messenger, stories, reels, right_column).",
+      inputSchema: z.object({
+        campaign_id: z.string(),
+        exclude: z.array(z.enum(["audience_network", "messenger", "stories", "reels", "right_column"])).min(1),
+      }),
+      execute: async ({ campaign_id, exclude }) => {
+        const camp = await getCampaign(supabaseAdmin, ctx.userId, campaign_id);
+        if (!camp?.meta_adset_id) return { error: "Adset Meta lipsă." };
+        const token = await getMetaToken(supabaseAdmin, ctx.userId);
+        if (!token) return { error: "Fără Meta" };
+        const { blacklistPlacement } = await import("./meta-ops.server");
+        try {
+          await blacklistPlacement(camp.meta_adset_id, token, exclude);
+          return { ok: true, message: `Am scos: ${exclude.join(", ")} ✅` };
+        } catch (e: any) {
+          return { error: e?.message ?? "Update placement eșuat" };
+        }
+      },
+    }),
+
+    ab_test_creative: tool({
+      description: "Adaugă un al doilea ad (variantă B) în adset-ul existent folosind ULTIMA imagine/video trimisă pe WhatsApp. Userul trebuie să fi trimis deja varianta B.",
+      inputSchema: z.object({
+        campaign_id: z.string(),
+        new_headline: z.string().max(40).optional(),
+        new_primary_text: z.string().max(500).optional(),
+      }),
+      execute: async ({ campaign_id, new_headline, new_primary_text }) => {
+        if (!ctx.latestMedia) return { error: "Trimite varianta B (poză sau clip) pe WhatsApp întâi." };
+        const camp = await getCampaign(supabaseAdmin, ctx.userId, campaign_id);
+        if (!camp?.meta_adset_id) return { error: "Adset Meta lipsă." };
+        const token = await getMetaToken(supabaseAdmin, ctx.userId);
+        if (!token) return { error: "Fără Meta" };
+        const { data: adAcc } = await supabaseAdmin
+          .from("meta_ad_accounts").select("ad_account_id")
+          .eq("user_id", ctx.userId).eq("is_active", true).limit(1).maybeSingle();
+        const { data: page } = await supabaseAdmin
+          .from("meta_pages").select("page_id")
+          .eq("user_id", ctx.userId).eq("is_active", true).limit(1).maybeSingle();
+        if (!adAcc?.ad_account_id || !page?.page_id) return { error: "Lipsesc ad account/page." };
+        try {
+          const { data: file } = await supabaseAdmin.storage.from("wa-media").download(ctx.latestMedia.path);
+          if (!file) return { error: "Nu pot citi media variantei B." };
+          const bytes = new Uint8Array(await file.arrayBuffer());
+          const isVideo = ctx.latestMedia.mime.toLowerCase().startsWith("video/");
+          const { uploadAdImageFromBytes, uploadAdVideoFromBytes, createAbTestAd } = await import("./meta-ops.server");
+          let image_hash: string | undefined;
+          let video_id: string | undefined;
+          let thumbnail_url: string | null | undefined;
+          if (isVideo) {
+            const v = await uploadAdVideoFromBytes(adAcc.ad_account_id, token, bytes, "ad_b.mp4", ctx.latestMedia.mime);
+            video_id = v.video_id; thumbnail_url = v.thumbnail_url;
+          } else {
+            image_hash = await uploadAdImageFromBytes(adAcc.ad_account_id, token, bytes, "ad_b.jpg", ctx.latestMedia.mime);
+          }
+          const creative = (camp.creative ?? {}) as any;
+          const res = await createAbTestAd({
+            adAccountId: adAcc.ad_account_id, accessToken: token, pageId: page.page_id,
+            adsetId: camp.meta_adset_id,
+            headline: new_headline || creative.headline || camp.name,
+            primary_text: new_primary_text || creative.primary_text || "",
+            cta: creative.cta || "Learn More",
+            landing_url: creative.landing_url || "https://adpilot.ro",
+            image_hash, video_id, thumbnail_url,
+            lead_gen_form_id: camp.meta_lead_form_id ?? null,
+            variant: "B",
+          });
+          return { ok: true, message: "Variant B lansat ✅ în aceeași campanie.", ...res };
+        } catch (e: any) {
+          return { error: e?.message ?? "A/B test eșuat" };
+        }
+      },
+    }),
+
+    reply_to_lead: tool({
+      description: "Trimite un mesaj WhatsApp către un lead (folosind numărul lui). Fereastra Meta de 24h se aplică — dacă leadul nu a scris recent, mesajul poate fi blocat.",
+      inputSchema: z.object({
+        lead_id: z.string(),
+        text: z.string().min(1).max(900),
+      }),
+      execute: async ({ lead_id, text }) => {
+        const { data: lead } = await supabaseAdmin
+          .from("leads").select("phone, full_name, created_at")
+          .eq("id", lead_id).eq("user_id", ctx.userId).maybeSingle();
+        if (!lead?.phone) return { error: "Lead-ul nu are telefon." };
+        const ageH = (Date.now() - new Date(lead.created_at).getTime()) / 3_600_000;
+        if (ageH > 24) {
+          return { error: "Au trecut peste 24h de la lead — Meta nu permite primul mesaj fără template aprobat." };
+        }
+        try {
+          const phone = lead.phone.replace(/\D/g, "");
+          await sendWhatsAppMessage(ctx.connection.phone_number_id, ctx.connection.access_token, phone, { type: "text", text });
+          return { ok: true, message: `Mesaj trimis lui ${lead.full_name ?? phone} ✅` };
+        } catch (e: any) {
+          return { error: e?.message ?? "Trimitere eșuată" };
+        }
+      },
+    }),
+
+    get_invoice: tool({
+      description: "Listează facturile Meta din ultima lună (sau N luni).",
+      inputSchema: z.object({ months: z.number().int().min(1).max(6).default(1) }),
+      execute: async ({ months }) => {
+        const token = await getMetaToken(supabaseAdmin, ctx.userId);
+        if (!token) return { error: "Fără Meta" };
+        const { data: adAcc } = await supabaseAdmin
+          .from("meta_ad_accounts").select("ad_account_id")
+          .eq("user_id", ctx.userId).eq("is_active", true).limit(1).maybeSingle();
+        if (!adAcc?.ad_account_id) return { error: "Fără ad account" };
+        const { getMetaInvoices } = await import("./meta-ops.server");
+        try {
+          return await getMetaInvoices(adAcc.ad_account_id, token, months);
+        } catch (e: any) {
+          return { error: e?.message ?? "Nu am putut citi facturile" };
+        }
+      },
+    }),
   };
 }
 
