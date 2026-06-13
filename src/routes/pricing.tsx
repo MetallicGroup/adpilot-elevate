@@ -4,9 +4,12 @@ import { Check } from "lucide-react";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({ meta: [
-    { title: "Pricing — AdPilot" },
-    { name: "description", content: "Simple monthly plans for businesses of every size. Start free for 14 days. Cancel anytime." },
-  ] }),
+    { title: "Prețuri — AdPilot" },
+    { name: "description", content: "Planuri lunare simple pentru afaceri de orice mărime. 14 zile gratuit. Anulezi oricând." },
+    { property: "og:title", content: "Prețuri — AdPilot" },
+    { property: "og:description", content: "14 zile gratuit. Fără card. Anulezi oricând." },
+    { property: "og:url", content: "https://adpilot.ro/pricing" },
+  ], links: [{ rel: "canonical", href: "https://adpilot.ro/pricing" }] }),
   component: PricingPage,
 });
 
