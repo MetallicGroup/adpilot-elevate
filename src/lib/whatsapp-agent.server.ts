@@ -710,6 +710,170 @@ async function retryLastDraftCampaign(supabaseAdmin: any, ctx: AgentCtx) {
   });
 }
 
+async function getActiveMetaSetup(supabaseAdmin: any, userId: string) {
+  const { data: conn } = await supabaseAdmin
+    .from("meta_connections")
+    .select("id, access_token")
+    .eq("user_id", userId)
+    .eq("is_active", true)
+    .maybeSingle();
+  if (!conn?.access_token) return { error: "Conectează Meta din Settings înainte." };
+
+  const { data: adAcc } = await supabaseAdmin
+    .from("meta_ad_accounts")
+    .select("ad_account_id")
+    .eq("user_id", userId)
+    .eq("connection_id", conn.id)
+    .eq("is_active", true)
+    .limit(1)
+    .maybeSingle();
+  if (!adAcc?.ad_account_id) return { error: "Selectează un ad account din Settings." };
+
+  const { data: page } = await supabaseAdmin
+    .from("meta_pages")
+    .select("page_id, page_access_token")
+    .eq("user_id", userId)
+    .eq("connection_id", conn.id)
+    .eq("is_active", true)
+    .limit(1)
+    .maybeSingle();
+  if (!page?.page_id || !page.page_access_token) return { error: "Conectează o Pagină în Settings." };
+
+  return {
+    accessToken: conn.access_token as string,
+    adAccountId: adAcc.ad_account_id as string,
+    pageId: page.page_id as string,
+    pageAccessToken: page.page_access_token as string,
+  };
+}
+
+async function resolveCityKeys(accessToken: string, cities: string[] | undefined, countries: string[], radius: number) {
+  const { findCityKey } = await import("./meta-publish.server");
+  const cityKeys: Array<{ key: string; radius?: number }> = [];
+  if (!cities?.length) return cityKeys;
+  const country = (countries?.[0] ?? "RO").toUpperCase();
+  for (const cityName of cities) {
+    const hit = await findCityKey(accessToken, cityName, country);
+    if (hit) cityKeys.push({ key: hit.key, radius });
+  }
+  return cityKeys;
+}
+
+async function publishCampaignToMeta(
+  supabaseAdmin: any,
+  input: {
+    campaignRowId: string;
+    adAccountId: string;
+    accessToken: string;
+    pageId: string;
+    pageAccessToken: string;
+    bytes: Uint8Array;
+    mediaMime: string;
+    args: {
+      name: string;
+      daily_budget: number;
+      headline: string;
+      primary_text: string;
+      description?: string;
+      cta: string;
+      landing_url?: string;
+      custom_questions?: Array<{ label: string; type?: "short" | "choice"; options?: string[] }>;
+      countries: string[];
+      age_min: number;
+      age_max: number;
+    };
+    objective: "leads" | "traffic";
+    cityKeys: Array<{ key: string; radius?: number }>;
+  },
+) {
+  const { createLeadForm, uploadAdImageFromBytes, createCampaign, createAdSet, createAdCreative, createAd } =
+    await import("./meta-publish.server");
+
+  try {
+    let form: { id: string } | null = null;
+    if (input.objective === "leads") {
+      form = await createLeadForm(input.pageId, input.pageAccessToken, {
+        name: input.args.name,
+        fields: ["Name", "Phone"],
+        privacy_url: "https://adpilot.ro/privacy-policy",
+        custom_questions: input.args.custom_questions,
+      });
+    }
+    const metaCamp = await createCampaign(
+      input.adAccountId,
+      input.accessToken,
+      input.args.name,
+      "ACTIVE",
+      input.objective === "traffic" ? "OUTCOME_TRAFFIC" : "OUTCOME_LEADS",
+    );
+    const adset = await createAdSet(input.adAccountId, input.accessToken, {
+      name: `${input.args.name} — AdSet`,
+      campaign_id: metaCamp.id,
+      daily_budget_cents: Math.round(input.args.daily_budget * 100),
+      page_id: input.pageId,
+      targeting: {
+        countries: input.args.countries,
+        age_min: input.args.age_min,
+        age_max: input.args.age_max,
+        cities: input.cityKeys.length ? input.cityKeys : undefined,
+      },
+      status: "ACTIVE",
+      objective: input.objective,
+    });
+    const isVideo = (input.mediaMime || "").toLowerCase().startsWith("video/");
+    let image_hash: string | undefined;
+    let video_id: string | undefined;
+    let thumbnail_url: string | null | undefined;
+    if (isVideo) {
+      const { uploadAdVideoFromBytes } = await import("./meta-publish.server");
+      const ext = (input.mediaMime.split("/")[1] || "mp4").split(";")[0];
+      const v = await uploadAdVideoFromBytes(input.adAccountId, input.accessToken, input.bytes, `ad.${ext}`, input.mediaMime || "video/mp4");
+      video_id = v.video_id;
+      thumbnail_url = v.thumbnail_url;
+    } else {
+      image_hash = await uploadAdImageFromBytes(input.adAccountId, input.accessToken, input.bytes, "ad.jpg", input.mediaMime || "image/jpeg");
+    }
+    const adCreative = await createAdCreative(input.adAccountId, input.accessToken, {
+      name: `${input.args.name} — Creative`,
+      page_id: input.pageId,
+      image_hash,
+      video_id,
+      thumbnail_url,
+      headline: input.args.headline,
+      description: input.args.primary_text,
+      cta: input.args.cta,
+      landing_url: input.args.landing_url ?? "https://adpilot.ro",
+      lead_gen_form_id: form?.id,
+    });
+    const ad = await createAd(input.adAccountId, input.accessToken, {
+      name: `${input.args.name} — Ad`,
+      adset_id: adset.id,
+      creative_id: adCreative.id,
+      status: "ACTIVE",
+    });
+    await supabaseAdmin
+      .from("campaigns")
+      .update({
+        meta_campaign_id: metaCamp.id,
+        meta_adset_id: adset.id,
+        meta_ad_id: ad.id,
+        meta_lead_form_id: form?.id ?? null,
+        status: "active",
+      })
+      .eq("id", input.campaignRowId);
+    return {
+      ok: true,
+      campaign_id: input.campaignRowId,
+      meta_campaign_id: metaCamp.id,
+      message: input.objective === "traffic" ? "Campanie LIVE (trafic pe site) ✅" : "Campanie LIVE (lead form) ✅",
+    };
+  } catch (e: any) {
+    const msg = e?.message ?? "Publish failed";
+    console.error("[wa-agent] create_campaign publish failed:", msg, e);
+    return { error: msg };
+  }
+}
+
 async function createMetaCampaignFromAgent(
   supabaseAdmin: any,
   ctx: AgentCtx,
