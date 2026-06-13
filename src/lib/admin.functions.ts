@@ -21,7 +21,7 @@ async function logAudit(
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: au } = await supabaseAdmin.auth.admin.getUserById(actorId);
-    await supabaseAdmin.from("audit_log").insert({
+    await (supabaseAdmin as any).from("audit_log").insert({
       actor_id: actorId,
       actor_email: au?.user?.email ?? null,
       action,
@@ -639,7 +639,7 @@ export const createBroadcast = createServerFn({ method: "POST" })
 
     const recipients = (conns ?? []).filter((c: any) => c.user_phone);
 
-    const { data: broadcast, error: bErr } = await supabaseAdmin
+    const { data: broadcast, error: bErr } = await (supabaseAdmin as any)
       .from("broadcasts")
       .insert({
         created_by: context.userId,
@@ -678,7 +678,7 @@ export const createBroadcast = createServerFn({ method: "POST" })
       }
     }
 
-    await supabaseAdmin
+    await (supabaseAdmin as any)
       .from("broadcasts")
       .update({
         total_sent: sent,
@@ -702,7 +702,7 @@ export const listBroadcasts = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data } = await supabaseAdmin
+    const { data } = await (supabaseAdmin as any)
       .from("broadcasts")
       .select("*")
       .order("created_at", { ascending: false })
@@ -716,7 +716,7 @@ export const listAuditLog = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data } = await supabaseAdmin
+    const { data } = await (supabaseAdmin as any)
       .from("audit_log")
       .select("*")
       .order("created_at", { ascending: false })
