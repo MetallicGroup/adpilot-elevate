@@ -41,7 +41,7 @@ function Index() {
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass text-xs font-medium text-muted-foreground"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-success pulse-dot text-success" />
-              🚀 Acum în Beta — gratuit 14 zile
+              ✨ Live acum — campanii în 60 de secunde
             </motion.div>
 
             <h1 className="mt-8 text-5xl md:text-7xl font-extrabold leading-[1.05] tracking-tight">
