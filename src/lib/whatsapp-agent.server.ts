@@ -130,8 +130,13 @@ function mediaHint(ctx: AgentCtx): string {
 
 async function sendChunked(ctx: AgentCtx, text: string) {
   const CHUNK = 3500;
-  for (let i = 0; i < text.length; i += CHUNK) {
-    const part = text.slice(i, i + CHUNK);
+  // WhatsApp folosește *bold* / _italic_, NU markdown **bold**. Convertim înainte de trimitere.
+  const normalized = text
+    .replace(/\*\*\*(.+?)\*\*\*/g, "*$1*")
+    .replace(/\*\*(.+?)\*\*/g, "*$1*")
+    .replace(/__(.+?)__/g, "_$1_");
+  for (let i = 0; i < normalized.length; i += CHUNK) {
+    const part = normalized.slice(i, i + CHUNK);
     const { id } = await sendWhatsAppMessage(
       ctx.connection.phone_number_id,
       ctx.connection.access_token,
