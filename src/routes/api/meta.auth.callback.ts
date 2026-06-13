@@ -120,6 +120,31 @@ export const Route = createFileRoute("/api/meta/auth/callback")({
                 .from("meta_pages")
                 .upsert(rows, { onConflict: "connection_id,page_id" });
             }
+
+            // Subscribe app to `leadgen` webhooks for each page so leads flow in automatically.
+            const { metaApiVersion } = await import("@/lib/meta.server");
+            const version = metaApiVersion();
+            await Promise.all(
+              pageData
+                .filter((p: any) => p.id && p.access_token)
+                .map(async (p: any) => {
+                  try {
+                    const subUrl = new URL(
+                      `https://graph.facebook.com/${version}/${p.id}/subscribed_apps`,
+                    );
+                    subUrl.searchParams.set("subscribed_fields", "leadgen");
+                    subUrl.searchParams.set("access_token", p.access_token);
+                    const res = await fetch(subUrl.toString(), { method: "POST" });
+                    if (!res.ok) {
+                      console.warn(
+                        `[meta] subscribed_apps failed for page ${p.id}: ${res.status} ${await res.text()}`,
+                      );
+                    }
+                  } catch (err) {
+                    console.warn(`[meta] subscribed_apps error for page ${p.id}`, err);
+                  }
+                }),
+            );
           } catch (e) {
             console.warn("Meta pages sync failed", e);
           }
