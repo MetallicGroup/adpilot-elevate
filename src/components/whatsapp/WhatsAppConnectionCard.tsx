@@ -27,7 +27,7 @@ export function WhatsAppConnectionCard() {
     setBusy(true);
     try {
       await save({ data: { phone: phone.trim() } });
-      toast.success("Număr salvat — apasă „Activează" să trimiți mesajul");
+      toast.success('Număr salvat — apasă „Activează" să trimiți mesajul');
       setPhone("");
       refetch();
     } catch (e: any) {
@@ -125,9 +125,9 @@ export function WhatsAppConnectionCard() {
           {isActive && (
             <div className="rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground">
               Scrie-i botului pe WhatsApp orice:
-              <br />• „arată-mi campaniile"
-              <br />• „cât am cheltuit săptămâna asta?"
-              <br />• „vreau o campanie nouă" (trimite și o poză 📸)
+              <br />• „arată-mi campaniile”
+              <br />• „cât am cheltuit săptămâna asta?”
+              <br />• „vreau o campanie nouă” (trimite și o poză 📸)
             </div>
           )}
 
