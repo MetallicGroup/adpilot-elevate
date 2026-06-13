@@ -54,10 +54,10 @@ const INITIAL_THREADS: Thread[] = [
   },
   {
     id: "t3", name: "AdPilot AI", phone: "Asistent", hue: 155, source: "AdPilot AI",
-    unread: 1, last: "🚀 47 lead-uri azi (+23% vs ieri). Top campanie: „Lansare vară".", lastAt: "acum 1 oră",
+    unread: 1, last: '🚀 47 lead-uri azi (+23% vs ieri). Top campanie: „Lansare vară".', lastAt: "acum 1 oră",
     msgs: [
       { id: "m1", from: "me", text: "Câte lead-uri azi?", at: "08:30", status: "read" },
-      { id: "m2", from: "them", text: "47 lead-uri azi 📈\n+23% față de ieri\nTop campanie: „Lansare vară" cu 28 lead-uri", at: "08:30" },
+      { id: "m2", from: "them", text: '47 lead-uri azi 📈\n+23% față de ieri\nTop campanie: „Lansare vară" cu 28 lead-uri', at: "08:30" },
       { id: "m3", from: "me", text: "Bugetul cum stă?", at: "08:31", status: "read" },
       { id: "m4", from: "them", text: "€780 cheltuiți din €1200 (zilnic). CPL mediu €6,40 — în target ✅", at: "08:31" },
     ],
