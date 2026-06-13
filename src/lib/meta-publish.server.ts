@@ -65,6 +65,20 @@ export async function createLeadForm(
     custom_questions?: string[];
   },
 ) {
+  const formName = spec.name.slice(0, 256);
+  // Reuse existing form with same name (Meta enforces unique names per page)
+  try {
+    const listUrl = `${GRAPH}/${metaApiVersion()}/${pageId}/leadgen_forms?fields=id,name&limit=200&access_token=${encodeURIComponent(pageAccessToken)}`;
+    const listRes = await fetch(listUrl);
+    const listJson = await listRes.json();
+    if (listRes.ok && Array.isArray(listJson.data)) {
+      const existing = listJson.data.find((f: { id: string; name: string }) => f.name === formName);
+      if (existing?.id) return { id: existing.id, name: existing.name, reused: true };
+    }
+  } catch {
+    // fall through to create
+  }
+
   const questions: Array<Record<string, unknown>> = spec.fields
     .map((f) => LEAD_FIELD_MAP[f])
     .filter(Boolean)
@@ -81,7 +95,7 @@ export async function createLeadForm(
   if (!questions.length) questions.push({ type: "PHONE" });
 
   return metaPOST(`/${pageId}/leadgen_forms`, pageAccessToken, {
-    name: spec.name.slice(0, 256),
+    name: formName,
     questions,
     privacy_policy: { url: spec.privacy_url, link_text: "Privacy policy" },
     follow_up_action_url: spec.follow_up_url || spec.privacy_url,
