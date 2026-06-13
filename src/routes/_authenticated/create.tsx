@@ -13,7 +13,6 @@ import { publishMetaCampaign, uploadAdMedia } from "@/lib/meta-publish.functions
 import { fmtMoney } from "@/lib/format";
 import { AdPreview } from "@/components/wizard/AdPreview";
 import { loadDraft, saveDraft, clearDraft } from "@/lib/wizard-draft";
-import { fmtMoney as _fmtMoneyAlias } from "@/lib/format";
 import {
   AlertDialog,
   AlertDialogAction,
