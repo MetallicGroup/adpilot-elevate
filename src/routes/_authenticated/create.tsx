@@ -57,13 +57,13 @@ type State = {
   page_id: string;
 };
 
-const LOCATIONS = ["United States", "United Kingdom", "Canada", "Australia", "Germany", "France", "Brazil", "Mexico", "Japan", "India"];
+const LOCATIONS = ["România", "Republica Moldova", "Marea Britanie", "Germania", "Italia", "Spania", "Franța", "SUA"];
 const AGES = ["13-17", "18-24", "25-34", "35-44", "45-54", "55+"];
-const GENDERS = ["All", "Female", "Male"];
-const INTERESTS = ["Beauty", "Fashion", "Fitness", "Food", "Gaming", "Tech", "Travel", "Finance", "Education", "Home", "Pets", "Auto"];
-const LANGUAGES = ["English", "Spanish", "French", "German", "Portuguese", "Japanese"];
-const CTAS = ["Learn More", "Sign Up", "Shop Now", "Download", "Apply Now", "Book Now"];
-const LEAD_FIELDS = ["Name", "Email", "Phone", "City", "Zip Code", "Company", "Job Title"];
+const GENDERS = ["Toți", "Femei", "Bărbați"];
+const INTERESTS = ["Frumusețe", "Modă", "Fitness", "Food", "Gaming", "Tech", "Călătorii", "Finanțe", "Educație", "Casă", "Animale", "Auto"];
+const LANGUAGES = ["Română", "Engleză", "Maghiară", "Germană"];
+const CTAS = ["Află mai mult", "Înscrie-te", "Cumpără acum", "Descarcă", "Aplică acum", "Rezervă acum"];
+const LEAD_FIELDS = ["Nume", "Email", "Telefon", "Oraș", "Cod poștal", "Companie", "Funcție"];
 
 function CreateWizard() {
   const navigate = useNavigate();
@@ -142,12 +142,12 @@ function CreateWizard() {
   }, [step, s]);
 
   const titles = [
-    { t: "What's your goal?", sub: "We'll optimize delivery around this objective." },
-    { t: "Set your budget", sub: "Start small — you can scale anytime." },
-    { t: "Who should see this?", sub: "Refine your audience by location, age and interests." },
-    { t: "Build your creative", sub: "Make something that stops the scroll." },
-    { t: s.objective === "LEAD_GENERATION" ? "Design your lead form" : "Review your campaign", sub: s.objective === "LEAD_GENERATION" ? "Capture the info you need — keep it short." : "Double-check everything before you launch." },
-    { t: "Review your campaign", sub: "Double-check everything before you launch." },
+    { t: "Care e obiectivul tău? 🎯", sub: "Optimizăm livrarea în funcție de ce vrei să obții." },
+    { t: "Setează bugetul 💰", sub: "Începe mic — poți scala oricând." },
+    { t: "Cine să vadă reclama? 👥", sub: "Rafinează audiența după locație, vârstă și interese." },
+    { t: "Creativul tău ✨", sub: "Fă ceva ce oprește scrollul." },
+    { t: s.objective === "LEAD_GENERATION" ? "Designul formularului 📋" : "Verifică campania 🚀", sub: s.objective === "LEAD_GENERATION" ? "Cere doar info esențiale — păstrează-l scurt." : "Verifică totul înainte de lansare." },
+    { t: "Verifică campania 🚀", sub: "Verifică totul înainte de lansare." },
   ];
 
   const onNext = async () => {
@@ -165,10 +165,10 @@ function CreateWizard() {
         if (!r.ready) {
           toast.error(
             r.reason === "no_pages"
-              ? "Connect at least one Facebook Page in Settings before publishing to Meta."
-              : "Connect your Meta account in Settings before publishing to Meta.",
+              ? "Conectează cel puțin o pagină Facebook în Setări înainte de a publica pe Meta."
+              : "Conectează contul Meta în Setări înainte de a publica.",
             {
-              action: { label: "Open Settings", onClick: () => navigate({ to: "/settings" }) },
+              action: { label: "Deschide Setări", onClick: () => navigate({ to: "/settings" }) },
             },
           );
           setSubmitting(false);
@@ -213,18 +213,18 @@ function CreateWizard() {
         toast.loading("Publishing to Meta…", { id: "publish" });
         try {
           await publishMeta({ data: { campaign_id: saved.id, page_id: s.page_id || undefined } });
-          toast.success("Live on Meta! 🎉", { id: "publish" });
+          toast.success("Live pe Meta! 🎉", { id: "publish" });
           navigate({ to: "/campaigns/$id", params: { id: saved.id } });
           return;
         } catch (e: any) {
-          toast.error(e?.message ?? "Meta publish failed", { id: "publish", duration: 8000 });
+          toast.error(e?.message ?? "Publicare Meta eșuată", { id: "publish", duration: 8000 });
         }
       } else {
-        toast.success("Campaign saved as draft");
+        toast.success("Campanie salvată ca draft 💾");
       }
       navigate({ to: "/dashboard" });
     } catch (e: any) {
-      toast.error(e?.message ?? "Couldn't save campaign");
+      toast.error(e?.message ?? "Nu am putut salva campania");
     } finally {
       setSubmitting(false);
     }
@@ -234,7 +234,7 @@ function CreateWizard() {
 
   const onUploadMedia = async (file: File) => {
     if (file.size > 8 * 1024 * 1024) {
-      toast.error("Image must be under 8 MB");
+      toast.error("Imaginea trebuie să fie sub 8 MB");
       return;
     }
     setUploadingMedia(true);
@@ -252,9 +252,9 @@ function CreateWizard() {
         data: { filename: file.name, contentType: file.type || "image/jpeg", base64 },
       });
       update("media_url", url);
-      toast.success("Image uploaded");
+      toast.success("Imagine încărcată ✨");
     } catch (e: any) {
-      toast.error(e?.message ?? "Upload failed");
+      toast.error(e?.message ?? "Încărcare eșuată");
     } finally {
       setUploadingMedia(false);
     }
@@ -272,7 +272,7 @@ function CreateWizard() {
       subtitle={titles[idx].sub}
       canBack={true}
       canNext={canNext}
-      nextLabel={isLast ? (s.platform === "meta" ? "Review & publish" : "Save campaign") : "Continue"}
+      nextLabel={isLast ? (s.platform === "meta" ? "Verifică și publică" : "Salvează campania") : "Continuă"}
       onBack={onBack}
       onNext={onNext}
       isSubmitting={submitting}
@@ -291,7 +291,7 @@ function CreateWizard() {
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            {s.platform === "meta" ? "Publish live on Meta?" : "Save this campaign?"}
+            {s.platform === "meta" ? "Publici live pe Meta? 🚀" : "Salvezi campania?"}
           </AlertDialogTitle>
           <AlertDialogDescription>
             {s.platform === "meta" ? (
@@ -323,7 +323,7 @@ function StepGoal({ s, update }: { s: State; update: <K extends keyof State>(k: 
   return (
     <div className="space-y-6">
       <div className="space-y-3">
-        <FieldLabel>Platform</FieldLabel>
+        <FieldLabel>Platformă</FieldLabel>
         <div className="grid grid-cols-2 gap-3">
           <ChoiceCard active={s.platform === "tiktok"} onClick={() => update("platform", "tiktok")}>
             <div className="flex items-center gap-3">
@@ -332,7 +332,7 @@ function StepGoal({ s, update }: { s: State; update: <K extends keyof State>(k: 
               </div>
               <div>
                 <div className="font-semibold text-foreground">TikTok Ads</div>
-                <div className="mt-0.5 text-xs text-muted-foreground">Short-form video, Gen Z reach</div>
+                <div className="mt-0.5 text-xs text-muted-foreground">Video scurt, audiență Gen Z</div>
               </div>
             </div>
           </ChoiceCard>
@@ -350,24 +350,24 @@ function StepGoal({ s, update }: { s: State; update: <K extends keyof State>(k: 
         </div>
       </div>
       <div>
-        <FieldLabel>Campaign name</FieldLabel>
+        <FieldLabel>Numele campaniei</FieldLabel>
         <Input
           value={s.name}
           onChange={(e) => update("name", e.target.value.slice(0, 120))}
-          placeholder="Summer launch — leads"
+          placeholder="Lansare vară — lead-uri"
           className="h-12 rounded-xl"
         />
       </div>
       <div className="space-y-3">
-        <FieldLabel>Objective</FieldLabel>
+        <FieldLabel>Obiectiv</FieldLabel>
         <ChoiceCard active={s.objective === "LEAD_GENERATION"} onClick={() => update("objective", "LEAD_GENERATION")}>
           <div className="flex items-start gap-4">
             <div className="w-10 h-10 rounded-xl bg-foreground text-background flex items-center justify-center">
               <Target className="w-5 h-5" />
             </div>
             <div>
-              <div className="font-semibold text-foreground">Lead generation</div>
-              <div className="mt-0.5 text-sm text-muted-foreground">Collect contact info with an in-app form.</div>
+              <div className="font-semibold text-foreground">Generare lead-uri</div>
+              <div className="mt-0.5 text-sm text-muted-foreground">Colectează contacte printr-un formular integrat.</div>
             </div>
           </div>
         </ChoiceCard>
@@ -377,8 +377,8 @@ function StepGoal({ s, update }: { s: State; update: <K extends keyof State>(k: 
               <TrendingUp className="w-5 h-5" />
             </div>
             <div>
-              <div className="font-semibold text-foreground">Conversions</div>
-              <div className="mt-0.5 text-sm text-muted-foreground">Drive purchases or sign-ups on your site.</div>
+              <div className="font-semibold text-foreground">Conversii</div>
+              <div className="mt-0.5 text-sm text-muted-foreground">Generează achiziții sau înscrieri pe site-ul tău.</div>
             </div>
           </div>
         </ChoiceCard>
@@ -391,15 +391,15 @@ function StepBudget({ s, update }: { s: State; update: <K extends keyof State>(k
   return (
     <div className="space-y-8">
       <div>
-        <FieldLabel>Budget type</FieldLabel>
+        <FieldLabel>Tip buget</FieldLabel>
         <div className="flex gap-2">
-          <Chip active={s.budget_mode === "BUDGET_MODE_DAY"} onClick={() => update("budget_mode", "BUDGET_MODE_DAY")}>Daily</Chip>
-          <Chip active={s.budget_mode === "BUDGET_MODE_TOTAL"} onClick={() => update("budget_mode", "BUDGET_MODE_TOTAL")}>Lifetime</Chip>
+          <Chip active={s.budget_mode === "BUDGET_MODE_DAY"} onClick={() => update("budget_mode", "BUDGET_MODE_DAY")}>Zilnic</Chip>
+          <Chip active={s.budget_mode === "BUDGET_MODE_TOTAL"} onClick={() => update("budget_mode", "BUDGET_MODE_TOTAL")}>Total</Chip>
         </div>
       </div>
       <div>
         <div className="flex items-baseline justify-between">
-          <FieldLabel>{s.budget_mode === "BUDGET_MODE_DAY" ? "Daily budget" : "Lifetime budget"}</FieldLabel>
+          <FieldLabel>{s.budget_mode === "BUDGET_MODE_DAY" ? "Buget zilnic" : "Buget total"}</FieldLabel>
           <div className="font-serif text-3xl font-semibold tabular-nums">{fmtMoney(s.budget)}</div>
         </div>
         <Slider
@@ -417,11 +417,11 @@ function StepBudget({ s, update }: { s: State; update: <K extends keyof State>(k
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <FieldLabel><Calendar className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />Start</FieldLabel>
+          <FieldLabel><Calendar className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />Început</FieldLabel>
           <Input type="date" value={s.start_date} onChange={(e) => update("start_date", e.target.value)} className="h-12 rounded-xl" />
         </div>
         <div>
-          <FieldLabel><Calendar className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />End (optional)</FieldLabel>
+          <FieldLabel><Calendar className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />Sfârșit (opțional)</FieldLabel>
           <Input type="date" value={s.end_date} onChange={(e) => update("end_date", e.target.value)} className="h-12 rounded-xl" />
         </div>
       </div>
@@ -432,35 +432,35 @@ function StepBudget({ s, update }: { s: State; update: <K extends keyof State>(k
 function StepAudience({ s, toggle }: { s: State; toggle: <K extends keyof State>(k: K, v: string) => void }) {
   return (
     <div className="space-y-7">
-      <Section icon={<MapPin className="w-4 h-4" />} label="Locations">
+      <Section icon={<MapPin className="w-4 h-4" />} label="Locații">
         <div className="flex flex-wrap gap-2">
           {LOCATIONS.map((l) => (
             <Chip key={l} active={s.locations.includes(l)} onClick={() => toggle("locations", l)}>{l}</Chip>
           ))}
         </div>
       </Section>
-      <Section label="Age">
+      <Section label="Vârstă">
         <div className="flex flex-wrap gap-2">
           {AGES.map((a) => (
             <Chip key={a} active={s.age_groups.includes(a)} onClick={() => toggle("age_groups", a)}>{a}</Chip>
           ))}
         </div>
       </Section>
-      <Section label="Gender">
+      <Section label="Gen">
         <div className="flex flex-wrap gap-2">
           {GENDERS.map((g) => (
             <Chip key={g} active={s.genders.includes(g)} onClick={() => toggle("genders", g)}>{g}</Chip>
           ))}
         </div>
       </Section>
-      <Section icon={<Sparkles className="w-4 h-4" />} label="Interests">
+      <Section icon={<Sparkles className="w-4 h-4" />} label="Interese">
         <div className="flex flex-wrap gap-2">
           {INTERESTS.map((i) => (
             <Chip key={i} active={s.interests.includes(i)} onClick={() => toggle("interests", i)}>{i}</Chip>
           ))}
         </div>
       </Section>
-      <Section label="Languages">
+      <Section label="Limbi">
         <div className="flex flex-wrap gap-2">
           {LANGUAGES.map((l) => (
             <Chip key={l} active={s.languages.includes(l)} onClick={() => toggle("languages", l)}>{l}</Chip>
@@ -480,11 +480,11 @@ function StepCreative({ s, update, onUploadMedia, uploadingMedia }: {
   return (
     <div className="space-y-6">
       <div>
-        <FieldLabel><ImageIcon className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />Image</FieldLabel>
+        <FieldLabel><ImageIcon className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />Imagine</FieldLabel>
         <label className="press flex items-center gap-3 h-12 px-4 rounded-xl border border-dashed border-border hover:bg-secondary cursor-pointer">
           {uploadingMedia ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
           <span className="text-sm text-muted-foreground truncate">
-            {uploadingMedia ? "Uploading…" : s.media_url ? "Replace image" : "Upload image (JPG/PNG, max 8 MB)"}
+            {uploadingMedia ? "Se încarcă…" : s.media_url ? "Înlocuiește imaginea" : "Încarcă imagine (JPG/PNG, max 8 MB)"}
           </span>
           <input
             type="file"
@@ -494,27 +494,27 @@ function StepCreative({ s, update, onUploadMedia, uploadingMedia }: {
           />
         </label>
         {s.media_url && (
-          <p className="mt-1.5 text-[11px] text-muted-foreground truncate">Uploaded ✓</p>
+          <p className="mt-1.5 text-[11px] text-muted-foreground truncate">Încărcată ✓</p>
         )}
         <Input
           value={s.media_url}
           onChange={(e) => update("media_url", e.target.value)}
-          placeholder="…or paste an image URL"
+          placeholder="…sau lipește un URL"
           className="mt-2 h-10 rounded-xl text-xs"
         />
       </div>
       <div>
-        <FieldLabel>Headline</FieldLabel>
-        <Input value={s.headline} onChange={(e) => update("headline", e.target.value.slice(0, 80))} placeholder="The smarter way to launch" className="h-12 rounded-xl" />
+        <FieldLabel>Titlu</FieldLabel>
+        <Input value={s.headline} onChange={(e) => update("headline", e.target.value.slice(0, 80))} placeholder="Modul mai inteligent de a lansa" className="h-12 rounded-xl" />
         <p className="mt-1.5 text-[11px] text-muted-foreground">{s.headline.length}/80</p>
       </div>
       <div>
-        <FieldLabel>Description</FieldLabel>
-        <Textarea value={s.description} onChange={(e) => update("description", e.target.value.slice(0, 280))} placeholder="Tell people why they should care." className="rounded-xl min-h-24" />
+        <FieldLabel>Descriere</FieldLabel>
+        <Textarea value={s.description} onChange={(e) => update("description", e.target.value.slice(0, 280))} placeholder="Spune-le oamenilor de ce ar trebui să le pese." className="rounded-xl min-h-24" />
         <p className="mt-1.5 text-[11px] text-muted-foreground">{s.description.length}/280</p>
       </div>
       <div>
-        <FieldLabel>Call to action</FieldLabel>
+        <FieldLabel>Buton acțiune</FieldLabel>
         <div className="flex flex-wrap gap-2">
           {CTAS.map((c) => (
             <Chip key={c} active={s.cta === c} onClick={() => update("cta", c)}>{c}</Chip>
@@ -522,8 +522,8 @@ function StepCreative({ s, update, onUploadMedia, uploadingMedia }: {
         </div>
       </div>
       <div>
-        <FieldLabel>Landing URL</FieldLabel>
-        <Input value={s.landing_url} onChange={(e) => update("landing_url", e.target.value)} placeholder="https://yourbrand.com/offer" className="h-12 rounded-xl" />
+        <FieldLabel>URL landing page</FieldLabel>
+        <Input value={s.landing_url} onChange={(e) => update("landing_url", e.target.value)} placeholder="https://brandul-tau.ro/oferta" className="h-12 rounded-xl" />
       </div>
     </div>
   );
@@ -549,14 +549,14 @@ function StepLeadForm({ s, update, toggle, pages, pagesLoading }: {
     <div className="space-y-6">
       {s.platform === "meta" && (
         <div>
-          <FieldLabel><Facebook className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />Facebook Page</FieldLabel>
+          <FieldLabel><Facebook className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />Pagină Facebook</FieldLabel>
           {pagesLoading ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground h-12 px-4 rounded-xl border border-border">
-              <Loader2 className="w-4 h-4 animate-spin" /> Loading pages…
+              <Loader2 className="w-4 h-4 animate-spin" /> Se încarcă paginile…
             </div>
           ) : pages.length === 0 ? (
             <div className="text-sm text-muted-foreground h-12 px-4 flex items-center rounded-xl border border-dashed border-border">
-              No pages connected. Connect a Page in Settings.
+              Nicio pagină conectată. Conectează una în Setări.
             </div>
           ) : (
             <div className="flex flex-wrap gap-2">
@@ -567,40 +567,40 @@ function StepLeadForm({ s, update, toggle, pages, pagesLoading }: {
               ))}
             </div>
           )}
-          <p className="mt-1.5 text-[11px] text-muted-foreground">Leads will be delivered to this Page.</p>
+          <p className="mt-1.5 text-[11px] text-muted-foreground">Lead-urile vor fi livrate către această pagină.</p>
         </div>
       )}
       <div>
-        <FieldLabel><FileText className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />Form title</FieldLabel>
-        <Input value={s.lf_title} onChange={(e) => update("lf_title", e.target.value.slice(0, 120))} placeholder="Get early access" className="h-12 rounded-xl" />
+        <FieldLabel><FileText className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />Titlu formular</FieldLabel>
+        <Input value={s.lf_title} onChange={(e) => update("lf_title", e.target.value.slice(0, 120))} placeholder="Primește acces în avanpremieră" className="h-12 rounded-xl" />
       </div>
       <div>
-        <FieldLabel>Intro message</FieldLabel>
-        <Textarea value={s.lf_intro} onChange={(e) => update("lf_intro", e.target.value.slice(0, 500))} placeholder="Tell us a bit about yourself — we'll reach out within 24 hours." className="rounded-xl min-h-20" />
+        <FieldLabel>Mesaj de intro</FieldLabel>
+        <Textarea value={s.lf_intro} onChange={(e) => update("lf_intro", e.target.value.slice(0, 500))} placeholder="Spune-ne câte ceva despre tine — te contactăm în 24 de ore." className="rounded-xl min-h-20" />
       </div>
       <div>
-        <FieldLabel>Standard fields</FieldLabel>
+        <FieldLabel>Câmpuri standard</FieldLabel>
         <div className="flex flex-wrap gap-2">
           {LEAD_FIELDS.map((f) => (
             <Chip key={f} active={s.lf_fields.includes(f)} onClick={() => toggle("lf_fields", f)}>{f}</Chip>
           ))}
         </div>
-        <p className="mt-1.5 text-[11px] text-muted-foreground">Pre-filled from the user's Facebook profile when available.</p>
+        <p className="mt-1.5 text-[11px] text-muted-foreground">Pre-completate din profilul Facebook al utilizatorului când e posibil.</p>
       </div>
       <div>
         <div className="flex items-center justify-between">
-          <FieldLabel>Custom questions</FieldLabel>
+          <FieldLabel>Întrebări personalizate</FieldLabel>
           <button
             type="button"
             onClick={addQuestion}
             className="press inline-flex items-center gap-1 text-xs font-medium text-foreground hover:opacity-70"
           >
-            <Plus className="w-3.5 h-3.5" /> Add question
+            <Plus className="w-3.5 h-3.5" /> Adaugă întrebare
           </button>
         </div>
         {s.lf_custom_questions.length === 0 ? (
           <p className="mt-2 text-[12px] text-muted-foreground">
-            Want to ask more than name & phone? Add your own questions (e.g. "What service are you interested in?", "Best time to call?").
+            Vrei să afli mai mult decât nume și telefon? Adaugă întrebări proprii (ex: „Ce serviciu te interesează?", „Când e cel mai bine să te sunăm?").
           </p>
         ) : (
           <div className="mt-2 space-y-2">
@@ -609,14 +609,14 @@ function StepLeadForm({ s, update, toggle, pages, pagesLoading }: {
                 <Input
                   value={q}
                   onChange={(e) => setQuestion(i, e.target.value)}
-                  placeholder="Type your question…"
+                  placeholder="Scrie întrebarea ta…"
                   className="h-11 rounded-xl"
                 />
                 <button
                   type="button"
                   onClick={() => removeQuestion(i)}
                   className="press w-11 h-11 flex items-center justify-center rounded-xl border border-border hover:bg-secondary text-muted-foreground"
-                  aria-label="Remove question"
+                  aria-label="Șterge întrebarea"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -626,8 +626,8 @@ function StepLeadForm({ s, update, toggle, pages, pagesLoading }: {
         )}
       </div>
       <div>
-        <FieldLabel>Privacy policy URL</FieldLabel>
-        <Input value={s.lf_privacy_url} onChange={(e) => update("lf_privacy_url", e.target.value)} placeholder="https://yourbrand.com/privacy" className="h-12 rounded-xl" />
+        <FieldLabel>URL politică de confidențialitate</FieldLabel>
+        <Input value={s.lf_privacy_url} onChange={(e) => update("lf_privacy_url", e.target.value)} placeholder="https://brandul-tau.ro/privacy" className="h-12 rounded-xl" />
       </div>
     </div>
   );
@@ -637,7 +637,7 @@ function StepReview({ s, pageName }: { s: State; pageName: string }) {
   return (
     <div className="space-y-3">
       <AdPreview
-        pageName={pageName || (s.platform === "meta" ? "Your Facebook Page" : s.name)}
+        pageName={pageName || (s.platform === "meta" ? "Pagina ta Facebook" : s.name)}
         headline={s.headline}
         description={s.description}
         cta={s.cta}
@@ -645,29 +645,29 @@ function StepReview({ s, pageName }: { s: State; pageName: string }) {
         landingUrl={s.landing_url}
       />
       <div className="text-[11px] uppercase tracking-wider text-muted-foreground pt-3">Preview · cum va apărea în feed</div>
-      <ReviewRow label="Platform" value={s.platform === "tiktok" ? "TikTok Ads" : "Meta Ads (Facebook & Instagram)"} />
-      <ReviewRow label="Name" value={s.name} />
-      <ReviewRow label="Objective" value={s.objective === "LEAD_GENERATION" ? "Lead generation" : "Conversions"} />
-      <ReviewRow label="Budget" value={`${fmtMoney(s.budget)} ${s.budget_mode === "BUDGET_MODE_DAY" ? "/ day" : "lifetime"}`} />
-      <ReviewRow label="Schedule" value={`${s.start_date}${s.end_date ? ` → ${s.end_date}` : " · ongoing"}`} />
-      <ReviewRow label="Locations" value={s.locations.join(", ") || "—"} />
-      <ReviewRow label="Age" value={s.age_groups.join(", ") || "—"} />
-      <ReviewRow label="Gender" value={s.genders.join(", ") || "—"} />
-      <ReviewRow label="Interests" value={s.interests.length ? s.interests.join(", ") : "Any"} />
-      <ReviewRow label="Languages" value={s.languages.join(", ") || "—"} />
-      <ReviewRow label="Headline" value={s.headline} />
+      <ReviewRow label="Platformă" value={s.platform === "tiktok" ? "TikTok Ads" : "Meta Ads (Facebook & Instagram)"} />
+      <ReviewRow label="Nume" value={s.name} />
+      <ReviewRow label="Obiectiv" value={s.objective === "LEAD_GENERATION" ? "Generare lead-uri" : "Conversii"} />
+      <ReviewRow label="Buget" value={`${fmtMoney(s.budget)} ${s.budget_mode === "BUDGET_MODE_DAY" ? "/ zi" : "total"}`} />
+      <ReviewRow label="Program" value={`${s.start_date}${s.end_date ? ` → ${s.end_date}` : " · continuu"}`} />
+      <ReviewRow label="Locații" value={s.locations.join(", ") || "—"} />
+      <ReviewRow label="Vârstă" value={s.age_groups.join(", ") || "—"} />
+      <ReviewRow label="Gen" value={s.genders.join(", ") || "—"} />
+      <ReviewRow label="Interese" value={s.interests.length ? s.interests.join(", ") : "Oricare"} />
+      <ReviewRow label="Limbi" value={s.languages.join(", ") || "—"} />
+      <ReviewRow label="Titlu" value={s.headline} />
       <ReviewRow label="CTA" value={s.cta} />
-      <ReviewRow label="Landing URL" value={s.landing_url} />
+      <ReviewRow label="URL landing" value={s.landing_url} />
       {s.objective === "LEAD_GENERATION" && (
         <>
-          <ReviewRow label="Form" value={s.lf_title} />
-          <ReviewRow label="Fields" value={s.lf_fields.join(", ")} />
+          <ReviewRow label="Formular" value={s.lf_title} />
+          <ReviewRow label="Câmpuri" value={s.lf_fields.join(", ")} />
         </>
       )}
       <div className="mt-6 card-floating p-4 flex items-start gap-3 text-sm">
         <Check className="w-4 h-4 mt-0.5 text-foreground" />
         <div className="text-muted-foreground">
-          Saved as a draft to your workspace. Connect {s.platform === "tiktok" ? "TikTok" : "Meta"} in Settings to publish live.
+          Salvată ca draft în workspace-ul tău. Conectează {s.platform === "tiktok" ? "TikTok" : "Meta"} în Setări pentru publicare live.
         </div>
       </div>
     </div>

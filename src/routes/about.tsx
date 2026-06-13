@@ -3,9 +3,12 @@ import { MarketingLayout, PageHero } from "@/components/marketing/MarketingLayou
 
 export const Route = createFileRoute("/about")({
   head: () => ({ meta: [
-    { title: "About — AdPilot" },
-    { name: "description", content: "AdPilot is on a mission to make TikTok advertising accessible to every business — no agency required." },
-  ] }),
+    { title: "Despre — AdPilot" },
+    { name: "description", content: "AdPilot face publicitatea TikTok accesibilă oricărei afaceri — fără agenție." },
+    { property: "og:title", content: "Despre AdPilot" },
+    { property: "og:description", content: "Misiunea noastră: reclame TikTok accesibile oricărei afaceri." },
+    { property: "og:url", content: "https://adpilot.ro/about" },
+  ], links: [{ rel: "canonical", href: "https://adpilot.ro/about" }] }),
   component: AboutPage,
 });
 

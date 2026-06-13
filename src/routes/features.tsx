@@ -4,9 +4,12 @@ import { Check, Megaphone, Bot, Inbox, LineChart, MessageCircle, ShieldCheck } f
 
 export const Route = createFileRoute("/features")({
   head: () => ({ meta: [
-    { title: "Features — AdPilot" },
-    { name: "description", content: "TikTok ad management, AI campaign builder, lead generation, analytics and WhatsApp AI assistant — all in one platform." },
-  ] }),
+    { title: "Funcționalități — AdPilot" },
+    { name: "description", content: "Management reclame TikTok, creare campanii cu AI, generare lead-uri, analiză și asistent WhatsApp AI — totul într-o singură platformă." },
+    { property: "og:title", content: "Funcționalități — AdPilot" },
+    { property: "og:description", content: "Management reclame TikTok, AI builder, lead-uri, analiză și asistent WhatsApp — totul într-un loc." },
+    { property: "og:url", content: "https://adpilot.ro/features" },
+  ], links: [{ rel: "canonical", href: "https://adpilot.ro/features" }] }),
   component: FeaturesPage,
 });
 
