@@ -5,7 +5,6 @@ import { useStripeCheckout } from "@/hooks/useStripeCheckout";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "@tanstack/react-router";
-import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({ meta: [
@@ -88,7 +87,6 @@ function PricingPage() {
 
   return (
     <MarketingLayout>
-      <PaymentTestModeBanner />
       <PageHero
         eyebrow="Prețuri"
         title="Planuri simple care cresc o dată cu tine."
