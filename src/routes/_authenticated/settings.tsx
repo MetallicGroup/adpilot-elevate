@@ -26,7 +26,6 @@ function Settings() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const search = useSearch({ from: "/_authenticated/settings" });
-  const startOAuth = useServerFn(startMetaOAuth);
 
   useEffect(() => {
     if (search.meta === "connected") {
