@@ -2,30 +2,30 @@ import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage, H2, P, UL } from "@/components/marketing/LegalPage";
 
 export const Route = createFileRoute("/cookie-policy")({
-  head: () => ({ meta: [{ title: "Cookie Policy — AdPilot" }, { name: "description", content: "How AdPilot uses cookies and similar technologies." }] }),
+  head: () => ({ meta: [{ title: "Politica de cookies — AdPilot" }, { name: "description", content: "Cum folosește AdPilot cookies și tehnologii similare." }] }),
   component: () => (
-    <LegalPage title="Cookie Policy" updated="June 10, 2026">
-      <P>This Cookie Policy explains how AdPilot SRL uses cookies and similar technologies when you visit our website or use the AdPilot platform. It should be read alongside our Privacy Policy.</P>
+    <LegalPage title="Politica de cookies" updated="10 iunie 2026">
+      <P>Această Politică explică cum AdPilot SRL folosește cookies și tehnologii similare atunci când vizitezi site-ul sau folosești platforma AdPilot. Citește-o împreună cu Politica noastră de confidențialitate.</P>
 
-      <H2>1. What is a cookie?</H2>
-      <P>A cookie is a small text file stored on your device by your browser when you visit a website. Cookies allow websites to remember your actions and preferences (such as language, login state and display settings) over time, so you don't have to keep re-entering them.</P>
+      <H2>1. Ce este un cookie?</H2>
+      <P>Un cookie este un fișier text mic stocat pe dispozitivul tău de către browser. Cookies permit site-urilor să rețină acțiunile și preferințele tale (limba, autentificare, setări) astfel încât să nu le introduci de fiecare dată.</P>
 
-      <H2>2. Categories of cookies we use</H2>
+      <H2>2. Categorii de cookies</H2>
       <UL>
-        <li><strong>Strictly necessary cookies</strong> — required for the website to function (authentication, security, load balancing). These cannot be switched off.</li>
-        <li><strong>Functional cookies</strong> — remember your preferences (language, theme, dismissed banners) to give you a better experience.</li>
-        <li><strong>Analytics cookies</strong> — help us understand how visitors use the site so we can improve it (e.g. Google Analytics with IP anonymization).</li>
-        <li><strong>Marketing cookies</strong> — used by us and our partners (TikTok Pixel, Meta Pixel) to measure the effectiveness of campaigns. Only set with your consent.</li>
+        <li><strong>Strict necesare</strong> — pentru funcționarea site-ului (autentificare, securitate). Nu pot fi dezactivate.</li>
+        <li><strong>Funcționale</strong> — rețin preferințele tale (limbă, temă, bannere închise).</li>
+        <li><strong>Analitică</strong> — ne ajută să înțelegem cum este folosit site-ul (de ex. Google Analytics cu IP anonimizat).</li>
+        <li><strong>Marketing</strong> — folosite de noi și parteneri (TikTok Pixel, Meta Pixel) pentru a măsura eficacitatea campaniilor. Doar cu consimțământul tău.</li>
       </UL>
 
-      <H2>3. Managing your cookie preferences</H2>
-      <P>You can accept or reject non-essential cookies via the cookie banner displayed on your first visit. You can update your choices at any time from the footer "Cookie Preferences" link. You can also block or delete cookies in your browser settings; note that blocking strictly necessary cookies may prevent the Services from functioning correctly.</P>
+      <H2>3. Cum îți administrezi preferințele</H2>
+      <P>Poți accepta sau refuza cookies-urile non-esențiale din bannerul afișat la prima vizită. Le poți modifica oricând din linkul „Preferințe cookies" din subsol. Le poți bloca și din setările browserului — blocarea cookies-urilor strict necesare poate împiedica funcționarea corectă a platformei.</P>
 
-      <H2>4. Third-party cookies</H2>
-      <P>Some cookies are set by third parties (e.g. Stripe for payments, Google for analytics, TikTok and Meta for advertising measurement). These providers have their own privacy and cookie policies, which we encourage you to review.</P>
+      <H2>4. Cookies de la terți</H2>
+      <P>Unele cookies sunt setate de terți (Stripe pentru plăți, Google pentru analitică, TikTok și Meta pentru măsurarea reclamelor). Aceștia au propriile politici, te încurajăm să le citești.</P>
 
-      <H2>5. Changes to this Policy</H2>
-      <P>We may update this Cookie Policy from time to time. The "Last updated" date above reflects the most recent revision. For questions, contact support@adpilot.ro.</P>
+      <H2>5. Modificări</H2>
+      <P>Putem actualiza această politică din când în când. Data „Ultima actualizare" de sus reflectă cea mai recentă revizie. Pentru întrebări, scrie-ne la support@adpilot.ro.</P>
     </LegalPage>
   ),
 });
