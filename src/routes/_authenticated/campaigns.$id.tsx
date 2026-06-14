@@ -111,7 +111,7 @@ function CampaignDetail() {
   };
 
   if (loading) {
-    return <div className="max-w-md mx-auto px-5 pt-10 text-sm text-muted-foreground">Loading…</div>;
+    return <div className="max-w-md mx-auto px-5 pt-10 text-sm text-muted-foreground">Se încarcă…</div>;
   }
   if (!data) return null;
   const { campaign, totals, perf, insights } = data;
@@ -120,12 +120,12 @@ function CampaignDetail() {
   const cpl = totals.leads ? totals.spend / totals.leads : 0;
 
   const stats = [
-    { label: "Spent", value: fmtMoney(totals.spend), icon: DollarSign },
-    { label: "Impressions", value: fmtNum(totals.impressions), icon: Eye },
-    { label: "Clicks", value: fmtNum(totals.clicks), icon: MousePointerClick },
-    { label: "Leads", value: fmtNum(totals.leads), icon: Users },
-    { label: "CTR", value: `${ctr.toFixed(2)}%`, icon: TrendingUp },
-    { label: "CPL", value: fmtMoney(cpl), icon: DollarSign },
+    { label: "Cheltuit", value: fmtMoney(totals.spend), icon: DollarSign },
+    { label: "Vizionări", value: fmtNum(totals.impressions), icon: Eye },
+    { label: "Clickuri", value: fmtNum(totals.clicks), icon: MousePointerClick },
+    { label: "Clienți potențiali", value: fmtNum(totals.leads), icon: Users },
+    { label: "Rată click (CTR)", value: `${ctr.toFixed(2)}%`, icon: TrendingUp },
+    { label: "Cost per client", value: fmtMoney(cpl), icon: DollarSign },
   ];
 
   const statusColor =
@@ -240,7 +240,7 @@ function CampaignDetail() {
         )}
       </div>
 
-      <h2 className="mt-7 text-sm font-semibold">Preview</h2>
+      <h2 className="mt-7 text-sm font-semibold">Previzualizare</h2>
       <div className="mt-3">
         <AdPreview
           pageName={campaign.name}
@@ -254,15 +254,15 @@ function CampaignDetail() {
 
       {perf.length > 0 && (
         <>
-          <h2 className="mt-7 text-sm font-semibold">Daily breakdown</h2>
+          <h2 className="mt-7 text-sm font-semibold">Pe zile</h2>
           <div className="mt-3 card-floating divide-y divide-border">
             {perf.map((p) => (
               <div key={p.date} className="flex items-center justify-between px-4 py-3 text-xs">
                 <div className="text-muted-foreground">{p.date}</div>
                 <div className="flex items-center gap-4 tabular-nums">
                   <span>{fmtMoney(Number(p.spend))}</span>
-                  <span>{fmtNum(p.impressions)} imp</span>
-                  <span>{fmtNum(p.leads)} leads</span>
+                  <span>{fmtNum(p.impressions)} vizionări</span>
+                  <span>{fmtNum(p.leads)} clienți</span>
                 </div>
               </div>
             ))}
@@ -271,7 +271,7 @@ function CampaignDetail() {
       )}
 
       <Link to="/leads" className="mt-6 inline-block text-xs text-muted-foreground underline">
-        Vezi toate lead-urile →
+        Vezi toți clienții potențiali →
       </Link>
     </motion.div>
   );

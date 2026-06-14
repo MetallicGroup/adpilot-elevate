@@ -86,9 +86,9 @@ function Index() {
           >
             <div className="card-floating-lg p-6 md:p-8 grid md:grid-cols-3 gap-4"
                  style={{ transform: "rotateX(6deg)", boxShadow: "0 50px 100px -20px oklch(0.62 0.22 295 / 0.4), 0 30px 60px -30px oklch(0 0 0 / 0.7)" }}>
-              <KpiTile label="Cheltuiți azi" value="€1.284" delta="+12%" />
-              <KpiTile label="Lead-uri azi" value="47" delta="+23%" />
-              <KpiTile label="CPL mediu" value="€6,40" delta="-8%" />
+              <KpiTile label="Cheltuiți azi" value="1.284 lei" delta="+12%" />
+              <KpiTile label="Clienți noi azi" value="47" delta="+23%" />
+              <KpiTile label="Cost/client" value="32 lei" delta="-8%" />
               <div className="md:col-span-2 rounded-xl bg-secondary p-6 border border-border">
                 <p className="text-xs uppercase tracking-widest text-muted-foreground">Campanie activă</p>
                 <div className="mt-2 flex items-center gap-2">
@@ -99,11 +99,11 @@ function Index() {
                   <div className="h-2 flex-1 rounded-full bg-background overflow-hidden">
                     <div className="h-full w-3/4 rounded-full" style={{ background: "var(--gradient-primary)" }} />
                   </div>
-                  <span className="text-xs text-muted-foreground font-mono">€750 / €1.000</span>
+                  <span className="text-xs text-muted-foreground font-mono">750 / 1.000 lei</span>
                 </div>
                 <div className="mt-6 grid grid-cols-3 gap-3 text-center">
                   <Mini label="CTR" value="3,2%" />
-                  <Mini label="CPL" value="€6,40" />
+                  <Mini label="Cost/client" value="32 lei" />
                   <Mini label="ROAS" value="4,1x" />
                 </div>
               </div>
@@ -149,9 +149,9 @@ function Index() {
           <BentoCard className="md:col-span-2 md:row-span-2 min-h-[320px]" icon={LineChart} title="Dashboard în timp real">
             <p>Vezi tot ce contează într-un singur loc: cheltuieli, lead-uri, CTR, CPL, ROAS. Actualizat la fiecare minut.</p>
             <div className="mt-6 grid grid-cols-3 gap-3">
-              <Mini label="Spend" value="€148" />
-              <Mini label="Lead-uri" value="23" />
-              <Mini label="CPL" value="€6,40" />
+              <Mini label="Cheltuit" value="740 lei" />
+              <Mini label="Clienți noi" value="23" />
+              <Mini label="Cost/client" value="32 lei" />
             </div>
             <div className="mt-4 h-24 rounded-xl bg-background border border-border flex items-end gap-1 p-3">
               {[40, 65, 50, 80, 45, 90, 70].map((h, i) => (
@@ -189,7 +189,7 @@ function Index() {
           <div className="relative grid md:grid-cols-3 gap-10 text-center">
             {[
               { v: "200+", l: "Afaceri din România" },
-              { v: "€2.4M+", l: "Buget gestionat" },
+              { v: "12M+ lei", l: "Buget gestionat" },
               { v: "4,2x", l: "ROAS mediu" },
             ].map((s) => (
               <div key={s.l} className="md:border-r md:last:border-r-0 border-border">
@@ -396,9 +396,9 @@ const steps = [
 ];
 
 const plans = [
-  { name: "Starter", tagline: "Pentru afaceri mici care încep.", price: "€99", items: ["1 cont de reclame", "Buget până la €2.000/lună", "AI Campaign Builder", "Suport pe email"] },
-  { name: "Growth", tagline: "Pentru afaceri care cresc rapid.", price: "€199", featured: true, items: ["3 conturi de reclame", "Buget până la €10.000/lună", "Asistent WhatsApp AI", "Optimizare automată", "Suport prioritar"] },
-  { name: "Pro", tagline: "Pentru agenții și branduri mari.", price: "€399", items: ["Conturi nelimitate", "Buget nelimitat", "Success manager dedicat", "Integrări personalizate", "SLA 99,9%"] },
+  { name: "Starter", tagline: "Pentru afaceri mici care încep.", price: "249 lei", items: ["3 campanii pe lună", "Fără generare AI de poze sau clipuri", "Asistent WhatsApp AI", "Suport pe email"] },
+  { name: "Pro", tagline: "Pentru afacerile care cresc rapid.", price: "495 lei", featured: true, items: ["Campanii nelimitate", "10 clipuri AI pe lună", "20 de poze AI pe lună", "Asistent WhatsApp AI", "Suport prioritar"] },
+  { name: "Premium", tagline: "Pentru branduri și agenții care scalează.", price: "995 lei", items: ["Campanii nelimitate", "Clipuri AI nelimitate", "Poze AI nelimitate", "Success manager dedicat"] },
 ];
 
 const faqs = [
