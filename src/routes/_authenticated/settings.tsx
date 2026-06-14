@@ -145,22 +145,6 @@ function Row({ label, defaultValue, disabled }: { label: string; defaultValue: s
   );
 }
 
-function KeyRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center gap-2 p-3 rounded-xl border border-border bg-secondary/30">
-      <span className="text-[10px] uppercase tracking-wider text-muted-foreground w-20">{label}</span>
-      <span className="font-mono text-xs flex-1 truncate">{value}</span>
-      <button
-        onClick={() => { navigator.clipboard?.writeText(value); toast.success("Copiat în clipboard"); }}
-        className="press p-1.5 rounded-md hover:bg-background text-muted-foreground"
-        aria-label="Copiază"
-      >
-        <Copy className="w-3.5 h-3.5" />
-      </button>
-    </div>
-  );
-}
-
 function AccentPicker() {
   const accents = [
     { hue: "290", label: "Violet" },
@@ -187,17 +171,6 @@ function AccentPicker() {
     </div>
   );
 }
-
-const MEMBERS = [
-  { name: "Cont AdPilot", email: "tu@adpilot.ro", role: "Admin", you: true, hue: 290 },
-  { name: "Andreea Marin", email: "andreea@firma.ro", role: "Editor", hue: 320 },
-  { name: "Radu Constantin", email: "radu@firma.ro", role: "Viewer", hue: 250 },
-];
-
-const WEBHOOKS = [
-  { url: "https://hooks.firma.ro/leads", events: ["lead.new", "lead.updated"], active: true },
-  { url: "https://crm.firma.ro/api/adpilot", events: ["campaign.live", "campaign.paused"], active: false },
-];
 
 function MetaConnectionCard() {
   const [busy, setBusy] = useState(false);
