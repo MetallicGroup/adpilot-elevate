@@ -10,10 +10,10 @@ import { IphoneWhatsAppMockup } from "@/components/marketing/IphoneWhatsAppMocku
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "AdPilot — Reclame Facebook & Instagram. Fără agenție." },
-      { name: "description", content: "Platforma AI care creează, lansează și optimizează reclame Facebook & Instagram în minute. 7 zile gratuit. Lead-urile vin direct pe WhatsApp." },
-      { property: "og:title", content: "AdPilot — Reclame Facebook & Instagram. Fără agenție." },
-      { property: "og:description", content: "Creează și optimizează reclame Facebook & Instagram cu AI. 7 zile gratuit. Lead-uri direct pe WhatsApp." },
+      { title: "AdPilot — Reclame Facebook. Lead-uri pe WhatsApp." },
+      { name: "description", content: "Platforma AI care creează, lansează și optimizează reclame Facebook în câteva minute. Fiecare lead ajunge direct pe WhatsApp. 7 zile gratuit." },
+      { property: "og:title", content: "AdPilot — Reclame Facebook. Lead-uri pe WhatsApp." },
+      { property: "og:description", content: "Creează și optimizează reclame Facebook cu AI. Lead-urile vin direct pe WhatsApp. 7 zile gratuit." },
     ],
   }),
   component: Index,
