@@ -4,7 +4,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Facebook, RefreshCw, Trash2, CheckCircle2, User, Plug, Palette, Plus, Music2 } from "lucide-react";
+import { Facebook, RefreshCw, Trash2, CheckCircle2, User, Plug, Palette } from "lucide-react";
 import { resyncMetaConnection, selectMetaAdAccount, selectMetaPage } from "@/lib/meta.functions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { applyAccent } from "@/components/AppHeader";
