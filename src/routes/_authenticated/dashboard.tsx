@@ -67,8 +67,8 @@ function Dashboard() {
   const stats = [
     { label: "Cheltuit total", value: fmtMoney(totalSpend), accent: "from-primary/30 to-primary/0" },
     { label: "Campanii active", value: fmtNum(active.length), accent: "from-emerald-500/30 to-emerald-500/0" },
-    { label: "Lead-uri totale", value: fmtNum(totalLeads), accent: "from-blue-500/30 to-blue-500/0" },
-    { label: "CPL mediu", value: fmtMoney(avgCpl), accent: "from-purple-500/30 to-purple-500/0" },
+    { label: "Clienți potențiali", value: fmtNum(totalLeads), accent: "from-blue-500/30 to-blue-500/0" },
+    { label: "Cost mediu per client", value: fmtMoney(avgCpl), accent: "from-purple-500/30 to-purple-500/0" },
   ];
 
   return (
@@ -115,7 +115,7 @@ function Dashboard() {
             <Inbox className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-sm font-medium">Lead-uri CRM</p>
+            <p className="text-sm font-medium">Clienți potențiali</p>
             <p className="text-xs text-muted-foreground">Toate platformele</p>
           </div>
         </Link>
@@ -198,7 +198,7 @@ function Dashboard() {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{c.name}</p>
                       <p className="text-[11px] text-muted-foreground font-mono">
-                        {c.platform === "meta" ? "Meta" : "TikTok"} · {fmtMoney(c.spend)} cheltuit · {fmtNum(c.leads)} lead-uri
+                        {c.platform === "meta" ? "Meta" : "TikTok"} · {fmtMoney(c.spend)} cheltuit · {fmtNum(c.leads)} clienți
                       </p>
                     </div>
                     {canToggle && (
