@@ -39,13 +39,13 @@ export async function setMetaCampaignStatus(opts: {
   // ACTIVE in Business Suite; cascading guarantees delivery stops.
   const targets: { id: string; label: string }[] = [];
   if (opts.next === "PAUSED") {
-    if (camp.meta_ad_id) targets.push({ id: camp.meta_ad_id, label: "ad" });
-    if (camp.meta_adset_id) targets.push({ id: camp.meta_adset_id, label: "adset" });
-    targets.push({ id: camp.meta_campaign_id, label: "campaign" });
+    if (camp.meta_ad_id) targets.push({ id: camp.meta_ad_id as string, label: "ad" });
+    if (camp.meta_adset_id) targets.push({ id: camp.meta_adset_id as string, label: "adset" });
+    targets.push({ id: camp.meta_campaign_id as string, label: "campaign" });
   } else {
-    targets.push({ id: camp.meta_campaign_id, label: "campaign" });
-    if (camp.meta_adset_id) targets.push({ id: camp.meta_adset_id, label: "adset" });
-    if (camp.meta_ad_id) targets.push({ id: camp.meta_ad_id, label: "ad" });
+    targets.push({ id: camp.meta_campaign_id as string, label: "campaign" });
+    if (camp.meta_adset_id) targets.push({ id: camp.meta_adset_id as string, label: "adset" });
+    if (camp.meta_ad_id) targets.push({ id: camp.meta_ad_id as string, label: "ad" });
   }
 
   let lastError: string | null = null;
