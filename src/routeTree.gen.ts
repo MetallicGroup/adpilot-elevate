@@ -37,6 +37,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedCreateRouteImport } from './routes/_authenticated/create'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ApiPublicAdminBootstrapRouteImport } from './routes/api/public/admin-bootstrap'
+import { Route as AuthenticatedQaTrialRouteImport } from './routes/_authenticated/qa.trial'
 import { Route as AuthenticatedCampaignsIdRouteImport } from './routes/_authenticated/campaigns.$id'
 import { Route as ApiPublicWhatsappWebhookRouteImport } from './routes/api/public/whatsapp.webhook'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -189,6 +190,11 @@ const ApiPublicAdminBootstrapRoute = ApiPublicAdminBootstrapRouteImport.update({
   path: '/api/public/admin-bootstrap',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedQaTrialRoute = AuthenticatedQaTrialRouteImport.update({
+  id: '/qa/trial',
+  path: '/qa/trial',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedCampaignsIdRoute =
   AuthenticatedCampaignsIdRouteImport.update({
     id: '/campaigns/$id',
@@ -287,6 +293,7 @@ export interface FileRoutesByFullPath {
   '/whatsapp': typeof AuthenticatedWhatsappRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
+  '/qa/trial': typeof AuthenticatedQaTrialRoute
   '/api/public/admin-bootstrap': typeof ApiPublicAdminBootstrapRoute
   '/admin/tickets/$id': typeof AuthenticatedAdminTicketsIdRoute
   '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
@@ -328,6 +335,7 @@ export interface FileRoutesByTo {
   '/whatsapp': typeof AuthenticatedWhatsappRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
+  '/qa/trial': typeof AuthenticatedQaTrialRoute
   '/api/public/admin-bootstrap': typeof ApiPublicAdminBootstrapRoute
   '/admin/tickets/$id': typeof AuthenticatedAdminTicketsIdRoute
   '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
@@ -371,6 +379,7 @@ export interface FileRoutesById {
   '/_authenticated/whatsapp': typeof AuthenticatedWhatsappRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/_authenticated/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
+  '/_authenticated/qa/trial': typeof AuthenticatedQaTrialRoute
   '/api/public/admin-bootstrap': typeof ApiPublicAdminBootstrapRoute
   '/_authenticated/admin/tickets/$id': typeof AuthenticatedAdminTicketsIdRoute
   '/_authenticated/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
@@ -414,6 +423,7 @@ export interface FileRouteTypes {
     | '/whatsapp'
     | '/checkout/return'
     | '/campaigns/$id'
+    | '/qa/trial'
     | '/api/public/admin-bootstrap'
     | '/admin/tickets/$id'
     | '/admin/users/$id'
@@ -455,6 +465,7 @@ export interface FileRouteTypes {
     | '/whatsapp'
     | '/checkout/return'
     | '/campaigns/$id'
+    | '/qa/trial'
     | '/api/public/admin-bootstrap'
     | '/admin/tickets/$id'
     | '/admin/users/$id'
@@ -497,6 +508,7 @@ export interface FileRouteTypes {
     | '/_authenticated/whatsapp'
     | '/checkout/return'
     | '/_authenticated/campaigns/$id'
+    | '/_authenticated/qa/trial'
     | '/api/public/admin-bootstrap'
     | '/_authenticated/admin/tickets/$id'
     | '/_authenticated/admin/users/$id'
@@ -739,6 +751,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAdminBootstrapRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/qa/trial': {
+      id: '/_authenticated/qa/trial'
+      path: '/qa/trial'
+      fullPath: '/qa/trial'
+      preLoaderRoute: typeof AuthenticatedQaTrialRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/campaigns/$id': {
       id: '/_authenticated/campaigns/$id'
       path: '/campaigns/$id'
@@ -851,6 +870,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
   AuthenticatedWhatsappRoute: typeof AuthenticatedWhatsappRoute
   AuthenticatedCampaignsIdRoute: typeof AuthenticatedCampaignsIdRoute
+  AuthenticatedQaTrialRoute: typeof AuthenticatedQaTrialRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -865,6 +885,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSupportRoute: AuthenticatedSupportRoute,
   AuthenticatedWhatsappRoute: AuthenticatedWhatsappRoute,
   AuthenticatedCampaignsIdRoute: AuthenticatedCampaignsIdRoute,
+  AuthenticatedQaTrialRoute: AuthenticatedQaTrialRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

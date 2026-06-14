@@ -157,3 +157,113 @@ export const getMySubscription = createServerFn({ method: "GET" })
       .maybeSingle();
     return { subscription: sub ?? null };
   });
+
+const ZERO_DECIMAL = new Set([
+  "bif","clp","djf","gnf","jpy","kmf","krw","mga","pyg","rwf","ugx","vnd","vuv","xaf","xof","xpf",
+]);
+const THREE_DECIMAL = new Set(["bhd","jod","kwd","omr","tnd"]);
+function toMajor(amount: number | null | undefined, currency: string): number {
+  const v = amount ?? 0;
+  const c = (currency ?? "").toLowerCase();
+  if (ZERO_DECIMAL.has(c)) return v;
+  if (THREE_DECIMAL.has(c)) return v / 1000;
+  return v / 100;
+}
+function isoFromUnix(s: number | null | undefined): string | null {
+  return s ? new Date(s * 1000).toISOString() : null;
+}
+
+export type BillingInvoice = {
+  id: string;
+  number: string | null;
+  status: string | null;
+  amount_paid: number;
+  amount_due: number;
+  currency: string;
+  created: string | null;
+  hosted_invoice_url: string | null;
+  pdf_url: string | null;
+  description: string | null;
+};
+
+export type UpcomingInvoice = {
+  amount_due: number;
+  currency: string;
+  next_payment_attempt: string | null;
+  period_end: string | null;
+  description: string | null;
+} | null;
+
+export type BillingHistoryResult =
+  | { invoices: BillingInvoice[]; upcoming: UpcomingInvoice }
+  | { error: string };
+
+export const getBillingHistory = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { environment: StripeEnv }) => {
+    if (data.environment !== "sandbox" && data.environment !== "live") {
+      throw new Error("Invalid environment");
+    }
+    return data;
+  })
+  .handler(async ({ data, context }): Promise<BillingHistoryResult> => {
+    try {
+      const { supabase, userId } = context;
+      const { data: sub } = await supabase
+        .from("subscriptions")
+        .select("stripe_customer_id,stripe_subscription_id")
+        .eq("user_id", userId)
+        .eq("environment", data.environment)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!sub?.stripe_customer_id) {
+        return { invoices: [], upcoming: null };
+      }
+
+      const stripe = createStripeClient(data.environment);
+      const customerId = sub.stripe_customer_id as string;
+      const subscriptionId = (sub.stripe_subscription_id as string | null) ?? undefined;
+
+      const list = await stripe.invoices.list({ customer: customerId, limit: 24 });
+      const invoices: BillingInvoice[] = list.data.map((inv) => ({
+        id: inv.id ?? "",
+        number: inv.number ?? null,
+        status: inv.status ?? null,
+        amount_paid: toMajor(inv.amount_paid, inv.currency),
+        amount_due: toMajor(inv.amount_due, inv.currency),
+        currency: inv.currency,
+        created: isoFromUnix(inv.created),
+        hosted_invoice_url: inv.hosted_invoice_url ?? null,
+        pdf_url: inv.invoice_pdf ?? null,
+        description: inv.lines?.data?.[0]?.description ?? null,
+      }));
+
+      let upcoming: UpcomingInvoice = null;
+      try {
+        const u = await (stripe.invoices as unknown as {
+          retrieveUpcoming: (p: Record<string, unknown>) => Promise<any>;
+        }).retrieveUpcoming({
+          customer: customerId,
+          ...(subscriptionId && { subscription: subscriptionId }),
+        });
+        upcoming = {
+          amount_due: toMajor(u.amount_due, u.currency),
+          currency: u.currency,
+          next_payment_attempt: isoFromUnix(u.next_payment_attempt),
+          period_end: isoFromUnix(u.period_end),
+          description: u.lines?.data?.[0]?.description ?? null,
+        };
+      } catch (e: any) {
+        // No upcoming invoice (canceled / no recurring) — non-fatal.
+        if (e?.code !== "invoice_upcoming_none") {
+          console.warn("retrieveUpcoming failed:", e?.message);
+        }
+      }
+
+      return { invoices, upcoming };
+    } catch (error) {
+      console.error("getBillingHistory error:", error);
+      return { error: getStripeErrorMessage(error) };
+    }
+  });
