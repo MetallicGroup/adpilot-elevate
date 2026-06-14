@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Check, Facebook, Loader2, Sparkles, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getOnboardingStatus, type OnboardingStatus } from "@/lib/onboarding.functions";
+import { startMetaOAuth } from "@/lib/meta-oauth.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { useStripeCheckout } from "@/hooks/useStripeCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
@@ -42,6 +43,7 @@ const PLANS = [
 function OnboardingPage() {
   const navigate = useNavigate();
   const fetchStatus = useServerFn(getOnboardingStatus);
+  const startOAuth = useServerFn(startMetaOAuth);
   const [status, setStatus] = useState<OnboardingStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const { openCheckout, closeCheckout, isOpen, checkoutElement } = useStripeCheckout();
@@ -66,9 +68,12 @@ function OnboardingPage() {
   }, []);
 
   async function connectMeta() {
-    const { data } = await supabase.auth.getUser();
-    if (!data.user) return;
-    window.location.href = `/api/meta/auth/start?uid=${data.user.id}`;
+    try {
+      const { url } = await startOAuth();
+      window.location.href = url;
+    } catch (e: any) {
+      toast.error(e?.message ?? "Nu am putut porni autentificarea Meta");
+    }
   }
 
   function selectPlan(priceId: string) {
