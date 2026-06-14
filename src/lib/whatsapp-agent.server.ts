@@ -630,31 +630,6 @@ async function getMetaToken(supabaseAdmin: any, userId: string): Promise<string 
   return data?.access_token ?? null;
 }
 
-async function setMetaStatus(
-  supabaseAdmin: any,
-  userId: string,
-  campaignId: string,
-  status: "ACTIVE" | "PAUSED",
-) {
-  const camp = await getCampaign(supabaseAdmin, userId, campaignId);
-  if (!camp) return { error: "Campanie negăsită" };
-  if (!camp.meta_campaign_id) return { error: "Campanie nepublicată" };
-  const token = await getMetaToken(supabaseAdmin, userId);
-  if (!token) return { error: "Fără Meta" };
-  const r = await fetch(`${GRAPH}/${metaApiVersion()}/${camp.meta_campaign_id}`, {
-    method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded" },
-    body: `status=${status}&access_token=${encodeURIComponent(token)}`,
-  });
-  const j = await r.json();
-  if (!r.ok) return { error: j?.error?.message || `Meta ${r.status}` };
-  await supabaseAdmin
-    .from("campaigns")
-    .update({ status: status === "ACTIVE" ? "active" : "paused" })
-    .eq("id", campaignId);
-  return { ok: true, status };
-}
-
 function isRetryPublishRequest(message: string): boolean {
   const normalized = message.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   return /\b(incearca|reincearca|retry)\b/.test(normalized) && /\b(iar|din nou|inca o data|retry)?\b/.test(normalized);
