@@ -43,7 +43,9 @@ export const getMetaStatus = createServerFn({ method: "POST" })
     const { metaApiVersion } = await import("@/lib/meta.server");
     const v = metaApiVersion();
 
-    const reconnect_url = `/api/meta/auth/start?uid=${userId}`;
+    // Reconnect goes through the authenticated `startMetaOAuth` server fn now;
+    // keep the field for backward compat but route to settings, which calls it.
+    const reconnect_url = `/settings`;
     const webhook_callback_url = "https://adpilot.ro/api/public/meta/webhook";
 
     const { data: conn } = await supabaseAdmin
