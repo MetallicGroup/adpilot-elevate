@@ -9,6 +9,7 @@ import { resyncMetaConnection, selectMetaAdAccount, selectMetaPage } from "@/lib
 import { WhatsAppConnectionCard } from "@/components/whatsapp/WhatsAppConnectionCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { applyAccent } from "@/components/AppHeader";
+import { SubscriptionBadge } from "@/components/SubscriptionBadge";
 
 type MetaSearch = { meta?: string; reason?: string };
 
@@ -66,20 +67,7 @@ function Settings() {
 
         <TabsContent value="cont" className="mt-6 space-y-4">
           <Card title="Plan & facturare" subtitle="Abonament curent și acces la portalul Stripe.">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="font-semibold">Growth · €199/lună</p>
-                <p className="text-xs text-muted-foreground mt-1">Reînnoire pe 24 dec 2026 · card •••• 4242</p>
-              </div>
-              <button className="press text-sm px-4 py-2 rounded-lg border border-border hover:bg-secondary">
-                Deschide portal
-              </button>
-            </div>
-            <div className="mt-4 grid grid-cols-3 gap-3">
-              <Stat label="Lead-uri" value="312" cap="/ ∞" />
-              <Stat label="Campanii" value="8" cap="/ ∞" />
-              <Stat label="Buget AI" value="€8.4k" cap="/ €10k" />
-            </div>
+            <SubscriptionBadge />
           </Card>
 
           <Card title="Profil" subtitle="Datele tale de afișare în AdPilot.">
