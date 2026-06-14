@@ -19,6 +19,7 @@ function AuthPage() {
   const navigate = useNavigate();
   const { redirect } = Route.useSearch();
   const afterAuth = redirect ?? "/onboarding";
+  const goAfterAuth = () => navigate({ to: afterAuth as any, replace: true });
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,7 +29,7 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: afterAuth, replace: true });
+      if (data.session) goAfterAuth();
     });
   }, [navigate, afterAuth]);
 
@@ -47,11 +48,11 @@ function AuthPage() {
         });
         if (error) throw error;
         toast.success("Welcome to AdPilot");
-        navigate({ to: afterAuth, replace: true });
+        goAfterAuth();
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate({ to: afterAuth, replace: true });
+        goAfterAuth();
       }
     } catch (err: any) {
       toast.error(err.message ?? "Something went wrong");
@@ -71,7 +72,7 @@ function AuthPage() {
       return;
     }
     if (!result.redirected) {
-      navigate({ to: afterAuth, replace: true });
+      goAfterAuth();
     }
   }
 
