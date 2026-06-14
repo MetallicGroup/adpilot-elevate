@@ -15,7 +15,7 @@ const sections = [
     items: [
       { id: "creeaza-cont", h: "Creează-ți contul", body: "Înregistrează-te pe adpilot.ro/auth cu email și parolă, sau continuă cu Google. După confirmarea emailului, ajungi direct pe dashboard." },
       { id: "conecteaza", h: "Conectează contul de reclame", body: "Din Setări → Conexiuni, apasă Conectează TikTok sau Meta. Vei fi redirecționat către ecranul OAuth oficial unde alegi ce cont de reclame să partajezi cu AdPilot. Poți revoca accesul oricând." },
-      { id: "prima-campanie", h: "Lansează prima campanie", body: "Apasă „Creează campanie" pe dashboard. Urmează wizard-ul: obiectiv, buget, audiență, creativ, formular (dacă e cazul) și revizuire. AI-ul îți sugerează audiențe și texte la fiecare pas." },
+      { id: "prima-campanie", h: "Lansează prima campanie", body: "Apasă „Creează campanie” pe dashboard. Urmează wizard-ul: obiectiv, buget, audiență, creativ, formular (dacă e cazul) și revizuire. AI-ul îți sugerează audiențe și texte la fiecare pas." },
     ],
   },
   {
@@ -30,7 +30,7 @@ const sections = [
     title: "3. Clienți potențiali & CRM",
     items: [
       { id: "inbox", h: "Inbox clienți", body: "Toți clienții colectați din formularele TikTok și Meta apar în inbox în timp real, cu detalii de contact, câmpurile formularului, campania-sursă și data." },
-      { id: "whatsapp", h: "Alerte WhatsApp", body: "Activează alertele WhatsApp din Setări → Notificări. Vei primi un mesaj instant pentru fiecare client nou. Răspunde cu „contactat" sau „exportă clienții de azi"." },
+      { id: "whatsapp", h: "Alerte WhatsApp", body: "Activează alertele WhatsApp din Setări → Notificări. Vei primi un mesaj instant pentru fiecare client nou. Răspunde cu „contactat” sau „exportă clienții de azi”." },
       { id: "crm-export", h: "Export CRM", body: "Conectează CRM-ul tău (HubSpot, Pipedrive, Notion) din Setări → Integrări. Clienții noi se sincronizează automat." },
     ],
   },
