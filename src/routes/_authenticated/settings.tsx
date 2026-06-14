@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Facebook, RefreshCw, Trash2, CheckCircle2, User, Plug, Palette } from "lucide-react";
 import { resyncMetaConnection, selectMetaAdAccount, selectMetaPage } from "@/lib/meta.functions";
+import { startMetaOAuth } from "@/lib/meta-oauth.functions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { applyAccent } from "@/components/AppHeader";
 import { SubscriptionBadge } from "@/components/SubscriptionBadge";
@@ -176,6 +177,7 @@ function MetaConnectionCard() {
   const resync = useServerFn(resyncMetaConnection);
   const selectAd = useServerFn(selectMetaAdAccount);
   const selectPg = useServerFn(selectMetaPage);
+  const startOAuth = useServerFn(startMetaOAuth);
 
   const { data, refetch, isLoading } = useQuery({
     queryKey: ["meta-connections"],
@@ -212,13 +214,13 @@ function MetaConnectionCard() {
 
   async function connect() {
     setBusy(true);
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) {
-      toast.error("Nu ești autentificat");
+    try {
+      const { url } = await startOAuth();
+      window.location.href = url;
+    } catch (e: any) {
+      toast.error(e?.message ?? "Nu am putut porni autentificarea Meta");
       setBusy(false);
-      return;
     }
-    window.location.href = `/api/meta/auth/start?uid=${u.user.id}`;
   }
 
   async function disconnect(id: string) {
