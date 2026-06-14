@@ -8,7 +8,6 @@ import { getOnboardingStatus, type OnboardingStatus } from "@/lib/onboarding.fun
 import { startMetaOAuth } from "@/lib/meta-oauth.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { useStripeCheckout } from "@/hooks/useStripeCheckout";
-import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
