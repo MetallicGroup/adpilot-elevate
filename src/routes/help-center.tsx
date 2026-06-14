@@ -28,7 +28,7 @@ function HelpCenter() {
       <section className="px-6 pb-12 max-w-5xl mx-auto w-full grid gap-4 md:grid-cols-2">
         {categories.map((c) => (
           <div key={c.title} className="card-floating p-6 flex items-start gap-4">
-            <c.icon className="w-5 h-5 text-tiktok shrink-0 mt-0.5" />
+            <c.icon className="w-5 h-5 text-facebook shrink-0 mt-0.5" />
             <div>
               <h3 className="font-semibold">{c.title}</h3>
               <p className="mt-1 text-sm text-muted-foreground">{c.body}</p>

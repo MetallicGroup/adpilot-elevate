@@ -6,7 +6,7 @@
 
 /*
  * AdPilot design system — Apple meets Linear.
- * Pure monochrome with a single TikTok-pink accent. DM Sans + Playfair Display.
+ * Pure monochrome with a single Facebook-blue accent. DM Sans + Playfair Display.
  */
 
 @theme inline {
@@ -73,8 +73,11 @@
   /* #8B8B9E */ --muted-foreground: oklch(0.62 0.018 285);
   --accent: oklch(0.62 0.22 295);
   --accent-foreground: oklch(1 0 0);
-  /* TikTok pink #FE2C55 */ --tiktok: oklch(0.65 0.245 18);
-  --tiktok-foreground: oklch(1 0 0);
+  /* Facebook blue #1877F2 */ --facebook: oklch(0.55 0.18 252);
+  --facebook-foreground: oklch(1 0 0);
+  /* legacy alias, kept for back-compat */
+  --tiktok: var(--facebook);
+  --tiktok-foreground: var(--facebook-foreground);
   --destructive: oklch(0.62 0.225 25);
   --destructive-foreground: oklch(0.985 0 0);
   --success: oklch(0.72 0.17 160);
@@ -104,6 +107,8 @@
 }
 
 @theme inline {
+  --color-facebook: var(--facebook);
+  --color-facebook-foreground: var(--facebook-foreground);
   --color-tiktok: var(--tiktok);
   --color-tiktok-foreground: var(--tiktok-foreground);
   --color-success: var(--success);

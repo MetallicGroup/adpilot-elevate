@@ -24,7 +24,7 @@ function SecurityPage() {
       <section className="px-6 pb-12 max-w-5xl mx-auto w-full grid gap-5 md:grid-cols-2">
         {pillars.map((p) => (
           <div key={p.title} className="card-floating p-7">
-            <p.icon className="w-6 h-6 text-tiktok" />
+            <p.icon className="w-6 h-6 text-facebook" />
             <h3 className="mt-4 font-semibold">{p.title}</h3>
             <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{p.body}</p>
           </div>

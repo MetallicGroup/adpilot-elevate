@@ -56,7 +56,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function ContactItem({ icon: Icon, title, value }: { icon: any; title: string; value: string }) {
   return (
     <div className="card-floating p-6 flex items-start gap-4">
-      <Icon className="w-5 h-5 text-tiktok mt-0.5" />
+      <Icon className="w-5 h-5 text-facebook mt-0.5" />
       <div>
         <p className="text-xs uppercase tracking-widest text-muted-foreground">{title}</p>
         <p className="mt-1 font-medium">{value}</p>
