@@ -117,10 +117,9 @@ export const runTrialSandboxTest = createServerFn({ method: "POST" })
 
       // 4. ASSERT — no charges during trial. Advance clock by 6 days
       //    (still inside the trial window).
-      await stripe.testHelpers.testClocks.advance({
+      await stripe.testHelpers.testClocks.advance(clock.id, {
         frozen_time: nowSec + 6 * SECONDS_PER_DAY,
-      } as any);
-      // The SDK signature is (id, params) — retry with the right shape.
+      });
       await waitForClock(stripe, clock.id);
 
       const midTrialCharges = await stripe.charges.list({ customer: customer.id, limit: 5 });
@@ -143,9 +142,9 @@ export const runTrialSandboxTest = createServerFn({ method: "POST" })
       });
 
       // 5. Advance past trial end (+8 days from start, well past trial_end).
-      await stripe.testHelpers.testClocks.advance({
+      await stripe.testHelpers.testClocks.advance(clock.id, {
         frozen_time: nowSec + 8 * SECONDS_PER_DAY,
-      } as any);
+      });
       await waitForClock(stripe, clock.id);
 
       // Stripe may need a moment to settle the renewal invoice.
