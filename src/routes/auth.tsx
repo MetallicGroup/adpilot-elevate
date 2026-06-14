@@ -19,6 +19,7 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -66,6 +67,25 @@ function AuthPage() {
     }
     if (!result.redirected) {
       navigate({ to: "/onboarding", replace: true });
+    }
+  }
+
+  async function forgotPassword() {
+    if (!email) {
+      toast.error("Introdu adresa de email mai întâi");
+      return;
+    }
+    setResetting(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + "/reset-password",
+      });
+      if (error) throw error;
+      toast.success("Ți-am trimis un email cu link-ul de resetare");
+    } catch (e: any) {
+      toast.error(e.message ?? "Nu am putut trimite email-ul");
+    } finally {
+      setResetting(false);
     }
   }
 
@@ -140,6 +160,16 @@ function AuthPage() {
               {mode === "signup" ? "Create account" : "Sign in"}
             </button>
           </form>
+
+          {mode === "signin" && (
+            <button
+              onClick={forgotPassword}
+              disabled={resetting}
+              className="mt-3 w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {resetting ? "Se trimite..." : "Ai uitat parola?"}
+            </button>
+          )}
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             {mode === "signup" ? "Already have an account?" : "New to AdPilot?"}{" "}
