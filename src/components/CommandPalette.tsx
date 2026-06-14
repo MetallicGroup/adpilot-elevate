@@ -9,7 +9,7 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
-import { Home, Plus, Inbox, MessageCircle, Settings, BarChart3, Sparkles, Rocket, Search } from "lucide-react";
+import { Home, Plus, Inbox, Settings, BarChart3, Sparkles, Rocket, Search } from "lucide-react";
 
 type Ctx = { open: boolean; setOpen: (v: boolean) => void };
 const CmdCtx = (() => {
