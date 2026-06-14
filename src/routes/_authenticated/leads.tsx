@@ -150,6 +150,12 @@ function LeadsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Link
+            to="/meta-status"
+            className="press text-sm px-4 py-2 rounded-lg border border-border hover:bg-secondary"
+          >
+            Status Meta
+          </Link>
           <button
             disabled={syncing}
             onClick={async () => {
