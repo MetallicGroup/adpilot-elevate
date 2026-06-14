@@ -8,7 +8,7 @@ import { OnboardingTour } from "@/components/OnboardingTour";
 import { getOnboardingStatus } from "@/lib/onboarding.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 
-const ONBOARDING_ALLOWED = ["/onboarding", "/checkout/return"];
+const ONBOARDING_ALLOWED = ["/onboarding", "/checkout/return", "/admin"];
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
