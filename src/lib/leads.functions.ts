@@ -175,6 +175,7 @@ export const listMetaPages = createServerFn({ method: "GET" })
  */
 export const syncMetaLeads = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => d as Record<string, never>)
   .handler(async ({ context }) => {
     const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
