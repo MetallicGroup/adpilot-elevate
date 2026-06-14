@@ -200,9 +200,6 @@ function LeadsPage() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <FilterChip active={platform === "all"} onClick={() => setPlatform("all")}>Toate platformele</FilterChip>
-          <FilterChip active={platform === "tiktok"} onClick={() => setPlatform("tiktok")}>
-            <Music2 className="w-3.5 h-3.5" /> TikTok
-          </FilterChip>
           <FilterChip active={platform === "meta"} onClick={() => setPlatform("meta")}>
             <Facebook className="w-3.5 h-3.5" /> Meta
           </FilterChip>

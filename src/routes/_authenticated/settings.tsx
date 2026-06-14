@@ -100,16 +100,6 @@ function Settings() {
         </TabsContent>
 
         <TabsContent value="integrari" className="mt-6 space-y-4">
-          <div className="card-floating p-5">
-            <div className="flex items-center gap-2">
-              <Music2 className="w-4 h-4" />
-              <p className="text-xs text-muted-foreground">TikTok Ads</p>
-            </div>
-            <p className="mt-1 text-sm">Niciun cont conectat încă.</p>
-            <button className="press mt-3 w-full py-2.5 rounded-xl border border-border hover:bg-secondary text-xs font-medium">
-              Conectează TikTok
-            </button>
-          </div>
           <MetaConnectionCard />
           <WhatsAppConnectionCard />
         </TabsContent>
