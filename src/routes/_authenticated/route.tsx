@@ -68,7 +68,6 @@ function BottomNav() {
     { to: "/dashboard", icon: Home, label: "Acasă" },
     { to: "/leads", icon: Inbox, label: "Lead-uri" },
     { to: "/create", icon: Plus, label: "Creează" },
-    { to: "/whatsapp", icon: MessageCircle, label: "WhatsApp" },
     { to: "/settings", icon: Settings, label: "Setări" },
   ] as const;
   return (
