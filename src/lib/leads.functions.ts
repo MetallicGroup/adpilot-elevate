@@ -167,3 +167,90 @@ export const listMetaPages = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return { pages: (data ?? []) as { page_id: string; page_name: string }[] };
   });
+
+/**
+ * Pull all leads from every Meta Lead Ads form on each connected Page and
+ * upsert them into the `leads` table. Used as a fallback when the page-level
+ * webhook subscription is missing or has not fired.
+ */
+export const syncMetaLeads = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { metaApiVersion } = await import("@/lib/meta.server");
+    const { mapMetaLeadFields } = await import("@/lib/leads.server");
+    const v = metaApiVersion();
+
+    const { data: pages } = await supabaseAdmin
+      .from("meta_pages")
+      .select("page_id, page_access_token")
+      .eq("user_id", userId)
+      .eq("is_active", true);
+    if (!pages?.length) return { inserted: 0, scanned: 0, forms: 0 };
+
+    let inserted = 0;
+    let scanned = 0;
+    let forms = 0;
+
+    for (const p of pages) {
+      if (!p.page_access_token) continue;
+      const formsRes = await fetch(
+        `https://graph.facebook.com/${v}/${p.page_id}/leadgen_forms?fields=id,name&limit=200&access_token=${encodeURIComponent(p.page_access_token)}`,
+      );
+      const formsJson = await formsRes.json();
+      const formList: Array<{ id: string; name: string }> = formsJson?.data ?? [];
+      forms += formList.length;
+
+      for (const form of formList) {
+        let next: string | null =
+          `https://graph.facebook.com/${v}/${form.id}/leads?fields=id,created_time,ad_id,form_id,field_data&limit=100&access_token=${encodeURIComponent(p.page_access_token)}`;
+        while (next) {
+          const r = await fetch(next);
+          const j: any = await r.json();
+          if (!r.ok) {
+            console.error("[syncMetaLeads] form", form.id, j?.error?.message);
+            break;
+          }
+          const rows: any[] = j?.data ?? [];
+          for (const row of rows) {
+            scanned++;
+            const mapped = mapMetaLeadFields(row.field_data || []);
+            let campaign_id: string | null = null;
+            if (row.ad_id) {
+              const { data: camp } = await supabaseAdmin
+                .from("campaigns")
+                .select("id")
+                .eq("user_id", userId)
+                .eq("meta_ad_id", row.ad_id)
+                .maybeSingle();
+              campaign_id = camp?.id ?? null;
+            }
+            const { error, count } = await supabaseAdmin
+              .from("leads")
+              .upsert(
+                {
+                  user_id: userId,
+                  platform: "meta" as const,
+                  campaign_id,
+                  external_lead_id: row.id,
+                  external_form_id: form.id,
+                  external_ad_id: row.ad_id ?? null,
+                  full_name: mapped.full_name,
+                  email: mapped.email,
+                  phone: mapped.phone,
+                  message: mapped.message,
+                  raw: row as any,
+                  status: "new" as const,
+                  created_at: row.created_time ?? new Date().toISOString(),
+                },
+                { onConflict: "platform,external_lead_id", ignoreDuplicates: true, count: "exact" },
+              );
+            if (!error && (count ?? 0) > 0) inserted++;
+          }
+          next = j?.paging?.next ?? null;
+        }
+      }
+    }
+    return { inserted, scanned, forms };
+  });
