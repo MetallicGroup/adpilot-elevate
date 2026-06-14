@@ -14,7 +14,12 @@ export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async ({ location }) => {
     const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) throw redirect({ to: "/auth" });
+    if (error || !data.user) {
+      throw redirect({
+        to: "/auth",
+        search: { redirect: location.href },
+      });
+    }
 
     // Subscription / Meta-connection gate. Allow the onboarding flow and the
     // checkout-return page through, otherwise force the user to /onboarding.
