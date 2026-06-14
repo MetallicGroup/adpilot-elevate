@@ -25,6 +25,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as AuthenticatedWhatsappRouteImport } from './routes/_authenticated/whatsapp'
 import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
@@ -37,6 +38,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as ApiPublicAdminBootstrapRouteImport } from './routes/api/public/admin-bootstrap'
 import { Route as AuthenticatedCampaignsIdRouteImport } from './routes/_authenticated/campaigns.$id'
 import { Route as ApiPublicWhatsappWebhookRouteImport } from './routes/api/public/whatsapp.webhook'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicMetaWebhookRouteImport } from './routes/api/public/meta.webhook'
 import { Route as ApiPublicHooksRefreshInsightsRouteImport } from './routes/api/public/hooks/refresh-insights'
 import { Route as ApiPublicHooksPeriodicUpdateRouteImport } from './routes/api/public/hooks/periodic-update'
@@ -126,6 +128,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
+  id: '/checkout/return',
+  path: '/checkout/return',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedWhatsappRoute = AuthenticatedWhatsappRouteImport.update({
   id: '/whatsapp',
   path: '/whatsapp',
@@ -186,6 +193,12 @@ const ApiPublicWhatsappWebhookRoute =
   ApiPublicWhatsappWebhookRouteImport.update({
     id: '/api/public/whatsapp/webhook',
     path: '/api/public/whatsapp/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicMetaWebhookRoute = ApiPublicMetaWebhookRouteImport.update({
@@ -265,6 +278,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/support': typeof AuthenticatedSupportRoute
   '/whatsapp': typeof AuthenticatedWhatsappRoute
+  '/checkout/return': typeof CheckoutReturnRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/api/public/admin-bootstrap': typeof ApiPublicAdminBootstrapRoute
   '/admin/tickets/$id': typeof AuthenticatedAdminTicketsIdRoute
@@ -276,6 +290,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/periodic-update': typeof ApiPublicHooksPeriodicUpdateRoute
   '/api/public/hooks/refresh-insights': typeof ApiPublicHooksRefreshInsightsRoute
   '/api/public/meta/webhook': typeof ApiPublicMetaWebhookRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -303,6 +318,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/support': typeof AuthenticatedSupportRoute
   '/whatsapp': typeof AuthenticatedWhatsappRoute
+  '/checkout/return': typeof CheckoutReturnRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/api/public/admin-bootstrap': typeof ApiPublicAdminBootstrapRoute
   '/admin/tickets/$id': typeof AuthenticatedAdminTicketsIdRoute
@@ -314,6 +330,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/periodic-update': typeof ApiPublicHooksPeriodicUpdateRoute
   '/api/public/hooks/refresh-insights': typeof ApiPublicHooksRefreshInsightsRoute
   '/api/public/meta/webhook': typeof ApiPublicMetaWebhookRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
 }
 export interface FileRoutesById {
@@ -343,6 +360,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/support': typeof AuthenticatedSupportRoute
   '/_authenticated/whatsapp': typeof AuthenticatedWhatsappRoute
+  '/checkout/return': typeof CheckoutReturnRoute
   '/_authenticated/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/api/public/admin-bootstrap': typeof ApiPublicAdminBootstrapRoute
   '/_authenticated/admin/tickets/$id': typeof AuthenticatedAdminTicketsIdRoute
@@ -354,6 +372,7 @@ export interface FileRoutesById {
   '/api/public/hooks/periodic-update': typeof ApiPublicHooksPeriodicUpdateRoute
   '/api/public/hooks/refresh-insights': typeof ApiPublicHooksRefreshInsightsRoute
   '/api/public/meta/webhook': typeof ApiPublicMetaWebhookRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
 }
 export interface FileRouteTypes {
@@ -383,6 +402,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/support'
     | '/whatsapp'
+    | '/checkout/return'
     | '/campaigns/$id'
     | '/api/public/admin-bootstrap'
     | '/admin/tickets/$id'
@@ -394,6 +414,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/periodic-update'
     | '/api/public/hooks/refresh-insights'
     | '/api/public/meta/webhook'
+    | '/api/public/payments/webhook'
     | '/api/public/whatsapp/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -421,6 +442,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/support'
     | '/whatsapp'
+    | '/checkout/return'
     | '/campaigns/$id'
     | '/api/public/admin-bootstrap'
     | '/admin/tickets/$id'
@@ -432,6 +454,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/periodic-update'
     | '/api/public/hooks/refresh-insights'
     | '/api/public/meta/webhook'
+    | '/api/public/payments/webhook'
     | '/api/public/whatsapp/webhook'
   id:
     | '__root__'
@@ -460,6 +483,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/support'
     | '/_authenticated/whatsapp'
+    | '/checkout/return'
     | '/_authenticated/campaigns/$id'
     | '/api/public/admin-bootstrap'
     | '/_authenticated/admin/tickets/$id'
@@ -471,6 +495,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/periodic-update'
     | '/api/public/hooks/refresh-insights'
     | '/api/public/meta/webhook'
+    | '/api/public/payments/webhook'
     | '/api/public/whatsapp/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -491,6 +516,7 @@ export interface RootRouteChildren {
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   SecurityRoute: typeof SecurityRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
+  CheckoutReturnRoute: typeof CheckoutReturnRoute
   ApiPublicAdminBootstrapRoute: typeof ApiPublicAdminBootstrapRoute
   ApiMetaAuthCallbackRoute: typeof ApiMetaAuthCallbackRoute
   ApiMetaAuthStartRoute: typeof ApiMetaAuthStartRoute
@@ -499,6 +525,7 @@ export interface RootRouteChildren {
   ApiPublicHooksPeriodicUpdateRoute: typeof ApiPublicHooksPeriodicUpdateRoute
   ApiPublicHooksRefreshInsightsRoute: typeof ApiPublicHooksRefreshInsightsRoute
   ApiPublicMetaWebhookRoute: typeof ApiPublicMetaWebhookRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicWhatsappWebhookRoute: typeof ApiPublicWhatsappWebhookRoute
 }
 
@@ -616,6 +643,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/checkout/return': {
+      id: '/checkout/return'
+      path: '/checkout/return'
+      fullPath: '/checkout/return'
+      preLoaderRoute: typeof CheckoutReturnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/whatsapp': {
       id: '/_authenticated/whatsapp'
       path: '/whatsapp'
@@ -698,6 +732,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/whatsapp/webhook'
       fullPath: '/api/public/whatsapp/webhook'
       preLoaderRoute: typeof ApiPublicWhatsappWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/meta/webhook': {
@@ -825,6 +866,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   SecurityRoute: SecurityRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
+  CheckoutReturnRoute: CheckoutReturnRoute,
   ApiPublicAdminBootstrapRoute: ApiPublicAdminBootstrapRoute,
   ApiMetaAuthCallbackRoute: ApiMetaAuthCallbackRoute,
   ApiMetaAuthStartRoute: ApiMetaAuthStartRoute,
@@ -833,6 +875,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksPeriodicUpdateRoute: ApiPublicHooksPeriodicUpdateRoute,
   ApiPublicHooksRefreshInsightsRoute: ApiPublicHooksRefreshInsightsRoute,
   ApiPublicMetaWebhookRoute: ApiPublicMetaWebhookRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicWhatsappWebhookRoute: ApiPublicWhatsappWebhookRoute,
 }
 export const routeTree = rootRouteImport

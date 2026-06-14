@@ -10,10 +10,10 @@ import { IphoneWhatsAppMockup } from "@/components/marketing/IphoneWhatsAppMocku
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "AdPilot — Reclame TikTok. Fără agenție." },
-      { name: "description", content: "Platforma AI care creează, lansează și optimizează reclame TikTok în minute. Lead-urile vin direct pe WhatsApp." },
-      { property: "og:title", content: "AdPilot — Reclame TikTok. Fără agenție." },
-      { property: "og:description", content: "Platforma AI care creează, lansează și optimizează reclame TikTok. Lead-urile vin direct pe WhatsApp." },
+      { title: "AdPilot — Reclame Facebook & Instagram. Fără agenție." },
+      { name: "description", content: "Platforma AI care creează, lansează și optimizează reclame Facebook & Instagram în minute. 7 zile gratuit. Lead-urile vin direct pe WhatsApp." },
+      { property: "og:title", content: "AdPilot — Reclame Facebook & Instagram. Fără agenție." },
+      { property: "og:description", content: "Creează și optimizează reclame Facebook & Instagram cu AI. 7 zile gratuit. Lead-uri direct pe WhatsApp." },
     ],
   }),
   component: Index,
@@ -43,21 +43,21 @@ function Index() {
                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass text-xs font-medium text-muted-foreground"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-success pulse-dot text-success" />
-                ✨ Live acum — campanii în 60 de secunde
+                ✨ 7 zile gratuit · fără retragere înainte de a 8-a zi
               </motion.div>
 
               <h1 className="mt-8 text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight">
-                Reclame TikTok.<br/>
+                Reclame Facebook.<br/>
                 <span className="gradient-text">Fără agenție.</span>
               </h1>
 
               <p className="mt-6 text-lg text-muted-foreground leading-relaxed max-w-xl mx-auto md:mx-0">
-                AdPilot creează, lansează și optimizează campaniile tale TikTok în câteva minute — iar fiecare lead ajunge direct pe WhatsApp-ul tău. ✨
+                AdPilot creează, lansează și optimizează campaniile tale Facebook & Instagram în câteva minute — iar fiecare lead ajunge direct pe WhatsApp-ul tău. ✨
               </p>
 
               <div className="mt-10 flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
                 <Link to="/auth" className="press btn-primary inline-flex items-center justify-center gap-2 px-7 py-4 rounded-xl font-semibold">
-                  Începe gratuit <ArrowRight className="w-4 h-4" />
+                  Începe cele 7 zile gratuit <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link to="/contact" className="press inline-flex items-center justify-center gap-2 px-7 py-4 glass rounded-xl font-medium text-foreground hover:bg-card transition-colors">
                   <PlayCircle className="w-4 h-4" /> Vezi demo
@@ -388,10 +388,10 @@ function BentoCard({ icon: Icon, title, children, className = "" }: { icon: any;
 }
 
 const steps = [
-  { icon: Zap, title: "Conectează TikTok", body: "OAuth securizat. Durează 30 de secunde." },
+  { icon: Zap, title: "Conectează Facebook", body: "OAuth securizat. Durează 30 de secunde." },
   { icon: Target, title: "Spune-ne obiectivul", body: "Lead-uri sau vânzări? Buget? Restul rezolvăm noi." },
   { icon: Bot, title: "AI construiește campania", body: "Audiențe, text, structură — totul generat." },
-  { icon: Rocket, title: "Lansează", body: "Un click și ești live pe TikTok." },
+  { icon: Rocket, title: "Lansează", body: "Un click și ești live pe Facebook & Instagram." },
   { icon: MessageCircle, title: "Primești lead-uri", body: "Direct pe WhatsApp, instant." },
 ];
 
@@ -402,12 +402,12 @@ const plans = [
 ];
 
 const faqs = [
-  { q: "Am nevoie de o agenție de marketing ca să folosesc AdPilot?", a: "Nu. AdPilot e construit exact pentru afacerile care vor să facă reclame TikTok fără agenție. AI-ul se ocupă de audiențe, text și structura campaniei." },
-  { q: "Trebuie să am experiență cu reclame TikTok?", a: "Deloc. Dacă poți răspunde la câteva întrebări despre afacerea ta și obiectiv, AdPilot creează și lansează campania pentru tine." },
+  { q: "Am nevoie de o agenție de marketing ca să folosesc AdPilot?", a: "Nu. AdPilot e construit exact pentru afacerile care vor să facă reclame Facebook & Instagram fără agenție. AI-ul se ocupă de audiențe, text și structura campaniei." },
+  { q: "Trebuie să am experiență cu reclame Facebook?", a: "Deloc. Dacă poți răspunde la câteva întrebări despre afacerea ta și obiectiv, AdPilot creează și lansează campania pentru tine." },
   { q: "Cum funcționează asistentul WhatsApp?", a: "Conectezi numărul tău de WhatsApp, iar apoi poți trimite comenzi în limbaj natural: «câte lead-uri azi?» sau «pornește campania nouă». AdPilot înțelege și execută instant." },
-  { q: "Sunt datele mele în siguranță?", a: "Da. Ne conectăm prin OAuth oficial TikTok, nu stocăm nicio parolă, iar toate datele sunt criptate. Suntem 100% conformi GDPR." },
-  { q: "Cine deține contul de reclame TikTok?", a: "Tu. Contul TikTok Business rămâne mereu pe numele tău. AdPilot doar acționează la instrucțiunile tale și poți retrage accesul oricând." },
-  { q: "Costul include bugetul de reclame?", a: "Nu. Abonamentul AdPilot acoperă doar platforma. Bugetul de reclame e plătit direct către TikTok, din contul tău." },
+  { q: "Sunt datele mele în siguranță?", a: "Da. Ne conectăm prin OAuth oficial Meta, nu stocăm nicio parolă, iar toate datele sunt criptate. Suntem 100% conformi GDPR." },
+  { q: "Cine deține contul de reclame?", a: "Tu. Contul Meta Business rămâne mereu pe numele tău. AdPilot doar acționează la instrucțiunile tale și poți retrage accesul oricând." },
+  { q: "Costul include bugetul de reclame?", a: "Nu. Abonamentul AdPilot acoperă doar platforma. Bugetul de reclame e plătit direct către Meta, din contul tău." },
   { q: "Pot anula oricând?", a: "Da. Anulezi din dashboard în orice moment. Accesul continuă până la finalul perioadei plătite." },
   { q: "În ce limbi vorbește AI-ul?", a: "Română și engleză. Tot AdPilot e localizat în română — interfață, asistent, rapoarte, totul." },
 ];
@@ -415,7 +415,7 @@ const faqs = [
 type Testimonial = { name: string; role: string; quote: string; metric: string; hue: number };
 
 const testimonials: Testimonial[] = [
-  { name: "Andreea Marin", role: "Fondator · Glamora Beauty", quote: "Am lansat prima campanie TikTok în 4 minute. În 2 săptămâni: 312 lead-uri și 18 cliente noi.", metric: "+312 lead-uri", hue: 320 },
+  { name: "Andreea Marin", role: "Fondator · Glamora Beauty", quote: "Am lansat prima campanie Facebook în 4 minute. În 2 săptămâni: 312 lead-uri și 18 cliente noi.", metric: "+312 lead-uri", hue: 320 },
   { name: "Radu Constantin", role: "CEO · MaxAuto Service", quote: "AdPilot mi-a tăiat costurile cu 40% față de agenția anterioară. Și răspunde pe WhatsApp în 2 secunde.", metric: "−40% cost", hue: 250 },
   { name: "Mihaela Popa", role: "Marketing · Casa Verde", quote: "Lead-urile vin direct pe telefon. Nu mai stau să verific dashboard-ul de 10 ori pe zi. E magie.", metric: "ROAS 5,2x", hue: 155 },
 ];
