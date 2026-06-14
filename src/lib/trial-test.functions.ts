@@ -59,11 +59,7 @@ export const runTrialSandboxTest = createServerFn({ method: "POST" })
 
     const stripe = createStripeClient("sandbox");
     const steps: StepReport[] = [];
-    const cleanup: TrialTestResult extends infer R
-      ? R extends { cleanup: infer C }
-        ? C
-        : never
-      : never = {} as any;
+    const cleanup: { test_clock?: string; customer?: string; subscription?: string } = {};
     const lookup = data.priceId ?? "starter_monthly";
 
     try {
