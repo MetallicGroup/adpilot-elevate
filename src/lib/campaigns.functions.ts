@@ -168,3 +168,26 @@ export const getCampaign = createServerFn({ method: "POST" })
 
     return { campaign, perf: perf ?? [], insights: insights ?? [], totals };
   });
+
+const StatusInput = z.object({
+  campaign_id: z.string().uuid(),
+  status: z.enum(["active", "paused"]),
+});
+
+/**
+ * Toggle a Meta campaign between ACTIVE and PAUSED.
+ * Pushes the change to Meta first; mirrors locally only if Meta accepts it.
+ */
+export const setCampaignStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => StatusInput.parse(d))
+  .handler(async ({ data, context }) => {
+    const { setMetaCampaignStatus } = await import("@/lib/campaign-control.server");
+    const res = await setMetaCampaignStatus({
+      userId: context.userId,
+      campaignId: data.campaign_id,
+      next: data.status === "active" ? "ACTIVE" : "PAUSED",
+    });
+    if ("error" in res) throw new Error(res.error);
+    return { ok: true as const, status: data.status };
+  });

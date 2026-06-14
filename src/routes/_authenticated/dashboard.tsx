@@ -3,10 +3,11 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
-import { Plus, TrendingUp, Inbox, ArrowRight, Sparkles } from "lucide-react";
+import { Plus, TrendingUp, Inbox, ArrowRight, Sparkles, Pause, Play } from "lucide-react";
 import { fmtMoney, fmtNum } from "@/lib/format";
-import { listCampaigns, type CampaignListRow } from "@/lib/campaigns.functions";
+import { listCampaigns, setCampaignStatus, type CampaignListRow } from "@/lib/campaigns.functions";
 import { refreshAllLiveCampaignInsights } from "@/lib/meta-insights.functions";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -19,6 +20,8 @@ function Dashboard() {
   const [recentInsights, setRecentInsights] = useState<{ id: string; campaign_id: string | null; insight_text: string; action: string | null; generated_at: string }[]>([]);
   const loadCampaigns = useServerFn(listCampaigns);
   const refreshAll = useServerFn(refreshAllLiveCampaignInsights);
+  const toggleStatus = useServerFn(setCampaignStatus);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -162,6 +165,23 @@ function Dashboard() {
           <div className="mt-3 space-y-2">
             {campaigns.map((c, idx) => {
               const color = c.status === "active" ? "bg-success pulse-dot text-success" : c.status === "paused" ? "bg-yellow-500" : "bg-muted-foreground";
+              const canToggle =
+                c.platform === "meta" && !!c.meta_campaign_id && (c.status === "active" || c.status === "paused");
+              const next = c.status === "active" ? "paused" : "active";
+              const onToggle = async (e: React.MouseEvent) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setBusyId(c.id);
+                try {
+                  await toggleStatus({ data: { campaign_id: c.id, status: next } });
+                  setCampaigns((cs) => cs.map((x) => (x.id === c.id ? { ...x, status: next } : x)));
+                  toast.success(next === "paused" ? "Campanie pusă pe pauză" : "Campanie reactivată");
+                } catch (err: any) {
+                  toast.error(err?.message ?? "Eroare");
+                } finally {
+                  setBusyId(null);
+                }
+              };
               return (
                 <motion.div
                   key={c.id}
@@ -181,6 +201,16 @@ function Dashboard() {
                         {c.platform === "meta" ? "Meta" : "TikTok"} · {fmtMoney(c.spend)} cheltuit · {fmtNum(c.leads)} lead-uri
                       </p>
                     </div>
+                    {canToggle && (
+                      <button
+                        onClick={onToggle}
+                        disabled={busyId === c.id}
+                        title={next === "paused" ? "Pune pe pauză" : "Reactivează"}
+                        className="press shrink-0 w-8 h-8 rounded-full border border-border flex items-center justify-center hover:bg-secondary disabled:opacity-50"
+                      >
+                        {c.status === "active" ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                      </button>
+                    )}
                     <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
                   </Link>
                 </motion.div>

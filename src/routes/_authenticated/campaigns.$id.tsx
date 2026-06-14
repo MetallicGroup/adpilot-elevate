@@ -3,8 +3,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { ArrowLeft, RefreshCw, Sparkles, TrendingUp, DollarSign, Eye, MousePointerClick, Users } from "lucide-react";
-import { getCampaign } from "@/lib/campaigns.functions";
+import { ArrowLeft, RefreshCw, Sparkles, TrendingUp, DollarSign, Eye, MousePointerClick, Users, Pause, Play } from "lucide-react";
+import { getCampaign, setCampaignStatus } from "@/lib/campaigns.functions";
 import { refreshCampaignInsights } from "@/lib/meta-insights.functions";
 import { generateAiInsights } from "@/lib/ai-optimize.functions";
 import { publishMetaCampaign } from "@/lib/meta-publish.functions";
@@ -24,11 +24,13 @@ function CampaignDetail() {
   const refresh = useServerFn(refreshCampaignInsights);
   const aiGen = useServerFn(generateAiInsights);
   const publishFn = useServerFn(publishMetaCampaign);
+  const toggleStatus = useServerFn(setCampaignStatus);
   const [data, setData] = useState<Data | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [aiBusy, setAiBusy] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [togglingStatus, setTogglingStatus] = useState(false);
 
   const fetchAll = useCallback(async () => {
     try {
@@ -93,6 +95,21 @@ function CampaignDetail() {
     }
   };
 
+  const onToggleStatus = async () => {
+    if (!data) return;
+    const next = data.campaign.status === "active" ? "paused" : "active";
+    setTogglingStatus(true);
+    try {
+      await toggleStatus({ data: { campaign_id: id, status: next } });
+      toast.success(next === "paused" ? "Campanie pusă pe pauză" : "Campanie reactivată");
+      await fetchAll();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Eroare");
+    } finally {
+      setTogglingStatus(false);
+    }
+  };
+
   if (loading) {
     return <div className="max-w-md mx-auto px-5 pt-10 text-sm text-muted-foreground">Loading…</div>;
   }
@@ -135,14 +152,29 @@ function CampaignDetail() {
             <span>{campaign.platform === "meta" ? "Meta" : "TikTok"}</span>
           </div>
         </div>
-        <button
-          onClick={() => onRefresh()}
-          disabled={refreshing}
-          className="press shrink-0 inline-flex items-center gap-1.5 px-3 h-9 rounded-full border border-border text-xs font-medium disabled:opacity-50"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
-          Refresh
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          {campaign.platform === "meta" && campaign.meta_campaign_id && (campaign.status === "active" || campaign.status === "paused") && (
+            <button
+              onClick={onToggleStatus}
+              disabled={togglingStatus}
+              className="press inline-flex items-center gap-1.5 px-3 h-9 rounded-full border border-border text-xs font-medium disabled:opacity-50"
+            >
+              {campaign.status === "active" ? (
+                <><Pause className="w-3.5 h-3.5" /> Pauză</>
+              ) : (
+                <><Play className="w-3.5 h-3.5" /> Reactivează</>
+              )}
+            </button>
+          )}
+          <button
+            onClick={() => onRefresh()}
+            disabled={refreshing}
+            className="press inline-flex items-center gap-1.5 px-3 h-9 rounded-full border border-border text-xs font-medium disabled:opacity-50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {campaign.status === "draft" && campaign.platform === "meta" && (
