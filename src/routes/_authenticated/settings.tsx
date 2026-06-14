@@ -177,6 +177,7 @@ function MetaConnectionCard() {
   const resync = useServerFn(resyncMetaConnection);
   const selectAd = useServerFn(selectMetaAdAccount);
   const selectPg = useServerFn(selectMetaPage);
+  const startOAuth = useServerFn(startMetaOAuth);
 
   const { data, refetch, isLoading } = useQuery({
     queryKey: ["meta-connections"],
