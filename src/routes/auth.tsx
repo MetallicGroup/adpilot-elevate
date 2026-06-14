@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
@@ -19,7 +19,7 @@ function AuthPage() {
   const navigate = useNavigate();
   const { redirect } = Route.useSearch();
   const afterAuth = redirect ?? "/onboarding";
-  const goAfterAuth = () => navigate({ to: afterAuth as any, replace: true });
+  const goAfterAuth = useCallback(() => navigate({ to: afterAuth as any, replace: true }), [navigate, afterAuth]);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,7 +31,7 @@ function AuthPage() {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) goAfterAuth();
     });
-  }, [navigate, afterAuth]);
+  }, [goAfterAuth]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
