@@ -9,7 +9,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 export const Route = createFileRoute("/auth")({
   ssr: false,
   validateSearch: (search: Record<string, unknown>) => ({
-    redirect: typeof search.redirect === "string" && search.redirect.startsWith("/") ? search.redirect : undefined,
+    redirect: typeof search.redirect === "string" && search.redirect.startsWith("/") && !search.redirect.startsWith("//") ? search.redirect : undefined,
   }),
   component: AuthPage,
   head: () => ({ meta: [{ title: "Sign in — AdPilot" }] }),
