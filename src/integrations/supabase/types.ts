@@ -167,6 +167,7 @@ export type Database = {
           end_date: string | null
           id: string
           last_anomaly_check_at: string | null
+          last_periodic_update_at: string | null
           lead_form: Json | null
           meta_ad_id: string | null
           meta_adset_id: string | null
@@ -193,6 +194,7 @@ export type Database = {
           end_date?: string | null
           id?: string
           last_anomaly_check_at?: string | null
+          last_periodic_update_at?: string | null
           lead_form?: Json | null
           meta_ad_id?: string | null
           meta_adset_id?: string | null
@@ -219,6 +221,7 @@ export type Database = {
           end_date?: string | null
           id?: string
           last_anomaly_check_at?: string | null
+          last_periodic_update_at?: string | null
           lead_form?: Json | null
           meta_ad_id?: string | null
           meta_adset_id?: string | null
