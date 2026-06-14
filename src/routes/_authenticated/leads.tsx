@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Search, Filter, Music2, Facebook, Inbox, Mail, Phone, Calendar, X, Trash2, CheckSquare } from "lucide-react";
-import { listLeads, updateLead, bulkLeads, LEAD_STATUSES, type LeadRow, type LeadStatus } from "@/lib/leads.functions";
+import { listLeads, updateLead, bulkLeads, syncMetaLeads, LEAD_STATUSES, type LeadRow, type LeadStatus } from "@/lib/leads.functions";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -25,6 +25,8 @@ function LeadsPage() {
   const fetchLeads = useServerFn(listLeads);
   const patchLead = useServerFn(updateLead);
   const bulkFn = useServerFn(bulkLeads);
+  const syncFn = useServerFn(syncMetaLeads);
+  const [syncing, setSyncing] = useState(false);
 
   const [platform, setPlatform] = useState<"all" | "tiktok" | "meta">("all");
   const [status, setStatus] = useState<"all" | LeadStatus>("all");
@@ -147,12 +149,32 @@ function LeadsPage() {
             {leads.length} {leads.length === 1 ? "lead" : "lead-uri"} de pe TikTok & Meta
           </p>
         </div>
-        <button
-          onClick={exportCsv}
-          className="press text-sm px-4 py-2 rounded-lg border border-border hover:bg-secondary"
-        >
-          Exportă CSV
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            disabled={syncing}
+            onClick={async () => {
+              setSyncing(true);
+              try {
+                const r = await syncFn({ data: {} });
+                toast.success(`Sincronizat: ${r.inserted} lead-uri noi din ${r.forms} formulare`);
+                reload();
+              } catch (e: any) {
+                toast.error(e?.message ?? "Sincronizare eșuată");
+              } finally {
+                setSyncing(false);
+              }
+            }}
+            className="press text-sm px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
+          >
+            {syncing ? "Se sincronizează…" : "Sincronizează din Meta"}
+          </button>
+          <button
+            onClick={exportCsv}
+            className="press text-sm px-4 py-2 rounded-lg border border-border hover:bg-secondary"
+          >
+            Exportă CSV
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
