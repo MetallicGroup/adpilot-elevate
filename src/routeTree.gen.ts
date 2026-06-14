@@ -46,7 +46,6 @@ import { Route as ApiPublicHooksRefreshInsightsRouteImport } from './routes/api/
 import { Route as ApiPublicHooksPeriodicUpdateRouteImport } from './routes/api/public/hooks/periodic-update'
 import { Route as ApiPublicHooksDailyReportRouteImport } from './routes/api/public/hooks/daily-report'
 import { Route as ApiPublicHooksAnomalyScanRouteImport } from './routes/api/public/hooks/anomaly-scan'
-import { Route as ApiMetaAuthStartRouteImport } from './routes/api/meta.auth.start'
 import { Route as ApiMetaAuthCallbackRouteImport } from './routes/api/meta.auth.callback'
 import { Route as AuthenticatedAdminUsersIdRouteImport } from './routes/_authenticated/admin.users.$id'
 import { Route as AuthenticatedAdminTicketsIdRouteImport } from './routes/_authenticated/admin.tickets.$id'
@@ -242,11 +241,6 @@ const ApiPublicHooksAnomalyScanRoute =
     path: '/api/public/hooks/anomaly-scan',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiMetaAuthStartRoute = ApiMetaAuthStartRouteImport.update({
-  id: '/api/meta/auth/start',
-  path: '/api/meta/auth/start',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiMetaAuthCallbackRoute = ApiMetaAuthCallbackRouteImport.update({
   id: '/api/meta/auth/callback',
   path: '/api/meta/auth/callback',
@@ -298,7 +292,6 @@ export interface FileRoutesByFullPath {
   '/admin/tickets/$id': typeof AuthenticatedAdminTicketsIdRoute
   '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
   '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
-  '/api/meta/auth/start': typeof ApiMetaAuthStartRoute
   '/api/public/hooks/anomaly-scan': typeof ApiPublicHooksAnomalyScanRoute
   '/api/public/hooks/daily-report': typeof ApiPublicHooksDailyReportRoute
   '/api/public/hooks/periodic-update': typeof ApiPublicHooksPeriodicUpdateRoute
@@ -340,7 +333,6 @@ export interface FileRoutesByTo {
   '/admin/tickets/$id': typeof AuthenticatedAdminTicketsIdRoute
   '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
   '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
-  '/api/meta/auth/start': typeof ApiMetaAuthStartRoute
   '/api/public/hooks/anomaly-scan': typeof ApiPublicHooksAnomalyScanRoute
   '/api/public/hooks/daily-report': typeof ApiPublicHooksDailyReportRoute
   '/api/public/hooks/periodic-update': typeof ApiPublicHooksPeriodicUpdateRoute
@@ -384,7 +376,6 @@ export interface FileRoutesById {
   '/_authenticated/admin/tickets/$id': typeof AuthenticatedAdminTicketsIdRoute
   '/_authenticated/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
   '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
-  '/api/meta/auth/start': typeof ApiMetaAuthStartRoute
   '/api/public/hooks/anomaly-scan': typeof ApiPublicHooksAnomalyScanRoute
   '/api/public/hooks/daily-report': typeof ApiPublicHooksDailyReportRoute
   '/api/public/hooks/periodic-update': typeof ApiPublicHooksPeriodicUpdateRoute
@@ -428,7 +419,6 @@ export interface FileRouteTypes {
     | '/admin/tickets/$id'
     | '/admin/users/$id'
     | '/api/meta/auth/callback'
-    | '/api/meta/auth/start'
     | '/api/public/hooks/anomaly-scan'
     | '/api/public/hooks/daily-report'
     | '/api/public/hooks/periodic-update'
@@ -470,7 +460,6 @@ export interface FileRouteTypes {
     | '/admin/tickets/$id'
     | '/admin/users/$id'
     | '/api/meta/auth/callback'
-    | '/api/meta/auth/start'
     | '/api/public/hooks/anomaly-scan'
     | '/api/public/hooks/daily-report'
     | '/api/public/hooks/periodic-update'
@@ -513,7 +502,6 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/tickets/$id'
     | '/_authenticated/admin/users/$id'
     | '/api/meta/auth/callback'
-    | '/api/meta/auth/start'
     | '/api/public/hooks/anomaly-scan'
     | '/api/public/hooks/daily-report'
     | '/api/public/hooks/periodic-update'
@@ -543,7 +531,6 @@ export interface RootRouteChildren {
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   ApiPublicAdminBootstrapRoute: typeof ApiPublicAdminBootstrapRoute
   ApiMetaAuthCallbackRoute: typeof ApiMetaAuthCallbackRoute
-  ApiMetaAuthStartRoute: typeof ApiMetaAuthStartRoute
   ApiPublicHooksAnomalyScanRoute: typeof ApiPublicHooksAnomalyScanRoute
   ApiPublicHooksDailyReportRoute: typeof ApiPublicHooksDailyReportRoute
   ApiPublicHooksPeriodicUpdateRoute: typeof ApiPublicHooksPeriodicUpdateRoute
@@ -814,13 +801,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksAnomalyScanRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/meta/auth/start': {
-      id: '/api/meta/auth/start'
-      path: '/api/meta/auth/start'
-      fullPath: '/api/meta/auth/start'
-      preLoaderRoute: typeof ApiMetaAuthStartRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/meta/auth/callback': {
       id: '/api/meta/auth/callback'
       path: '/api/meta/auth/callback'
@@ -911,7 +891,6 @@ const rootRouteChildren: RootRouteChildren = {
   CheckoutReturnRoute: CheckoutReturnRoute,
   ApiPublicAdminBootstrapRoute: ApiPublicAdminBootstrapRoute,
   ApiMetaAuthCallbackRoute: ApiMetaAuthCallbackRoute,
-  ApiMetaAuthStartRoute: ApiMetaAuthStartRoute,
   ApiPublicHooksAnomalyScanRoute: ApiPublicHooksAnomalyScanRoute,
   ApiPublicHooksDailyReportRoute: ApiPublicHooksDailyReportRoute,
   ApiPublicHooksPeriodicUpdateRoute: ApiPublicHooksPeriodicUpdateRoute,
