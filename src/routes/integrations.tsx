@@ -4,13 +4,12 @@ import { MarketingLayout, PageHero } from "@/components/marketing/MarketingLayou
 export const Route = createFileRoute("/integrations")({
   head: () => ({ meta: [
     { title: "Integrări — AdPilot" },
-    { name: "description", content: "AdPilot se integrează cu TikTok Ads, Meta Ads, WhatsApp, Stripe, Google Analytics și Meta Pixel." },
+    { name: "description", content: "AdPilot se integrează cu Meta Ads (Facebook & Instagram), WhatsApp, Stripe, Google Analytics și Meta Pixel." },
   ] }),
   component: IntegrationsPage,
 });
 
 const integrations = [
-  { name: "TikTok Ads", body: "Conexiune OAuth oficială. Creezi și administrezi campanii nativ." },
   { name: "Meta Ads (Facebook & Instagram)", body: "Lansezi și administrezi campanii direct pe Facebook și Instagram." },
   { name: "WhatsApp", body: "Primești notificări pentru fiecare client nou și controlezi campaniile direct din chat." },
   { name: "Stripe", body: "Abonamente și plăți gestionate automat." },

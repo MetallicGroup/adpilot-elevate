@@ -8,7 +8,7 @@ import { isAdmin as isAdminFn } from "@/lib/admin.functions";
 type Notif = { id: string; emoji: string; title: string; body: string; time: string };
 
 const MOCK_NOTIFS: Notif[] = [
-  { id: "1", emoji: "🎯", title: "Lead nou de pe TikTok", body: "Andrei P. — interesat de oferta de primăvară", time: "acum 2 min" },
+  { id: "1", emoji: "🎯", title: "Lead nou de pe Facebook", body: "Andrei P. — interesat de oferta de primăvară", time: "acum 2 min" },
   { id: "2", emoji: "🚀", title: "Campanie publicată", body: '„Reduceri vară" e live pe Meta', time: "acum 14 min" },
   { id: "3", emoji: "📈", title: "CTR în creștere", body: "+18% față de ieri — bun lucrat!", time: "acum 1 oră" },
 ];
