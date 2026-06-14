@@ -107,9 +107,10 @@ export const getMetaStatus = createServerFn({ method: "POST" })
         subErr = "Token-ul paginii lipsește. Reconectează contul Meta.";
       } else {
         // 1) subscribed_apps
+        const pageToken = p.page_access_token!;
         try {
           const r = await fetch(
-            `https://graph.facebook.com/${v}/${p.page_id}/subscribed_apps?access_token=${encodeURIComponent(p.page_access_token)}`,
+            `https://graph.facebook.com/${v}/${p.page_id}/subscribed_apps?access_token=${encodeURIComponent(pageToken)}`,
           );
           const j = await r.json();
           if (r.ok) {
@@ -133,7 +134,7 @@ export const getMetaStatus = createServerFn({ method: "POST" })
         if (!subscribed && !missingPageScopes.length) {
           try {
             const r = await fetch(
-              `https://graph.facebook.com/${v}/${p.page_id}/subscribed_apps?access_token=${encodeURIComponent(p.page_access_token)}`,
+              `https://graph.facebook.com/${v}/${p.page_id}/subscribed_apps?access_token=${encodeURIComponent(pageToken)}`,
               {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -158,7 +159,7 @@ export const getMetaStatus = createServerFn({ method: "POST" })
         // 3) Lead forms count
         try {
           const r = await fetch(
-            `https://graph.facebook.com/${v}/${p.page_id}/leadgen_forms?fields=id,leads_count&limit=200&access_token=${encodeURIComponent(p.page_access_token)}`,
+            `https://graph.facebook.com/${v}/${p.page_id}/leadgen_forms?fields=id,leads_count&limit=200&access_token=${encodeURIComponent(pageToken)}`,
           );
           const j = await r.json();
           if (r.ok) {
