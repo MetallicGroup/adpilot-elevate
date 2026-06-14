@@ -161,8 +161,12 @@ function LeadsPage() {
             onClick={async () => {
               setSyncing(true);
               try {
-                const r = await syncFn({ data: {} as never });
-                toast.success(`Sincronizat: ${r.inserted} lead-uri noi din ${r.forms} formulare`);
+                const r: any = await syncFn({ data: {} as never });
+                const errCount = r.errors?.length ?? 0;
+                toast.success(
+                  `Sincronizat: ${r.inserted} noi · ${r.scanned} scanate · ${r.forms} formulare${errCount ? ` · ${errCount} erori` : ""}`,
+                );
+                if (errCount) console.warn("[syncMetaLeads] errors", r.errors);
                 reload();
               } catch (e: any) {
                 toast.error(e?.message ?? "Sincronizare eșuată");
