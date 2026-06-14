@@ -3,6 +3,7 @@
  */
 import { fetchCampaignInsights } from "./meta-insights.server";
 import { getCentralWhatsApp, sendWhatsAppMessage } from "./whatsapp.server";
+import { syncMetaCampaignStatuses } from "./campaign-control.server";
 
 type Camp = {
   id: string;
@@ -19,6 +20,12 @@ function fmtMoney(n: number) {
 /** Refresh today's performance_data for every active Meta campaign across all users. */
 export async function refreshAllInsights(): Promise<{ refreshed: number; errors: number }> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  // Mirror Meta campaign status (ACTIVE/PAUSED/DELETED) into local DB first
+  try {
+    await syncMetaCampaignStatuses();
+  } catch (e) {
+    console.error("[refresh-insights] status sync", e);
+  }
   const { data: camps } = await supabaseAdmin
     .from("campaigns")
     .select("id, user_id, meta_campaign_id")
