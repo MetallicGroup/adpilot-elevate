@@ -155,7 +155,7 @@ function LeadsPage() {
             onClick={async () => {
               setSyncing(true);
               try {
-                const r = await syncFn({ data: {} });
+                const r = await syncFn({ data: {} as never });
                 toast.success(`Sincronizat: ${r.inserted} lead-uri noi din ${r.forms} formulare`);
                 reload();
               } catch (e: any) {
