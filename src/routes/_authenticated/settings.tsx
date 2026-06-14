@@ -228,15 +228,6 @@ function Row({ label, defaultValue, disabled }: { label: string; defaultValue: s
   );
 }
 
-function Stat({ label, value, cap }: { label: string; value: string; cap: string }) {
-  return (
-    <div className="rounded-xl bg-secondary/50 border border-border p-3">
-      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className="mt-1 font-mono text-lg font-semibold">{value} <span className="text-muted-foreground text-xs">{cap}</span></p>
-    </div>
-  );
-}
-
 function KeyRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center gap-2 p-3 rounded-xl border border-border bg-secondary/30">
