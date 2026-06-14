@@ -22,7 +22,7 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard", replace: true });
+      if (data.session) navigate({ to: "/onboarding", replace: true });
     });
   }, [navigate]);
 
@@ -41,11 +41,11 @@ function AuthPage() {
         });
         if (error) throw error;
         toast.success("Welcome to AdPilot");
-        navigate({ to: "/dashboard", replace: true });
+        navigate({ to: "/onboarding", replace: true });
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate({ to: "/dashboard", replace: true });
+        navigate({ to: "/onboarding", replace: true });
       }
     } catch (err: any) {
       toast.error(err.message ?? "Something went wrong");
@@ -57,7 +57,7 @@ function AuthPage() {
   async function google() {
     setLoading(true);
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+      redirect_uri: window.location.origin + "/onboarding",
     });
     if (result.error) {
       toast.error("Google sign-in failed");
@@ -65,7 +65,7 @@ function AuthPage() {
       return;
     }
     if (!result.redirected) {
-      navigate({ to: "/dashboard", replace: true });
+      navigate({ to: "/onboarding", replace: true });
     }
   }
 
