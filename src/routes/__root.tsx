@@ -11,6 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import logoAsset from "@/assets/adpilot-logo.png.asset.json";
+import ogHeroAsset from "@/assets/og-hero.png.asset.json";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
