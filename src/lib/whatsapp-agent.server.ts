@@ -7,6 +7,7 @@ import { z } from "zod";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 import { sendWhatsAppMessage, uploadWhatsAppMedia } from "./whatsapp.server";
 import { metaApiVersion } from "./meta.server";
+import { setMetaCampaignStatus } from "./campaign-control.server";
 
 const GRAPH = "https://graph.facebook.com";
 
@@ -228,13 +229,15 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
     pause_campaign: tool({
       description: "Pune pe pauză o campanie Meta. Execută direct, fără confirmare suplimentară.",
       inputSchema: z.object({ campaign_id: z.string() }),
-      execute: async ({ campaign_id }) => setMetaStatus(supabaseAdmin, ctx.userId, campaign_id, "PAUSED"),
+      execute: async ({ campaign_id }) =>
+        setMetaCampaignStatus({ userId: ctx.userId, campaignId: campaign_id, next: "PAUSED" }),
     }),
 
     resume_campaign: tool({
       description: "Pornește/reactivează o campanie Meta.",
       inputSchema: z.object({ campaign_id: z.string() }),
-      execute: async ({ campaign_id }) => setMetaStatus(supabaseAdmin, ctx.userId, campaign_id, "ACTIVE"),
+      execute: async ({ campaign_id }) =>
+        setMetaCampaignStatus({ userId: ctx.userId, campaignId: campaign_id, next: "ACTIVE" }),
     }),
 
     update_budget: tool({
