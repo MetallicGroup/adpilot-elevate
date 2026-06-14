@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as SecurityRouteImport } from './routes/security'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as IntegrationsRouteImport } from './routes/integrations'
@@ -59,6 +60,11 @@ const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
 const SecurityRoute = SecurityRouteImport.update({
   id: '/security',
   path: '/security',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
@@ -280,6 +286,7 @@ export interface FileRoutesByFullPath {
   '/integrations': typeof IntegrationsRoute
   '/pricing': typeof PricingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/security': typeof SecurityRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
@@ -322,6 +329,7 @@ export interface FileRoutesByTo {
   '/integrations': typeof IntegrationsRoute
   '/pricing': typeof PricingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/security': typeof SecurityRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
@@ -366,6 +374,7 @@ export interface FileRoutesById {
   '/integrations': typeof IntegrationsRoute
   '/pricing': typeof PricingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/security': typeof SecurityRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
@@ -410,6 +419,7 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/pricing'
     | '/privacy-policy'
+    | '/reset-password'
     | '/security'
     | '/terms-of-service'
     | '/admin'
@@ -452,6 +462,7 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/pricing'
     | '/privacy-policy'
+    | '/reset-password'
     | '/security'
     | '/terms-of-service'
     | '/admin'
@@ -495,6 +506,7 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/pricing'
     | '/privacy-policy'
+    | '/reset-password'
     | '/security'
     | '/terms-of-service'
     | '/_authenticated/admin'
@@ -539,6 +551,7 @@ export interface RootRouteChildren {
   IntegrationsRoute: typeof IntegrationsRoute
   PricingRoute: typeof PricingRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SecurityRoute: typeof SecurityRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
@@ -568,6 +581,13 @@ declare module '@tanstack/react-router' {
       path: '/security'
       fullPath: '/security'
       preLoaderRoute: typeof SecurityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy-policy': {
@@ -907,6 +927,7 @@ const rootRouteChildren: RootRouteChildren = {
   IntegrationsRoute: IntegrationsRoute,
   PricingRoute: PricingRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SecurityRoute: SecurityRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
