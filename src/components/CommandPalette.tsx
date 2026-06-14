@@ -58,7 +58,6 @@ export function CommandPalette() {
         <CommandGroup heading="Navigare">
           <CommandItem onSelect={() => go("/dashboard")}><Home className="mr-2 h-4 w-4" /> Dashboard <span className="ml-auto text-xs text-muted-foreground">G D</span></CommandItem>
           <CommandItem onSelect={() => go("/leads")}><Inbox className="mr-2 h-4 w-4" /> Lead-uri <span className="ml-auto text-xs text-muted-foreground">G L</span></CommandItem>
-          <CommandItem onSelect={() => go("/whatsapp")}><MessageCircle className="mr-2 h-4 w-4" /> WhatsApp <span className="ml-auto text-xs text-muted-foreground">G W</span></CommandItem>
           <CommandItem onSelect={() => go("/reports")}><BarChart3 className="mr-2 h-4 w-4" /> Rapoarte</CommandItem>
           <CommandItem onSelect={() => go("/settings")}><Settings className="mr-2 h-4 w-4" /> Setări</CommandItem>
         </CommandGroup>
