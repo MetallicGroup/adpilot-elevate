@@ -8,12 +8,17 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
+  validateSearch: (search: Record<string, unknown>) => ({
+    redirect: typeof search.redirect === "string" && search.redirect.startsWith("/") ? search.redirect : undefined,
+  }),
   component: AuthPage,
   head: () => ({ meta: [{ title: "Sign in — AdPilot" }] }),
 });
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { redirect } = Route.useSearch();
+  const afterAuth = redirect ?? "/onboarding";
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,9 +28,9 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/onboarding", replace: true });
+      if (data.session) navigate({ to: afterAuth, replace: true });
     });
-  }, [navigate]);
+  }, [navigate, afterAuth]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -42,11 +47,11 @@ function AuthPage() {
         });
         if (error) throw error;
         toast.success("Welcome to AdPilot");
-        navigate({ to: "/onboarding", replace: true });
+        navigate({ to: afterAuth, replace: true });
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate({ to: "/onboarding", replace: true });
+        navigate({ to: afterAuth, replace: true });
       }
     } catch (err: any) {
       toast.error(err.message ?? "Something went wrong");
@@ -58,7 +63,7 @@ function AuthPage() {
   async function google() {
     setLoading(true);
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin + "/onboarding",
+      redirect_uri: window.location.origin + afterAuth,
     });
     if (result.error) {
       toast.error("Google sign-in failed");
@@ -66,7 +71,7 @@ function AuthPage() {
       return;
     }
     if (!result.redirected) {
-      navigate({ to: "/onboarding", replace: true });
+      navigate({ to: afterAuth, replace: true });
     }
   }
 
