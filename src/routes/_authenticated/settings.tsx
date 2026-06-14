@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Facebook, RefreshCw, Trash2, CheckCircle2, User, Plug, Palette, Plus, Music2 } from "lucide-react";
 import { resyncMetaConnection, selectMetaAdAccount, selectMetaPage } from "@/lib/meta.functions";
-import { WhatsAppConnectionCard } from "@/components/whatsapp/WhatsAppConnectionCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { applyAccent } from "@/components/AppHeader";
 import { SubscriptionBadge } from "@/components/SubscriptionBadge";
