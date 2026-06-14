@@ -4,7 +4,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Facebook, RefreshCw, Trash2, CheckCircle2, User, Plug, Users, Webhook, Palette, Copy, Plus, Music2 } from "lucide-react";
+import { Facebook, RefreshCw, Trash2, CheckCircle2, User, Plug, Palette, Plus, Music2 } from "lucide-react";
 import { resyncMetaConnection, selectMetaAdAccount, selectMetaPage } from "@/lib/meta.functions";
 import { WhatsAppConnectionCard } from "@/components/whatsapp/WhatsAppConnectionCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -61,13 +61,11 @@ function Settings() {
         <TabsList className="bg-secondary/40 p-1 rounded-full h-auto flex flex-wrap gap-1 justify-start w-full">
           <TabTrig value="cont" icon={<User className="w-3.5 h-3.5" />}>Cont</TabTrig>
           <TabTrig value="integrari" icon={<Plug className="w-3.5 h-3.5" />}>Integrări</TabTrig>
-          <TabTrig value="echipa" icon={<Users className="w-3.5 h-3.5" />}>Echipă</TabTrig>
-          <TabTrig value="api" icon={<Webhook className="w-3.5 h-3.5" />}>API & Webhooks</TabTrig>
           <TabTrig value="aspect" icon={<Palette className="w-3.5 h-3.5" />}>Aspect</TabTrig>
         </TabsList>
 
         <TabsContent value="cont" className="mt-6 space-y-4">
-          <Card title="Plan & facturare" subtitle="Abonament curent și acces la portalul Stripe.">
+          <Card title="Plan & facturare" subtitle="Abonamentul tău activ, perioada de trial și data următoarei facturări.">
             <SubscriptionBadge />
           </Card>
 
@@ -94,92 +92,6 @@ function Settings() {
 
         <TabsContent value="integrari" className="mt-6 space-y-4">
           <MetaConnectionCard />
-          <WhatsAppConnectionCard />
-        </TabsContent>
-
-        <TabsContent value="echipa" className="mt-6 space-y-4">
-          <Card title="Membri echipă" subtitle="Invită colegii — poți seta roluri și permisiuni.">
-            <div className="divide-y divide-border">
-              {MEMBERS.map((m) => (
-                <div key={m.email} className="py-3 flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full text-white text-xs font-semibold flex items-center justify-center" style={{ background: `linear-gradient(135deg, oklch(0.62 0.22 ${m.hue}), oklch(0.7 0.2 ${m.hue + 30}))` }}>
-                    {m.name.split(" ").map(n => n[0]).slice(0,2).join("")}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate">{m.name} {m.you && <span className="text-[10px] text-primary font-normal">(tu)</span>}</p>
-                    <p className="text-xs text-muted-foreground truncate">{m.email}</p>
-                  </div>
-                  <span className="text-[10px] uppercase tracking-wider px-2 py-1 rounded-full border border-border text-muted-foreground">{m.role}</span>
-                </div>
-              ))}
-            </div>
-            <form
-              onSubmit={(e) => { e.preventDefault(); toast.success("Invitație trimisă ✉️"); (e.currentTarget as HTMLFormElement).reset(); }}
-              className="mt-4 flex gap-2"
-            >
-              <input type="email" required placeholder="coleg@firma.ro" className="flex-1 h-10 px-3 rounded-lg bg-secondary/60 border border-border text-sm outline-none focus:border-primary" />
-              <select className="h-10 px-3 rounded-lg bg-secondary/60 border border-border text-sm">
-                <option>Editor</option>
-                <option>Admin</option>
-                <option>Viewer</option>
-              </select>
-              <button className="press inline-flex items-center gap-1 px-4 rounded-lg text-white text-sm font-medium" style={{ background: "var(--gradient-primary)" }}>
-                <Plus className="w-4 h-4" /> Invită
-              </button>
-            </form>
-          </Card>
-
-          <Card title="Roluri & permisiuni" subtitle="Cine ce poate face.">
-            <div className="grid sm:grid-cols-3 gap-3 text-xs">
-              {[
-                { r: "Admin", d: "Acces total: cont, plată, echipă, integrări." },
-                { r: "Editor", d: "Creează și editează campanii, vede lead-uri." },
-                { r: "Viewer", d: "Doar citire — dashboard și rapoarte." },
-              ].map((x) => (
-                <div key={x.r} className="rounded-xl border border-border p-3">
-                  <p className="font-semibold">{x.r}</p>
-                  <p className="mt-1 text-muted-foreground">{x.d}</p>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="api" className="mt-6 space-y-4">
-          <Card title="Chei API" subtitle="Folosește pentru integrări custom cu CRM-ul tău.">
-            <div className="space-y-2">
-              <KeyRow label="Production" value="adp_live_8K2j•••••••••••••••••••sX9q" />
-              <KeyRow label="Test" value="adp_test_W1a•••••••••••••••••••pL4z" />
-            </div>
-            <button className="press mt-4 inline-flex items-center gap-1 text-sm px-3 py-2 rounded-lg border border-border hover:bg-secondary">
-              <Plus className="w-3.5 h-3.5" /> Generează cheie nouă
-            </button>
-          </Card>
-
-          <Card title="Webhooks" subtitle="Primește notificări pe URL-ul tău când vin lead-uri sau se schimbă statusuri.">
-            <div className="space-y-2">
-              {WEBHOOKS.map((w) => (
-                <div key={w.url} className="flex items-center gap-3 p-3 rounded-xl border border-border">
-                  <span className={`w-2 h-2 rounded-full ${w.active ? "bg-emerald-400" : "bg-muted-foreground"}`} />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-mono truncate">{w.url}</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">{w.events.join(" · ")}</p>
-                  </div>
-                  <button className="text-[11px] text-muted-foreground hover:text-foreground">Editează</button>
-                </div>
-              ))}
-            </div>
-            <button className="press mt-3 w-full py-2.5 rounded-xl border border-dashed border-border hover:bg-secondary text-xs font-medium">
-              + Adaugă webhook
-            </button>
-          </Card>
-
-          <Card title="Documentație">
-            <p className="text-sm text-muted-foreground">
-              Endpoint-uri REST și ghid de integrare disponibile la{" "}
-              <a className="text-primary underline" href="#">docs.adpilot.ro/api</a>.
-            </p>
-          </Card>
         </TabsContent>
 
         <TabsContent value="aspect" className="mt-6 space-y-4">
