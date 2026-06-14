@@ -96,7 +96,6 @@ function OnboardingPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <PaymentTestModeBanner />
       <div className="max-w-3xl mx-auto px-5 pt-12 pb-32">
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
           <p className="text-xs uppercase tracking-widest text-muted-foreground">Bun venit la AdPilot</p>
