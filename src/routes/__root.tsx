@@ -93,6 +93,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:description", content: "Lansează și optimizează reclame Facebook dintr-o singură aplicație, iar fiecare lead ajunge direct pe WhatsApp. 7 zile gratuit." },
       { property: "og:image", content: `https://adpilot.ro${ogHeroAsset.url}` },
       { name: "twitter:image", content: `https://adpilot.ro${ogHeroAsset.url}` },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/4cOJ83UnP8SAkbV0euFNWpJ4Knp2/social-images/social-1781442030101-Screenshot_2026-06-14_at_15.59.44.webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/4cOJ83UnP8SAkbV0euFNWpJ4Knp2/social-images/social-1781442030101-Screenshot_2026-06-14_at_15.59.44.webp" },
     ],
     links: [
       {
