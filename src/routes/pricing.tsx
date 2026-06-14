@@ -87,7 +87,6 @@ function PricingPage() {
 
   return (
     <MarketingLayout>
-      <PaymentTestModeBanner />
       <PageHero
         eyebrow="Prețuri"
         title="Planuri simple care cresc o dată cu tine."
