@@ -11,7 +11,7 @@ export const Route = createFileRoute("/help-center")({
 });
 
 const categories = [
-  { icon: Rocket, title: "Primii pași", body: "Creează cont, conectează TikTok sau Meta și lansează prima campanie." },
+  { icon: Rocket, title: "Primii pași", body: "Creează cont, conectează Facebook și lansează prima campanie." },
   { icon: Megaphone, title: "Campanii", body: "Creare, editare, pauză și optimizare de campanii." },
   { icon: Inbox, title: "Clienți potențiali & CRM", body: "Cum primești clienți, cum îi exporți, cum conectezi un CRM." },
   { icon: MessageCircle, title: "Asistent WhatsApp", body: "Configurare WhatsApp și folosirea comenzilor AI." },

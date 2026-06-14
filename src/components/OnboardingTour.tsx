@@ -9,7 +9,7 @@ const STEPS = [
   {
     emoji: "👋",
     title: "Bine ai venit în AdPilot!",
-    body: "Hai să-ți arăt în 30 de secunde cum lansezi prima ta campanie TikTok sau Meta — fără agenție.",
+    body: "Hai să-ți arăt în 30 de secunde cum lansezi prima ta campanie pe Facebook sau Instagram — fără agenție.",
     icon: Sparkles,
   },
   {

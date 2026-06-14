@@ -146,7 +146,7 @@ function LeadsPage() {
           <p className="text-sm text-muted-foreground">CRM</p>
           <h1 className="text-3xl font-bold tracking-tight mt-1">Lead-uri 📋</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {leads.length} {leads.length === 1 ? "lead" : "lead-uri"} de pe TikTok & Meta
+            {leads.length} {leads.length === 1 ? "lead" : "lead-uri"} de pe Facebook & Instagram
           </p>
         </div>
         <div className="flex items-center gap-2">
