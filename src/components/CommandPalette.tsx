@@ -9,7 +9,7 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
-import { Home, Plus, Inbox, MessageCircle, Settings, BarChart3, Sparkles, Rocket, Search } from "lucide-react";
+import { Home, Plus, Inbox, Settings, BarChart3, Sparkles, Rocket, Search } from "lucide-react";
 
 type Ctx = { open: boolean; setOpen: (v: boolean) => void };
 const CmdCtx = (() => {
@@ -58,7 +58,6 @@ export function CommandPalette() {
         <CommandGroup heading="Navigare">
           <CommandItem onSelect={() => go("/dashboard")}><Home className="mr-2 h-4 w-4" /> Dashboard <span className="ml-auto text-xs text-muted-foreground">G D</span></CommandItem>
           <CommandItem onSelect={() => go("/leads")}><Inbox className="mr-2 h-4 w-4" /> Lead-uri <span className="ml-auto text-xs text-muted-foreground">G L</span></CommandItem>
-          <CommandItem onSelect={() => go("/whatsapp")}><MessageCircle className="mr-2 h-4 w-4" /> WhatsApp <span className="ml-auto text-xs text-muted-foreground">G W</span></CommandItem>
           <CommandItem onSelect={() => go("/reports")}><BarChart3 className="mr-2 h-4 w-4" /> Rapoarte</CommandItem>
           <CommandItem onSelect={() => go("/settings")}><Settings className="mr-2 h-4 w-4" /> Setări</CommandItem>
         </CommandGroup>

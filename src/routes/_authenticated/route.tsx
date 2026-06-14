@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, redirect, Link, useRouterState, isRedirect } from "@tanstack/react-router";
 import { AnimatePresence, motion, LayoutGroup } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { Home, Plus, Inbox, MessageCircle, Settings } from "lucide-react";
+import { Home, Plus, Inbox, Settings } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { CommandPalette } from "@/components/CommandPalette";
 import { OnboardingTour } from "@/components/OnboardingTour";
@@ -68,7 +68,6 @@ function BottomNav() {
     { to: "/dashboard", icon: Home, label: "Acasă" },
     { to: "/leads", icon: Inbox, label: "Lead-uri" },
     { to: "/create", icon: Plus, label: "Creează" },
-    { to: "/whatsapp", icon: MessageCircle, label: "WhatsApp" },
     { to: "/settings", icon: Settings, label: "Setări" },
   ] as const;
   return (
