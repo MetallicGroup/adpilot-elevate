@@ -335,7 +335,6 @@ function CampaignsTable({ campaigns, onChange }: { campaigns: any[]; onChange: (
         <select value={platformF} onChange={(e) => setPlatformF(e.target.value)} className="h-9 rounded-md border border-border bg-secondary/40 text-sm px-2">
           <option value="all">Toate platformele</option>
           <option value="meta">Meta</option>
-          <option value="tiktok">TikTok</option>
         </select>
         <span className="text-xs text-muted-foreground ml-auto">{filtered.length} campanii</span>
       </div>

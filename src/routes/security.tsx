@@ -11,7 +11,7 @@ export const Route = createFileRoute("/security")({
 });
 
 const pillars = [
-  { icon: ShieldCheck, title: "Autentificare OAuth", body: "Ne conectăm la TikTok și Meta folosind fluxul oficial OAuth 2.0. Nu vedem și nu stocăm niciodată parola ta." },
+  { icon: ShieldCheck, title: "Autentificare OAuth", body: "Ne conectăm la Meta (Facebook și Instagram) folosind fluxul oficial OAuth 2.0. Nu vedem și nu stocăm niciodată parola ta." },
   { icon: Lock, title: "Stocare criptată", body: "Toate tokenurile de acces și datele personale sunt criptate în repaus cu AES-256." },
   { icon: Globe, title: "Conform GDPR", body: "Construit în UE, AdPilot respectă principiile GDPR: bază legală, minimizarea datelor și dreptul la ștergere." },
   { icon: Users, title: "Tu deții contul de reclame", body: "Contul de Business rămâne mereu pe numele tău. Nu preluăm niciodată conturi sau campanii." },
@@ -24,7 +24,7 @@ function SecurityPage() {
       <section className="px-6 pb-12 max-w-5xl mx-auto w-full grid gap-5 md:grid-cols-2">
         {pillars.map((p) => (
           <div key={p.title} className="card-floating p-7">
-            <p.icon className="w-6 h-6 text-tiktok" />
+            <p.icon className="w-6 h-6 text-facebook" />
             <h3 className="mt-4 font-semibold">{p.title}</h3>
             <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{p.body}</p>
           </div>

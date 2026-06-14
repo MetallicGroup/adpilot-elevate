@@ -107,7 +107,7 @@ function Dashboard() {
           </div>
           <div>
             <p className="text-sm font-medium">Campanie nouă</p>
-            <p className="text-xs text-muted-foreground">TikTok sau Meta</p>
+            <p className="text-xs text-muted-foreground">Facebook & Instagram</p>
           </div>
         </Link>
         <Link to="/leads" className="press card-floating p-4 flex items-center gap-3 hover:border-primary/40 transition-colors">

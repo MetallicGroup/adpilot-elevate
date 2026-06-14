@@ -146,7 +146,7 @@ function LeadsPage() {
           <p className="text-sm text-muted-foreground">CRM</p>
           <h1 className="text-3xl font-bold tracking-tight mt-1">Lead-uri 📋</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {leads.length} {leads.length === 1 ? "lead" : "lead-uri"} de pe TikTok & Meta
+            {leads.length} {leads.length === 1 ? "lead" : "lead-uri"} de pe Facebook & Instagram
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -200,9 +200,6 @@ function LeadsPage() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <FilterChip active={platform === "all"} onClick={() => setPlatform("all")}>Toate platformele</FilterChip>
-          <FilterChip active={platform === "tiktok"} onClick={() => setPlatform("tiktok")}>
-            <Music2 className="w-3.5 h-3.5" /> TikTok
-          </FilterChip>
           <FilterChip active={platform === "meta"} onClick={() => setPlatform("meta")}>
             <Facebook className="w-3.5 h-3.5" /> Meta
           </FilterChip>

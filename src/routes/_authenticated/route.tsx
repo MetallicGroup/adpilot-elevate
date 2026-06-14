@@ -1,16 +1,39 @@
-import { createFileRoute, Outlet, redirect, Link, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, Link, useRouterState, isRedirect } from "@tanstack/react-router";
 import { AnimatePresence, motion, LayoutGroup } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Home, Plus, Inbox, MessageCircle, Settings } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { CommandPalette } from "@/components/CommandPalette";
 import { OnboardingTour } from "@/components/OnboardingTour";
+import { getOnboardingStatus } from "@/lib/onboarding.functions";
+import { getStripeEnvironment } from "@/lib/stripe";
+
+const ONBOARDING_ALLOWED = ["/onboarding", "/checkout/return"];
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
-  beforeLoad: async () => {
+  beforeLoad: async ({ location }) => {
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) throw redirect({ to: "/auth" });
+
+    // Subscription / Meta-connection gate. Allow the onboarding flow and the
+    // checkout-return page through, otherwise force the user to /onboarding.
+    const path = location.pathname;
+    const isAllowed = ONBOARDING_ALLOWED.some((p) => path === p || path.startsWith(p + "/"));
+    if (!isAllowed) {
+      try {
+        const status = await getOnboardingStatus({
+          data: { environment: getStripeEnvironment() },
+        });
+        if (!status.hasMetaConnection || !status.hasActiveSubscription) {
+          throw redirect({ to: "/onboarding" });
+        }
+      } catch (e) {
+        if (isRedirect(e)) throw e;
+        // Swallow other errors so the app still renders
+      }
+    }
+
     return { user: data.user };
   },
   component: AuthLayout,
