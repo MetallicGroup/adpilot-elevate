@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, redirect, Link, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, Link, useRouterState, isRedirect } from "@tanstack/react-router";
 import { AnimatePresence, motion, LayoutGroup } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Home, Plus, Inbox, MessageCircle, Settings } from "lucide-react";
@@ -28,9 +28,9 @@ export const Route = createFileRoute("/_authenticated")({
         if (!status.hasMetaConnection || !status.hasActiveSubscription) {
           throw redirect({ to: "/onboarding" });
         }
-      } catch (e: any) {
-        // Re-throw redirects, swallow other errors so the app still renders
-        if (e?.isRedirect || e?.options?.to) throw e;
+      } catch (e) {
+        if (isRedirect(e)) throw e;
+        // Swallow other errors so the app still renders
       }
     }
 
