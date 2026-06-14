@@ -10,6 +10,7 @@ import { WhatsAppConnectionCard } from "@/components/whatsapp/WhatsAppConnection
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { applyAccent } from "@/components/AppHeader";
 import { SubscriptionBadge } from "@/components/SubscriptionBadge";
+import { BillingHistory } from "@/components/BillingHistory";
 
 type MetaSearch = { meta?: string; reason?: string };
 
@@ -68,6 +69,10 @@ function Settings() {
         <TabsContent value="cont" className="mt-6 space-y-4">
           <Card title="Plan & facturare" subtitle="Abonament curent și acces la portalul Stripe.">
             <SubscriptionBadge />
+          </Card>
+
+          <Card title="Facturi & chitanțe" subtitle="Istoric Stripe și următoarea facturare.">
+            <BillingHistory />
           </Card>
 
           <Card title="Profil" subtitle="Datele tale de afișare în AdPilot.">
