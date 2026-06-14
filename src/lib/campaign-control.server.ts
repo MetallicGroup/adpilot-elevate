@@ -59,15 +59,15 @@ export async function setMetaCampaignStatus(opts: {
       });
       const j: any = await r.json();
       if (!r.ok) {
-        lastError = j?.error?.message || `Meta ${r.status} (${t.label})`;
+        lastError = (j?.error?.message as string) || `Meta ${r.status} (${t.label})`;
         // Adset/ad errors are non-fatal — campaign-level is the source of truth.
-        if (t.label === "campaign") return { error: lastError };
+        if (t.label === "campaign") return { error: lastError! };
       } else if (t.label === "campaign") {
         campaignOk = true;
       }
     } catch (e: any) {
-      lastError = e?.message || `Network error (${t.label})`;
-      if (t.label === "campaign") return { error: lastError };
+      lastError = (e?.message as string) || `Network error (${t.label})`;
+      if (t.label === "campaign") return { error: lastError! };
     }
   }
   if (!campaignOk) return { error: lastError || "Meta error" };
