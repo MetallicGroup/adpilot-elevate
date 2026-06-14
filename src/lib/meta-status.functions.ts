@@ -122,7 +122,7 @@ export const getMetaStatus = createServerFn({ method: "POST" })
             }
           } else {
             subErr = j?.error?.message ?? `HTTP ${r.status}`;
-            if (/pages_manage_metadata/i.test(subErr)) {
+            if (subErr && /pages_manage_metadata/i.test(subErr)) {
               missingPageScopes.push("pages_manage_metadata");
             }
           }
@@ -147,7 +147,7 @@ export const getMetaStatus = createServerFn({ method: "POST" })
               canResub = true;
             } else {
               resubErr = j?.error?.message ?? `HTTP ${r.status}`;
-              if (/pages_manage_metadata/i.test(resubErr)) {
+              if (resubErr && /pages_manage_metadata/i.test(resubErr)) {
                 missingPageScopes.push("pages_manage_metadata");
               }
             }
