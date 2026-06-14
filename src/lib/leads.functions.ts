@@ -193,6 +193,7 @@ export const syncMetaLeads = createServerFn({ method: "POST" })
     let inserted = 0;
     let scanned = 0;
     let forms = 0;
+    const errors: string[] = [];
 
     for (const p of pages) {
       if (!p.page_access_token) continue;
@@ -210,7 +211,9 @@ export const syncMetaLeads = createServerFn({ method: "POST" })
           const r = await fetch(next);
           const j: any = await r.json();
           if (!r.ok) {
-            console.error("[syncMetaLeads] form", form.id, j?.error?.message);
+            const msg = j?.error?.message ?? `HTTP ${r.status}`;
+            console.error("[syncMetaLeads] form", form.id, msg);
+            errors.push(`${form.id}: ${msg}`);
             break;
           }
           const rows: any[] = j?.data ?? [];
@@ -227,31 +230,39 @@ export const syncMetaLeads = createServerFn({ method: "POST" })
                 .maybeSingle();
               campaign_id = camp?.id ?? null;
             }
-            const { error, count } = await supabaseAdmin
+            // Check if lead already exists, then insert.
+            const { data: existing } = await supabaseAdmin
               .from("leads")
-              .upsert(
-                {
-                  user_id: userId,
-                  platform: "meta" as const,
-                  campaign_id,
-                  external_lead_id: row.id,
-                  external_form_id: form.id,
-                  external_ad_id: row.ad_id ?? null,
-                  full_name: mapped.full_name,
-                  email: mapped.email,
-                  phone: mapped.phone,
-                  message: mapped.message,
-                  raw: row as any,
-                  status: "new" as const,
-                  created_at: row.created_time ?? new Date().toISOString(),
-                },
-                { onConflict: "platform,external_lead_id", ignoreDuplicates: true, count: "exact" },
-              );
-            if (!error && (count ?? 0) > 0) inserted++;
+              .select("id")
+              .eq("platform", "meta")
+              .eq("external_lead_id", row.id)
+              .maybeSingle();
+            if (existing) continue;
+            const { error: insErr } = await supabaseAdmin.from("leads").insert({
+              user_id: userId,
+              platform: "meta" as const,
+              campaign_id,
+              external_lead_id: row.id,
+              external_form_id: form.id,
+              external_ad_id: row.ad_id ?? null,
+              full_name: mapped.full_name,
+              email: mapped.email,
+              phone: mapped.phone,
+              message: mapped.message,
+              raw: row as any,
+              status: "new" as const,
+              created_at: row.created_time ?? new Date().toISOString(),
+            });
+            if (insErr) {
+              console.error("[syncMetaLeads] insert", row.id, insErr.message);
+              errors.push(`insert ${row.id}: ${insErr.message}`);
+            } else {
+              inserted++;
+            }
           }
           next = j?.paging?.next ?? null;
         }
       }
     }
-    return { inserted, scanned, forms };
+    return { inserted, scanned, forms, errors };
   });
