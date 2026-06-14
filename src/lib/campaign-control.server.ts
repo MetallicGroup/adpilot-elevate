@@ -16,7 +16,7 @@ export async function setMetaCampaignStatus(opts: {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data: camp } = await supabaseAdmin
     .from("campaigns")
-    .select("id, meta_campaign_id")
+    .select("id, meta_campaign_id, meta_adset_id, meta_ad_id")
     .eq("id", opts.campaignId)
     .eq("user_id", opts.userId)
     .maybeSingle();
@@ -31,13 +31,46 @@ export async function setMetaCampaignStatus(opts: {
     .maybeSingle();
   if (!conn?.access_token) return { error: "Fără conexiune Meta" };
 
-  const r = await fetch(`${GRAPH}/${metaApiVersion()}/${camp.meta_campaign_id}`, {
-    method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded" },
-    body: `status=${opts.next}&access_token=${encodeURIComponent(conn.access_token)}`,
-  });
-  const j = await r.json();
-  if (!r.ok) return { error: j?.error?.message || `Meta ${r.status}` };
+  const v = metaApiVersion();
+  const token = conn.access_token;
+
+  // Cascade: pause ad → adset → campaign (and resume in reverse).
+  // Pausing only the campaign sometimes leaves the ad reported as
+  // ACTIVE in Business Suite; cascading guarantees delivery stops.
+  const targets: { id: string; label: string }[] = [];
+  if (opts.next === "PAUSED") {
+    if (camp.meta_ad_id) targets.push({ id: camp.meta_ad_id as string, label: "ad" });
+    if (camp.meta_adset_id) targets.push({ id: camp.meta_adset_id as string, label: "adset" });
+    targets.push({ id: camp.meta_campaign_id as string, label: "campaign" });
+  } else {
+    targets.push({ id: camp.meta_campaign_id as string, label: "campaign" });
+    if (camp.meta_adset_id) targets.push({ id: camp.meta_adset_id as string, label: "adset" });
+    if (camp.meta_ad_id) targets.push({ id: camp.meta_ad_id as string, label: "ad" });
+  }
+
+  let lastError: string | null = null;
+  let campaignOk = false;
+  for (const t of targets) {
+    try {
+      const r = await fetch(`${GRAPH}/${v}/${t.id}`, {
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body: `status=${opts.next}&access_token=${encodeURIComponent(token)}`,
+      });
+      const j: any = await r.json();
+      if (!r.ok) {
+        lastError = (j?.error?.message as string) || `Meta ${r.status} (${t.label})`;
+        // Adset/ad errors are non-fatal — campaign-level is the source of truth.
+        if (t.label === "campaign") return { error: lastError! };
+      } else if (t.label === "campaign") {
+        campaignOk = true;
+      }
+    } catch (e: any) {
+      lastError = (e?.message as string) || `Network error (${t.label})`;
+      if (t.label === "campaign") return { error: lastError! };
+    }
+  }
+  if (!campaignOk) return { error: lastError || "Meta error" };
 
   await supabaseAdmin
     .from("campaigns")
