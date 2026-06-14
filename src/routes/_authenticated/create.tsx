@@ -80,7 +80,7 @@ function CreateWizard() {
   const [pagesLoading, setPagesLoading] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [s, setS] = useState<State>({
-    platform: "tiktok",
+    platform: "meta",
     name: "",
     objective: "LEAD_GENERATION",
     budget: 50,
