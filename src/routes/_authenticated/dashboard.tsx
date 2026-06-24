@@ -35,12 +35,17 @@ function Dashboard() {
       .then((r) => setCampaigns(r.campaigns))
       .catch(() => {})
       .finally(() => setLoading(false));
-    supabase
-      .from("ai_insights")
-      .select("id, campaign_id, insight_text, action, generated_at")
-      .order("generated_at", { ascending: false })
-      .limit(5)
-      .then(({ data }) => setRecentInsights((data as any) ?? []));
+    supabase.auth.getUser().then(({ data: u }) => {
+      const uid = u.user?.id;
+      if (!uid) return;
+      supabase
+        .from("ai_insights")
+        .select("id, campaign_id, insight_text, action, generated_at")
+        .eq("user_id", uid)
+        .order("generated_at", { ascending: false })
+        .limit(5)
+        .then(({ data }) => setRecentInsights((data as any) ?? []));
+    });
   }, [loadCampaigns]);
 
   // Auto-refresh Meta insights for all live campaigns every 60s
