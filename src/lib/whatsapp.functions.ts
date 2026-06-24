@@ -97,10 +97,10 @@ export const saveMyWhatsAppPhone = createServerFn({ method: "POST" })
 export const disconnectMyWhatsApp = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabase } = context;
+    const { supabase, userId } = context;
     await supabase
       .from("whatsapp_connections")
       .delete()
-      .neq("id", "00000000-0000-0000-0000-000000000000");
+      .eq("user_id", userId);
     return { ok: true };
   });
