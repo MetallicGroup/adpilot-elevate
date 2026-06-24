@@ -114,8 +114,22 @@ export async function verifyWebhook(
     new TextEncoder().encode(`${timestamp}.${body}`),
   );
   const expected = Buffer.from(new Uint8Array(signed)).toString('hex');
-
-  if (!v1Signatures.includes(expected)) throw new Error('Invalid webhook signature');
+  const expectedBuf = Buffer.from(expected, 'hex');
+  const { timingSafeEqual } = await import('crypto');
+  let matched = false;
+  for (const candidate of v1Signatures) {
+    let candidateBuf: Buffer;
+    try {
+      candidateBuf = Buffer.from(candidate, 'hex');
+    } catch {
+      continue;
+    }
+    if (candidateBuf.length === expectedBuf.length && timingSafeEqual(candidateBuf, expectedBuf)) {
+      matched = true;
+      break;
+    }
+  }
+  if (!matched) throw new Error('Invalid webhook signature');
 
   return JSON.parse(body);
 }
