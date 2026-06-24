@@ -91,10 +91,10 @@ export async function runWhatsAppAgent(
 
   const tools = buildTools(ctx, supabaseAdmin);
 
-  if (isRetryPublishRequest(userMessage)) {
+  if (isRetryPublishRequest(userMessage) && shouldRetryPublishFromHistory(history, userMessage)) {
     const retry = await retryLastDraftCampaign(supabaseAdmin, ctx);
     const text = "error" in retry
-      ? `Nu a mers încă. Motivul real: ${retry.error}`
+      ? formatPublishErrorForWhatsApp(retry.error)
       : "Gata — campania este LIVE acum ✅";
     await sendChunked(ctx, text);
     return { text };
@@ -635,6 +635,52 @@ function isRetryPublishRequest(message: string): boolean {
   return /\b(incearca|reincearca|retry)\b/.test(normalized) && /\b(iar|din nou|inca o data|retry)?\b/.test(normalized);
 }
 
+function normalizeRo(text: string): string {
+  return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+function shouldRetryPublishFromHistory(
+  history: Array<{ role: "user" | "assistant"; content: string }>,
+  userMessage: string,
+): boolean {
+  const lastAssistant = [...history].reverse().find((m) => m.role === "assistant")?.content ?? "";
+  const last = normalizeRo(lastAssistant);
+  const current = normalizeRo(userMessage);
+
+  // „Încearcă iar” immediately after an AI image failure should retry image generation,
+  // not publish an old draft campaign from days ago.
+  if (/(generare ai|imagine|poza|foto)/.test(last) && /(nu a putut crea|nu a mers|a esuat|problema)/.test(last)) {
+    return false;
+  }
+
+  if (/(too many calls|rate limit|rate-limiting|nu mai incerc automat)/.test(last)) {
+    return /(campanie|reclama|public|lans)/.test(current);
+  }
+
+  if (/(campanie|reclama|public|lans|meta|motivul real)/.test(last)) {
+    return true;
+  }
+
+  return /(campanie|reclama|public|lans)/.test(current);
+}
+
+function isMetaRateLimitError(message: string): boolean {
+  const normalized = normalizeRo(message);
+  return (
+    normalized.includes("too many calls") ||
+    normalized.includes("rate-limiting") ||
+    normalized.includes("rate limiting") ||
+    normalized.includes("call limit")
+  );
+}
+
+function formatPublishErrorForWhatsApp(error: string): string {
+  if (isMetaRateLimitError(error)) {
+    return "Nu mai încerc automat acum — Meta a blocat temporar contul de reclame pentru prea multe apeluri. Așteaptă 15-30 minute, apoi scrie-mi *publică din nou campania*. Draftul rămâne salvat ✅";
+  }
+  return `Nu a mers încă. Motivul real: ${error}`;
+}
+
 async function retryLastDraftCampaign(supabaseAdmin: any, ctx: AgentCtx) {
   if (!ctx.latestMedia) return { error: "Nu mai găsesc poza/clipul pentru reclamă. Trimite media încă o dată pe WhatsApp." };
   const { data: draft } = await supabaseAdmin
@@ -644,10 +690,11 @@ async function retryLastDraftCampaign(supabaseAdmin: any, ctx: AgentCtx) {
     .eq("platform", "meta")
     .eq("status", "draft")
     .is("meta_campaign_id", null)
+    .gte("updated_at", new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString())
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
-  if (!draft) return { error: "Nu am găsit o campanie eșuată recentă pe care să o reîncerc." };
+  if (!draft) return { error: "Nu am găsit o campanie eșuată recentă pe care să o reîncerc. Dacă vrei, îmi spui din nou detaliile și o lansez curat." };
 
   const creative = (draft.creative ?? {}) as any;
   const leadForm = (draft.lead_form ?? {}) as any;
@@ -859,6 +906,12 @@ async function publishCampaignToMeta(
   } catch (e: any) {
     const msg = e?.message ?? "Publish failed";
     console.error("[wa-agent] create_campaign publish failed:", msg, e);
+    if (isMetaRateLimitError(msg)) {
+      await supabaseAdmin
+        .from("campaigns")
+        .update({ status: "draft" })
+        .eq("id", input.campaignRowId);
+    }
     return { error: msg };
   }
 }
