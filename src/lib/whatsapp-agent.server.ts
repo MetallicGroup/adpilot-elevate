@@ -653,7 +653,11 @@ function shouldRetryPublishFromHistory(
     return false;
   }
 
-  if (/(campanie|reclama|public|lans|meta|motivul real|too many calls|rate limit)/.test(last)) {
+  if (/(too many calls|rate limit|rate-limiting|nu mai incerc automat)/.test(last)) {
+    return /(campanie|reclama|public|lans)/.test(current);
+  }
+
+  if (/(campanie|reclama|public|lans|meta|motivul real)/.test(last)) {
     return true;
   }
 
