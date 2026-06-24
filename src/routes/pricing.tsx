@@ -24,7 +24,7 @@ const plans = [
     price: "249 lei",
     desc: "Pentru afaceri mici care încep cu reclamele online.",
     items: [
-      "3 campanii pe lună",
+      "3 campanii pe lună pe Facebook și Google Ads",
       "Asistent WhatsApp AI",
       "Suport pe email",
     ],
@@ -37,7 +37,7 @@ const plans = [
     featured: true,
     desc: "Pentru afacerile care vor să crească rapid.",
     items: [
-      "Campanii nelimitate",
+      "Campanii nelimitate pe Facebook și Google Ads",
       "10 clipuri AI pe lună",
       "20 de poze AI pe lună",
       "Asistent WhatsApp AI",
@@ -51,7 +51,7 @@ const plans = [
     price: "995 lei",
     desc: "Pentru branduri și agenții care scalează agresiv.",
     items: [
-      "Campanii nelimitate",
+      "Campanii nelimitate pe Facebook și Google Ads",
       "Clipuri AI nelimitate",
       "Poze AI nelimitate",
       "Asistent WhatsApp AI",
