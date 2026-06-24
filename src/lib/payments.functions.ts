@@ -82,6 +82,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         return_url: data.returnUrl,
         customer: customerId,
         metadata: { userId },
+        customer_update: { address: "auto", name: "auto" },
         ...(isRecurring && {
           payment_method_collection: "always",
           subscription_data: {

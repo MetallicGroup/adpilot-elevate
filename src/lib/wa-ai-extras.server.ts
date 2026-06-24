@@ -21,11 +21,11 @@ export async function generateCreativeImage(
   prompt: string,
 ): Promise<{ path: string; mime: string; signedUrl: string }> {
   const body = {
-    model: "google/gemini-2.5-flash-image-preview",
+    model: "openai/gpt-image-1-mini",
     prompt,
     n: 1,
     size: "1024x1024",
-    response_format: "b64_json",
+    quality: "low",
   };
   const r = await fetch(`${GATEWAY}/images/generations`, {
     method: "POST",
