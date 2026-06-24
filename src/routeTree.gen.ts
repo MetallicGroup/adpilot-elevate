@@ -37,7 +37,6 @@ import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCreateRouteImport } from './routes/_authenticated/create'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
-import { Route as ApiPublicAdminBootstrapRouteImport } from './routes/api/public/admin-bootstrap'
 import { Route as AuthenticatedQaTrialRouteImport } from './routes/_authenticated/qa.trial'
 import { Route as AuthenticatedCampaignsIdRouteImport } from './routes/_authenticated/campaigns.$id'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
@@ -191,11 +190,6 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const ApiPublicAdminBootstrapRoute = ApiPublicAdminBootstrapRouteImport.update({
-  id: '/api/public/admin-bootstrap',
-  path: '/api/public/admin-bootstrap',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthenticatedQaTrialRoute = AuthenticatedQaTrialRouteImport.update({
   id: '/qa/trial',
   path: '/qa/trial',
@@ -302,7 +296,6 @@ export interface FileRoutesByFullPath {
   '/checkout/return': typeof CheckoutReturnRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/qa/trial': typeof AuthenticatedQaTrialRoute
-  '/api/public/admin-bootstrap': typeof ApiPublicAdminBootstrapRoute
   '/admin/tickets/$id': typeof AuthenticatedAdminTicketsIdRoute
   '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
   '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
@@ -345,7 +338,6 @@ export interface FileRoutesByTo {
   '/checkout/return': typeof CheckoutReturnRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/qa/trial': typeof AuthenticatedQaTrialRoute
-  '/api/public/admin-bootstrap': typeof ApiPublicAdminBootstrapRoute
   '/admin/tickets/$id': typeof AuthenticatedAdminTicketsIdRoute
   '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
   '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
@@ -390,7 +382,6 @@ export interface FileRoutesById {
   '/checkout/return': typeof CheckoutReturnRoute
   '/_authenticated/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/_authenticated/qa/trial': typeof AuthenticatedQaTrialRoute
-  '/api/public/admin-bootstrap': typeof ApiPublicAdminBootstrapRoute
   '/_authenticated/admin/tickets/$id': typeof AuthenticatedAdminTicketsIdRoute
   '/_authenticated/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
   '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
@@ -435,7 +426,6 @@ export interface FileRouteTypes {
     | '/checkout/return'
     | '/campaigns/$id'
     | '/qa/trial'
-    | '/api/public/admin-bootstrap'
     | '/admin/tickets/$id'
     | '/admin/users/$id'
     | '/api/meta/auth/callback'
@@ -478,7 +468,6 @@ export interface FileRouteTypes {
     | '/checkout/return'
     | '/campaigns/$id'
     | '/qa/trial'
-    | '/api/public/admin-bootstrap'
     | '/admin/tickets/$id'
     | '/admin/users/$id'
     | '/api/meta/auth/callback'
@@ -522,7 +511,6 @@ export interface FileRouteTypes {
     | '/checkout/return'
     | '/_authenticated/campaigns/$id'
     | '/_authenticated/qa/trial'
-    | '/api/public/admin-bootstrap'
     | '/_authenticated/admin/tickets/$id'
     | '/_authenticated/admin/users/$id'
     | '/api/meta/auth/callback'
@@ -555,7 +543,6 @@ export interface RootRouteChildren {
   SecurityRoute: typeof SecurityRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
-  ApiPublicAdminBootstrapRoute: typeof ApiPublicAdminBootstrapRoute
   ApiMetaAuthCallbackRoute: typeof ApiMetaAuthCallbackRoute
   ApiPublicHooksAnomalyScanRoute: typeof ApiPublicHooksAnomalyScanRoute
   ApiPublicHooksDailyReportRoute: typeof ApiPublicHooksDailyReportRoute
@@ -765,13 +752,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/public/admin-bootstrap': {
-      id: '/api/public/admin-bootstrap'
-      path: '/api/public/admin-bootstrap'
-      fullPath: '/api/public/admin-bootstrap'
-      preLoaderRoute: typeof ApiPublicAdminBootstrapRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authenticated/qa/trial': {
       id: '/_authenticated/qa/trial'
       path: '/qa/trial'
@@ -931,7 +911,6 @@ const rootRouteChildren: RootRouteChildren = {
   SecurityRoute: SecurityRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
-  ApiPublicAdminBootstrapRoute: ApiPublicAdminBootstrapRoute,
   ApiMetaAuthCallbackRoute: ApiMetaAuthCallbackRoute,
   ApiPublicHooksAnomalyScanRoute: ApiPublicHooksAnomalyScanRoute,
   ApiPublicHooksDailyReportRoute: ApiPublicHooksDailyReportRoute,
@@ -945,13 +924,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -53,7 +53,23 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       environment: StripeEnv;
     }) => {
       if (!/^[a-zA-Z0-9_-]+$/.test(data.priceId)) throw new Error("Invalid priceId");
-      if (!data.returnUrl?.startsWith("http")) throw new Error("Invalid returnUrl");
+      // Strict same-origin allowlist to prevent open-redirect via Stripe return_url.
+      try {
+        const u = new URL(data.returnUrl);
+        const allowed = new Set([
+          "adpilot.ro",
+          "www.adpilot.ro",
+          "adpilot-elevate.lovable.app",
+        ]);
+        const okHost =
+          allowed.has(u.hostname) ||
+          u.hostname.endsWith(".lovable.app") ||
+          u.hostname === "localhost";
+        if (u.protocol !== "https:" && u.hostname !== "localhost") throw new Error();
+        if (!okHost) throw new Error();
+      } catch {
+        throw new Error("Invalid returnUrl");
+      }
       if (data.environment !== "sandbox" && data.environment !== "live") {
         throw new Error("Invalid environment");
       }
