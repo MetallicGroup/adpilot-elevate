@@ -31,6 +31,12 @@ function AuthPage() {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) goAfterAuth();
     });
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session && (event === "SIGNED_IN" || event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED")) {
+        goAfterAuth();
+      }
+    });
+    return () => sub.subscription.unsubscribe();
   }, [goAfterAuth]);
 
   async function submit(e: React.FormEvent) {
@@ -63,8 +69,10 @@ function AuthPage() {
 
   async function google() {
     setLoading(true);
+    // Keep redirect_uri on a public same-origin URL — the onAuthStateChange
+    // listener above navigates to `afterAuth` once the session hydrates.
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin + afterAuth,
+      redirect_uri: window.location.origin,
     });
     if (result.error) {
       toast.error("Google sign-in failed");
