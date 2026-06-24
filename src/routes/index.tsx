@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import {
   ArrowRight, Check, MessageCircle, Bot, Inbox, LineChart, Zap, Rocket, Target,
-  Star, PlayCircle,
+  Star, PlayCircle, Facebook, Search,
 } from "lucide-react";
 import { MarketingLayout } from "@/components/marketing/MarketingLayout";
 import { IphoneWhatsAppMockup } from "@/components/marketing/IphoneWhatsAppMockup";
@@ -10,10 +10,10 @@ import { IphoneWhatsAppMockup } from "@/components/marketing/IphoneWhatsAppMocku
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "AdPilot — Reclame Facebook. Lead-uri pe WhatsApp." },
-      { name: "description", content: "Platforma AI care creează, lansează și optimizează reclame Facebook în câteva minute. Fiecare lead ajunge direct pe WhatsApp. 7 zile gratuit." },
-      { property: "og:title", content: "AdPilot — Reclame Facebook. Lead-uri pe WhatsApp." },
-      { property: "og:description", content: "Creează și optimizează reclame Facebook cu AI. Lead-urile vin direct pe WhatsApp. 7 zile gratuit." },
+      { title: "AdPilot — Reclame Facebook & Google. Lead-uri pe WhatsApp." },
+      { name: "description", content: "Platforma AI care creează, lansează și optimizează reclame Facebook și Google Ads în câteva minute. Fiecare lead ajunge direct pe WhatsApp. 7 zile gratuit." },
+      { property: "og:title", content: "AdPilot — Reclame Facebook & Google. Lead-uri pe WhatsApp." },
+      { property: "og:description", content: "Creează și optimizează reclame Facebook și Google Ads cu AI. Lead-urile vin direct pe WhatsApp. 7 zile gratuit." },
     ],
   }),
   component: Index,
@@ -47,12 +47,12 @@ function Index() {
               </motion.div>
 
               <h1 className="mt-8 text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight">
-                Reclame Facebook.<br/>
+                Reclame Facebook &amp; Google.<br/>
                 <span className="gradient-text">Fără agenție.</span>
               </h1>
 
               <p className="mt-6 text-lg text-muted-foreground leading-relaxed max-w-xl mx-auto md:mx-0">
-                AdPilot creează, lansează și optimizează campaniile tale Facebook & Instagram în câteva minute — iar fiecare lead ajunge direct pe WhatsApp-ul tău. ✨
+                AdPilot creează, lansează și optimizează campaniile tale Facebook, Instagram și Google Ads în câteva minute — iar fiecare lead ajunge direct pe WhatsApp-ul tău. ✨
               </p>
 
               <div className="mt-10 flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
@@ -143,6 +143,27 @@ function Index() {
         </div>
       </Section>
 
+      {/* PLATFORMS WE MANAGE */}
+      <Section eyebrow="Platformele pe care le gestionăm" title="Facebook, Instagram & Google Ads — într-un singur loc.">
+        <div className="grid md:grid-cols-3 gap-5">
+          <div className="glass p-6 rounded-2xl">
+            <Facebook className="w-8 h-8 text-primary" />
+            <h3 className="mt-4 font-semibold">Facebook &amp; Instagram</h3>
+            <p className="mt-2 text-sm text-muted-foreground">Campanii Lead Generation și Conversii, optimizate automat de AI.</p>
+          </div>
+          <div className="glass p-6 rounded-2xl">
+            <GoogleLogo className="w-8 h-8" />
+            <h3 className="mt-4 font-semibold">Google Ads</h3>
+            <p className="mt-2 text-sm text-muted-foreground">Campanii Search și Display — apari exact când clienții tăi te caută pe Google.</p>
+          </div>
+          <div className="glass p-6 rounded-2xl">
+            <MessageCircle className="w-8 h-8 text-primary" />
+            <h3 className="mt-4 font-semibold">WhatsApp AI</h3>
+            <p className="mt-2 text-sm text-muted-foreground">Control total și rapoarte zilnice, direct din conversație.</p>
+          </div>
+        </div>
+      </Section>
+
       {/* FEATURES BENTO */}
       <Section eyebrow="Funcționalități" title="Tot ce ai nevoie. Nimic în plus.">
         <div className="grid md:grid-cols-3 gap-4">
@@ -176,6 +197,9 @@ function Index() {
           </BentoCard>
           <BentoCard icon={Zap} title="Optimizare automată">
             <p>AdPilot identifică reclamele performante și redistribuie bugetul automat. Tu dormi, el optimizează. 😴</p>
+          </BentoCard>
+          <BentoCard icon={Search} title="Google Ads Integration">
+            <p>Conectează-ți contul Google Ads și lansează campanii Search sau Display direct din AdPilot — fără să deschizi Google Ads Manager.</p>
           </BentoCard>
         </div>
       </Section>
