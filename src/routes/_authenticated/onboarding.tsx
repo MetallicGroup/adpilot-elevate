@@ -2,13 +2,14 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Check, Facebook, Loader2, Sparkles, ArrowRight } from "lucide-react";
+import { Check, Facebook, Loader2, Sparkles, ArrowRight, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getOnboardingStatus, type OnboardingStatus } from "@/lib/onboarding.functions";
 import { startMetaOAuth } from "@/lib/meta-oauth.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { useStripeCheckout } from "@/hooks/useStripeCheckout";
 import { toast } from "sonner";
+import { WhatsAppConnectionCard } from "@/components/whatsapp/WhatsAppConnectionCard";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   component: OnboardingPage,
@@ -112,6 +113,8 @@ function OnboardingPage() {
           <StepBadge n={1} done={step1Done} active={activeStep === 1} label="Conectează Meta" />
           <div className="flex-1 h-px bg-border" />
           <StepBadge n={2} done={step2Done} active={activeStep === 2} label="Alege plan" />
+          <div className="flex-1 h-px bg-border" />
+          <StepBadge n={3} done={false} active={activeStep === 3} label="WhatsApp (opțional)" />
         </div>
 
         {/* Step 1: Meta */}
@@ -194,6 +197,30 @@ function OnboardingPage() {
               </div>
             ))}
           </div>
+        </section>
+
+        {/* Step 3: WhatsApp (optional) */}
+        <section className={`mt-5 card-floating p-7 transition-opacity ${!step2Done ? "opacity-40 pointer-events-none" : ""}`}>
+          <div className="flex items-start gap-4">
+            <div className="w-11 h-11 rounded-xl bg-[#25D366]/15 text-[#25D366] flex items-center justify-center shrink-0">
+              <MessageCircle className="w-5 h-5" />
+            </div>
+            <div className="flex-1">
+              <h2 className="font-semibold text-lg">Conectează WhatsApp <span className="text-xs font-normal text-muted-foreground">(opțional)</span></h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Primește lead-uri, rapoarte și controlează campaniile direct din WhatsApp. Poți face asta și mai târziu din Dashboard.
+              </p>
+            </div>
+          </div>
+          <div className="mt-5">
+            <WhatsAppConnectionCard />
+          </div>
+          <button
+            onClick={() => navigate({ to: "/dashboard" })}
+            className="press mt-5 w-full py-2.5 rounded-xl text-sm font-medium bg-foreground text-background"
+          >
+            Intră în Dashboard
+          </button>
         </section>
       </div>
 
