@@ -8,6 +8,7 @@ import { fmtMoney, fmtNum } from "@/lib/format";
 import { listCampaigns, setCampaignStatus, type CampaignListRow } from "@/lib/campaigns.functions";
 import { refreshAllLiveCampaignInsights } from "@/lib/meta-insights.functions";
 import { toast } from "sonner";
+import { WhatsAppConnectionCard } from "@/components/whatsapp/WhatsAppConnectionCard";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -224,6 +225,11 @@ function Dashboard() {
           </div>
         </>
       )}
+
+      <h2 className="mt-8 text-sm font-semibold text-muted-foreground uppercase tracking-wider">WhatsApp</h2>
+      <div className="mt-3">
+        <WhatsAppConnectionCard />
+      </div>
 
       {recentInsights.length > 0 && (
         <>
