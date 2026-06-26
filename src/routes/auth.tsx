@@ -72,7 +72,7 @@ function AuthPage() {
     // Keep redirect_uri on a public same-origin URL — the onAuthStateChange
     // listener above navigates to `afterAuth` once the session hydrates.
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+      redirect_uri: `${window.location.origin}/auth${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`,
     });
     if (result.error) {
       toast.error("Google sign-in failed");
