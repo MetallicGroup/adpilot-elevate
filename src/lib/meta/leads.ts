@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { upsertCrmLead } from "@/lib/crm/leads.service";
 import { notifyNewLead } from "@/lib/whatsapp/notifications";

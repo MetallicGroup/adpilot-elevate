@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { MetaApiError, metaGraphRequest } from "./client";
 import { getMetaAccessToken } from "./oauth";

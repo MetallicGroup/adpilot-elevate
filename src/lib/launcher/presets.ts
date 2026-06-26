@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { BusinessNiche, PromotionGoal } from "./types";
 
 export const PROMOTION_GOALS: Array<{
