@@ -58,6 +58,52 @@ export const publishMetaCampaign = createServerFn({ method: "POST" })
     if (!page?.page_id || !page.page_access_token)
       throw new Error("No Facebook Page connected. Add a page in Settings.");
 
+    // 3.5 Preflight: only safe READ endpoints. Block any POST if validation fails,
+    // so we don't pollute the Marketing API error rate (required for Standard Access Tier review).
+    const v = (await import("./meta.server")).metaApiVersion();
+    const required = ["ads_management", "ads_read", "pages_manage_ads", "leads_retrieval"];
+    try {
+      const permRes = await fetch(
+        `https://graph.facebook.com/${v}/me/permissions?access_token=${encodeURIComponent(conn.access_token)}`,
+      );
+      const permJson: any = await permRes.json();
+      if (!permRes.ok) throw new Error(permJson?.error?.message || "Token Meta invalid sau expirat");
+      const granted = new Set<string>(
+        (permJson?.data ?? [])
+          .filter((p: any) => p.status === "granted")
+          .map((p: any) => p.permission),
+      );
+      const missing = required.filter((s) => !granted.has(s));
+      if (missing.length) {
+        throw new Error(
+          `Permisiuni Meta lipsă: ${missing.join(", ")}. Reconectează contul Meta cu toate permisiunile cerute.`,
+        );
+      }
+    } catch (e: any) {
+      throw new Error(e?.message ?? "Nu am putut valida permisiunile Meta");
+    }
+
+    // Validate ad account accessible
+    {
+      const r = await fetch(
+        `https://graph.facebook.com/${v}/act_${adAcc.ad_account_id}?fields=id,account_status&access_token=${encodeURIComponent(conn.access_token)}`,
+      );
+      const j: any = await r.json();
+      if (!r.ok) throw new Error(`Contul publicitar nu este accesibil: ${j?.error?.message ?? r.status}`);
+      if (j?.account_status && Number(j.account_status) !== 1) {
+        throw new Error("Contul publicitar Meta nu este activ. Verifică Business Manager.");
+      }
+    }
+
+    // Validate page accessible with its page token
+    {
+      const r = await fetch(
+        `https://graph.facebook.com/${v}/${page.page_id}?fields=id,name&access_token=${encodeURIComponent(page.page_access_token)}`,
+      );
+      const j: any = await r.json();
+      if (!r.ok) throw new Error(`Pagina Facebook nu este accesibilă: ${j?.error?.message ?? r.status}`);
+    }
+
     // 4. Fetch media bytes (from ad-media storage or external URL)
     const creative = (campaign.creative as any) ?? {};
     const leadForm = (campaign.lead_form as any) ?? {};
