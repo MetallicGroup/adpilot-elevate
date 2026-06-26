@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as SecurityRouteImport } from './routes/security'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as IntegrationsRouteImport } from './routes/integrations'
@@ -25,12 +26,31 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as AuthenticatedWhatsappRouteImport } from './routes/_authenticated/whatsapp'
+import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedMetaStatusRouteImport } from './routes/_authenticated/meta-status'
 import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCreateRouteImport } from './routes/_authenticated/create'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedQaTrialRouteImport } from './routes/_authenticated/qa.trial'
+import { Route as AuthenticatedCampaignsIdRouteImport } from './routes/_authenticated/campaigns.$id'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
+import { Route as ApiPublicWhatsappWebhookRouteImport } from './routes/api/public/whatsapp.webhook'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as ApiPublicMetaWebhookRouteImport } from './routes/api/public/meta.webhook'
+import { Route as ApiPublicHooksRefreshInsightsRouteImport } from './routes/api/public/hooks/refresh-insights'
+import { Route as ApiPublicHooksPeriodicUpdateRouteImport } from './routes/api/public/hooks/periodic-update'
+import { Route as ApiPublicHooksDailyReportRouteImport } from './routes/api/public/hooks/daily-report'
+import { Route as ApiPublicHooksAnomalyScanRouteImport } from './routes/api/public/hooks/anomaly-scan'
+import { Route as ApiMetaAuthCallbackRouteImport } from './routes/api/meta.auth.callback'
+import { Route as AuthenticatedAdminUsersIdRouteImport } from './routes/_authenticated/admin.users.$id'
+import { Route as AuthenticatedAdminTicketsIdRouteImport } from './routes/_authenticated/admin.tickets.$id'
 
 const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
   id: '/terms-of-service',
@@ -40,6 +60,11 @@ const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
 const SecurityRoute = SecurityRouteImport.update({
   id: '/security',
   path: '/security',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
@@ -111,10 +136,25 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
+  id: '/checkout/return',
+  path: '/checkout/return',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/callback',
   path: '/callback',
   getParentRoute: () => AuthRoute,
+} as any)
+const AuthenticatedWhatsappRoute = AuthenticatedWhatsappRouteImport.update({
+  id: '/whatsapp',
+  path: '/whatsapp',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSupportRoute = AuthenticatedSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
@@ -124,6 +164,16 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
 const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMetaStatusRoute = AuthenticatedMetaStatusRouteImport.update({
+  id: '/meta-status',
+  path: '/meta-status',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedLeadsRoute = AuthenticatedLeadsRouteImport.update({
@@ -141,6 +191,86 @@ const AuthenticatedCreateRoute = AuthenticatedCreateRouteImport.update({
   path: '/create',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedQaTrialRoute = AuthenticatedQaTrialRouteImport.update({
+  id: '/qa/trial',
+  path: '/qa/trial',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCampaignsIdRoute =
+  AuthenticatedCampaignsIdRouteImport.update({
+    id: '/campaigns/$id',
+    path: '/campaigns/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicWhatsappWebhookRoute =
+  ApiPublicWhatsappWebhookRouteImport.update({
+    id: '/api/public/whatsapp/webhook',
+    path: '/api/public/whatsapp/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicMetaWebhookRoute = ApiPublicMetaWebhookRouteImport.update({
+  id: '/api/public/meta/webhook',
+  path: '/api/public/meta/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHooksRefreshInsightsRoute =
+  ApiPublicHooksRefreshInsightsRouteImport.update({
+    id: '/api/public/hooks/refresh-insights',
+    path: '/api/public/hooks/refresh-insights',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksPeriodicUpdateRoute =
+  ApiPublicHooksPeriodicUpdateRouteImport.update({
+    id: '/api/public/hooks/periodic-update',
+    path: '/api/public/hooks/periodic-update',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksDailyReportRoute =
+  ApiPublicHooksDailyReportRouteImport.update({
+    id: '/api/public/hooks/daily-report',
+    path: '/api/public/hooks/daily-report',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksAnomalyScanRoute =
+  ApiPublicHooksAnomalyScanRouteImport.update({
+    id: '/api/public/hooks/anomaly-scan',
+    path: '/api/public/hooks/anomaly-scan',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiMetaAuthCallbackRoute = ApiMetaAuthCallbackRouteImport.update({
+  id: '/api/meta/auth/callback',
+  path: '/api/meta/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminUsersIdRoute =
+  AuthenticatedAdminUsersIdRouteImport.update({
+    id: '/users/$id',
+    path: '/users/$id',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminTicketsIdRoute =
+  AuthenticatedAdminTicketsIdRouteImport.update({
+    id: '/tickets/$id',
+    path: '/tickets/$id',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -156,14 +286,34 @@ export interface FileRoutesByFullPath {
   '/integrations': typeof IntegrationsRoute
   '/pricing': typeof PricingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/security': typeof SecurityRoute
   '/terms-of-service': typeof TermsOfServiceRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/create': typeof AuthenticatedCreateRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/leads': typeof AuthenticatedLeadsRoute
+  '/meta-status': typeof AuthenticatedMetaStatusRoute
+  '/onboarding': typeof AuthenticatedOnboardingRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/support': typeof AuthenticatedSupportRoute
+  '/whatsapp': typeof AuthenticatedWhatsappRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/checkout/return': typeof CheckoutReturnRoute
+  '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
+  '/qa/trial': typeof AuthenticatedQaTrialRoute
+  '/admin/tickets/$id': typeof AuthenticatedAdminTicketsIdRoute
+  '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
+  '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
+  '/api/public/hooks/anomaly-scan': typeof ApiPublicHooksAnomalyScanRoute
+  '/api/public/hooks/daily-report': typeof ApiPublicHooksDailyReportRoute
+  '/api/public/hooks/periodic-update': typeof ApiPublicHooksPeriodicUpdateRoute
+  '/api/public/hooks/refresh-insights': typeof ApiPublicHooksRefreshInsightsRoute
+  '/api/public/meta/webhook': typeof ApiPublicMetaWebhookRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -179,14 +329,34 @@ export interface FileRoutesByTo {
   '/integrations': typeof IntegrationsRoute
   '/pricing': typeof PricingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/security': typeof SecurityRoute
   '/terms-of-service': typeof TermsOfServiceRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/create': typeof AuthenticatedCreateRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/leads': typeof AuthenticatedLeadsRoute
+  '/meta-status': typeof AuthenticatedMetaStatusRoute
+  '/onboarding': typeof AuthenticatedOnboardingRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/support': typeof AuthenticatedSupportRoute
+  '/whatsapp': typeof AuthenticatedWhatsappRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/checkout/return': typeof CheckoutReturnRoute
+  '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
+  '/qa/trial': typeof AuthenticatedQaTrialRoute
+  '/admin/tickets/$id': typeof AuthenticatedAdminTicketsIdRoute
+  '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
+  '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
+  '/api/public/hooks/anomaly-scan': typeof ApiPublicHooksAnomalyScanRoute
+  '/api/public/hooks/daily-report': typeof ApiPublicHooksDailyReportRoute
+  '/api/public/hooks/periodic-update': typeof ApiPublicHooksPeriodicUpdateRoute
+  '/api/public/hooks/refresh-insights': typeof ApiPublicHooksRefreshInsightsRoute
+  '/api/public/meta/webhook': typeof ApiPublicMetaWebhookRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -204,14 +374,34 @@ export interface FileRoutesById {
   '/integrations': typeof IntegrationsRoute
   '/pricing': typeof PricingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/security': typeof SecurityRoute
   '/terms-of-service': typeof TermsOfServiceRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/create': typeof AuthenticatedCreateRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/leads': typeof AuthenticatedLeadsRoute
+  '/_authenticated/meta-status': typeof AuthenticatedMetaStatusRoute
+  '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/support': typeof AuthenticatedSupportRoute
+  '/_authenticated/whatsapp': typeof AuthenticatedWhatsappRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/checkout/return': typeof CheckoutReturnRoute
+  '/_authenticated/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
+  '/_authenticated/qa/trial': typeof AuthenticatedQaTrialRoute
+  '/_authenticated/admin/tickets/$id': typeof AuthenticatedAdminTicketsIdRoute
+  '/_authenticated/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
+  '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
+  '/api/public/hooks/anomaly-scan': typeof ApiPublicHooksAnomalyScanRoute
+  '/api/public/hooks/daily-report': typeof ApiPublicHooksDailyReportRoute
+  '/api/public/hooks/periodic-update': typeof ApiPublicHooksPeriodicUpdateRoute
+  '/api/public/hooks/refresh-insights': typeof ApiPublicHooksRefreshInsightsRoute
+  '/api/public/meta/webhook': typeof ApiPublicMetaWebhookRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -229,14 +419,34 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/pricing'
     | '/privacy-policy'
+    | '/reset-password'
     | '/security'
     | '/terms-of-service'
+    | '/admin'
     | '/create'
     | '/dashboard'
     | '/leads'
+    | '/meta-status'
+    | '/onboarding'
     | '/reports'
     | '/settings'
+    | '/support'
+    | '/whatsapp'
     | '/auth/callback'
+    | '/checkout/return'
+    | '/campaigns/$id'
+    | '/qa/trial'
+    | '/admin/tickets/$id'
+    | '/admin/users/$id'
+    | '/api/meta/auth/callback'
+    | '/api/public/hooks/anomaly-scan'
+    | '/api/public/hooks/daily-report'
+    | '/api/public/hooks/periodic-update'
+    | '/api/public/hooks/refresh-insights'
+    | '/api/public/meta/webhook'
+    | '/api/public/payments/webhook'
+    | '/api/public/whatsapp/webhook'
+    | '/lovable/email/queue/process'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -252,14 +462,34 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/pricing'
     | '/privacy-policy'
+    | '/reset-password'
     | '/security'
     | '/terms-of-service'
+    | '/admin'
     | '/create'
     | '/dashboard'
     | '/leads'
+    | '/meta-status'
+    | '/onboarding'
     | '/reports'
     | '/settings'
+    | '/support'
+    | '/whatsapp'
     | '/auth/callback'
+    | '/checkout/return'
+    | '/campaigns/$id'
+    | '/qa/trial'
+    | '/admin/tickets/$id'
+    | '/admin/users/$id'
+    | '/api/meta/auth/callback'
+    | '/api/public/hooks/anomaly-scan'
+    | '/api/public/hooks/daily-report'
+    | '/api/public/hooks/periodic-update'
+    | '/api/public/hooks/refresh-insights'
+    | '/api/public/meta/webhook'
+    | '/api/public/payments/webhook'
+    | '/api/public/whatsapp/webhook'
+    | '/lovable/email/queue/process'
   id:
     | '__root__'
     | '/'
@@ -276,14 +506,34 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/pricing'
     | '/privacy-policy'
+    | '/reset-password'
     | '/security'
     | '/terms-of-service'
+    | '/_authenticated/admin'
     | '/_authenticated/create'
     | '/_authenticated/dashboard'
     | '/_authenticated/leads'
+    | '/_authenticated/meta-status'
+    | '/_authenticated/onboarding'
     | '/_authenticated/reports'
     | '/_authenticated/settings'
+    | '/_authenticated/support'
+    | '/_authenticated/whatsapp'
     | '/auth/callback'
+    | '/checkout/return'
+    | '/_authenticated/campaigns/$id'
+    | '/_authenticated/qa/trial'
+    | '/_authenticated/admin/tickets/$id'
+    | '/_authenticated/admin/users/$id'
+    | '/api/meta/auth/callback'
+    | '/api/public/hooks/anomaly-scan'
+    | '/api/public/hooks/daily-report'
+    | '/api/public/hooks/periodic-update'
+    | '/api/public/hooks/refresh-insights'
+    | '/api/public/meta/webhook'
+    | '/api/public/payments/webhook'
+    | '/api/public/whatsapp/webhook'
+    | '/lovable/email/queue/process'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -301,8 +551,19 @@ export interface RootRouteChildren {
   IntegrationsRoute: typeof IntegrationsRoute
   PricingRoute: typeof PricingRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SecurityRoute: typeof SecurityRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
+  CheckoutReturnRoute: typeof CheckoutReturnRoute
+  ApiMetaAuthCallbackRoute: typeof ApiMetaAuthCallbackRoute
+  ApiPublicHooksAnomalyScanRoute: typeof ApiPublicHooksAnomalyScanRoute
+  ApiPublicHooksDailyReportRoute: typeof ApiPublicHooksDailyReportRoute
+  ApiPublicHooksPeriodicUpdateRoute: typeof ApiPublicHooksPeriodicUpdateRoute
+  ApiPublicHooksRefreshInsightsRoute: typeof ApiPublicHooksRefreshInsightsRoute
+  ApiPublicMetaWebhookRoute: typeof ApiPublicMetaWebhookRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
+  ApiPublicWhatsappWebhookRoute: typeof ApiPublicWhatsappWebhookRoute
+  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -319,6 +580,13 @@ declare module '@tanstack/react-router' {
       path: '/security'
       fullPath: '/security'
       preLoaderRoute: typeof SecurityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy-policy': {
@@ -419,12 +687,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/checkout/return': {
+      id: '/checkout/return'
+      path: '/checkout/return'
+      fullPath: '/checkout/return'
+      preLoaderRoute: typeof CheckoutReturnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/callback': {
       id: '/auth/callback'
       path: '/callback'
       fullPath: '/auth/callback'
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof AuthRoute
+    }
+    '/_authenticated/whatsapp': {
+      id: '/_authenticated/whatsapp'
+      path: '/whatsapp'
+      fullPath: '/whatsapp'
+      preLoaderRoute: typeof AuthenticatedWhatsappRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/support': {
+      id: '/_authenticated/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof AuthenticatedSupportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
@@ -438,6 +727,20 @@ declare module '@tanstack/react-router' {
       path: '/reports'
       fullPath: '/reports'
       preLoaderRoute: typeof AuthenticatedReportsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/onboarding': {
+      id: '/_authenticated/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/meta-status': {
+      id: '/_authenticated/meta-status'
+      path: '/meta-status'
+      fullPath: '/meta-status'
+      preLoaderRoute: typeof AuthenticatedMetaStatusRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/leads': {
@@ -461,23 +764,148 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCreateRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/qa/trial': {
+      id: '/_authenticated/qa/trial'
+      path: '/qa/trial'
+      fullPath: '/qa/trial'
+      preLoaderRoute: typeof AuthenticatedQaTrialRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/campaigns/$id': {
+      id: '/_authenticated/campaigns/$id'
+      path: '/campaigns/$id'
+      fullPath: '/campaigns/$id'
+      preLoaderRoute: typeof AuthenticatedCampaignsIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/whatsapp/webhook': {
+      id: '/api/public/whatsapp/webhook'
+      path: '/api/public/whatsapp/webhook'
+      fullPath: '/api/public/whatsapp/webhook'
+      preLoaderRoute: typeof ApiPublicWhatsappWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/meta/webhook': {
+      id: '/api/public/meta/webhook'
+      path: '/api/public/meta/webhook'
+      fullPath: '/api/public/meta/webhook'
+      preLoaderRoute: typeof ApiPublicMetaWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/refresh-insights': {
+      id: '/api/public/hooks/refresh-insights'
+      path: '/api/public/hooks/refresh-insights'
+      fullPath: '/api/public/hooks/refresh-insights'
+      preLoaderRoute: typeof ApiPublicHooksRefreshInsightsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/periodic-update': {
+      id: '/api/public/hooks/periodic-update'
+      path: '/api/public/hooks/periodic-update'
+      fullPath: '/api/public/hooks/periodic-update'
+      preLoaderRoute: typeof ApiPublicHooksPeriodicUpdateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/daily-report': {
+      id: '/api/public/hooks/daily-report'
+      path: '/api/public/hooks/daily-report'
+      fullPath: '/api/public/hooks/daily-report'
+      preLoaderRoute: typeof ApiPublicHooksDailyReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/anomaly-scan': {
+      id: '/api/public/hooks/anomaly-scan'
+      path: '/api/public/hooks/anomaly-scan'
+      fullPath: '/api/public/hooks/anomaly-scan'
+      preLoaderRoute: typeof ApiPublicHooksAnomalyScanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/meta/auth/callback': {
+      id: '/api/meta/auth/callback'
+      path: '/api/meta/auth/callback'
+      fullPath: '/api/meta/auth/callback'
+      preLoaderRoute: typeof ApiMetaAuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin/users/$id': {
+      id: '/_authenticated/admin/users/$id'
+      path: '/users/$id'
+      fullPath: '/admin/users/$id'
+      preLoaderRoute: typeof AuthenticatedAdminUsersIdRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/tickets/$id': {
+      id: '/_authenticated/admin/tickets/$id'
+      path: '/tickets/$id'
+      fullPath: '/admin/tickets/$id'
+      preLoaderRoute: typeof AuthenticatedAdminTicketsIdRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
   }
 }
 
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminTicketsIdRoute: typeof AuthenticatedAdminTicketsIdRoute
+  AuthenticatedAdminUsersIdRoute: typeof AuthenticatedAdminUsersIdRoute
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminTicketsIdRoute: AuthenticatedAdminTicketsIdRoute,
+  AuthenticatedAdminUsersIdRoute: AuthenticatedAdminUsersIdRoute,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedCreateRoute: typeof AuthenticatedCreateRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
+  AuthenticatedMetaStatusRoute: typeof AuthenticatedMetaStatusRoute
+  AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
+  AuthenticatedWhatsappRoute: typeof AuthenticatedWhatsappRoute
+  AuthenticatedCampaignsIdRoute: typeof AuthenticatedCampaignsIdRoute
+  AuthenticatedQaTrialRoute: typeof AuthenticatedQaTrialRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedCreateRoute: AuthenticatedCreateRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
+  AuthenticatedMetaStatusRoute: AuthenticatedMetaStatusRoute,
+  AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedSupportRoute: AuthenticatedSupportRoute,
+  AuthenticatedWhatsappRoute: AuthenticatedWhatsappRoute,
+  AuthenticatedCampaignsIdRoute: AuthenticatedCampaignsIdRoute,
+  AuthenticatedQaTrialRoute: AuthenticatedQaTrialRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -508,8 +936,19 @@ const rootRouteChildren: RootRouteChildren = {
   IntegrationsRoute: IntegrationsRoute,
   PricingRoute: PricingRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SecurityRoute: SecurityRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
+  CheckoutReturnRoute: CheckoutReturnRoute,
+  ApiMetaAuthCallbackRoute: ApiMetaAuthCallbackRoute,
+  ApiPublicHooksAnomalyScanRoute: ApiPublicHooksAnomalyScanRoute,
+  ApiPublicHooksDailyReportRoute: ApiPublicHooksDailyReportRoute,
+  ApiPublicHooksPeriodicUpdateRoute: ApiPublicHooksPeriodicUpdateRoute,
+  ApiPublicHooksRefreshInsightsRoute: ApiPublicHooksRefreshInsightsRoute,
+  ApiPublicMetaWebhookRoute: ApiPublicMetaWebhookRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
+  ApiPublicWhatsappWebhookRoute: ApiPublicWhatsappWebhookRoute,
+  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

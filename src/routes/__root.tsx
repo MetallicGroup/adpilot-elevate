@@ -11,6 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import logoAsset from "@/assets/adpilot-logo.png.asset.json";
+import ogHeroAsset from "@/assets/og-hero.png.asset.json";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -80,18 +81,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "AdPilot — Run TikTok Ads. Effortlessly." },
-      { name: "description", content: "Launch, manage, and optimize TikTok ad campaigns from one beautifully simple app." },
+      { title: "AdPilot — Reclame Facebook. Lead-uri pe WhatsApp." },
+      { name: "description", content: "Lansează și optimizează reclame Facebook dintr-o singură aplicație, iar fiecare lead ajunge direct pe WhatsApp. 7 zile gratuit." },
       { name: "author", content: "AdPilot" },
-      { property: "og:title", content: "AdPilot — Run TikTok Ads. Effortlessly." },
-      { property: "og:description", content: "Launch, manage, and optimize TikTok ad campaigns from one beautifully simple app." },
+      { property: "og:title", content: "AdPilot — Reclame Facebook. Lead-uri pe WhatsApp." },
+      { property: "og:description", content: "Lansează și optimizează reclame Facebook dintr-o singură aplicație, iar fiecare lead ajunge direct pe WhatsApp. 7 zile gratuit." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:title", content: "AdPilot — Run TikTok Ads. Effortlessly." },
-      { name: "twitter:description", content: "Launch, manage, and optimize TikTok ad campaigns from one beautifully simple app." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/249a9917-9a92-4073-b39d-dc837228a603/id-preview-c21a02f8--5785506e-f54a-4fa0-9cd0-b98a0a8bf624.lovable.app-1780681513111.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/249a9917-9a92-4073-b39d-dc837228a603/id-preview-c21a02f8--5785506e-f54a-4fa0-9cd0-b98a0a8bf624.lovable.app-1780681513111.png" },
+      { name: "twitter:title", content: "AdPilot — Reclame Facebook. Lead-uri pe WhatsApp." },
+      { name: "twitter:description", content: "Lansează și optimizează reclame Facebook dintr-o singură aplicație, iar fiecare lead ajunge direct pe WhatsApp. 7 zile gratuit." },
+      { property: "og:image", content: `https://adpilot.ro${ogHeroAsset.url}` },
+      { name: "twitter:image", content: `https://adpilot.ro${ogHeroAsset.url}` },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/4cOJ83UnP8SAkbV0euFNWpJ4Knp2/social-images/social-1781442030101-Screenshot_2026-06-14_at_15.59.44.webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/4cOJ83UnP8SAkbV0euFNWpJ4Knp2/social-images/social-1781442030101-Screenshot_2026-06-14_at_15.59.44.webp" },
     ],
     links: [
       {
@@ -104,7 +107,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Playfair+Display:wght@500;600;700&display=swap",
       },
     ],
   }),
@@ -116,11 +119,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="ro" className="dark">
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body className="bg-background text-foreground">
         {children}
         <Scripts />
       </body>
@@ -144,7 +147,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
-      <Toaster position="bottom-center" theme="light" />
+      <Toaster position="bottom-center" theme="dark" />
     </QueryClientProvider>
   );
 }

@@ -82,6 +82,81 @@ export type Database = {
           },
         ]
       }
+      audit_log: {
+        Row: {
+          action: string
+          actor_email: string | null
+          actor_id: string | null
+          created_at: string
+          details: Json | null
+          id: string
+          target_id: string | null
+          target_type: string | null
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Relationships: []
+      }
+      broadcasts: {
+        Row: {
+          body: string
+          channel: string
+          created_at: string
+          created_by: string | null
+          details: Json | null
+          id: string
+          segment: string
+          status: string
+          total_failed: number
+          total_recipients: number
+          total_sent: number
+        }
+        Insert: {
+          body: string
+          channel?: string
+          created_at?: string
+          created_by?: string | null
+          details?: Json | null
+          id?: string
+          segment?: string
+          status?: string
+          total_failed?: number
+          total_recipients?: number
+          total_sent?: number
+        }
+        Update: {
+          body?: string
+          channel?: string
+          created_at?: string
+          created_by?: string | null
+          details?: Json | null
+          id?: string
+          segment?: string
+          status?: string
+          total_failed?: number
+          total_recipients?: number
+          total_sent?: number
+        }
+        Relationships: []
+      }
       campaigns: {
         Row: {
           ad_account_id: string | null
@@ -91,9 +166,16 @@ export type Database = {
           creative: Json
           end_date: string | null
           id: string
+          last_anomaly_check_at: string | null
+          last_periodic_update_at: string | null
           lead_form: Json | null
+          meta_ad_id: string | null
+          meta_adset_id: string | null
+          meta_campaign_id: string | null
+          meta_lead_form_id: string | null
           name: string
           objective: string
+          platform: string
           start_date: string | null
           status: string
           targeting: Json
@@ -111,9 +193,16 @@ export type Database = {
           creative?: Json
           end_date?: string | null
           id?: string
+          last_anomaly_check_at?: string | null
+          last_periodic_update_at?: string | null
           lead_form?: Json | null
+          meta_ad_id?: string | null
+          meta_adset_id?: string | null
+          meta_campaign_id?: string | null
+          meta_lead_form_id?: string | null
           name: string
           objective?: string
+          platform?: string
           start_date?: string | null
           status?: string
           targeting?: Json
@@ -131,9 +220,16 @@ export type Database = {
           creative?: Json
           end_date?: string | null
           id?: string
+          last_anomaly_check_at?: string | null
+          last_periodic_update_at?: string | null
           lead_form?: Json | null
+          meta_ad_id?: string | null
+          meta_adset_id?: string | null
+          meta_campaign_id?: string | null
+          meta_lead_form_id?: string | null
           name?: string
           objective?: string
+          platform?: string
           start_date?: string | null
           status?: string
           targeting?: Json
@@ -149,6 +245,303 @@ export type Database = {
             columns: ["ad_account_id"]
             isOneToOne: false
             referencedRelation: "ad_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_send_log: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          message_id: string | null
+          metadata: Json | null
+          recipient_email: string
+          status: string
+          template_name: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message_id?: string | null
+          metadata?: Json | null
+          recipient_email: string
+          status: string
+          template_name: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message_id?: string | null
+          metadata?: Json | null
+          recipient_email?: string
+          status?: string
+          template_name?: string
+        }
+        Relationships: []
+      }
+      email_send_state: {
+        Row: {
+          auth_email_ttl_minutes: number
+          batch_size: number
+          id: number
+          retry_after_until: string | null
+          send_delay_ms: number
+          transactional_email_ttl_minutes: number
+          updated_at: string
+        }
+        Insert: {
+          auth_email_ttl_minutes?: number
+          batch_size?: number
+          id?: number
+          retry_after_until?: string | null
+          send_delay_ms?: number
+          transactional_email_ttl_minutes?: number
+          updated_at?: string
+        }
+        Update: {
+          auth_email_ttl_minutes?: number
+          batch_size?: number
+          id?: number
+          retry_after_until?: string | null
+          send_delay_ms?: number
+          transactional_email_ttl_minutes?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      email_unsubscribe_tokens: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          token: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: []
+      }
+      leads: {
+        Row: {
+          assignee: string | null
+          campaign_id: string | null
+          created_at: string
+          email: string | null
+          external_ad_id: string | null
+          external_campaign_id: string | null
+          external_form_id: string | null
+          external_lead_id: string | null
+          full_name: string | null
+          id: string
+          message: string | null
+          notes: string | null
+          phone: string | null
+          platform: string
+          raw: Json
+          source_url: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assignee?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          email?: string | null
+          external_ad_id?: string | null
+          external_campaign_id?: string | null
+          external_form_id?: string | null
+          external_lead_id?: string | null
+          full_name?: string | null
+          id?: string
+          message?: string | null
+          notes?: string | null
+          phone?: string | null
+          platform: string
+          raw?: Json
+          source_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assignee?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          email?: string | null
+          external_ad_id?: string | null
+          external_campaign_id?: string | null
+          external_form_id?: string | null
+          external_lead_id?: string | null
+          full_name?: string | null
+          id?: string
+          message?: string | null
+          notes?: string | null
+          phone?: string | null
+          platform?: string
+          raw?: Json
+          source_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_ad_accounts: {
+        Row: {
+          account_name: string | null
+          ad_account_id: string
+          connection_id: string
+          created_at: string
+          currency: string | null
+          id: string
+          is_active: boolean
+          status: number | null
+          timezone_name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_name?: string | null
+          ad_account_id: string
+          connection_id: string
+          created_at?: string
+          currency?: string | null
+          id?: string
+          is_active?: boolean
+          status?: number | null
+          timezone_name?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_name?: string | null
+          ad_account_id?: string
+          connection_id?: string
+          created_at?: string
+          currency?: string | null
+          id?: string
+          is_active?: boolean
+          status?: number | null
+          timezone_name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_ad_accounts_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "meta_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_connections: {
+        Row: {
+          access_token: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          meta_user_id: string
+          meta_user_name: string | null
+          scopes: string | null
+          token_expires_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          meta_user_id: string
+          meta_user_name?: string | null
+          scopes?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          meta_user_id?: string
+          meta_user_name?: string | null
+          scopes?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      meta_pages: {
+        Row: {
+          category: string | null
+          connection_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          page_access_token: string | null
+          page_id: string
+          page_name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          connection_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          page_access_token?: string | null
+          page_id: string
+          page_name?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          connection_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          page_access_token?: string | null
+          page_id?: string
+          page_name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_pages_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "meta_connections"
             referencedColumns: ["id"]
           },
         ]
@@ -205,290 +598,310 @@ export type Database = {
       }
       profiles: {
         Row: {
+          admin_notes: string | null
           created_at: string
           full_name: string | null
           id: string
           plan: string
+          subscription_status: string
+          suspended: boolean
+          trial_ends_at: string | null
           updated_at: string
         }
         Insert: {
+          admin_notes?: string | null
           created_at?: string
           full_name?: string | null
           id: string
           plan?: string
+          subscription_status?: string
+          suspended?: boolean
+          trial_ends_at?: string | null
           updated_at?: string
         }
         Update: {
+          admin_notes?: string | null
           created_at?: string
           full_name?: string | null
           id?: string
           plan?: string
+          subscription_status?: string
+          suspended?: boolean
+          trial_ends_at?: string | null
           updated_at?: string
         }
         Relationships: []
       }
-      meta_oauth_states: {
+      subscriptions: {
         Row: {
-          state: string
-          user_id: string
-          expires_at: string
-          created_at: string
-        }
-        Insert: {
-          state: string
-          user_id: string
-          expires_at: string
-          created_at?: string
-        }
-        Update: {
-          state?: string
-          user_id?: string
-          expires_at?: string
-          created_at?: string
-        }
-        Relationships: []
-      }
-      meta_connections: {
-        Row: {
+          cancel_at_period_end: boolean | null
+          created_at: string | null
+          current_period_end: string | null
+          current_period_start: string | null
+          environment: string
           id: string
-          user_id: string
-          provider: string
-          meta_user_id: string | null
-          meta_user_name: string | null
-          access_token: string | null
-          token_expires_at: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          provider?: string
-          meta_user_id?: string | null
-          meta_user_name?: string | null
-          access_token?: string | null
-          token_expires_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          provider?: string
-          meta_user_id?: string | null
-          meta_user_name?: string | null
-          access_token?: string | null
-          token_expires_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      meta_ad_accounts: {
-        Row: {
-          id: string
-          user_id: string
-          connection_id: string
-          ad_account_id: string
-          account_name: string | null
-          currency: string | null
-          timezone: string | null
+          price_id: string
+          product_id: string
           status: string
-          created_at: string
+          stripe_customer_id: string
+          stripe_subscription_id: string
+          trial_end: string | null
+          updated_at: string | null
+          user_id: string
         }
         Insert: {
+          cancel_at_period_end?: boolean | null
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          environment?: string
           id?: string
-          user_id: string
-          connection_id: string
-          ad_account_id: string
-          account_name?: string | null
-          currency?: string | null
-          timezone?: string | null
+          price_id: string
+          product_id: string
           status?: string
-          created_at?: string
+          stripe_customer_id: string
+          stripe_subscription_id: string
+          trial_end?: string | null
+          updated_at?: string | null
+          user_id: string
         }
         Update: {
+          cancel_at_period_end?: boolean | null
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          environment?: string
           id?: string
-          user_id?: string
-          connection_id?: string
-          ad_account_id?: string
-          account_name?: string | null
-          currency?: string | null
-          timezone?: string | null
+          price_id?: string
+          product_id?: string
           status?: string
+          stripe_customer_id?: string
+          stripe_subscription_id?: string
+          trial_end?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      support_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          sender: string
+          sent_to_whatsapp: boolean
+          ticket_id: string
+        }
+        Insert: {
+          body: string
           created_at?: string
+          id?: string
+          sender: string
+          sent_to_whatsapp?: boolean
+          ticket_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          sender?: string
+          sent_to_whatsapp?: boolean
+          ticket_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "meta_ad_accounts_connection_id_fkey"
+            foreignKeyName: "support_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_tickets: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          id: string
+          last_message_at: string
+          priority: string
+          status: string
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          priority?: string
+          status?: string
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          priority?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      suppressed_emails: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          metadata: Json | null
+          reason: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          metadata?: Json | null
+          reason: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          metadata?: Json | null
+          reason?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      whatsapp_connections: {
+        Row: {
+          access_token: string | null
+          activated_at: string | null
+          activation_code: string | null
+          created_at: string
+          display_phone: string | null
+          id: string
+          last_daily_report_at: string | null
+          last_message_at: string | null
+          phone_number_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          user_phone: string | null
+          verify_token: string | null
+          waba_id: string | null
+        }
+        Insert: {
+          access_token?: string | null
+          activated_at?: string | null
+          activation_code?: string | null
+          created_at?: string
+          display_phone?: string | null
+          id?: string
+          last_daily_report_at?: string | null
+          last_message_at?: string | null
+          phone_number_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          user_phone?: string | null
+          verify_token?: string | null
+          waba_id?: string | null
+        }
+        Update: {
+          access_token?: string | null
+          activated_at?: string | null
+          activation_code?: string | null
+          created_at?: string
+          display_phone?: string | null
+          id?: string
+          last_daily_report_at?: string | null
+          last_message_at?: string | null
+          phone_number_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          user_phone?: string | null
+          verify_token?: string | null
+          waba_id?: string | null
+        }
+        Relationships: []
+      }
+      whatsapp_messages: {
+        Row: {
+          connection_id: string | null
+          created_at: string
+          direction: string
+          id: string
+          media_mime: string | null
+          media_path: string | null
+          meta: Json | null
+          msg_type: string
+          text: string | null
+          tool_calls: Json | null
+          user_id: string
+          wa_message_id: string | null
+        }
+        Insert: {
+          connection_id?: string | null
+          created_at?: string
+          direction: string
+          id?: string
+          media_mime?: string | null
+          media_path?: string | null
+          meta?: Json | null
+          msg_type?: string
+          text?: string | null
+          tool_calls?: Json | null
+          user_id: string
+          wa_message_id?: string | null
+        }
+        Update: {
+          connection_id?: string | null
+          created_at?: string
+          direction?: string
+          id?: string
+          media_mime?: string | null
+          media_path?: string | null
+          meta?: Json | null
+          msg_type?: string
+          text?: string | null
+          tool_calls?: Json | null
+          user_id?: string
+          wa_message_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_messages_connection_id_fkey"
             columns: ["connection_id"]
             isOneToOne: false
-            referencedRelation: "meta_connections"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      meta_campaigns: {
-        Row: {
-          id: string
-          user_id: string
-          ad_account_id: string
-          meta_campaign_id: string | null
-          meta_adset_id: string | null
-          meta_ad_id: string | null
-          meta_form_id: string | null
-          page_id: string | null
-          campaign_name: string
-          objective: string
-          daily_budget: number
-          status: string
-          business_details: Json
-          creative: Json
-          targeting: Json
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          ad_account_id: string
-          meta_campaign_id?: string | null
-          meta_adset_id?: string | null
-          meta_ad_id?: string | null
-          meta_form_id?: string | null
-          page_id?: string | null
-          campaign_name: string
-          objective?: string
-          daily_budget?: number
-          status?: string
-          business_details?: Json
-          creative?: Json
-          targeting?: Json
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          ad_account_id?: string
-          meta_campaign_id?: string | null
-          meta_adset_id?: string | null
-          meta_ad_id?: string | null
-          meta_form_id?: string | null
-          page_id?: string | null
-          campaign_name?: string
-          objective?: string
-          daily_budget?: number
-          status?: string
-          business_details?: Json
-          creative?: Json
-          targeting?: Json
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "meta_campaigns_ad_account_id_fkey"
-            columns: ["ad_account_id"]
-            isOneToOne: false
-            referencedRelation: "meta_ad_accounts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      meta_leads: {
-        Row: {
-          id: string
-          user_id: string
-          campaign_id: string | null
-          platform_lead_id: string
-          name: string | null
-          email: string | null
-          phone: string | null
-          raw_payload: Json
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          campaign_id?: string | null
-          platform_lead_id: string
-          name?: string | null
-          email?: string | null
-          phone?: string | null
-          raw_payload?: Json
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          campaign_id?: string | null
-          platform_lead_id?: string
-          name?: string | null
-          email?: string | null
-          phone?: string | null
-          raw_payload?: Json
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "meta_leads_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "meta_campaigns"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      meta_performance: {
-        Row: {
-          id: string
-          user_id: string
-          campaign_id: string
-          date: string
-          spend: number
-          impressions: number
-          clicks: number
-          ctr: number
-          cpc: number
-          leads: number
-          cpl: number
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          campaign_id: string
-          date: string
-          spend?: number
-          impressions?: number
-          clicks?: number
-          ctr?: number
-          cpc?: number
-          leads?: number
-          cpl?: number
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          campaign_id?: string
-          date?: string
-          spend?: number
-          impressions?: number
-          clicks?: number
-          ctr?: number
-          cpc?: number
-          leads?: number
-          cpl?: number
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "meta_performance_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "meta_campaigns"
+            referencedRelation: "whatsapp_connections"
             referencedColumns: ["id"]
           },
         ]
@@ -498,10 +911,45 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      delete_email: {
+        Args: { message_id: number; queue_name: string }
+        Returns: boolean
+      }
+      enqueue_email: {
+        Args: { payload: Json; queue_name: string }
+        Returns: number
+      }
+      has_active_subscription: {
+        Args: { check_env?: string; user_uuid: string }
+        Returns: boolean
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      move_to_dlq: {
+        Args: {
+          dlq_name: string
+          message_id: number
+          payload: Json
+          source_queue: string
+        }
+        Returns: number
+      }
+      read_email_batch: {
+        Args: { batch_size: number; queue_name: string; vt: number }
+        Returns: {
+          message: Json
+          msg_id: number
+          read_ct: number
+        }[]
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -628,6 +1076,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const

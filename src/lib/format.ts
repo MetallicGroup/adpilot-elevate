@@ -1,9 +1,12 @@
-export const fmtMoney = (n: number, currency: "RON" | "USD" = "RON") =>
-  new Intl.NumberFormat("ro-RO", { style: "currency", currency, maximumFractionDigits: n < 10 ? 2 : 0 }).format(n || 0);
+export const fmtMoney = (n: number) => {
+  const v = n || 0;
+  const digits = v < 10 ? 2 : 0;
+  return `${new Intl.NumberFormat("ro-RO", { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(v)} lei`;
+};
 
-export const fmtMoneyRon = (n: number) => fmtMoney(n, "RON");
+export const fmtMoneyRon = fmtMoney;
 
-export const fmtNum = (n: number) => new Intl.NumberFormat("en-US").format(n || 0);
+export const fmtNum = (n: number) => new Intl.NumberFormat("ro-RO").format(n || 0);
 
 export const fmtPct = (n: number) => `${(n * 100).toFixed(2)}%`;
 
@@ -14,7 +17,7 @@ export const friendlyDate = (d: string | Date) => {
   yest.setDate(today.getDate() - 1);
   const sameDay = (a: Date, b: Date) =>
     a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-  if (sameDay(date, today)) return "Today";
-  if (sameDay(date, yest)) return "Yesterday";
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  if (sameDay(date, today)) return "Azi";
+  if (sameDay(date, yest)) return "Ieri";
+  return date.toLocaleDateString("ro-RO", { month: "short", day: "numeric" });
 };

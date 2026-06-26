@@ -7,7 +7,7 @@ export function LegalPage({ title, updated, children }: { title: string; updated
       <article className="px-6 pt-16 pb-24 max-w-3xl mx-auto w-full">
         <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3">Legal</p>
         <h1 className="font-serif text-4xl md:text-5xl font-semibold tracking-tight">{title}</h1>
-        <p className="mt-3 text-sm text-muted-foreground">Last updated: {updated}</p>
+        <p className="mt-3 text-sm text-muted-foreground">Ultima actualizare: {updated}</p>
         <div className="prose-styles mt-10 space-y-6 text-[15px] leading-relaxed text-foreground/90">
           {children}
         </div>

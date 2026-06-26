@@ -1,132 +1,159 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { buildMetaOAuthUrl, createOAuthState } from "@/lib/meta/oauth";
-import { createMetaLeadCampaign, fetchMetaPages } from "@/lib/meta/campaign";
-import { generateMetaCampaignContent } from "@/lib/meta/ai";
-import { syncMetaInsights, getMetaInsightsSummary } from "@/lib/meta/insights";
-import { syncMetaLeads } from "@/lib/meta/leads";
-import type { MetaBusinessDetails } from "@/lib/meta/types";
 
-const BusinessDetailsSchema = z.object({
-  business_name: z.string().min(1).max(120),
-  service_product: z.string().min(1).max(200),
-  location: z.string().min(1).max(120),
-  target_audience: z.string().min(1).max(300),
-  daily_budget: z.number().min(5).max(100000),
-  duration_days: z.number().min(1).max(365),
-  phone: z.string().min(1).max(40),
-  website: z.string().max(2000).optional(),
-});
-
-const LaunchSchema = z.object({
-  ad_account_uuid: z.string().uuid(),
-  page_id: z.string().min(1),
-  business_details: BusinessDetailsSchema,
-  generated: z.object({
-    campaign_name: z.string().min(1),
-    primary_text: z.string().min(1),
-    headline: z.string().min(1),
-    description: z.string().min(1),
-    call_to_action: z.enum(["SIGN_UP", "LEARN_MORE"]),
-    lead_form_questions: z.array(z.string()).min(1),
-    targeting_suggestion: z.object({
-      countries: z.array(z.string()).min(1),
-      age_min: z.number().min(18),
-      age_max: z.number().max(65),
-    }),
-  }),
-  privacy_policy_url: z.string().url(),
-  launch_active: z.boolean().optional(),
-});
-
-export const getMetaAuthUrl = createServerFn({ method: "POST" })
+/**
+ * Re-sync ad accounts + pages for a given Meta connection by calling the
+ * Meta Graph API with the stored (server-only) access token.
+ */
+export const resyncMetaConnection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const state = await createOAuthState(context.userId);
-    return { url: buildMetaOAuthUrl(state) };
-  });
+  .inputValidator((input: unknown) =>
+    z.object({ connectionId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { fetchAdAccounts, fetchPages } = await import("@/lib/meta.server");
 
-export const getMetaConnectionStatus = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { data: connection } = await supabaseAdmin
+    const { data: conn, error } = await supabaseAdmin
       .from("meta_connections")
-      .select("meta_user_id, meta_user_name, token_expires_at")
-      .eq("user_id", context.userId)
-      .eq("provider", "meta")
+      .select("id, user_id, access_token")
+      .eq("id", data.connectionId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!conn || !conn.access_token) throw new Error("Connection not found");
+
+    const { data: selectedAd } = await supabaseAdmin
+      .from("meta_ad_accounts")
+      .select("ad_account_id")
+      .eq("user_id", userId)
+      .eq("connection_id", conn.id)
+      .eq("is_active", true)
+      .limit(1)
       .maybeSingle();
 
-    const { data: accounts } = await supabaseAdmin
-      .from("meta_ad_accounts")
-      .select("id, ad_account_id, account_name, currency, timezone, status")
-      .eq("user_id", context.userId)
-      .order("account_name");
+    const { data: selectedPage } = await supabaseAdmin
+      .from("meta_pages")
+      .select("page_id")
+      .eq("user_id", userId)
+      .eq("connection_id", conn.id)
+      .eq("is_active", true)
+      .limit(1)
+      .maybeSingle();
 
-    let pages: Array<{ id: string; name: string }> = [];
-    if (connection) {
-      try {
-        pages = await fetchMetaPages(context.userId);
-      } catch {
-        pages = [];
-      }
+    const ads = await fetchAdAccounts(conn.access_token);
+    const adData = ads?.data ?? [];
+    const fallbackAdAccountId = adData.find((a: any) => a.account_status === 1)?.account_id ?? adData[0]?.account_id;
+    const adRows = adData.map((a: any) => ({
+      user_id: userId,
+      connection_id: conn.id,
+      ad_account_id: a.account_id,
+      account_name: a.name ?? null,
+      currency: a.currency ?? null,
+      timezone_name: a.timezone_name ?? null,
+      status: a.account_status ?? null,
+      is_active: selectedAd?.ad_account_id
+        ? selectedAd.ad_account_id === a.account_id
+        : fallbackAdAccountId === a.account_id,
+    }));
+    if (adRows.length) {
+      await supabaseAdmin
+        .from("meta_ad_accounts")
+        .upsert(adRows, { onConflict: "connection_id,ad_account_id" });
     }
 
-    return {
-      connected: !!connection,
-      connection,
-      ad_accounts: accounts ?? [],
-      pages,
-    };
+    const pages = await fetchPages(conn.access_token);
+    const pageData = pages?.data ?? [];
+    const fallbackPageId = pageData[0]?.id;
+    const pageRows = pageData.map((p: any) => ({
+      user_id: userId,
+      connection_id: conn.id,
+      page_id: p.id,
+      page_name: p.name ?? null,
+      category: p.category ?? null,
+      page_access_token: p.access_token ?? null,
+      is_active: selectedPage?.page_id ? selectedPage.page_id === p.id : fallbackPageId === p.id,
+    }));
+    if (pageRows.length) {
+      await supabaseAdmin
+        .from("meta_pages")
+        .upsert(pageRows, { onConflict: "connection_id,page_id" });
+    }
+
+    return { adAccounts: adRows.length, pages: pageRows.length };
   });
 
-export const generateMetaCampaign = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => BusinessDetailsSchema.parse(data))
-  .handler(async ({ data }) => {
-    return generateMetaCampaignContent(data as MetaBusinessDetails);
-  });
+const SelectMetaItemInput = z.object({
+  connectionId: z.string().uuid(),
+  rowId: z.string().uuid(),
+});
 
-export const launchMetaCampaign = createServerFn({ method: "POST" })
+export const selectMetaAdAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => LaunchSchema.parse(data))
+  .inputValidator((input: unknown) => SelectMetaItemInput.parse(input))
   .handler(async ({ data, context }) => {
-    return createMetaLeadCampaign(context.userId, data);
+    const { userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: account, error: findError } = await supabaseAdmin
+      .from("meta_ad_accounts")
+      .select("id")
+      .eq("id", data.rowId)
+      .eq("connection_id", data.connectionId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (findError) throw new Error(findError.message);
+    if (!account) throw new Error("Ad account not found");
+
+    const { error: clearError } = await supabaseAdmin
+      .from("meta_ad_accounts")
+      .update({ is_active: false })
+      .eq("connection_id", data.connectionId)
+      .eq("user_id", userId);
+    if (clearError) throw new Error(clearError.message);
+
+    const { error: selectError } = await supabaseAdmin
+      .from("meta_ad_accounts")
+      .update({ is_active: true })
+      .eq("id", data.rowId)
+      .eq("user_id", userId);
+    if (selectError) throw new Error(selectError.message);
+
+    return { ok: true };
   });
 
-export const fetchMetaInsights = createServerFn({ method: "POST" })
+export const selectMetaPage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    await syncMetaInsights(context.userId);
-    return getMetaInsightsSummary(context.userId);
-  });
+  .inputValidator((input: unknown) => SelectMetaItemInput.parse(input))
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-export const fetchMetaLeads = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const syncResult = await syncMetaLeads(context.userId);
-    const { listCrmLeads } = await import("@/lib/crm/leads.service");
-    const leads = await listCrmLeads(context.userId);
-    return { leads, synced: syncResult.synced };
-  });
+    const { data: page, error: findError } = await supabaseAdmin
+      .from("meta_pages")
+      .select("id")
+      .eq("id", data.rowId)
+      .eq("connection_id", data.connectionId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (findError) throw new Error(findError.message);
+    if (!page) throw new Error("Page not found");
 
-export const getMetaDashboardStats = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { data: campaigns } = await supabaseAdmin
-      .from("meta_campaigns")
-      .select("id, status")
-      .eq("user_id", context.userId);
+    const { error: clearError } = await supabaseAdmin
+      .from("meta_pages")
+      .update({ is_active: false })
+      .eq("connection_id", data.connectionId)
+      .eq("user_id", userId);
+    if (clearError) throw new Error(clearError.message);
 
-    const summary = await getMetaInsightsSummary(context.userId);
-    const activeCampaigns = (campaigns ?? []).filter((c) => c.status === "ACTIVE").length;
+    const { error: selectError } = await supabaseAdmin
+      .from("meta_pages")
+      .update({ is_active: true })
+      .eq("id", data.rowId)
+      .eq("user_id", userId);
+    if (selectError) throw new Error(selectError.message);
 
-    return {
-      spend: summary.spend,
-      active_campaigns: activeCampaigns,
-      total_leads: summary.leads,
-      avg_cpl: summary.cpl,
-      campaign_count: campaigns?.length ?? 0,
-    };
+    return { ok: true };
   });

@@ -11,14 +11,14 @@ export const Route = createFileRoute("/help-center")({
 });
 
 const categories = [
-  { icon: Rocket, title: "Getting started", body: "Create your account, connect TikTok, launch your first campaign." },
-  { icon: Megaphone, title: "Campaigns", body: "Building, editing, pausing and optimizing TikTok campaigns." },
-  { icon: Inbox, title: "Leads & CRM", body: "Receiving leads, exporting them, and connecting your CRM." },
-  { icon: MessageCircle, title: "WhatsApp Assistant", body: "Setting up WhatsApp and using AI commands." },
-  { icon: CreditCard, title: "Billing", body: "Subscriptions, invoices, plan changes, refunds." },
-  { icon: ShieldCheck, title: "Security & Privacy", body: "OAuth, GDPR, data deletion requests." },
-  { icon: Settings, title: "Account settings", body: "Profile, team members, notification preferences." },
-  { icon: HelpCircle, title: "Troubleshooting", body: "Common errors and how to resolve them." },
+  { icon: Rocket, title: "Primii pași", body: "Creează cont, conectează Facebook și lansează prima campanie." },
+  { icon: Megaphone, title: "Campanii", body: "Creare, editare, pauză și optimizare de campanii." },
+  { icon: Inbox, title: "Clienți potențiali & CRM", body: "Cum primești clienți, cum îi exporți, cum conectezi un CRM." },
+  { icon: MessageCircle, title: "Asistent WhatsApp", body: "Configurare WhatsApp și folosirea comenzilor AI." },
+  { icon: CreditCard, title: "Facturare", body: "Abonamente, facturi, schimbare plan, rambursări." },
+  { icon: ShieldCheck, title: "Securitate & Confidențialitate", body: "OAuth, GDPR, cereri de ștergere a datelor." },
+  { icon: Settings, title: "Setări cont", body: "Profil, membri echipă, preferințe notificări." },
+  { icon: HelpCircle, title: "Rezolvare probleme", body: "Erori frecvente și cum se rezolvă." },
 ];
 
 function HelpCenter() {
@@ -28,7 +28,7 @@ function HelpCenter() {
       <section className="px-6 pb-12 max-w-5xl mx-auto w-full grid gap-4 md:grid-cols-2">
         {categories.map((c) => (
           <div key={c.title} className="card-floating p-6 flex items-start gap-4">
-            <c.icon className="w-5 h-5 text-tiktok shrink-0 mt-0.5" />
+            <c.icon className="w-5 h-5 text-facebook shrink-0 mt-0.5" />
             <div>
               <h3 className="font-semibold">{c.title}</h3>
               <p className="mt-1 text-sm text-muted-foreground">{c.body}</p>

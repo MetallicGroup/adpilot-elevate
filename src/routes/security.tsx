@@ -4,27 +4,27 @@ import { Check, ShieldCheck, Lock, Globe, Users } from "lucide-react";
 
 export const Route = createFileRoute("/security")({
   head: () => ({ meta: [
-    { title: "Security & Privacy — AdPilot" },
-    { name: "description", content: "OAuth authentication, GDPR compliance, encrypted storage and full ad account ownership for advertisers." },
+    { title: "Securitate & Confidențialitate — AdPilot" },
+    { name: "description", content: "Autentificare OAuth, conformitate GDPR, stocare criptată și deținere completă a contului de reclame." },
   ] }),
   component: SecurityPage,
 });
 
 const pillars = [
-  { icon: ShieldCheck, title: "OAuth Authentication", body: "We connect to TikTok using the official OAuth 2.0 flow. We never see or store your TikTok password." },
-  { icon: Lock, title: "Encrypted Storage", body: "All access tokens and personal data are encrypted at rest using industry-standard AES-256." },
-  { icon: Globe, title: "GDPR Compliant", body: "Built in the EU, AdPilot follows GDPR principles: lawful basis, data minimization, and the right to delete." },
-  { icon: Users, title: "You Own Your Ad Account", body: "The TikTok Business Account always remains in the advertiser's name. We never take ownership of accounts or campaigns." },
+  { icon: ShieldCheck, title: "Autentificare OAuth", body: "Ne conectăm la Meta (Facebook și Instagram) folosind fluxul oficial OAuth 2.0. Nu vedem și nu stocăm niciodată parola ta." },
+  { icon: Lock, title: "Stocare criptată", body: "Toate tokenurile de acces și datele personale sunt criptate în repaus cu AES-256." },
+  { icon: Globe, title: "Conform GDPR", body: "Construit în UE, AdPilot respectă principiile GDPR: bază legală, minimizarea datelor și dreptul la ștergere." },
+  { icon: Users, title: "Tu deții contul de reclame", body: "Contul de Business rămâne mereu pe numele tău. Nu preluăm niciodată conturi sau campanii." },
 ];
 
 function SecurityPage() {
   return (
     <MarketingLayout>
-      <PageHero eyebrow="Security & Privacy" title="Your data. Your ad account. Your control." subtitle="Security is not a feature — it's the foundation of AdPilot. Here is how we protect your account and your customers' data." />
+      <PageHero eyebrow="Securitate & Confidențialitate" title="Datele tale. Contul tău. Controlul tău." subtitle="Securitatea nu e o funcționalitate — e fundația AdPilot. Iată cum îți protejăm contul și datele clienților tăi." />
       <section className="px-6 pb-12 max-w-5xl mx-auto w-full grid gap-5 md:grid-cols-2">
         {pillars.map((p) => (
           <div key={p.title} className="card-floating p-7">
-            <p.icon className="w-6 h-6 text-tiktok" />
+            <p.icon className="w-6 h-6 text-facebook" />
             <h3 className="mt-4 font-semibold">{p.title}</h3>
             <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{p.body}</p>
           </div>
@@ -32,14 +32,14 @@ function SecurityPage() {
       </section>
       <section className="px-6 pb-20 max-w-3xl mx-auto w-full">
         <div className="card-floating-lg p-8">
-          <h3 className="font-semibold">Our commitments</h3>
+          <h3 className="font-semibold">Promisiunile noastre</h3>
           <ul className="mt-5 space-y-3">
             {[
-              "We never sell or share your data with third parties.",
-              "We never run ads or campaigns without explicit user approval.",
-              "You can revoke AdPilot's access to your TikTok account at any time.",
-              "You can request full data export or deletion via support@adpilot.ro.",
-              "Personal data is processed only as described in our Privacy Policy.",
+              "Nu vindem și nu împărtășim niciodată datele tale cu terți.",
+              "Nu rulăm campanii fără aprobarea ta explicită.",
+              "Poți revoca accesul AdPilot la contul tău oricând.",
+              "Poți solicita exportul complet sau ștergerea datelor scriindu-ne la support@adpilot.ro.",
+              "Datele personale sunt prelucrate doar așa cum este descris în Politica de confidențialitate.",
             ].map((i) => (
               <li key={i} className="flex items-start gap-3 text-sm"><Check className="w-4 h-4 text-success mt-0.5 shrink-0" />{i}</li>
             ))}

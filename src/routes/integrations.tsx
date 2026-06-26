@@ -3,25 +3,24 @@ import { MarketingLayout, PageHero } from "@/components/marketing/MarketingLayou
 
 export const Route = createFileRoute("/integrations")({
   head: () => ({ meta: [
-    { title: "Integrations — AdPilot" },
-    { name: "description", content: "AdPilot integrates with TikTok Ads, WhatsApp, Stripe, Google Analytics and Meta Pixel." },
+    { title: "Integrări — AdPilot" },
+    { name: "description", content: "AdPilot se integrează cu Meta Ads (Facebook & Instagram), WhatsApp, Stripe, Google Analytics și Meta Pixel." },
   ] }),
   component: IntegrationsPage,
 });
 
 const integrations = [
-  { name: "TikTok Ads", body: "Official OAuth connection. Create and manage campaigns natively." },
-  { name: "Meta Ads", body: "Connect Facebook & Instagram. Launch lead generation campaigns in minutes." },
-  { name: "WhatsApp", body: "Receive lead notifications and control campaigns via chat." },
-  { name: "Stripe", body: "Subscription billing and payment management." },
-  { name: "Google Analytics", body: "Cross-channel attribution and conversion tracking." },
-  { name: "Meta Pixel", body: "Companion tracking for multi-platform performance comparison." },
+  { name: "Meta Ads (Facebook & Instagram)", body: "Lansezi și administrezi campanii direct pe Facebook și Instagram." },
+  { name: "WhatsApp", body: "Primești notificări pentru fiecare client nou și controlezi campaniile direct din chat." },
+  { name: "Stripe", body: "Abonamente și plăți gestionate automat." },
+  { name: "Google Analytics", body: "Atribuire multi-canal și urmărirea conversiilor." },
+  { name: "Meta Pixel", body: "Tracking complementar pentru compararea performanței între platforme." },
 ];
 
 function IntegrationsPage() {
   return (
     <MarketingLayout>
-      <PageHero eyebrow="Integrations" title="Connect the tools you already use." subtitle="AdPilot plugs into your existing stack — no migrations, no replacements." />
+      <PageHero eyebrow="Integrări" title="Conectează instrumentele pe care le folosești deja." subtitle="AdPilot se integrează în stack-ul tău — fără migrări, fără înlocuiri." />
       <section className="px-6 pb-20 max-w-5xl mx-auto w-full grid gap-5 md:grid-cols-2">
         {integrations.map((i) => (
           <div key={i.name} className="card-floating p-7">
