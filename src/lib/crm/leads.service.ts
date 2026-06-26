@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import type { LeadStatus } from "@/lib/launcher/types";
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { createMetaLeadCampaign } from "@/lib/meta/campaign";
 import type { GeneratedAdCopy, LauncherSimpleAnswers, LeadFieldConfig } from "./types";

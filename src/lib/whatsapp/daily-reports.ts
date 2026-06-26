@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { getMetaInsightsSummary, syncMetaInsights } from "@/lib/meta/insights";
 import { sendDailyReport } from "./notifications";

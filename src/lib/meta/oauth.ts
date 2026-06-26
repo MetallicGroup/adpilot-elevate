@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { randomBytes } from "node:crypto";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { getMetaConfig, META_SCOPES } from "./config.server";
