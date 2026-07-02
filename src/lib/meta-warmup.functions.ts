@@ -45,11 +45,13 @@ export const warmupMetaCalls = createServerFn({ method: "POST" })
     const acct = adAcc.ad_account_id;
 
     // Safe Marketing API READ endpoints (all under act_<id>).
+    // NOTE: /adsets and /ads hit user-level rate limits fast. Keep the mix
+    // biased toward the account-level endpoint which is cheaper.
     const endpoints = [
       `/act_${acct}?fields=name,account_status,currency`,
+      `/act_${acct}?fields=name,account_status,currency`,
+      `/act_${acct}?fields=name,account_status,currency`,
       `/act_${acct}/campaigns?fields=id,name,status&limit=5`,
-      `/act_${acct}/adsets?fields=id,name,status&limit=5`,
-      `/act_${acct}/ads?fields=id,name,status&limit=5`,
       `/act_${acct}/insights?fields=spend,impressions&date_preset=today&limit=1`,
     ];
 
@@ -67,8 +69,10 @@ export const warmupMetaCalls = createServerFn({ method: "POST" })
           if (errorSamples.length < 3) {
             errorSamples.push(`${path} → ${j?.error?.message ?? r.status}`);
           }
-          // Stop early on auth/permission failures — no point spamming errors.
-          if (j?.error?.code === 190 || j?.error?.code === 200 || j?.error?.code === 10) {
+          // Stop early on auth/permission/rate-limit failures — no point spamming errors.
+          // 190=token, 200=permission, 10=auth, 17=user rate limit, 613=throttle, 4=app rate limit, 32=page-level rate limit
+          const code = j?.error?.code;
+          if ([190, 200, 10, 17, 613, 4, 32].includes(code)) {
             return { ok, errors, stopped: true, reason: j?.error?.message, samples: errorSamples };
           }
         } else {
@@ -78,8 +82,8 @@ export const warmupMetaCalls = createServerFn({ method: "POST" })
         errors++;
         if (errorSamples.length < 3) errorSamples.push(`${path} → ${e?.message}`);
       }
-      // Small pacing to avoid rate limits (~4 req/s).
-      await new Promise((res) => setTimeout(res, 250));
+      // Slow pacing (~1 req / 2s) — Meta user-level rate limit is aggressive.
+      await new Promise((res) => setTimeout(res, 2000));
     }
 
     return { ok, errors, stopped: false, samples: errorSamples };
