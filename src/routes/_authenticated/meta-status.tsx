@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { CheckCircle2, XCircle, AlertTriangle, RefreshCw, ExternalLink, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { getMetaStatus, type MetaStatus } from "@/lib/meta-status.functions";
+import { warmupMetaCalls } from "@/lib/meta-warmup.functions";
 
 export const Route = createFileRoute("/_authenticated/meta-status")({
   component: MetaStatusPage,
@@ -22,8 +23,27 @@ const SCOPE_HUMAN: Record<string, string> = {
 
 function MetaStatusPage() {
   const fetchStatus = useServerFn(getMetaStatus);
+  const runWarmup = useServerFn(warmupMetaCalls);
   const [data, setData] = useState<MetaStatus | null>(null);
   const [loading, setLoading] = useState(true);
+  const [warmupCount, setWarmupCount] = useState(50);
+  const [warmupRunning, setWarmupRunning] = useState(false);
+  const [warmupResult, setWarmupResult] = useState<{ ok: number; errors: number; stopped?: boolean; reason?: string; samples?: string[] } | null>(null);
+
+  const doWarmup = async () => {
+    setWarmupRunning(true);
+    setWarmupResult(null);
+    try {
+      const r = await runWarmup({ data: { count: warmupCount } });
+      setWarmupResult(r);
+      if (r.stopped) toast.error(`Oprit după ${r.ok} ok / ${r.errors} erori: ${r.reason}`);
+      else toast.success(`${r.ok} apeluri OK, ${r.errors} erori`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Eroare");
+    } finally {
+      setWarmupRunning(false);
+    }
+  };
 
   const load = async () => {
     setLoading(true);
@@ -152,6 +172,53 @@ function MetaStatusPage() {
           </button>
         </div>
       </section>
+
+      {/* Warmup — pre-review clean READ calls */}
+      {data.connected && (
+        <section className="card-floating p-5 space-y-3">
+          <div>
+            <p className="text-sm font-medium">Warmup Marketing API (doar READ)</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Face N apeluri curate pe contul tău publicitar (fără scriere). Folosește-l ca să diluezi
+              istoricul de erori înainte de re-review Meta. Recomandat: 300 apeluri, pauză 250ms între ele.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min={1}
+              max={500}
+              value={warmupCount}
+              onChange={(e) => setWarmupCount(Math.max(1, Math.min(500, Number(e.target.value) || 1)))}
+              className="w-24 text-sm px-3 py-2 rounded-lg border border-border bg-background"
+              disabled={warmupRunning}
+            />
+            <button
+              onClick={doWarmup}
+              disabled={warmupRunning}
+              className="press text-sm px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-2"
+            >
+              {warmupRunning ? "Rulez…" : `Rulează ${warmupCount} apeluri`}
+            </button>
+          </div>
+          {warmupResult && (
+            <div className="text-xs space-y-1">
+              <p>
+                ✓ OK: <strong>{warmupResult.ok}</strong> — ✗ Erori:{" "}
+                <strong className={warmupResult.errors > 0 ? "text-red-500" : ""}>{warmupResult.errors}</strong>
+                {warmupResult.stopped && " (oprit devreme)"}
+              </p>
+              {warmupResult.samples && warmupResult.samples.length > 0 && (
+                <ul className="text-muted-foreground">
+                  {warmupResult.samples.map((s, i) => (
+                    <li key={i} className="truncate">• {s}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Pages */}
       <section className="space-y-3">
