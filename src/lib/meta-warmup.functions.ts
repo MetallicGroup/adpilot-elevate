@@ -111,8 +111,8 @@ export const warmupMetaCalls = createServerFn({ method: "POST" })
       await new Promise((res) => setTimeout(res, 2000));
     }
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin.from("meta_warmup_runs").insert({
+    const { supabaseAdmin: sa } = await import("@/integrations/supabase/client.server");
+    await sa.from("meta_warmup_runs").insert({
       user_id: userId,
       requested: data.count,
       ok,
