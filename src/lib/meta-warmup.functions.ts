@@ -98,6 +98,15 @@ export const warmupMetaCalls = createServerFn({ method: "POST" })
           // 190=token, 200=permission, 10=auth, 17=user rate limit, 613=throttle, 4=app rate limit, 32=page-level rate limit
           const code = j?.error?.code;
           if ([190, 200, 10, 17, 613, 4, 32].includes(code)) {
+            const { supabaseAdmin: sa2 } = await import("@/integrations/supabase/client.server");
+            await sa2.from("meta_warmup_runs").insert({
+              user_id: userId,
+              requested: data.count,
+              ok,
+              errors,
+              stopped: true,
+              reason: j?.error?.message ?? null,
+            });
             return { ok, errors, stopped: true, reason: j?.error?.message, samples: errorSamples };
           }
         } else {
