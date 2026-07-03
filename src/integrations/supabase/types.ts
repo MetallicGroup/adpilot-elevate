@@ -546,6 +546,39 @@ export type Database = {
           },
         ]
       }
+      meta_warmup_runs: {
+        Row: {
+          created_at: string
+          errors: number
+          id: string
+          ok: number
+          reason: string | null
+          requested: number
+          stopped: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          errors?: number
+          id?: string
+          ok?: number
+          reason?: string | null
+          requested: number
+          stopped?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          errors?: number
+          id?: string
+          ok?: number
+          reason?: string | null
+          requested?: number
+          stopped?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       performance_data: {
         Row: {
           campaign_id: string
