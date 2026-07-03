@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { CheckCircle2, XCircle, AlertTriangle, RefreshCw, ExternalLink, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { getMetaStatus, type MetaStatus } from "@/lib/meta-status.functions";
-import { warmupMetaCalls } from "@/lib/meta-warmup.functions";
+import { warmupMetaCalls, getWarmupHistory } from "@/lib/meta-warmup.functions";
 
 export const Route = createFileRoute("/_authenticated/meta-status")({
   component: MetaStatusPage,
@@ -24,11 +24,25 @@ const SCOPE_HUMAN: Record<string, string> = {
 function MetaStatusPage() {
   const fetchStatus = useServerFn(getMetaStatus);
   const runWarmup = useServerFn(warmupMetaCalls);
+  const fetchHistory = useServerFn(getWarmupHistory);
   const [data, setData] = useState<MetaStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [warmupCount, setWarmupCount] = useState(50);
   const [warmupRunning, setWarmupRunning] = useState(false);
   const [warmupResult, setWarmupResult] = useState<{ ok: number; errors: number; stopped?: boolean; reason?: string; samples?: string[] } | null>(null);
+  const [history, setHistory] = useState<{
+    runs: Array<{ id: string; requested: number; ok: number; errors: number; stopped: boolean; reason: string | null; created_at: string }>;
+    totals: { ok: number; errors: number; runs: number };
+  } | null>(null);
+
+  const loadHistory = async () => {
+    try {
+      const h = await fetchHistory({ data: {} as never });
+      setHistory(h);
+    } catch {
+      /* ignore */
+    }
+  };
 
   const doWarmup = async () => {
     setWarmupRunning(true);
@@ -38,6 +52,7 @@ function MetaStatusPage() {
       setWarmupResult(r);
       if (r.stopped) toast.error(`Oprit după ${r.ok} ok / ${r.errors} erori: ${r.reason}`);
       else toast.success(`${r.ok} apeluri OK, ${r.errors} erori`);
+      loadHistory();
     } catch (e: any) {
       toast.error(e?.message ?? "Eroare");
     } finally {
@@ -59,6 +74,7 @@ function MetaStatusPage() {
 
   useEffect(() => {
     load();
+    loadHistory();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -217,6 +233,60 @@ function MetaStatusPage() {
               )}
             </div>
           )}
+
+          {/* 48h history */}
+          <div className="border-t border-border pt-3 mt-2 space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium">Ultimele 48h</p>
+              <button
+                onClick={loadHistory}
+                className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+              >
+                <RefreshCw className="w-3 h-3" /> Reîncarcă
+              </button>
+            </div>
+            {history && (
+              <>
+                <div className="grid grid-cols-3 gap-2 text-xs">
+                  <div className="rounded-md border border-border p-2">
+                    <p className="text-muted-foreground">Rulări</p>
+                    <p className="text-base font-semibold">{history.totals.runs}</p>
+                  </div>
+                  <div className="rounded-md border border-border p-2">
+                    <p className="text-muted-foreground">Total OK</p>
+                    <p className="text-base font-semibold text-emerald-600 dark:text-emerald-400">{history.totals.ok}</p>
+                  </div>
+                  <div className="rounded-md border border-border p-2">
+                    <p className="text-muted-foreground">Total erori</p>
+                    <p className={`text-base font-semibold ${history.totals.errors > 0 ? "text-red-500" : ""}`}>
+                      {history.totals.errors}
+                    </p>
+                  </div>
+                </div>
+                {history.runs.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">Nicio rulare în ultimele 48h.</p>
+                ) : (
+                  <ul className="text-xs divide-y divide-border border border-border rounded-md overflow-hidden">
+                    {history.runs.map((r) => (
+                      <li key={r.id} className="flex items-center justify-between gap-2 px-3 py-2">
+                        <span className="text-muted-foreground tabular-nums">
+                          {new Date(r.created_at).toLocaleString("ro-RO", { dateStyle: "short", timeStyle: "short" })}
+                        </span>
+                        <span className="tabular-nums">
+                          <span className="text-emerald-600 dark:text-emerald-400">{r.ok} ok</span>
+                          {" · "}
+                          <span className={r.errors > 0 ? "text-red-500" : ""}>{r.errors} err</span>
+                          {" / "}
+                          <span className="text-muted-foreground">{r.requested} cerute</span>
+                          {r.stopped && <span className="ml-2 text-amber-500">oprit</span>}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            )}
+          </div>
         </section>
       )}
 
