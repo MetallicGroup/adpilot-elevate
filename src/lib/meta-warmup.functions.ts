@@ -6,6 +6,31 @@ const Input = z.object({
   count: z.number().int().min(1).max(500),
 });
 
+export const getWarmupHistory = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const since = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+    const { data, error } = await supabase
+      .from("meta_warmup_runs")
+      .select("id, requested, ok, errors, stopped, reason, created_at")
+      .eq("user_id", userId)
+      .gte("created_at", since)
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    const runs = data ?? [];
+    const totals = runs.reduce(
+      (acc, r) => {
+        acc.ok += r.ok;
+        acc.errors += r.errors;
+        acc.runs += 1;
+        return acc;
+      },
+      { ok: 0, errors: 0, runs: 0 },
+    );
+    return { runs, totals };
+  });
+
 /**
  * Manual warm-up: performs N safe READ-only Marketing API calls
  * against the user's own ad account. Used to accumulate clean calls
@@ -85,6 +110,15 @@ export const warmupMetaCalls = createServerFn({ method: "POST" })
       // Slow pacing (~1 req / 2s) — Meta user-level rate limit is aggressive.
       await new Promise((res) => setTimeout(res, 2000));
     }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("meta_warmup_runs").insert({
+      user_id: userId,
+      requested: data.count,
+      ok,
+      errors,
+      stopped: false,
+    });
 
     return { ok, errors, stopped: false, samples: errorSamples };
   });
