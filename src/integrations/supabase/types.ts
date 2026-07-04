@@ -840,8 +840,10 @@ export type Database = {
           created_at: string
           display_phone: string | null
           id: string
+          keepalive_opt_out: boolean
           last_daily_report_at: string | null
           last_message_at: string | null
+          opted_out_at: string | null
           phone_number_id: string | null
           status: string
           updated_at: string
@@ -857,8 +859,10 @@ export type Database = {
           created_at?: string
           display_phone?: string | null
           id?: string
+          keepalive_opt_out?: boolean
           last_daily_report_at?: string | null
           last_message_at?: string | null
+          opted_out_at?: string | null
           phone_number_id?: string | null
           status?: string
           updated_at?: string
@@ -874,8 +878,10 @@ export type Database = {
           created_at?: string
           display_phone?: string | null
           id?: string
+          keepalive_opt_out?: boolean
           last_daily_report_at?: string | null
           last_message_at?: string | null
+          opted_out_at?: string | null
           phone_number_id?: string | null
           status?: string
           updated_at?: string
@@ -888,6 +894,7 @@ export type Database = {
       }
       whatsapp_messages: {
         Row: {
+          campaign_id: string | null
           connection_id: string | null
           created_at: string
           direction: string
@@ -902,6 +909,7 @@ export type Database = {
           wa_message_id: string | null
         }
         Insert: {
+          campaign_id?: string | null
           connection_id?: string | null
           created_at?: string
           direction: string
@@ -916,6 +924,7 @@ export type Database = {
           wa_message_id?: string | null
         }
         Update: {
+          campaign_id?: string | null
           connection_id?: string | null
           created_at?: string
           direction?: string
@@ -930,6 +939,13 @@ export type Database = {
           wa_message_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "whatsapp_messages_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "whatsapp_messages_connection_id_fkey"
             columns: ["connection_id"]

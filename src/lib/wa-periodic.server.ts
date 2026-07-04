@@ -89,8 +89,9 @@ export async function runPeriodicUpdates(): Promise<{ sent: number; errors: numb
 
   const { data: conns } = await supabaseAdmin
     .from("whatsapp_connections")
-    .select("id, user_id, user_phone")
+    .select("id, user_id, user_phone, keepalive_opt_out")
     .eq("status", "active")
+    .eq("keepalive_opt_out", false)
     .not("user_phone", "is", null);
   if (!conns?.length) return { sent: 0, errors: 0 };
 

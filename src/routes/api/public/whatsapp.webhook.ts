@@ -162,6 +162,27 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
 
               const justActivated = conn.status !== "active";
 
+              // ── STOP / opt-out detection ─────────────────────────────
+              // Any of these words (in any casing) permanently opts the
+              // user out of AdPilot-initiated keep-alive messages.
+              const optOutRegex =
+                /^\s*(stop|stop\s+keepalive|nu\s+mai\s+trimite|dezabonare|dezaboneaza[- ]m[aă]|unsubscribe)\s*!*\.?\s*$/i;
+              const isOptOut = !!(text && optOutRegex.test(text));
+
+              // Best-effort campaign link: most recent active campaign for this user
+              let inboundCampaignId: string | null = null;
+              try {
+                const { data: lastCamp } = await supabaseAdmin
+                  .from("campaigns")
+                  .select("id")
+                  .eq("user_id", conn.user_id)
+                  .in("status", ["active", "paused"])
+                  .order("updated_at", { ascending: false })
+                  .limit(1)
+                  .maybeSingle();
+                inboundCampaignId = lastCamp?.id ?? null;
+              } catch { /* ignore */ }
+
               // Persist incoming
               await supabaseAdmin.from("whatsapp_messages").insert({
                 user_id: conn.user_id,
@@ -172,6 +193,7 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
                 text,
                 media_path: mediaPath,
                 media_mime: mediaMime,
+                campaign_id: inboundCampaignId,
               });
 
               await supabaseAdmin
@@ -183,6 +205,39 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
                     : {}),
                 })
                 .eq("id", conn.id);
+
+              // Handle STOP: mark opt-out, confirm, and stop processing.
+              if (isOptOut) {
+                await supabaseAdmin
+                  .from("whatsapp_connections")
+                  .update({
+                    keepalive_opt_out: true,
+                    opted_out_at: new Date().toISOString(),
+                  })
+                  .eq("id", conn.id);
+                try {
+                  const confirm =
+                    "Am înțeles ✅ Nu îți vom mai trimite mesaje de urmărire (keepalive). Rapoartele și alertele de lead-uri rămân active — dacă vrei să le oprești și pe acelea, scrie „STOP TOT”. Ne poți scrie oricând să reactivăm.";
+                  const { id } = await sendWhatsAppMessage(
+                    central.phoneNumberId,
+                    central.accessToken,
+                    fromPhone,
+                    { type: "text", text: confirm },
+                  );
+                  await supabaseAdmin.from("whatsapp_messages").insert({
+                    user_id: conn.user_id,
+                    connection_id: conn.id,
+                    wa_message_id: id,
+                    direction: "out",
+                    msg_type: "text",
+                    text: confirm,
+                    meta: { kind: "optout_confirm" },
+                  });
+                } catch (e) {
+                  console.error("[wa] optout confirm failed", e);
+                }
+                continue;
+              }
 
               // First-time activation → send welcome and stop (don't run agent on the activation msg)
               if (justActivated) {
