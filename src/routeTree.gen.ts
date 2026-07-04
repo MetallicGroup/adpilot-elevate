@@ -44,6 +44,7 @@ import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/e
 import { Route as ApiPublicWhatsappWebhookRouteImport } from './routes/api/public/whatsapp.webhook'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicMetaWebhookRouteImport } from './routes/api/public/meta.webhook'
+import { Route as ApiPublicHooksWaKeepaliveRouteImport } from './routes/api/public/hooks/wa-keepalive'
 import { Route as ApiPublicHooksRefreshInsightsRouteImport } from './routes/api/public/hooks/refresh-insights'
 import { Route as ApiPublicHooksPeriodicUpdateRouteImport } from './routes/api/public/hooks/periodic-update'
 import { Route as ApiPublicHooksDailyReportRouteImport } from './routes/api/public/hooks/daily-report'
@@ -230,6 +231,12 @@ const ApiPublicMetaWebhookRoute = ApiPublicMetaWebhookRouteImport.update({
   path: '/api/public/meta/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksWaKeepaliveRoute =
+  ApiPublicHooksWaKeepaliveRouteImport.update({
+    id: '/api/public/hooks/wa-keepalive',
+    path: '/api/public/hooks/wa-keepalive',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksRefreshInsightsRoute =
   ApiPublicHooksRefreshInsightsRouteImport.update({
     id: '/api/public/hooks/refresh-insights',
@@ -310,6 +317,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/daily-report': typeof ApiPublicHooksDailyReportRoute
   '/api/public/hooks/periodic-update': typeof ApiPublicHooksPeriodicUpdateRoute
   '/api/public/hooks/refresh-insights': typeof ApiPublicHooksRefreshInsightsRoute
+  '/api/public/hooks/wa-keepalive': typeof ApiPublicHooksWaKeepaliveRoute
   '/api/public/meta/webhook': typeof ApiPublicMetaWebhookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
@@ -353,6 +361,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/daily-report': typeof ApiPublicHooksDailyReportRoute
   '/api/public/hooks/periodic-update': typeof ApiPublicHooksPeriodicUpdateRoute
   '/api/public/hooks/refresh-insights': typeof ApiPublicHooksRefreshInsightsRoute
+  '/api/public/hooks/wa-keepalive': typeof ApiPublicHooksWaKeepaliveRoute
   '/api/public/meta/webhook': typeof ApiPublicMetaWebhookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
@@ -398,6 +407,7 @@ export interface FileRoutesById {
   '/api/public/hooks/daily-report': typeof ApiPublicHooksDailyReportRoute
   '/api/public/hooks/periodic-update': typeof ApiPublicHooksPeriodicUpdateRoute
   '/api/public/hooks/refresh-insights': typeof ApiPublicHooksRefreshInsightsRoute
+  '/api/public/hooks/wa-keepalive': typeof ApiPublicHooksWaKeepaliveRoute
   '/api/public/meta/webhook': typeof ApiPublicMetaWebhookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
@@ -443,6 +453,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/daily-report'
     | '/api/public/hooks/periodic-update'
     | '/api/public/hooks/refresh-insights'
+    | '/api/public/hooks/wa-keepalive'
     | '/api/public/meta/webhook'
     | '/api/public/payments/webhook'
     | '/api/public/whatsapp/webhook'
@@ -486,6 +497,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/daily-report'
     | '/api/public/hooks/periodic-update'
     | '/api/public/hooks/refresh-insights'
+    | '/api/public/hooks/wa-keepalive'
     | '/api/public/meta/webhook'
     | '/api/public/payments/webhook'
     | '/api/public/whatsapp/webhook'
@@ -530,6 +542,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/daily-report'
     | '/api/public/hooks/periodic-update'
     | '/api/public/hooks/refresh-insights'
+    | '/api/public/hooks/wa-keepalive'
     | '/api/public/meta/webhook'
     | '/api/public/payments/webhook'
     | '/api/public/whatsapp/webhook'
@@ -560,6 +573,7 @@ export interface RootRouteChildren {
   ApiPublicHooksDailyReportRoute: typeof ApiPublicHooksDailyReportRoute
   ApiPublicHooksPeriodicUpdateRoute: typeof ApiPublicHooksPeriodicUpdateRoute
   ApiPublicHooksRefreshInsightsRoute: typeof ApiPublicHooksRefreshInsightsRoute
+  ApiPublicHooksWaKeepaliveRoute: typeof ApiPublicHooksWaKeepaliveRoute
   ApiPublicMetaWebhookRoute: typeof ApiPublicMetaWebhookRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicWhatsappWebhookRoute: typeof ApiPublicWhatsappWebhookRoute
@@ -813,6 +827,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicMetaWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/wa-keepalive': {
+      id: '/api/public/hooks/wa-keepalive'
+      path: '/api/public/hooks/wa-keepalive'
+      fullPath: '/api/public/hooks/wa-keepalive'
+      preLoaderRoute: typeof ApiPublicHooksWaKeepaliveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/refresh-insights': {
       id: '/api/public/hooks/refresh-insights'
       path: '/api/public/hooks/refresh-insights'
@@ -945,6 +966,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksDailyReportRoute: ApiPublicHooksDailyReportRoute,
   ApiPublicHooksPeriodicUpdateRoute: ApiPublicHooksPeriodicUpdateRoute,
   ApiPublicHooksRefreshInsightsRoute: ApiPublicHooksRefreshInsightsRoute,
+  ApiPublicHooksWaKeepaliveRoute: ApiPublicHooksWaKeepaliveRoute,
   ApiPublicMetaWebhookRoute: ApiPublicMetaWebhookRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicWhatsappWebhookRoute: ApiPublicWhatsappWebhookRoute,
