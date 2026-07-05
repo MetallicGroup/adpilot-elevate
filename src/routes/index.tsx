@@ -1,5 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { motion } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
+import { resolvePostAuthPath } from "@/lib/post-auth";
 import {
   ArrowRight, Check, MessageCircle, Bot, Inbox, LineChart, Zap, Rocket, Target,
   Star, PlayCircle, Facebook, Search,
@@ -20,6 +23,21 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session || cancelled) return;
+      const dest = await resolvePostAuthPath();
+      if (!cancelled) navigate({ to: dest, replace: true });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate]);
+
   return (
     <MarketingLayout>
       {/* HERO */}
