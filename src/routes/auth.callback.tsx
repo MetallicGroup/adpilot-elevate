@@ -25,6 +25,7 @@ function AuthCallbackPage() {
         window.location.hash.startsWith("#") ? window.location.hash.slice(1) : "",
       );
       const code = params.get("code");
+      const hashSession = getHashSessionParams(hashParams);
       const type = params.get("type") ?? hashParams.get("type");
       const authError =
         params.get("error_description") ??
@@ -38,6 +39,19 @@ function AuthCallbackPage() {
         return;
       }
 
+      let session: Session | null = null;
+
+      if (hashSession) {
+        const { data, error } = await supabase.auth.setSession(hashSession);
+        clearAuthHash();
+        if (error) {
+          toast.error(translateAuthError(error.message));
+          if (!cancelled) navigate({ to: "/auth", replace: true });
+          return;
+        }
+        session = data.session;
+      }
+
       if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code);
         if (error) {
@@ -47,7 +61,7 @@ function AuthCallbackPage() {
         }
       }
 
-      const session = await waitForSessionHydration();
+      session = session ?? (await waitForSessionHydration());
 
       if (session) {
         // Ruteză după tipul de link din email.
@@ -94,6 +108,21 @@ function AuthCallbackPage() {
       <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
       <p className="text-sm text-muted-foreground">Te conectăm la cont...</p>
     </div>
+  );
+}
+
+function getHashSessionParams(hashParams: URLSearchParams) {
+  const accessToken = hashParams.get("access_token");
+  const refreshToken = hashParams.get("refresh_token");
+  if (!accessToken || !refreshToken) return null;
+  return { access_token: accessToken, refresh_token: refreshToken };
+}
+
+function clearAuthHash() {
+  window.history.replaceState(
+    window.history.state,
+    document.title,
+    `${window.location.pathname}${window.location.search}`,
   );
 }
 
