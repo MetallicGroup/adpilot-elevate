@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import type { Session } from "@supabase/supabase-js";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -46,9 +47,7 @@ function AuthCallbackPage() {
         }
       }
 
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const session = await waitForSessionHydration();
 
       if (session) {
         // Ruteză după tipul de link din email.
@@ -96,4 +95,30 @@ function AuthCallbackPage() {
       <p className="text-sm text-muted-foreground">Te conectăm la cont...</p>
     </div>
   );
+}
+
+async function waitForSessionHydration(): Promise<Session | null> {
+  const initial = await supabase.auth.getSession();
+  if (initial.data.session) return initial.data.session;
+
+  return new Promise<Session | null>((resolve) => {
+    let subscription: { unsubscribe: () => void } | undefined;
+    let settled = false;
+    const finish = (session: Session | null) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeout);
+      subscription?.unsubscribe();
+      resolve(session);
+    };
+
+    const timeout = window.setTimeout(() => {
+      finish(null);
+    }, 5000);
+
+    subscription = supabase.auth.onAuthStateChange((event, session) => {
+      if (event !== "SIGNED_IN" || !session) return;
+      finish(session);
+    }).data.subscription;
+  });
 }
