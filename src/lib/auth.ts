@@ -1,5 +1,6 @@
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
 
 export function authCallbackUrl() {
   if (typeof window === "undefined") return "/auth/callback";
@@ -37,13 +38,9 @@ export async function waitForClientSession(): Promise<Session> {
   return session;
 }
 
-export async function signInWithProvider(provider: "google" | "facebook") {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider,
-    options: {
-      redirectTo: authCallbackUrl(),
-    },
+export async function signInWithProvider(provider: "google") {
+  const result = await lovable.auth.signInWithOAuth(provider, {
+    redirect_uri: typeof window !== "undefined" ? window.location.origin : undefined,
   });
-
-  if (error) throw error;
+  if (result.error) throw result.error;
 }
