@@ -40,7 +40,7 @@ export async function waitForClientSession(): Promise<Session> {
 
 export async function signInWithProvider(provider: "google") {
   const result = await lovable.auth.signInWithOAuth(provider, {
-    redirect_uri: authCallbackUrl(),
+    redirect_uri: typeof window !== "undefined" ? window.location.origin : undefined,
   });
   if (result.error) throw result.error;
   return result;
