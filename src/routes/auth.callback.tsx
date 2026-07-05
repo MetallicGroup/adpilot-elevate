@@ -46,9 +46,7 @@ function AuthCallbackPage() {
         }
       }
 
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const session = await waitForSessionHydration();
 
       if (session) {
         // Ruteză după tipul de link din email.
@@ -96,4 +94,25 @@ function AuthCallbackPage() {
       <p className="text-sm text-muted-foreground">Te conectăm la cont...</p>
     </div>
   );
+}
+
+async function waitForSessionHydration() {
+  const initial = await supabase.auth.getSession();
+  if (initial.data.session) return initial.data.session;
+
+  return new Promise<typeof initial.data.session>((resolve) => {
+    const timeout = window.setTimeout(() => {
+      subscription.unsubscribe();
+      resolve(null);
+    }, 5000);
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event !== "SIGNED_IN" || !session) return;
+      window.clearTimeout(timeout);
+      subscription.unsubscribe();
+      resolve(session);
+    });
+  });
 }
