@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import type { Session } from "@supabase/supabase-js";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -96,11 +97,11 @@ function AuthCallbackPage() {
   );
 }
 
-async function waitForSessionHydration() {
+async function waitForSessionHydration(): Promise<Session | null> {
   const initial = await supabase.auth.getSession();
   if (initial.data.session) return initial.data.session;
 
-  return new Promise<typeof initial.data.session>((resolve) => {
+  return new Promise<Session | null>((resolve) => {
     const timeout = window.setTimeout(() => {
       subscription.unsubscribe();
       resolve(null);
