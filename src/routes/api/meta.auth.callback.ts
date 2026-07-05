@@ -10,8 +10,14 @@ export const Route = createFileRoute("/api/meta/auth/callback")({
         const state = url.searchParams.get("state");
         const error = url.searchParams.get("error");
 
+        const returnTo = getCookie("meta_oauth_return") ?? "/settings";
+        const safeReturn = returnTo === "/onboarding" ? "/onboarding" : "/settings";
+        deleteCookie("meta_oauth_return", { path: "/" });
         const back = (q: string) =>
-          new Response(null, { status: 302, headers: { Location: `/settings?${q}` } });
+          new Response(null, {
+            status: 302,
+            headers: { Location: `${safeReturn}?${q}` },
+          });
 
         if (error) return back(`meta=error&reason=${encodeURIComponent(error)}`);
         if (!code || !state) return back("meta=error&reason=missing_params");
