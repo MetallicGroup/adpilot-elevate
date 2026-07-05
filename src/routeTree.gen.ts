@@ -18,6 +18,7 @@ import { Route as IntegrationsRouteImport } from './routes/integrations'
 import { Route as HelpCenterRouteImport } from './routes/help-center'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as GdprRouteImport } from './routes/gdpr'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as DocumentationRouteImport } from './routes/documentation'
 import { Route as CookiePolicyRouteImport } from './routes/cookie-policy'
@@ -27,6 +28,9 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
+import { Route as AuthWelcomeRouteImport } from './routes/auth.welcome'
+import { Route as AuthVerifiedRouteImport } from './routes/auth.verified'
+import { Route as AuthConfirmEmailRouteImport } from './routes/auth.confirm-email'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedWhatsappRouteImport } from './routes/_authenticated/whatsapp'
 import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
@@ -98,6 +102,11 @@ const GdprRoute = GdprRouteImport.update({
   path: '/gdpr',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FeaturesRoute = FeaturesRouteImport.update({
   id: '/features',
   path: '/features',
@@ -141,6 +150,21 @@ const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   id: '/checkout/return',
   path: '/checkout/return',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthWelcomeRoute = AuthWelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthVerifiedRoute = AuthVerifiedRouteImport.update({
+  id: '/verified',
+  path: '/verified',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthConfirmEmailRoute = AuthConfirmEmailRouteImport.update({
+  id: '/confirm-email',
+  path: '/confirm-email',
+  getParentRoute: () => AuthRoute,
 } as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/callback',
@@ -287,6 +311,7 @@ export interface FileRoutesByFullPath {
   '/cookie-policy': typeof CookiePolicyRoute
   '/documentation': typeof DocumentationRoute
   '/features': typeof FeaturesRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/gdpr': typeof GdprRoute
   '/help': typeof HelpRoute
   '/help-center': typeof HelpCenterRoute
@@ -307,6 +332,9 @@ export interface FileRoutesByFullPath {
   '/support': typeof AuthenticatedSupportRoute
   '/whatsapp': typeof AuthenticatedWhatsappRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/auth/confirm-email': typeof AuthConfirmEmailRoute
+  '/auth/verified': typeof AuthVerifiedRoute
+  '/auth/welcome': typeof AuthWelcomeRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/qa/trial': typeof AuthenticatedQaTrialRoute
@@ -331,6 +359,7 @@ export interface FileRoutesByTo {
   '/cookie-policy': typeof CookiePolicyRoute
   '/documentation': typeof DocumentationRoute
   '/features': typeof FeaturesRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/gdpr': typeof GdprRoute
   '/help': typeof HelpRoute
   '/help-center': typeof HelpCenterRoute
@@ -351,6 +380,9 @@ export interface FileRoutesByTo {
   '/support': typeof AuthenticatedSupportRoute
   '/whatsapp': typeof AuthenticatedWhatsappRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/auth/confirm-email': typeof AuthConfirmEmailRoute
+  '/auth/verified': typeof AuthVerifiedRoute
+  '/auth/welcome': typeof AuthWelcomeRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/qa/trial': typeof AuthenticatedQaTrialRoute
@@ -377,6 +409,7 @@ export interface FileRoutesById {
   '/cookie-policy': typeof CookiePolicyRoute
   '/documentation': typeof DocumentationRoute
   '/features': typeof FeaturesRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/gdpr': typeof GdprRoute
   '/help': typeof HelpRoute
   '/help-center': typeof HelpCenterRoute
@@ -397,6 +430,9 @@ export interface FileRoutesById {
   '/_authenticated/support': typeof AuthenticatedSupportRoute
   '/_authenticated/whatsapp': typeof AuthenticatedWhatsappRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/auth/confirm-email': typeof AuthConfirmEmailRoute
+  '/auth/verified': typeof AuthVerifiedRoute
+  '/auth/welcome': typeof AuthWelcomeRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/_authenticated/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/_authenticated/qa/trial': typeof AuthenticatedQaTrialRoute
@@ -423,6 +459,7 @@ export interface FileRouteTypes {
     | '/cookie-policy'
     | '/documentation'
     | '/features'
+    | '/forgot-password'
     | '/gdpr'
     | '/help'
     | '/help-center'
@@ -443,6 +480,9 @@ export interface FileRouteTypes {
     | '/support'
     | '/whatsapp'
     | '/auth/callback'
+    | '/auth/confirm-email'
+    | '/auth/verified'
+    | '/auth/welcome'
     | '/checkout/return'
     | '/campaigns/$id'
     | '/qa/trial'
@@ -467,6 +507,7 @@ export interface FileRouteTypes {
     | '/cookie-policy'
     | '/documentation'
     | '/features'
+    | '/forgot-password'
     | '/gdpr'
     | '/help'
     | '/help-center'
@@ -487,6 +528,9 @@ export interface FileRouteTypes {
     | '/support'
     | '/whatsapp'
     | '/auth/callback'
+    | '/auth/confirm-email'
+    | '/auth/verified'
+    | '/auth/welcome'
     | '/checkout/return'
     | '/campaigns/$id'
     | '/qa/trial'
@@ -512,6 +556,7 @@ export interface FileRouteTypes {
     | '/cookie-policy'
     | '/documentation'
     | '/features'
+    | '/forgot-password'
     | '/gdpr'
     | '/help'
     | '/help-center'
@@ -532,6 +577,9 @@ export interface FileRouteTypes {
     | '/_authenticated/support'
     | '/_authenticated/whatsapp'
     | '/auth/callback'
+    | '/auth/confirm-email'
+    | '/auth/verified'
+    | '/auth/welcome'
     | '/checkout/return'
     | '/_authenticated/campaigns/$id'
     | '/_authenticated/qa/trial'
@@ -558,6 +606,7 @@ export interface RootRouteChildren {
   CookiePolicyRoute: typeof CookiePolicyRoute
   DocumentationRoute: typeof DocumentationRoute
   FeaturesRoute: typeof FeaturesRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   GdprRoute: typeof GdprRoute
   HelpRoute: typeof HelpRoute
   HelpCenterRoute: typeof HelpCenterRoute
@@ -645,6 +694,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GdprRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/features': {
       id: '/features'
       path: '/features'
@@ -707,6 +763,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/checkout/return'
       preLoaderRoute: typeof CheckoutReturnRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/auth/welcome': {
+      id: '/auth/welcome'
+      path: '/welcome'
+      fullPath: '/auth/welcome'
+      preLoaderRoute: typeof AuthWelcomeRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/verified': {
+      id: '/auth/verified'
+      path: '/verified'
+      fullPath: '/auth/verified'
+      preLoaderRoute: typeof AuthVerifiedRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/confirm-email': {
+      id: '/auth/confirm-email'
+      path: '/confirm-email'
+      fullPath: '/auth/confirm-email'
+      preLoaderRoute: typeof AuthConfirmEmailRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/auth/callback': {
       id: '/auth/callback'
@@ -934,10 +1011,16 @@ const AuthenticatedRouteRouteWithChildren =
 
 interface AuthRouteChildren {
   AuthCallbackRoute: typeof AuthCallbackRoute
+  AuthConfirmEmailRoute: typeof AuthConfirmEmailRoute
+  AuthVerifiedRoute: typeof AuthVerifiedRoute
+  AuthWelcomeRoute: typeof AuthWelcomeRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
   AuthCallbackRoute: AuthCallbackRoute,
+  AuthConfirmEmailRoute: AuthConfirmEmailRoute,
+  AuthVerifiedRoute: AuthVerifiedRoute,
+  AuthWelcomeRoute: AuthWelcomeRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
@@ -951,6 +1034,7 @@ const rootRouteChildren: RootRouteChildren = {
   CookiePolicyRoute: CookiePolicyRoute,
   DocumentationRoute: DocumentationRoute,
   FeaturesRoute: FeaturesRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   GdprRoute: GdprRoute,
   HelpRoute: HelpRoute,
   HelpCenterRoute: HelpCenterRoute,

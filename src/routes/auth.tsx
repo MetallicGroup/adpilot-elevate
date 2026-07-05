@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  ensureSessionAfterSignUp,
   signInWithProvider,
+  translateAuthError,
   waitForClientSession,
 } from "@/lib/auth";
 import { resolvePostAuthPath } from "@/lib/post-auth";
@@ -14,24 +14,34 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 export const Route = createFileRoute("/auth")({
   ssr: false,
   component: AuthPage,
+  validateSearch: (s: Record<string, unknown>) => ({
+    email: typeof s.email === "string" ? s.email : undefined,
+    mode: s.mode === "signin" || s.mode === "signup" ? s.mode : undefined,
+  }),
   head: () => ({ meta: [{ title: "Autentificare — AdPilot" }] }),
 });
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signup");
-  const [email, setEmail] = useState("");
+  const search = Route.useSearch();
+  const [mode, setMode] = useState<"signin" | "signup">(search.mode ?? "signup");
+  const [email, setEmail] = useState(search.email ?? "");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     supabase.auth.getSession().then(async ({ data }) => {
+      if (cancelled) return;
       if (data.session) {
         const dest = await resolvePostAuthPath();
-        navigate({ to: dest, replace: true });
+        if (!cancelled) navigate({ to: dest, replace: true });
       }
     });
+    return () => {
+      cancelled = true;
+    };
   }, [navigate]);
 
   async function goPostAuth() {
@@ -55,24 +65,39 @@ function AuthPage() {
         });
         if (error) throw error;
 
-        if (!data.session) {
-          await ensureSessionAfterSignUp(email, password);
-        } else {
-          await waitForClientSession();
+        // Supabase semnalează "email deja folosit" prin identities: []
+        // (userul nu este creat, doar returnat).
+        if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+          toast.error("Există deja un cont cu acest email. Loghează-te sau resetează parola.");
+          setMode("signin");
+          return;
         }
 
+        if (!data.session) {
+          // Confirmare email obligatorie — trimitem userul la ecranul de confirmare.
+          navigate({
+            to: "/auth/confirm-email",
+            search: { email },
+            replace: true,
+          });
+          return;
+        }
+
+        // Auto-confirm activ (dev fallback) — intrăm direct.
         toast.success("Cont creat cu succes!");
+        await waitForClientSession();
+        await goPostAuth();
+        return;
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         await waitForClientSession();
         toast.success("Bine ai revenit!");
+        await goPostAuth();
       }
-
-      await goPostAuth();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Ceva nu a mers bine";
-      toast.error(message);
+      toast.error(translateAuthError(message));
     } finally {
       setLoading(false);
     }
@@ -88,7 +113,7 @@ function AuthPage() {
       await goPostAuth();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Autentificarea a eșuat";
-      toast.error(message);
+      toast.error(translateAuthError(message));
     } finally {
       setLoading(false);
     }
@@ -185,6 +210,18 @@ function AuthPage() {
               {mode === "signup" ? "Creează cont" : "Intră în cont"}
             </button>
           </form>
+
+          {mode === "signin" && (
+            <div className="mt-3 text-right">
+              <Link
+                to="/forgot-password"
+                search={email ? { email } : undefined}
+                className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-4"
+              >
+                Am uitat parola
+              </Link>
+            </div>
+          )}
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             {mode === "signup" ? "Ai deja cont?" : "Nou pe AdPilot?"}{" "}

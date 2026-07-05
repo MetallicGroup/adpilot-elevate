@@ -1,71 +1,69 @@
+## Audit auth curent (ce am găsit)
 
-# Extindere agent WhatsApp AdPilot
+**Rupt / lipsă:**
+1. **Signup email cu confirmare = crash mut.** `auth.tsx` face `signUp` apoi imediat `ensureSessionAfterSignUp` care apelează `signInWithPassword`. Cu email confirmation ON (ce vrei), Supabase răspunde `Email not confirmed` și userul primește doar un toast roșu. Nicio pagină "confirmă emailul", niciun buton resend.
+2. **Nicio pagină `/auth/confirm-email`** — după signup, userul rămâne blocat pe formular.
+3. **`/auth/callback` nu tratează scenariul "am dat click pe linkul din mail"** distinct — merge la `/onboarding` fără feedback (nu apare "Emailul tău e confirmat ✓").
+4. **Forgot password lipsă.** Există `/reset-password` care consumă tokenul, dar nu există buton "Am uitat parola" pe `/auth` și nici funcția `resetPasswordForEmail`.
+5. **Reset password redirect greșit** — trimite mereu la `/onboarding`, chiar dacă userul are onboarding făcut (ar trebui `resolvePostAuthPath`).
+6. **Google fără ecran de bun venit** (ai cerut unul scurt).
+7. **Meta callback trimite mereu la `/settings`** — dacă userul a pornit Meta din `/onboarding`, e aruncat la Settings, rupe flow-ul de onboarding.
+8. **Meta callback fără feedback UI stilizat** — doar query param `meta=error&reason=xyz`, mesajele nu sunt afișate frumos peste tot.
+9. **Signup cu email deja existent** → mesaj Supabase în engleză, fără CTA "Ai deja cont? Loghează-te".
+10. **`auth.tsx`** are dublă redirecționare (getSession în useEffect + goPostAuth), risc de flash.
 
-## 1. Alertă lead instant (push, nu pull)
-- În `src/routes/api/public/meta.webhook.ts` (handler leadgen): după ce inserăm lead-ul în DB, dacă userul are `whatsapp_connections.status = 'active'`, trimitem imediat un mesaj WhatsApp formatat:
-  > 🎯 **Lead nou** — *{campanie}*
-  > 👤 {nume}
-  > 📞 {telefon}
-  > 💬 {primul răspuns custom, dacă există}
-  >
-  > Răspunde *"sună"* să-l contactăm sau *"detalii"* pentru tot formularul.
-- Folosim `sendWhatsAppMessage` (central) din `whatsapp.server.ts`.
-- Eșec silent (try/catch + log) — nu blocăm webhook-ul Meta.
+---
 
-## 2. Raport zilnic 09:00
-- Server route public `src/routes/api/public/hooks/daily-report.ts` (POST, verifică `apikey` header = anon key).
-- Iterează userii cu WhatsApp conectat + Meta conectat, pentru fiecare:
-  - Cheamă insights ultimele 24h (impressions, click-uri, leaduri, cheltuit).
-  - Compune mesaj în română simplă, fără jargon:
-    > 📊 **Raport ieri**
-    > • Ai cheltuit **{x} lei**
-    > • Ai primit **{n} clienți noi**
-    > • Fiecare client te-a costat **{y} lei**
-    > • Cea mai bună reclamă: *{nume}* — {n} clienți
-    >
-    > {1 propunere acționabilă în limbaj simplu}
-- Cron job în Supabase via `pg_cron` + `pg_net` la `0 6 * * *` UTC (= 09:00 RO vara).
+## Plan de fix (în ordine)
 
-## 3. Anomalii cu auto-fix
-- Același cron rulează verificări la fiecare oră (sau separat la `15 * * * *`):
-  - Spend zero >12h pe campanie ACTIVE → "Reclama ta «X» nu a cheltuit nimic azi. Probabil e prea îngustă sau e oprită."
-  - Cost per client x2 față de media 7 zile → "Clienții te costă **dublu** azi față de săptămâna trecută la «X»."
-  - CTR sub 0.5% → "Foarte puțină lume dă click pe «X». Probabil poza/textul nu mai prind."
-- Mesajul se termină cu: "Vrei să rezolv eu? Răspunde **da**."
-- În agent (`whatsapp-agent.server.ts`):
-  - Detectăm dacă ultimul mesaj outbound a fost o propunere de anomalie (marker în DB — coloană nouă `whatsapp_messages.meta jsonb` cu `{anomaly_action: {...}}`).
-  - La răspuns "da/ok/rezolvă", agentul execută acțiunea propusă (pause, lărgire targeting, schimbare buget) — fără confirmare nouă.
+### Faza 1 — Supabase config
+- Setez `auto_confirm_email: false`, `disable_signup: false`, `password_hibp_enabled: true` prin `supabase--configure_auth`.
+- Confirm că template-urile de auth email există (dacă nu, scaffold cu `scaffold_auth_email_templates` — cere domeniu de email).
 
-## 4. Tool-uri noi pentru agent
-În `src/lib/whatsapp-agent.server.ts` adăugăm:
-- `duplicate_campaign({ campaign_id, new_name?, new_copy? })` — citește campania existentă, recreează cu copy nou și pornește pe PAUSED.
-- `ab_test_creative({ campaign_id, media_ids: [a, b] })` — creează 2 ad-uri în același adset, nume "A" / "B".
-- `change_targeting({ campaign_id, age_min?, age_max?, cities?, genders? })` — PATCH pe adset existent.
-- `blacklist_placement({ campaign_id, exclude: ["audience_network" | "stories" | ...] })` — update `publisher_platforms` / `facebook_positions`.
-- `reply_to_lead({ lead_id, text })` — trimite mesaj WhatsApp către lead-ul respectiv (doar dacă `lead.phone` și consimțământ înregistrat; verifică fereastra 24h Meta — dacă expirat, refuză cu explicație).
-- `get_invoice({ month? })` — Graph API `act_{id}/transactions` ultima lună, returnează link / sumă.
-- Helpers Meta corespunzători în `meta-publish.server.ts`.
+### Faza 2 — Pagini noi frumoase
+- **`/auth/confirm-email?email=…`** — ecran cu icon email, "Ți-am trimis un link la `x@y.com`", buton **Retrimite** (rate-limited 60s), buton **Schimbă email** (revine la signup), linkuri deschide Gmail/Outlook.
+- **`/auth/verified`** — landing scurt după click în mail: check verde animat "Emailul tău e confirmat", auto-redirect 2s spre `/onboarding` sau `/dashboard` (via `resolvePostAuthPath`).
+- **`/auth/welcome`** — ecran scurt după Google login pentru useri noi (numele + "Hai să conectăm contul Meta"), buton "Continuă" → `/onboarding`.
+- **`/forgot-password`** — input email + `resetPasswordForEmail` cu `redirectTo` corect, apoi ecran "Verifică emailul".
 
-## 5. Generare poze statice AI
-- Tool nou `generate_creative_image({ prompt, brand_colors? })` în agent.
-- Implementare: chemă Lovable AI Gateway `/v1/images/generations` cu `google/gemini-2.5-flash-image` (sau `nano-banana`), salvează rezultat în bucket `wa-media`, returnează URL + media_id WA pentru preview imediat clientului.
-- Agentul propune: "Nu ai poză? Pot să-ți generez una. Descrie-mi produsul."
+### Faza 3 — Fix flow existent
+- **`src/routes/auth.tsx`**:
+  - Signup: NU mai chem `ensureSessionAfterSignUp`. Dacă `data.session === null`, redirect la `/auth/confirm-email?email=…`.
+  - Detectez `identities: []` din Supabase (semnal "email already exists") și afișez CTA "Ai deja cont, loghează-te".
+  - Adaug link "Am uitat parola" în mode `signin`.
+  - Elimin dubla redirecționare (o singură cale prin `onAuthStateChange`).
+  - Traduc erorile comune Supabase (`Invalid login credentials`, `Email not confirmed`, `User already registered`) în română.
+- **`src/routes/auth.callback.tsx`**:
+  - Detectez `type=signup` / `type=recovery` / `type=email_change` și redirect la `/auth/verified`, `/reset-password`, respectiv `/auth/email-changed`.
+  - Pentru Google (fără type): dacă e user nou (created_at ≈ now, no meta connection), redirect la `/auth/welcome`; altfel `resolvePostAuthPath`.
+- **`src/routes/reset-password.tsx`**: după succes → `resolvePostAuthPath()` în loc de hard `/onboarding`.
+- **`src/lib/auth.ts`**: elimin `ensureSessionAfterSignUp` (nu mai are sens cu confirmarea obligatorie).
 
-## 6. Mesaje vocale (voice notes)
-- În `src/routes/api/public/whatsapp.webhook.ts`: tratăm `messages[].type === 'audio'`.
-- Descărcăm fișierul WA (deja avem `downloadWhatsAppMedia`), trimitem la Lovable AI Gateway `/v1/chat/completions` cu `google/gemini-2.5-flash` și `input_audio` (format webm/ogg) → transcriere.
-- Tratam transcriptul ca text user normal în agent loop.
-- Salvăm și audio-ul în `wa-media` pentru istoric, plus `text` cu transcriptul + prefix "🎙️ ".
+### Faza 4 — Meta OAuth polish
+- `startMetaOAuth`: primește param `returnTo` (`/onboarding` sau `/settings`), îl semnez în cookie separat.
+- `api/meta.auth.callback.ts`: la final redirect la `returnTo` cu `?meta=connected` / `?meta=error&reason=…`.
+- Component nou `<MetaConnectStatus />` folosit în `/settings` și `/onboarding` care citește query params și afișează toast + banner clar (success verde, erori explicative în română: `pages_manage_ads_missing` → "Trebuie să acorzi permisiunea de management pagini", `bad_state` → "Sesiune expirată, încearcă din nou").
+- Buton "Deconectează Meta" în Settings care șterge `meta_connections` + revocă tokenul.
 
-## Detalii tehnice rapide
-- **Migrație DB**: 
-  - `whatsapp_messages` + coloană `meta jsonb` (anomaly actions, audio refs).
-  - `campaigns` + coloană `last_anomaly_check_at timestamptz`.
-- **Cron**: 2 joburi noi (`adpilot-daily-report` la 06:00 UTC, `adpilot-anomaly-scan` la fiecare oră).
-- **Limbaj**: toate mesajele automate în română, fără termeni gen "CPL", "CTR", "ROAS" — folosim "cost per client", "câți dau click", "cât scoți la 1 leu investit".
+### Faza 5 — Design consistency
+- Toate paginile auth (`/auth`, `/auth/confirm-email`, `/auth/verified`, `/auth/welcome`, `/forgot-password`, `/reset-password`) folosesc același layout: header cu logo + back link, card centrat max-w-sm, font serif titlu, motion fade-in.
+- Iconografie unitară din `lucide-react` (Mail, MailCheck, Sparkles, ShieldCheck).
+- Toast-uri sonner cu mesaje românești consistente.
 
-## Ce nu fac acum
-- Calendar/Stripe/Shopify/TikTok/Twilio — în alt round, după ce confirmi că ce e mai sus merge.
-- UI dedicat anomalii — totul prin chat WhatsApp.
+### Faza 6 — Verificare
+- Rulez `tsgo --noEmit` după fiecare fază.
+- Playwright smoke: signup manual → landing confirm-email, click retrimite; Google login flow (mockable); forgot password flow.
 
-Confirmi planul ca să încep să implementez?
+---
+
+## Ce las neatins
+- Structura DB (profiles trigger e ok).
+- Onboarding logic (`resolvePostAuthPath`).
+- `_authenticated/route.tsx` (managed).
+- Stripe/checkout.
+
+## Impact / risc
+- Userii existenți neconfirmați: după activarea confirmării obligatorii **nu se mai pot loga cu parola** până nu confirmă emailul. Pot să adaug un flow "retrimite confirmare" din `/auth`.
+- Necesită template Supabase auth email cu link către `/auth/callback` (dacă nu e domeniu email setat, îți zic să rulăm setup email întâi).
+
+Ordine de execuție: **Faza 1 → 2 → 3 → 4 → 5 → 6**, cu commit după fiecare fază ca să pot da rollback selectiv.

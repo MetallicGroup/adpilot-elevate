@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2 } from "lucide-react";
+import { resolvePostAuthPath } from "@/lib/post-auth";
+import { translateAuthError } from "@/lib/auth";
 
 export const Route = createFileRoute("/reset-password")({
   ssr: false,
@@ -45,9 +47,11 @@ function ResetPasswordPage() {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
       toast.success("Parola a fost schimbată");
-      navigate({ to: "/onboarding", replace: true });
-    } catch (e: any) {
-      toast.error(e.message ?? "Eroare la schimbarea parolei");
+      const dest = await resolvePostAuthPath();
+      navigate({ to: dest, replace: true });
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Eroare la schimbarea parolei";
+      toast.error(translateAuthError(msg));
     } finally {
       setLoading(false);
     }

@@ -34,8 +34,14 @@ function Settings() {
     } else if (search.meta === "error") {
       const reason =
         search.reason === "pages_manage_ads_missing"
-          ? "Meta nu a acordat pages_manage_ads. Adaugă-te ca tester/admin sau trimite aplicația în review, apoi reconectează."
-          : search.reason;
+          ? "Trebuie să acorzi permisiunea de management pagini pentru contul tău Meta."
+          : search.reason === "bad_state"
+            ? "Sesiune expirată — încearcă din nou."
+            : search.reason === "missing_params"
+              ? "Meta nu a returnat toate datele necesare."
+              : search.reason === "callback_failed"
+                ? "Ceva a mers prost la finalizarea autentificării."
+                : search.reason;
       toast.error(`Nu am putut conecta Meta${reason ? `: ${reason}` : ""}`);
       navigate({ to: "/settings", replace: true, search: {} as MetaSearch });
     }
@@ -215,7 +221,7 @@ function MetaConnectionCard() {
   async function connect() {
     setBusy(true);
     try {
-      const { url } = await startOAuth();
+      const { url } = await startOAuth({ data: { returnTo: "/settings" } });
       window.location.href = url;
     } catch (e: any) {
       toast.error(e?.message ?? "Nu am putut porni autentificarea Meta");
