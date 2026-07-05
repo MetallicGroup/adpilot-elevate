@@ -211,6 +211,18 @@ function AuthPage() {
             </button>
           </form>
 
+          {mode === "signin" && (
+            <div className="mt-3 text-right">
+              <Link
+                to="/forgot-password"
+                search={email ? { email } : undefined}
+                className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-4"
+              >
+                Am uitat parola
+              </Link>
+            </div>
+          )}
+
           <p className="mt-6 text-center text-sm text-muted-foreground">
             {mode === "signup" ? "Ai deja cont?" : "Nou pe AdPilot?"}{" "}
             <button
