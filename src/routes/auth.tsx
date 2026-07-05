@@ -81,10 +81,15 @@ function AuthPage() {
   async function oauth(provider: "google") {
     setLoading(true);
     try {
-      await signInWithProvider(provider);
+      const result = await signInWithProvider(provider);
+      if (result.redirected) return;
+
+      toast.success("Bine ai revenit!");
+      await goPostAuth();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Autentificarea a eșuat";
       toast.error(message);
+    } finally {
       setLoading(false);
     }
   }
