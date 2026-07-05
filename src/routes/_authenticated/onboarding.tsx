@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
@@ -11,7 +11,13 @@ import { useStripeCheckout } from "@/hooks/useStripeCheckout";
 import { toast } from "sonner";
 import { WhatsAppConnectionCard } from "@/components/whatsapp/WhatsAppConnectionCard";
 
+type OnboardingSearch = { meta?: string; reason?: string };
+
 export const Route = createFileRoute("/_authenticated/onboarding")({
+  validateSearch: (s: Record<string, unknown>): OnboardingSearch => ({
+    meta: typeof s.meta === "string" ? s.meta : undefined,
+    reason: typeof s.reason === "string" ? s.reason : undefined,
+  }),
   component: OnboardingPage,
 });
 
@@ -42,6 +48,7 @@ const PLANS = [
 
 function OnboardingPage() {
   const navigate = useNavigate();
+  const search = useSearch({ from: "/_authenticated/onboarding" });
   const fetchStatus = useServerFn(getOnboardingStatus);
   const startOAuth = useServerFn(startMetaOAuth);
   const [status, setStatus] = useState<OnboardingStatus | null>(null);
@@ -67,9 +74,27 @@ function OnboardingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (search.meta === "connected") {
+      toast.success("Cont Meta conectat ✅");
+      navigate({ to: "/onboarding", replace: true, search: {} as OnboardingSearch });
+    } else if (search.meta === "error") {
+      const reason =
+        search.reason === "pages_manage_ads_missing"
+          ? "Trebuie să acorzi permisiunea de management pagini."
+          : search.reason === "bad_state"
+            ? "Sesiune expirată — încearcă din nou."
+            : search.reason === "missing_params"
+              ? "Meta nu a returnat toate datele necesare."
+              : search.reason;
+      toast.error(`Nu am putut conecta Meta${reason ? `: ${reason}` : ""}`);
+      navigate({ to: "/onboarding", replace: true, search: {} as OnboardingSearch });
+    }
+  }, [search.meta, search.reason, navigate]);
+
   async function connectMeta() {
     try {
-      const { url } = await startOAuth();
+      const { url } = await startOAuth({ data: { returnTo: "/onboarding" } });
       window.location.href = url;
     } catch (e: any) {
       toast.error(e?.message ?? "Nu am putut porni autentificarea Meta");
