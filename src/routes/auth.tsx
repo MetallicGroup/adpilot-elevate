@@ -7,6 +7,7 @@ import {
   signInWithProvider,
   waitForClientSession,
 } from "@/lib/auth";
+import { resolvePostAuthPath } from "@/lib/post-auth";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
@@ -25,14 +26,18 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard", replace: true });
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (data.session) {
+        const dest = await resolvePostAuthPath();
+        navigate({ to: dest, replace: true });
+      }
     });
   }, [navigate]);
 
-  async function goToOnboarding() {
+  async function goPostAuth() {
     await waitForClientSession();
-    navigate({ to: "/onboarding", replace: true });
+    const dest = await resolvePostAuthPath();
+    navigate({ to: dest, replace: true });
   }
 
   async function submit(e: React.FormEvent) {
@@ -64,7 +69,7 @@ function AuthPage() {
         toast.success("Bine ai revenit!");
       }
 
-      await goToOnboarding();
+      await goPostAuth();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Ceva nu a mers bine";
       toast.error(message);

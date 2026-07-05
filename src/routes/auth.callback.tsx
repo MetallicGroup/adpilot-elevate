@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { resolvePostAuthPath } from "@/lib/post-auth";
 
 export const Route = createFileRoute("/auth/callback")({
   ssr: false,
@@ -41,7 +42,8 @@ function AuthCallbackPage() {
       } = await supabase.auth.getSession();
 
       if (session) {
-        if (!cancelled) navigate({ to: "/onboarding", replace: true });
+        const dest = await resolvePostAuthPath();
+        if (!cancelled) navigate({ to: dest, replace: true });
         return;
       }
 
