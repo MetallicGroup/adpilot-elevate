@@ -15,6 +15,7 @@ import ogHeroAsset from "@/assets/og-hero.png.asset.json";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { runOAuthConfigCheck } from "@/lib/oauth-config-check";
 
 function NotFoundComponent() {
   return (
@@ -136,6 +137,7 @@ function RootComponent() {
   const router = useRouter();
 
   useEffect(() => {
+    runOAuthConfigCheck();
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
