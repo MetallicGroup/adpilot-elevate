@@ -28,6 +28,29 @@ function Index() {
   useEffect(() => {
     let cancelled = false;
     async function redirectSignedInUser() {
+      const params = new URLSearchParams(window.location.search);
+      const hashParams = new URLSearchParams(
+        window.location.hash.startsWith("#") ? window.location.hash.slice(1) : "",
+      );
+      const looksLikeAuthReturn =
+        params.has("code") ||
+        params.has("error") ||
+        params.has("error_description") ||
+        hashParams.has("access_token") ||
+        hashParams.has("refresh_token") ||
+        hashParams.has("type") ||
+        hashParams.has("error");
+
+      if (looksLikeAuthReturn) {
+        navigate({
+          to: "/auth/callback",
+          search: Object.fromEntries(params.entries()),
+          hash: window.location.hash.startsWith("#") ? window.location.hash.slice(1) : undefined,
+          replace: true,
+        });
+        return;
+      }
+
       const { data } = await supabase.auth.getSession();
       if (!data.session || cancelled) return;
       const dest = await resolvePostAuthPath();
