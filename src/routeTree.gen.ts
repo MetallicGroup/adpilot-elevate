@@ -27,6 +27,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
+import { Route as AuthVerifiedRouteImport } from './routes/auth.verified'
 import { Route as AuthConfirmEmailRouteImport } from './routes/auth.confirm-email'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedWhatsappRouteImport } from './routes/_authenticated/whatsapp'
@@ -142,6 +143,11 @@ const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   id: '/checkout/return',
   path: '/checkout/return',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthVerifiedRoute = AuthVerifiedRouteImport.update({
+  id: '/verified',
+  path: '/verified',
+  getParentRoute: () => AuthRoute,
 } as any)
 const AuthConfirmEmailRoute = AuthConfirmEmailRouteImport.update({
   id: '/confirm-email',
@@ -314,6 +320,7 @@ export interface FileRoutesByFullPath {
   '/whatsapp': typeof AuthenticatedWhatsappRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/confirm-email': typeof AuthConfirmEmailRoute
+  '/auth/verified': typeof AuthVerifiedRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/qa/trial': typeof AuthenticatedQaTrialRoute
@@ -359,6 +366,7 @@ export interface FileRoutesByTo {
   '/whatsapp': typeof AuthenticatedWhatsappRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/confirm-email': typeof AuthConfirmEmailRoute
+  '/auth/verified': typeof AuthVerifiedRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/qa/trial': typeof AuthenticatedQaTrialRoute
@@ -406,6 +414,7 @@ export interface FileRoutesById {
   '/_authenticated/whatsapp': typeof AuthenticatedWhatsappRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/confirm-email': typeof AuthConfirmEmailRoute
+  '/auth/verified': typeof AuthVerifiedRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/_authenticated/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/_authenticated/qa/trial': typeof AuthenticatedQaTrialRoute
@@ -453,6 +462,7 @@ export interface FileRouteTypes {
     | '/whatsapp'
     | '/auth/callback'
     | '/auth/confirm-email'
+    | '/auth/verified'
     | '/checkout/return'
     | '/campaigns/$id'
     | '/qa/trial'
@@ -498,6 +508,7 @@ export interface FileRouteTypes {
     | '/whatsapp'
     | '/auth/callback'
     | '/auth/confirm-email'
+    | '/auth/verified'
     | '/checkout/return'
     | '/campaigns/$id'
     | '/qa/trial'
@@ -544,6 +555,7 @@ export interface FileRouteTypes {
     | '/_authenticated/whatsapp'
     | '/auth/callback'
     | '/auth/confirm-email'
+    | '/auth/verified'
     | '/checkout/return'
     | '/_authenticated/campaigns/$id'
     | '/_authenticated/qa/trial'
@@ -719,6 +731,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/checkout/return'
       preLoaderRoute: typeof CheckoutReturnRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/auth/verified': {
+      id: '/auth/verified'
+      path: '/verified'
+      fullPath: '/auth/verified'
+      preLoaderRoute: typeof AuthVerifiedRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/auth/confirm-email': {
       id: '/auth/confirm-email'
@@ -954,11 +973,13 @@ const AuthenticatedRouteRouteWithChildren =
 interface AuthRouteChildren {
   AuthCallbackRoute: typeof AuthCallbackRoute
   AuthConfirmEmailRoute: typeof AuthConfirmEmailRoute
+  AuthVerifiedRoute: typeof AuthVerifiedRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
   AuthCallbackRoute: AuthCallbackRoute,
   AuthConfirmEmailRoute: AuthConfirmEmailRoute,
+  AuthVerifiedRoute: AuthVerifiedRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
