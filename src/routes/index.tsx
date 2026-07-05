@@ -27,14 +27,23 @@ function Index() {
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+    async function redirectSignedInUser() {
       const { data } = await supabase.auth.getSession();
       if (!data.session || cancelled) return;
       const dest = await resolvePostAuthPath();
       if (!cancelled) navigate({ to: dest, replace: true });
-    })();
+    }
+
+    redirectSignedInUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event !== "SIGNED_IN") return;
+      void redirectSignedInUser();
+    });
+
     return () => {
       cancelled = true;
+      subscription.unsubscribe();
     };
   }, [navigate]);
 
