@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  ensureSessionAfterSignUp,
   signInWithProvider,
+  translateAuthError,
   waitForClientSession,
 } from "@/lib/auth";
 import { resolvePostAuthPath } from "@/lib/post-auth";
@@ -26,12 +26,17 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     supabase.auth.getSession().then(async ({ data }) => {
+      if (cancelled) return;
       if (data.session) {
         const dest = await resolvePostAuthPath();
-        navigate({ to: dest, replace: true });
+        if (!cancelled) navigate({ to: dest, replace: true });
       }
     });
+    return () => {
+      cancelled = true;
+    };
   }, [navigate]);
 
   async function goPostAuth() {
@@ -55,24 +60,39 @@ function AuthPage() {
         });
         if (error) throw error;
 
-        if (!data.session) {
-          await ensureSessionAfterSignUp(email, password);
-        } else {
-          await waitForClientSession();
+        // Supabase semnalează "email deja folosit" prin identities: []
+        // (userul nu este creat, doar returnat).
+        if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+          toast.error("Există deja un cont cu acest email. Loghează-te sau resetează parola.");
+          setMode("signin");
+          return;
         }
 
+        if (!data.session) {
+          // Confirmare email obligatorie — trimitem userul la ecranul de confirmare.
+          navigate({
+            to: "/auth/confirm-email",
+            search: { email },
+            replace: true,
+          });
+          return;
+        }
+
+        // Auto-confirm activ (dev fallback) — intrăm direct.
         toast.success("Cont creat cu succes!");
+        await waitForClientSession();
+        await goPostAuth();
+        return;
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         await waitForClientSession();
         toast.success("Bine ai revenit!");
+        await goPostAuth();
       }
-
-      await goPostAuth();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Ceva nu a mers bine";
-      toast.error(message);
+      toast.error(translateAuthError(message));
     } finally {
       setLoading(false);
     }
@@ -88,7 +108,7 @@ function AuthPage() {
       await goPostAuth();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Autentificarea a eșuat";
-      toast.error(message);
+      toast.error(translateAuthError(message));
     } finally {
       setLoading(false);
     }
