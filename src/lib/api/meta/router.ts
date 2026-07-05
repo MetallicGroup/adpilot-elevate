@@ -2,7 +2,6 @@
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { getUserIdFromBearer, jsonResponse, errorResponse } from "../auth";
-import { buildMetaOAuthUrl, completeMetaOAuth, consumeOAuthState, createOAuthState } from "@/lib/meta/oauth";
 import { createMetaLeadCampaign, fetchMetaPages } from "@/lib/meta/campaign";
 import { syncMetaInsights, getMetaInsightsSummary } from "@/lib/meta/insights";
 import { syncMetaLeads, listMetaLeads } from "@/lib/meta/leads";
@@ -46,30 +45,6 @@ export async function handleMetaApiRequest(request: Request): Promise<Response |
   const path = url.pathname.replace(/\/$/, "");
 
   try {
-    if (path === "/api/meta/auth/start" && request.method === "GET") {
-      const userId = await getUserIdFromBearer(request);
-      const state = await createOAuthState(userId);
-      const redirectUrl = buildMetaOAuthUrl(state);
-      return Response.redirect(redirectUrl, 302);
-    }
-
-    if (path === "/api/meta/auth/callback" && request.method === "GET") {
-      const code = url.searchParams.get("code");
-      const state = url.searchParams.get("state");
-      const oauthError = url.searchParams.get("error_description") || url.searchParams.get("error");
-
-      if (oauthError) {
-        return Response.redirect(`/settings?meta_error=${encodeURIComponent(oauthError)}`, 302);
-      }
-      if (!code || !state) {
-        return Response.redirect("/settings?meta_error=missing_code", 302);
-      }
-
-      const userId = await consumeOAuthState(state);
-      await completeMetaOAuth(code, userId);
-      return Response.redirect("/settings?meta=connected", 302);
-    }
-
     if (path === "/api/meta/ad-accounts" && request.method === "GET") {
       const userId = await getUserIdFromBearer(request);
 
