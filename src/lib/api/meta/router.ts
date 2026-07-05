@@ -135,7 +135,7 @@ export async function handleMetaApiRequest(request: Request): Promise<Response |
       return jsonResponse({ leads, synced: result.synced });
     }
 
-    return errorResponse("Not found", 404);
+    return null;
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     const status =
