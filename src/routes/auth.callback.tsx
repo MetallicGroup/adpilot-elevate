@@ -102,18 +102,23 @@ async function waitForSessionHydration(): Promise<Session | null> {
   if (initial.data.session) return initial.data.session;
 
   return new Promise<Session | null>((resolve) => {
+    let subscription: { unsubscribe: () => void } | undefined;
+    let settled = false;
+    const finish = (session: Session | null) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeout);
+      subscription?.unsubscribe();
+      resolve(session);
+    };
+
     const timeout = window.setTimeout(() => {
-      subscription.unsubscribe();
-      resolve(null);
+      finish(null);
     }, 5000);
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    subscription = supabase.auth.onAuthStateChange((event, session) => {
       if (event !== "SIGNED_IN" || !session) return;
-      window.clearTimeout(timeout);
-      subscription.unsubscribe();
-      resolve(session);
-    });
+      finish(session);
+    }).data.subscription;
   });
 }
