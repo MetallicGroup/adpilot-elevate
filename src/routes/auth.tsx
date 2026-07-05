@@ -30,9 +30,9 @@ function AuthPage() {
     });
   }, [navigate]);
 
-  async function goToDashboard() {
+  async function goToOnboarding() {
     await waitForClientSession();
-    navigate({ to: "/dashboard", replace: true });
+    navigate({ to: "/onboarding", replace: true });
   }
 
   async function submit(e: React.FormEvent) {
@@ -64,7 +64,7 @@ function AuthPage() {
         toast.success("Bine ai revenit!");
       }
 
-      await goToDashboard();
+      await goToOnboarding();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Ceva nu a mers bine";
       toast.error(message);

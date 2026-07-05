@@ -41,7 +41,7 @@ function AuthCallbackPage() {
       } = await supabase.auth.getSession();
 
       if (session) {
-        if (!cancelled) navigate({ to: "/dashboard", replace: true });
+        if (!cancelled) navigate({ to: "/onboarding", replace: true });
         return;
       }
 
