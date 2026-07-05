@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { resolvePostAuthPath } from "@/lib/post-auth";
+import { translateAuthError } from "@/lib/auth";
 
 export const Route = createFileRoute("/auth/callback")({
   ssr: false,
@@ -19,11 +20,19 @@ function AuthCallbackPage() {
 
     async function finish() {
       const params = new URLSearchParams(window.location.search);
+      const hashParams = new URLSearchParams(
+        window.location.hash.startsWith("#") ? window.location.hash.slice(1) : "",
+      );
       const code = params.get("code");
-      const authError = params.get("error_description") ?? params.get("error");
+      const type = params.get("type") ?? hashParams.get("type");
+      const authError =
+        params.get("error_description") ??
+        params.get("error") ??
+        hashParams.get("error_description") ??
+        hashParams.get("error");
 
       if (authError) {
-        toast.error(decodeURIComponent(authError));
+        toast.error(translateAuthError(decodeURIComponent(authError)));
         if (!cancelled) navigate({ to: "/auth", replace: true });
         return;
       }
@@ -31,7 +40,7 @@ function AuthCallbackPage() {
       if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code);
         if (error) {
-          toast.error(error.message);
+          toast.error(translateAuthError(error.message));
           if (!cancelled) navigate({ to: "/auth", replace: true });
           return;
         }
@@ -42,6 +51,30 @@ function AuthCallbackPage() {
       } = await supabase.auth.getSession();
 
       if (session) {
+        // Ruteză după tipul de link din email.
+        if (type === "recovery") {
+          if (!cancelled) navigate({ to: "/reset-password", replace: true });
+          return;
+        }
+        if (type === "signup" || type === "email_change" || type === "email") {
+          if (!cancelled) navigate({ to: "/auth/verified", replace: true });
+          return;
+        }
+
+        // OAuth (Google) — dacă e primul sign-in, arătăm ecranul de bun venit.
+        const user = session.user;
+        const created = new Date(user.created_at).getTime();
+        const lastSignIn = user.last_sign_in_at
+          ? new Date(user.last_sign_in_at).getTime()
+          : created;
+        const isFirstSignIn = Math.abs(lastSignIn - created) < 15_000;
+        const isOAuth = (user.app_metadata?.provider ?? "email") !== "email";
+
+        if (isOAuth && isFirstSignIn) {
+          if (!cancelled) navigate({ to: "/auth/welcome", replace: true });
+          return;
+        }
+
         const dest = await resolvePostAuthPath();
         if (!cancelled) navigate({ to: dest, replace: true });
         return;

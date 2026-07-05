@@ -18,6 +18,7 @@ import { Route as IntegrationsRouteImport } from './routes/integrations'
 import { Route as HelpCenterRouteImport } from './routes/help-center'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as GdprRouteImport } from './routes/gdpr'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as DocumentationRouteImport } from './routes/documentation'
 import { Route as CookiePolicyRouteImport } from './routes/cookie-policy'
@@ -99,6 +100,11 @@ const HelpRoute = HelpRouteImport.update({
 const GdprRoute = GdprRouteImport.update({
   id: '/gdpr',
   path: '/gdpr',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FeaturesRoute = FeaturesRouteImport.update({
@@ -305,6 +311,7 @@ export interface FileRoutesByFullPath {
   '/cookie-policy': typeof CookiePolicyRoute
   '/documentation': typeof DocumentationRoute
   '/features': typeof FeaturesRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/gdpr': typeof GdprRoute
   '/help': typeof HelpRoute
   '/help-center': typeof HelpCenterRoute
@@ -352,6 +359,7 @@ export interface FileRoutesByTo {
   '/cookie-policy': typeof CookiePolicyRoute
   '/documentation': typeof DocumentationRoute
   '/features': typeof FeaturesRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/gdpr': typeof GdprRoute
   '/help': typeof HelpRoute
   '/help-center': typeof HelpCenterRoute
@@ -401,6 +409,7 @@ export interface FileRoutesById {
   '/cookie-policy': typeof CookiePolicyRoute
   '/documentation': typeof DocumentationRoute
   '/features': typeof FeaturesRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/gdpr': typeof GdprRoute
   '/help': typeof HelpRoute
   '/help-center': typeof HelpCenterRoute
@@ -450,6 +459,7 @@ export interface FileRouteTypes {
     | '/cookie-policy'
     | '/documentation'
     | '/features'
+    | '/forgot-password'
     | '/gdpr'
     | '/help'
     | '/help-center'
@@ -497,6 +507,7 @@ export interface FileRouteTypes {
     | '/cookie-policy'
     | '/documentation'
     | '/features'
+    | '/forgot-password'
     | '/gdpr'
     | '/help'
     | '/help-center'
@@ -545,6 +556,7 @@ export interface FileRouteTypes {
     | '/cookie-policy'
     | '/documentation'
     | '/features'
+    | '/forgot-password'
     | '/gdpr'
     | '/help'
     | '/help-center'
@@ -594,6 +606,7 @@ export interface RootRouteChildren {
   CookiePolicyRoute: typeof CookiePolicyRoute
   DocumentationRoute: typeof DocumentationRoute
   FeaturesRoute: typeof FeaturesRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   GdprRoute: typeof GdprRoute
   HelpRoute: typeof HelpRoute
   HelpCenterRoute: typeof HelpCenterRoute
@@ -679,6 +692,13 @@ declare module '@tanstack/react-router' {
       path: '/gdpr'
       fullPath: '/gdpr'
       preLoaderRoute: typeof GdprRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/features': {
@@ -1014,6 +1034,7 @@ const rootRouteChildren: RootRouteChildren = {
   CookiePolicyRoute: CookiePolicyRoute,
   DocumentationRoute: DocumentationRoute,
   FeaturesRoute: FeaturesRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   GdprRoute: GdprRoute,
   HelpRoute: HelpRoute,
   HelpCenterRoute: HelpCenterRoute,
