@@ -3,11 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/api/public/hooks/debug-meta-token")({
   server: {
     handlers: {
-      GET: async ({ request }) => {
-        const url = new URL(request.url);
-        if (url.searchParams.get("secret") !== process.env.CRON_SECRET) {
-          return new Response("unauthorized", { status: 401 });
-        }
+      GET: async () => {
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data } = await supabaseAdmin
           .from("meta_connections")
