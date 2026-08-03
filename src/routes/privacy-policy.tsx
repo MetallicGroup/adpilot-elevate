@@ -5,10 +5,10 @@ export const Route = createFileRoute("/privacy-policy")({
   head: () => ({ meta: [{ title: "Politica de confidențialitate — AdPilot" }, { name: "description", content: "Cum colectează, folosește, stochează și protejează AdPilot datele tale personale." }] }),
   component: () => (
     <LegalPage title="Politica de confidențialitate" updated="10 iunie 2026">
-      <P>Această Politică descrie cum AdPilot SRL („AdPilot", „noi") colectează, folosește, stochează, partajează și protejează datele personale când folosești platforma AdPilot, site-ul și serviciile asociate (împreună, „Serviciile"). Folosind Serviciile, accepți practicile descrise mai jos.</P>
+      <P>Această Politică descrie cum Danu Daniel Andrei PFA („AdPilot”) („AdPilot", „noi") colectează, folosește, stochează, partajează și protejează datele personale când folosești platforma AdPilot, site-ul și serviciile asociate (împreună, „Serviciile"). Folosind Serviciile, accepți practicile descrise mai jos.</P>
 
       <H2>1. Cine suntem</H2>
-      <P>AdPilot SRL este o companie înregistrată în România. Pentru scopurile legislației europene privind protecția datelor, AdPilot este operatorul de date pentru datele descrise în această Politică. Ne poți contacta la support@adpilot.ro pentru orice întrebare privind confidențialitatea.</P>
+      <P>Danu Daniel Andrei PFA („AdPilot”) este o companie înregistrată în România. Pentru scopurile legislației europene privind protecția datelor, AdPilot este operatorul de date pentru datele descrise în această Politică. Ne poți contacta la support@adpilot.ro pentru orice întrebare privind confidențialitatea.</P>
 
       <H2>2. Ce informații colectăm</H2>
       <UL>
@@ -66,7 +66,7 @@ export const Route = createFileRoute("/privacy-policy")({
       <P>Putem actualiza această Politică din când în când. Modificările importante sunt comunicate prin email și/sau banner în aplicație cu cel puțin 14 zile înainte. Data „Ultima actualizare" reflectă cea mai recentă revizie.</P>
 
       <H2>12. Contact</H2>
-      <P>Pentru orice întrebare, contactează-ne: AdPilot SRL, support@adpilot.ro, România.</P>
+      <P>Pentru orice întrebare, contactează-ne: Danu Daniel Andrei PFA („AdPilot”), support@adpilot.ro, România.</P>
     </LegalPage>
   ),
 });

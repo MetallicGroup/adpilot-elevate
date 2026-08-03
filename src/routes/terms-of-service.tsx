@@ -5,7 +5,7 @@ export const Route = createFileRoute("/terms-of-service")({
   head: () => ({ meta: [{ title: "Termeni și condiții — AdPilot" }, { name: "description", content: "Termenii care guvernează folosirea platformei AdPilot." }] }),
   component: () => (
     <LegalPage title="Termeni și condiții" updated="10 iunie 2026">
-      <P>Acești Termeni formează un acord obligatoriu între tine („Client") și AdPilot SRL („AdPilot", „noi") și guvernează accesul și folosirea platformei AdPilot, a site-ului și a serviciilor asociate („Serviciile"). Creând un cont sau folosind Serviciile, accepți acești Termeni.</P>
+      <P>Acești Termeni formează un acord obligatoriu între tine („Client") și Danu Daniel Andrei PFA („AdPilot”) („AdPilot", „noi") și guvernează accesul și folosirea platformei AdPilot, a site-ului și a serviciilor asociate („Serviciile"). Creând un cont sau folosind Serviciile, accepți acești Termeni.</P>
 
       <H2>1. Serviciile</H2>
       <P>AdPilot oferă o platformă SaaS care ajută afacerile să creeze, administreze, optimizeze și raporteze campanii de publicitate pe Meta (Facebook și Instagram). Serviciile includ instrumente de creare campanii, generare de creativ cu AI, livrare de clienți potențiali, dashboarduri de analitică și un asistent conversațional pe WhatsApp.</P>
@@ -43,7 +43,7 @@ export const Route = createFileRoute("/terms-of-service")({
       <P>Fiecare parte tratează informațiile non-publice ale celeilalte ca fiind confidențiale și le folosește doar pentru scopurile acestor Termeni. Această obligație continuă 3 ani după încetare.</P>
 
       <H2>9. Proprietate intelectuală</H2>
-      <P>AdPilot, logo-ul, codul, documentația și proprietatea intelectuală asociată aparțin AdPilot SRL. Nu îți acordăm alte drepturi decât folosirea limitată a Serviciilor.</P>
+      <P>AdPilot, logo-ul, codul, documentația și proprietatea intelectuală asociată aparțin Danu Daniel Andrei PFA („AdPilot”). Nu îți acordăm alte drepturi decât folosirea limitată a Serviciilor.</P>
 
       <H2>10. Limitarea garanțiilor</H2>
       <P>Serviciile sunt oferite „așa cum sunt". În măsura permisă de lege, AdPilot nu oferă garanții, exprese sau implicite, inclusiv de calitate comercială sau adecvare pentru un scop. Nu garantăm rezultate specifice de publicitate, ROAS, volum de clienți sau venit.</P>
@@ -64,7 +64,7 @@ export const Route = createFileRoute("/terms-of-service")({
       <P>Putem actualiza acești Termeni. Modificările importante sunt comunicate cu cel puțin 30 de zile înainte prin email și/sau notificare în aplicație. Folosirea continuă a Serviciilor după data efectivă reprezintă acceptul Termenilor revizuiți.</P>
 
       <H2>16. Contact</H2>
-      <P>Întrebări despre acești Termeni? Scrie-ne la support@adpilot.ro sau către AdPilot SRL, România.</P>
+      <P>Întrebări despre acești Termeni? Scrie-ne la support@adpilot.ro sau către Danu Daniel Andrei PFA („AdPilot”), România.</P>
     </LegalPage>
   ),
 });
