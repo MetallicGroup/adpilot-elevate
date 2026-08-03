@@ -5,7 +5,7 @@ export const Route = createFileRoute("/terms-of-service")({
   head: () => ({ meta: [{ title: "Termeni și condiții — AdPilot" }, { name: "description", content: "Termenii care guvernează folosirea platformei AdPilot." }] }),
   component: () => (
     <LegalPage title="Termeni și condiții" updated="10 iunie 2026">
-      <P>Acești Termeni formează un acord obligatoriu între tine („Client") și Danu Daniel Andrei PFA („AdPilot”) („AdPilot", „noi") și guvernează accesul și folosirea platformei AdPilot, a site-ului și a serviciilor asociate („Serviciile"). Creând un cont sau folosind Serviciile, accepți acești Termeni.</P>
+      <P>Acești Termeni formează un acord obligatoriu între tine („Client") și Danu Daniel Andrei PFA („AdPilot", „noi") și guvernează accesul și folosirea platformei AdPilot, a site-ului și a serviciilor asociate („Serviciile"). Creând un cont sau folosind Serviciile, accepți acești Termeni.</P>
 
       <H2>1. Serviciile</H2>
       <P>AdPilot oferă o platformă SaaS care ajută afacerile să creeze, administreze, optimizeze și raporteze campanii de publicitate pe Meta (Facebook și Instagram). Serviciile includ instrumente de creare campanii, generare de creativ cu AI, livrare de clienți potențiali, dashboarduri de analitică și un asistent conversațional pe WhatsApp.</P>
