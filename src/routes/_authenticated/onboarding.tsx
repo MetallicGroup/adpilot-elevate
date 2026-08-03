@@ -11,12 +11,13 @@ import { useStripeCheckout } from "@/hooks/useStripeCheckout";
 import { toast } from "sonner";
 import { WhatsAppConnectionCard } from "@/components/whatsapp/WhatsAppConnectionCard";
 
-type OnboardingSearch = { meta?: string; reason?: string };
+type OnboardingSearch = { meta?: string; reason?: string; limited?: string };
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   validateSearch: (s: Record<string, unknown>): OnboardingSearch => ({
     meta: typeof s.meta === "string" ? s.meta : undefined,
     reason: typeof s.reason === "string" ? s.reason : undefined,
+    limited: typeof s.limited === "string" ? s.limited : undefined,
   }),
   component: OnboardingPage,
 });
@@ -77,6 +78,12 @@ function OnboardingPage() {
   useEffect(() => {
     if (search.meta === "connected") {
       toast.success("Cont Meta conectat ✅");
+      if (search.limited) {
+        toast.warning(
+          `Conectat cu funcționalitate limitată — Meta nu a acordat: ${search.limited}.`,
+          { duration: 10000 },
+        );
+      }
       navigate({ to: "/onboarding", replace: true, search: {} as OnboardingSearch });
     } else if (search.meta === "error") {
       const reason =
@@ -90,7 +97,7 @@ function OnboardingPage() {
       toast.error(`Nu am putut conecta Meta${reason ? `: ${reason}` : ""}`);
       navigate({ to: "/onboarding", replace: true, search: {} as OnboardingSearch });
     }
-  }, [search.meta, search.reason, navigate]);
+  }, [search.meta, search.reason, search.limited, navigate]);
 
   async function connectMeta() {
     try {
