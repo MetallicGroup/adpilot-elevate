@@ -121,10 +121,16 @@ export async function createLeadForm(
     });
   } catch (e: any) {
     const msg = String(e?.message ?? "");
-    if (/permission|pages_manage_ads|OAuth|\(#200\)|\(#10\)/i.test(msg)) {
+    console.error("createLeadForm failed", { pageId, msg });
+    if (/pages_manage_ads|\(#200\)/i.test(msg)) {
       throw new Error(
-        "Meta a refuzat crearea formularului de lead pentru această pagină. Reconectează contul Meta din Setări și acceptă toate permisiunile pentru pagină (trebuie să fii admin al paginii).",
+        "Meta nu acordă încă permisiunea pages_manage_ads pentru această aplicație, deci formularele de lead nu pot fi create. " +
+          "Adaugă permisiunea în Meta App Review (App Review → Permissions and Features → pages_manage_ads) și reconectează contul din Setări. " +
+          "Până atunci poți lansa campanii care nu folosesc formular de lead (trafic / Click-to-WhatsApp).",
       );
+    }
+    if (/permission|OAuth|\(#10\)/i.test(msg)) {
+      throw new Error(`Meta a refuzat crearea formularului de lead pentru pagina ${pageId}: ${msg}`);
     }
     throw e;
   }
