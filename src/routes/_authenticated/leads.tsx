@@ -161,7 +161,7 @@ function LeadsPage() {
             onClick={async () => {
               setSyncing(true);
               try {
-                const r: any = await syncFn({ data: {} as never });
+                const r: any = await syncFn({ data: { full: true } });
                 const errCount = r.errors?.length ?? 0;
                 toast.success(
                   `Sincronizat: ${r.inserted} noi · ${r.scanned} scanate · ${r.forms} formulare${errCount ? ` · ${errCount} erori` : ""}`,
