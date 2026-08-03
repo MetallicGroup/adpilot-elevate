@@ -26,7 +26,14 @@ export function getCentralWhatsApp(): {
 }
 
 export function normalizePhone(input: string): string {
-  return (input || "").replace(/\D/g, "");
+  let d = (input || "").replace(/\D/g, "");
+  // 0040... → 40...
+  if (d.startsWith("00")) d = d.slice(2);
+  // Numere locale RO: 07xxxxxxxx (10 cifre) → 407xxxxxxxx
+  if (d.length === 10 && d.startsWith("07")) d = `4${d}`;
+  // 7xxxxxxxx (9 cifre, fără 0) → 407xxxxxxxx
+  else if (d.length === 9 && d.startsWith("7")) d = `40${d}`;
+  return d;
 }
 
 export function buildWaMeLink(displayNumber: string, prefilledText: string): string {
