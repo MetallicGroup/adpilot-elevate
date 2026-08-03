@@ -59,9 +59,12 @@ export const Route = createFileRoute("/api/meta/auth/callback")({
               .filter((p: any) => p.status === "granted")
               .map((p: any) => p.permission),
           );
-          if (!granted.has("pages_manage_ads")) {
-            return back("meta=error&reason=pages_manage_ads_missing");
-          }
+          // `pages_manage_ads` / `pages_manage_metadata` sunt încă Standard Access:
+          // pentru userii externi Meta nu le returnează. Nu blocăm conectarea —
+          // salvăm scope-urile primite și semnalăm limitarea în UI.
+          const missingScopes = ["pages_manage_ads", "pages_manage_metadata"].filter(
+            (s) => !granted.has(s),
+          );
           const expiresAt = expiresIn ? new Date(Date.now() + expiresIn * 1000).toISOString() : null;
 
           const { data: conn, error: connErr } = await supabaseAdmin
@@ -73,7 +76,7 @@ export const Route = createFileRoute("/api/meta/auth/callback")({
                 meta_user_name: me.name ?? null,
                 access_token: accessToken,
                 token_expires_at: expiresAt,
-                scopes: META_SCOPES.join(","),
+                scopes: Array.from(granted).join(",") || META_SCOPES.join(","),
                 is_active: true,
               },
               { onConflict: "user_id,meta_user_id" },
@@ -155,7 +158,11 @@ export const Route = createFileRoute("/api/meta/auth/callback")({
             console.warn("Meta pages sync failed", e);
           }
 
-          return back("meta=connected");
+          return back(
+            missingScopes.length
+              ? `meta=connected&limited=${encodeURIComponent(missingScopes.join(","))}`
+              : "meta=connected",
+          );
         } catch (e) {
           console.error("Meta OAuth callback error", e);
           return back("meta=error&reason=callback_failed");
