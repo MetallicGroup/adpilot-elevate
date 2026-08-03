@@ -61,7 +61,10 @@ export const publishMetaCampaign = createServerFn({ method: "POST" })
     // 3.5 Preflight: only safe READ endpoints. Block any POST if validation fails,
     // so we don't pollute the Marketing API error rate (required for Standard Access Tier review).
     const v = (await import("./meta.server")).metaApiVersion();
-    const required = ["ads_management", "ads_read", "pages_manage_ads", "leads_retrieval"];
+    // `pages_manage_ads` este încă Standard Access: nu apare în token-ul userilor
+    // externi, dar apelul de creare lead form poate reuși oricum. Nu blocăm pe el —
+    // dacă Meta refuză efectiv, eroarea reală apare la crearea formularului.
+    const required = ["ads_management", "ads_read", "leads_retrieval"];
     try {
       const permRes = await fetch(
         `https://graph.facebook.com/${v}/me/permissions?access_token=${encodeURIComponent(conn.access_token)}`,

@@ -111,13 +111,23 @@ export async function createLeadForm(
   }
   if (!questions.length) questions.push({ type: "PHONE" });
 
-  return metaPOST(`/${pageId}/leadgen_forms`, pageAccessToken, {
-    name: formName,
-    questions,
-    privacy_policy: { url: spec.privacy_url, link_text: "Privacy policy" },
-    follow_up_action_url: spec.follow_up_url || spec.privacy_url,
-    locale: "EN_US",
-  });
+  try {
+    return await metaPOST(`/${pageId}/leadgen_forms`, pageAccessToken, {
+      name: formName,
+      questions,
+      privacy_policy: { url: spec.privacy_url, link_text: "Privacy policy" },
+      follow_up_action_url: spec.follow_up_url || spec.privacy_url,
+      locale: "EN_US",
+    });
+  } catch (e: any) {
+    const msg = String(e?.message ?? "");
+    if (/permission|pages_manage_ads|OAuth|\(#200\)|\(#10\)/i.test(msg)) {
+      throw new Error(
+        "Meta a refuzat crearea formularului de lead pentru această pagină. Reconectează contul Meta din Setări și acceptă toate permisiunile pentru pagină (trebuie să fii admin al paginii).",
+      );
+    }
+    throw e;
+  }
 }
 
 export async function uploadAdImageFromBytes(
