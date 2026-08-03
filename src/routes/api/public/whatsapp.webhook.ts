@@ -24,7 +24,9 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
       POST: async ({ request }) => {
         const raw = await request.text();
         const sig = request.headers.get("x-hub-signature-256");
-        const appSecret = process.env.META_APP_SECRET;
+        // WABA-ul poate fi într-un alt Meta app decât cel de Ads; în acest caz
+        // semnătura vine cu secretul acelui app (ADPILOT_WA_APP_SECRET).
+        const appSecret = process.env.ADPILOT_WA_APP_SECRET || process.env.META_APP_SECRET;
         if (!appSecret) return new Response("Server misconfigured", { status: 500 });
 
         const {
