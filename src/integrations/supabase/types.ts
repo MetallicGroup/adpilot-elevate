@@ -506,6 +506,8 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean
+          last_lead_created_at: string | null
+          leads_synced_at: string | null
           page_access_token: string | null
           page_id: string
           page_name: string | null
@@ -518,6 +520,8 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          last_lead_created_at?: string | null
+          leads_synced_at?: string | null
           page_access_token?: string | null
           page_id: string
           page_name?: string | null
@@ -530,6 +534,8 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          last_lead_created_at?: string | null
+          leads_synced_at?: string | null
           page_access_token?: string | null
           page_id?: string
           page_name?: string | null
