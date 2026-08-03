@@ -59,12 +59,11 @@ export const Route = createFileRoute("/api/meta/auth/callback")({
               .filter((p: any) => p.status === "granted")
               .map((p: any) => p.permission),
           );
-          // `pages_manage_ads` / `pages_manage_metadata` sunt încă Standard Access:
-          // pentru userii externi Meta nu le returnează. Nu blocăm conectarea —
-          // salvăm scope-urile primite și semnalăm limitarea în UI.
-          const missingScopes = ["pages_manage_ads", "pages_manage_metadata"].filter(
-            (s) => !granted.has(s),
-          );
+          // `pages_manage_ads` e încă Standard Access: pentru userii externi Meta
+          // nu îl returnează. Nu blocăm conectarea — salvăm scope-urile primite
+          // și semnalăm limitarea în UI. `pages_manage_metadata` nu mai e cerut:
+          // lead-urile vin prin sincronizare periodică (`leads_retrieval`).
+          const missingScopes = ["pages_manage_ads"].filter((s) => !granted.has(s));
           const expiresAt = expiresIn ? new Date(Date.now() + expiresIn * 1000).toISOString() : null;
 
           const { data: conn, error: connErr } = await supabaseAdmin
@@ -130,30 +129,34 @@ export const Route = createFileRoute("/api/meta/auth/callback")({
                 .upsert(rows, { onConflict: "connection_id,page_id" });
             }
 
-            // Subscribe app to `leadgen` webhooks for each page so leads flow in automatically.
-            const { metaApiVersion } = await import("@/lib/meta.server");
-            const version = metaApiVersion();
-            await Promise.all(
-              pageData
-                .filter((p: any) => p.id && p.access_token)
-                .map(async (p: any) => {
-                  try {
-                    const subUrl = new URL(
-                      `https://graph.facebook.com/${version}/${p.id}/subscribed_apps`,
-                    );
-                    subUrl.searchParams.set("subscribed_fields", "leadgen");
-                    subUrl.searchParams.set("access_token", p.access_token);
-                    const res = await fetch(subUrl.toString(), { method: "POST" });
-                    if (!res.ok) {
-                      console.warn(
-                        `[meta] subscribed_apps failed for page ${p.id}: ${res.status} ${await res.text()}`,
+            // Webhook-ul `leadgen` la nivel de pagină necesită `pages_manage_metadata`,
+            // care nu mai e cerut la login. Abonăm paginile doar dacă permisiunea
+            // există deja (admini/testeri); altfel lead-urile vin prin cron incremental.
+            if (granted.has("pages_manage_metadata")) {
+              const { metaApiVersion } = await import("@/lib/meta.server");
+              const version = metaApiVersion();
+              await Promise.all(
+                pageData
+                  .filter((p: any) => p.id && p.access_token)
+                  .map(async (p: any) => {
+                    try {
+                      const subUrl = new URL(
+                        `https://graph.facebook.com/${version}/${p.id}/subscribed_apps`,
                       );
+                      subUrl.searchParams.set("subscribed_fields", "leadgen");
+                      subUrl.searchParams.set("access_token", p.access_token);
+                      const res = await fetch(subUrl.toString(), { method: "POST" });
+                      if (!res.ok) {
+                        console.warn(
+                          `[meta] subscribed_apps failed for page ${p.id}: ${res.status} ${await res.text()}`,
+                        );
+                      }
+                    } catch (err) {
+                      console.warn(`[meta] subscribed_apps error for page ${p.id}`, err);
                     }
-                  } catch (err) {
-                    console.warn(`[meta] subscribed_apps error for page ${p.id}`, err);
-                  }
-                }),
-            );
+                  }),
+              );
+            }
           } catch (e) {
             console.warn("Meta pages sync failed", e);
           }
