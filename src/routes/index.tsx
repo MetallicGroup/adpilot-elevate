@@ -374,7 +374,7 @@ function Index() {
               <Link to="/auth" className={`press mt-7 inline-flex w-full items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold ${p.featured ? "btn-primary" : "glass hover:bg-card text-foreground"}`}>
                 Începe gratuit
               </Link>
-              <p className="mt-3 text-xs text-center text-muted-foreground">14 zile gratuit · fără card</p>
+              <p className="mt-3 text-xs text-center text-muted-foreground">7 zile gratuit · fără card</p>
             </div>
           ))}
         </div>
@@ -404,7 +404,7 @@ function Index() {
           <h2 className="text-4xl md:text-6xl font-extrabold tracking-tight">
             Gata să lansezi <span className="gradient-text">prima ta reclamă?</span>
           </h2>
-          <p className="mt-5 text-lg text-muted-foreground">Gratuit 14 zile. Fără card. Anulezi oricând. 🎉</p>
+          <p className="mt-5 text-lg text-muted-foreground">Gratuit 7 zile. Fără card. Anulezi oricând. 🎉</p>
           <Link to="/auth" className="press btn-primary mt-10 inline-flex items-center gap-2 px-8 py-4 rounded-xl text-lg font-semibold">
             Începe acum <ArrowRight className="w-5 h-5" />
           </Link>
