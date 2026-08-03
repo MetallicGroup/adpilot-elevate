@@ -27,6 +27,7 @@ export function SiteFooter() {
         <FooterCol title="Legal" links={[
           { to: "/privacy-policy", label: "Politica de confidențialitate" },
           { to: "/terms-of-service", label: "Termeni și condiții" },
+          { to: "/refund-policy", label: "Politica de rambursare" },
           { to: "/cookie-policy", label: "Politica cookies" },
           { to: "/gdpr", label: "Conformitate GDPR" },
         ]} />
