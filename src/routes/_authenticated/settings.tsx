@@ -12,12 +12,13 @@ import { applyAccent } from "@/components/AppHeader";
 import { SubscriptionBadge } from "@/components/SubscriptionBadge";
 import { BillingHistory } from "@/components/BillingHistory";
 
-type MetaSearch = { meta?: string; reason?: string };
+type MetaSearch = { meta?: string; reason?: string; limited?: string };
 
 export const Route = createFileRoute("/_authenticated/settings")({
   validateSearch: (s: Record<string, unknown>): MetaSearch => ({
     meta: typeof s.meta === "string" ? s.meta : undefined,
     reason: typeof s.reason === "string" ? s.reason : undefined,
+    limited: typeof s.limited === "string" ? s.limited : undefined,
   }),
   component: Settings,
 });
@@ -30,6 +31,12 @@ function Settings() {
   useEffect(() => {
     if (search.meta === "connected") {
       toast.success("Cont Meta conectat ✅");
+      if (search.limited) {
+        toast.warning(
+          `Conectat cu funcționalitate limitată — Meta nu a acordat: ${search.limited}. Lead forms și webhook-ul instant vor fi indisponibile până la aprobarea App Review.`,
+          { duration: 10000 },
+        );
+      }
       navigate({ to: "/settings", replace: true, search: {} as MetaSearch });
     } else if (search.meta === "error") {
       const reason =
@@ -45,7 +52,7 @@ function Settings() {
       toast.error(`Nu am putut conecta Meta${reason ? `: ${reason}` : ""}`);
       navigate({ to: "/settings", replace: true, search: {} as MetaSearch });
     }
-  }, [search.meta, search.reason, navigate]);
+  }, [search.meta, search.reason, search.limited, navigate]);
 
   async function signOut() {
     await qc.cancelQueries();
