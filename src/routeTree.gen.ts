@@ -52,7 +52,6 @@ import { Route as ApiPublicHooksWaKeepaliveRouteImport } from './routes/api/publ
 import { Route as ApiPublicHooksSyncMetaLeadsRouteImport } from './routes/api/public/hooks/sync-meta-leads'
 import { Route as ApiPublicHooksRefreshInsightsRouteImport } from './routes/api/public/hooks/refresh-insights'
 import { Route as ApiPublicHooksPeriodicUpdateRouteImport } from './routes/api/public/hooks/periodic-update'
-import { Route as ApiPublicHooksDiagPageRouteImport } from './routes/api/public/hooks/diag-page'
 import { Route as ApiPublicHooksDailyReportRouteImport } from './routes/api/public/hooks/daily-report'
 import { Route as ApiPublicHooksAnomalyScanRouteImport } from './routes/api/public/hooks/anomaly-scan'
 import { Route as ApiMetaAuthCallbackRouteImport } from './routes/api/meta.auth.callback'
@@ -281,11 +280,6 @@ const ApiPublicHooksPeriodicUpdateRoute =
     path: '/api/public/hooks/periodic-update',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicHooksDiagPageRoute = ApiPublicHooksDiagPageRouteImport.update({
-  id: '/api/public/hooks/diag-page',
-  path: '/api/public/hooks/diag-page',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPublicHooksDailyReportRoute =
   ApiPublicHooksDailyReportRouteImport.update({
     id: '/api/public/hooks/daily-report',
@@ -356,7 +350,6 @@ export interface FileRoutesByFullPath {
   '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
   '/api/public/hooks/anomaly-scan': typeof ApiPublicHooksAnomalyScanRoute
   '/api/public/hooks/daily-report': typeof ApiPublicHooksDailyReportRoute
-  '/api/public/hooks/diag-page': typeof ApiPublicHooksDiagPageRoute
   '/api/public/hooks/periodic-update': typeof ApiPublicHooksPeriodicUpdateRoute
   '/api/public/hooks/refresh-insights': typeof ApiPublicHooksRefreshInsightsRoute
   '/api/public/hooks/sync-meta-leads': typeof ApiPublicHooksSyncMetaLeadsRoute
@@ -406,7 +399,6 @@ export interface FileRoutesByTo {
   '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
   '/api/public/hooks/anomaly-scan': typeof ApiPublicHooksAnomalyScanRoute
   '/api/public/hooks/daily-report': typeof ApiPublicHooksDailyReportRoute
-  '/api/public/hooks/diag-page': typeof ApiPublicHooksDiagPageRoute
   '/api/public/hooks/periodic-update': typeof ApiPublicHooksPeriodicUpdateRoute
   '/api/public/hooks/refresh-insights': typeof ApiPublicHooksRefreshInsightsRoute
   '/api/public/hooks/sync-meta-leads': typeof ApiPublicHooksSyncMetaLeadsRoute
@@ -458,7 +450,6 @@ export interface FileRoutesById {
   '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
   '/api/public/hooks/anomaly-scan': typeof ApiPublicHooksAnomalyScanRoute
   '/api/public/hooks/daily-report': typeof ApiPublicHooksDailyReportRoute
-  '/api/public/hooks/diag-page': typeof ApiPublicHooksDiagPageRoute
   '/api/public/hooks/periodic-update': typeof ApiPublicHooksPeriodicUpdateRoute
   '/api/public/hooks/refresh-insights': typeof ApiPublicHooksRefreshInsightsRoute
   '/api/public/hooks/sync-meta-leads': typeof ApiPublicHooksSyncMetaLeadsRoute
@@ -510,7 +501,6 @@ export interface FileRouteTypes {
     | '/api/meta/auth/callback'
     | '/api/public/hooks/anomaly-scan'
     | '/api/public/hooks/daily-report'
-    | '/api/public/hooks/diag-page'
     | '/api/public/hooks/periodic-update'
     | '/api/public/hooks/refresh-insights'
     | '/api/public/hooks/sync-meta-leads'
@@ -560,7 +550,6 @@ export interface FileRouteTypes {
     | '/api/meta/auth/callback'
     | '/api/public/hooks/anomaly-scan'
     | '/api/public/hooks/daily-report'
-    | '/api/public/hooks/diag-page'
     | '/api/public/hooks/periodic-update'
     | '/api/public/hooks/refresh-insights'
     | '/api/public/hooks/sync-meta-leads'
@@ -611,7 +600,6 @@ export interface FileRouteTypes {
     | '/api/meta/auth/callback'
     | '/api/public/hooks/anomaly-scan'
     | '/api/public/hooks/daily-report'
-    | '/api/public/hooks/diag-page'
     | '/api/public/hooks/periodic-update'
     | '/api/public/hooks/refresh-insights'
     | '/api/public/hooks/sync-meta-leads'
@@ -645,7 +633,6 @@ export interface RootRouteChildren {
   ApiMetaAuthCallbackRoute: typeof ApiMetaAuthCallbackRoute
   ApiPublicHooksAnomalyScanRoute: typeof ApiPublicHooksAnomalyScanRoute
   ApiPublicHooksDailyReportRoute: typeof ApiPublicHooksDailyReportRoute
-  ApiPublicHooksDiagPageRoute: typeof ApiPublicHooksDiagPageRoute
   ApiPublicHooksPeriodicUpdateRoute: typeof ApiPublicHooksPeriodicUpdateRoute
   ApiPublicHooksRefreshInsightsRoute: typeof ApiPublicHooksRefreshInsightsRoute
   ApiPublicHooksSyncMetaLeadsRoute: typeof ApiPublicHooksSyncMetaLeadsRoute
@@ -959,13 +946,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksPeriodicUpdateRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/hooks/diag-page': {
-      id: '/api/public/hooks/diag-page'
-      path: '/api/public/hooks/diag-page'
-      fullPath: '/api/public/hooks/diag-page'
-      preLoaderRoute: typeof ApiPublicHooksDiagPageRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/hooks/daily-report': {
       id: '/api/public/hooks/daily-report'
       path: '/api/public/hooks/daily-report'
@@ -1089,7 +1069,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMetaAuthCallbackRoute: ApiMetaAuthCallbackRoute,
   ApiPublicHooksAnomalyScanRoute: ApiPublicHooksAnomalyScanRoute,
   ApiPublicHooksDailyReportRoute: ApiPublicHooksDailyReportRoute,
-  ApiPublicHooksDiagPageRoute: ApiPublicHooksDiagPageRoute,
   ApiPublicHooksPeriodicUpdateRoute: ApiPublicHooksPeriodicUpdateRoute,
   ApiPublicHooksRefreshInsightsRoute: ApiPublicHooksRefreshInsightsRoute,
   ApiPublicHooksSyncMetaLeadsRoute: ApiPublicHooksSyncMetaLeadsRoute,
