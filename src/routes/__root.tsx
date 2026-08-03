@@ -16,6 +16,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { runOAuthConfigCheck } from "@/lib/oauth-config-check";
+import { CookieConsent } from "@/components/CookieConsent";
 
 function NotFoundComponent() {
   return (
@@ -150,6 +151,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <Outlet />
       <Toaster position="bottom-center" theme="dark" />
+      <CookieConsent />
     </QueryClientProvider>
   );
 }

@@ -1,11 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage, H2, P, UL } from "@/components/marketing/LegalPage";
+import { CompanyDetails } from "@/components/marketing/CompanyDetails";
 
 export const Route = createFileRoute("/gdpr")({
   head: () => ({ meta: [{ title: "Conformitate GDPR — AdPilot" }, { name: "description", content: "Cum respectă AdPilot Regulamentul General privind Protecția Datelor." }] }),
   component: () => (
     <LegalPage title="Conformitate GDPR" updated="10 iunie 2026">
-      <P>AdPilot SRL este o companie din UE, complet angajată să respecte Regulamentul General privind Protecția Datelor (Regulamentul (UE) 2016/679, „GDPR"). Această pagină rezumă cum aplicăm principiile GDPR. Pentru detalii complete, citește Politica de confidențialitate.</P>
+      <CompanyDetails />
+      <P>Danu Daniel Andrei PFA („AdPilot”) este o companie din UE, complet angajată să respecte Regulamentul General privind Protecția Datelor (Regulamentul (UE) 2016/679, „GDPR"). Această pagină rezumă cum aplicăm principiile GDPR. Pentru detalii complete, citește Politica de confidențialitate.</P>
 
       <H2>1. Baze legale de prelucrare</H2>
       <P>Prelucrăm datele personale doar atunci când se aplică una dintre bazele legale GDPR — cel mai frecvent: executarea unui contract, consimțământul tău, interesele noastre legitime (echilibrate cu drepturile tale) sau obligația legală.</P>
@@ -39,7 +41,7 @@ export const Route = createFileRoute("/gdpr")({
       <P>În cazul puțin probabil al unei breșe de securitate care prezintă risc pentru drepturile persoanelor, AdPilot notifică autoritatea de supraveghere în 72 de ore și, când este necesar, informează persoanele afectate fără întârziere.</P>
 
       <H2>8. Contact</H2>
-      <P>Pentru orice întrebare GDPR, scrie la support@adpilot.ro sau către AdPilot SRL, România.</P>
+      <P>Pentru orice întrebare GDPR, scrie la support@adpilot.ro sau către Danu Daniel Andrei PFA („AdPilot”), România.</P>
     </LegalPage>
   ),
 });

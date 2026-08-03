@@ -1,5 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import logoAsset from "@/assets/adpilot-logo.png.asset.json";
+import anpcSal from "@/assets/anpc-sal.png";
+import anpcSol from "@/assets/anpc-sol.png";
+import { openCookiePreferences } from "@/components/CookieConsent";
 
 export function SiteFooter() {
   return (
@@ -37,6 +40,40 @@ export function SiteFooter() {
           { to: "/documentation", label: "Documentație" },
           { to: "/contact", label: "Contact" },
         ]} />
+      </div>
+      <div className="border-t border-border">
+        <div className="max-w-6xl mx-auto w-full px-6 py-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="text-xs text-muted-foreground leading-relaxed">
+            <p className="font-medium text-foreground/90">Danu Daniel Andrei Persoană Fizică Autorizată</p>
+            <p>CUI: 48925044 · Nr. Reg. Com.: F40/7483/2023</p>
+            <p>Sediu: B-dul Bucureștii Noi, 136, et. Parter, ap. 5, Sector 1, București</p>
+            <button
+              type="button"
+              onClick={openCookiePreferences}
+              className="mt-2 underline underline-offset-4 hover:text-foreground transition-colors"
+            >
+              Preferințe cookies
+            </button>
+          </div>
+          <div className="flex items-center gap-3">
+            <a
+              href="https://anpc.ro/ce-este-sal/"
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              aria-label="ANPC — Soluționarea Alternativă a Litigiilor"
+            >
+              <img src={anpcSal} alt="ANPC — Soluționarea Alternativă a Litigiilor" loading="lazy" width={250} height={50} className="h-11 w-auto rounded-md bg-white p-1" />
+            </a>
+            <a
+              href="https://ec.europa.eu/consumers/odr"
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              aria-label="ANPC — Soluționarea Online a Litigiilor"
+            >
+              <img src={anpcSol} alt="ANPC — Soluționarea Online a Litigiilor" loading="lazy" width={250} height={50} className="h-11 w-auto rounded-md bg-white p-1" />
+            </a>
+          </div>
+        </div>
       </div>
       <div className="border-t border-border">
         <div className="max-w-6xl mx-auto w-full px-6 py-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs text-muted-foreground">
