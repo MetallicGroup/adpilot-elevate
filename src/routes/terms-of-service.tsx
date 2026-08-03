@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage, H2, P, UL } from "@/components/marketing/LegalPage";
+import { CompanyDetails } from "@/components/marketing/CompanyDetails";
 
 export const Route = createFileRoute("/terms-of-service")({
   head: () => ({ meta: [{ title: "Termeni și condiții — AdPilot" }, { name: "description", content: "Termenii care guvernează folosirea platformei AdPilot." }] }),
   component: () => (
     <LegalPage title="Termeni și condiții" updated="10 iunie 2026">
+      <CompanyDetails />
       <P>Acești Termeni formează un acord obligatoriu între tine („Client") și Danu Daniel Andrei PFA („AdPilot", „noi") și guvernează accesul și folosirea platformei AdPilot, a site-ului și a serviciilor asociate („Serviciile"). Creând un cont sau folosind Serviciile, accepți acești Termeni.</P>
 
       <H2>1. Serviciile</H2>

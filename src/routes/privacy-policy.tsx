@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage, H2, P, UL } from "@/components/marketing/LegalPage";
+import { CompanyDetails } from "@/components/marketing/CompanyDetails";
 
 export const Route = createFileRoute("/privacy-policy")({
   head: () => ({ meta: [{ title: "Politica de confidențialitate — AdPilot" }, { name: "description", content: "Cum colectează, folosește, stochează și protejează AdPilot datele tale personale." }] }),
   component: () => (
     <LegalPage title="Politica de confidențialitate" updated="10 iunie 2026">
+      <CompanyDetails />
       <P>Această Politică descrie cum Danu Daniel Andrei PFA („AdPilot", „noi") colectează, folosește, stochează, partajează și protejează datele personale când folosești platforma AdPilot, site-ul și serviciile asociate (împreună, „Serviciile"). Folosind Serviciile, accepți practicile descrise mai jos.</P>
 
       <H2>1. Cine suntem</H2>

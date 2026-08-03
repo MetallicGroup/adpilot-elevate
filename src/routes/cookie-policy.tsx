@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage, H2, P, UL } from "@/components/marketing/LegalPage";
+import { CompanyDetails } from "@/components/marketing/CompanyDetails";
 
 export const Route = createFileRoute("/cookie-policy")({
   head: () => ({ meta: [{ title: "Politica de cookies — AdPilot" }, { name: "description", content: "Cum folosește AdPilot cookies și tehnologii similare." }] }),
   component: () => (
     <LegalPage title="Politica de cookies" updated="10 iunie 2026">
+      <CompanyDetails />
       <P>Această Politică explică cum Danu Daniel Andrei PFA („AdPilot”) folosește cookies și tehnologii similare atunci când vizitezi site-ul sau folosești platforma AdPilot. Citește-o împreună cu Politica noastră de confidențialitate.</P>
 
       <H2>1. Ce este un cookie?</H2>

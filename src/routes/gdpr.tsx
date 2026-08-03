@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage, H2, P, UL } from "@/components/marketing/LegalPage";
+import { CompanyDetails } from "@/components/marketing/CompanyDetails";
 
 export const Route = createFileRoute("/gdpr")({
   head: () => ({ meta: [{ title: "Conformitate GDPR — AdPilot" }, { name: "description", content: "Cum respectă AdPilot Regulamentul General privind Protecția Datelor." }] }),
   component: () => (
     <LegalPage title="Conformitate GDPR" updated="10 iunie 2026">
+      <CompanyDetails />
       <P>Danu Daniel Andrei PFA („AdPilot”) este o companie din UE, complet angajată să respecte Regulamentul General privind Protecția Datelor (Regulamentul (UE) 2016/679, „GDPR"). Această pagină rezumă cum aplicăm principiile GDPR. Pentru detalii complete, citește Politica de confidențialitate.</P>
 
       <H2>1. Baze legale de prelucrare</H2>
