@@ -16,7 +16,7 @@ const SCOPE_HUMAN: Record<string, string> = {
   business_management: "Gestionare Business Manager",
   leads_retrieval: "Citire lead-uri din formulare",
   pages_manage_ads: "Reclame pe paginile tale",
-  pages_manage_metadata: "Abonare pagină la webhook (lead-uri instant)",
+  pages_manage_metadata: "Opțional: webhook pagină (lead-uri instant, altfel sync la 3 min)",
   pages_read_engagement: "Citire date pagină",
   pages_show_list: "Listă pagini",
 };
