@@ -121,9 +121,10 @@ export async function createLeadForm(
     });
   } catch (e: any) {
     const msg = String(e?.message ?? "");
+    console.error("createLeadForm failed", { pageId, msg });
     if (/permission|pages_manage_ads|OAuth|\(#200\)|\(#10\)/i.test(msg)) {
       throw new Error(
-        "Meta a refuzat crearea formularului de lead pentru această pagină. Reconectează contul Meta din Setări și acceptă toate permisiunile pentru pagină (trebuie să fii admin al paginii).",
+        `Meta a refuzat crearea formularului de lead pentru pagina ${pageId}. Detalii Meta: ${msg}`,
       );
     }
     throw e;
