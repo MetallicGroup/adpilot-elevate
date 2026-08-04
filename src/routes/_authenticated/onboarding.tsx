@@ -136,7 +136,7 @@ function OnboardingPage() {
             Două minute și ești gata să lansezi.
           </h1>
           <p className="mt-3 text-muted-foreground">
-            Conectează pagina ta de Facebook și alege un plan — 7 zile gratuit, anulezi oricând.
+            Conectează pagina ta de Facebook și alege un plan — 3 zile gratuit, anulezi oricând.
           </p>
         </motion.div>
 
@@ -186,7 +186,7 @@ function OnboardingPage() {
             <div className="flex-1">
               <h2 className="font-semibold text-lg">Alege planul tău</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                7 zile gratuit pe orice plan. Cardul e necesar pentru activare — nu îți retragem nimic înainte de a 8-a zi.
+                3 zile gratuit pe orice plan. Cardul e necesar pentru activare — nu îți retragem nimic înainte de a 4-a zi.
               </p>
             </div>
           </div>
@@ -210,7 +210,7 @@ function OnboardingPage() {
                   {p.price}
                   <span className="text-xs text-muted-foreground font-sans">/lună</span>
                 </p>
-                <p className="mt-1 text-[11px] text-success font-medium">✨ 7 zile gratuit</p>
+                <p className="mt-1 text-[11px] text-success font-medium">✨ 3 zile gratuit</p>
                 <ul className="mt-4 space-y-1.5 text-xs flex-1">
                   {p.items.map((it) => (
                     <li key={it} className="flex items-start gap-2">
@@ -224,7 +224,7 @@ function OnboardingPage() {
                     p.featured ? "bg-primary text-primary-foreground" : "bg-foreground text-background"
                   }`}
                 >
-                  Începe 7 zile gratuit
+                  Începe 3 zile gratuit
                 </button>
               </div>
             ))}
