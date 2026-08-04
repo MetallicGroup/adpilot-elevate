@@ -240,6 +240,8 @@ export async function createAdSet(
     };
     status: "ACTIVE" | "PAUSED";
     objective?: "leads" | "traffic";
+    dsa_beneficiary?: string;
+    dsa_payor?: string;
   },
 ) {
   const geo_locations: Record<string, unknown> = {};
@@ -276,6 +278,11 @@ export async function createAdSet(
   if (args.objective !== "traffic") {
     body.promoted_object = { page_id: args.page_id };
   }
+  // EU DSA: Meta cere entitatea promovată (beneficiar) și plătitorul.
+  if (args.dsa_beneficiary) {
+    body.dsa_beneficiary = args.dsa_beneficiary;
+    body.dsa_payor = args.dsa_payor || args.dsa_beneficiary;
+  }
   if (args.daily_budget_cents) body.daily_budget = args.daily_budget_cents;
   if (args.lifetime_budget_cents) body.lifetime_budget = args.lifetime_budget_cents;
   if (args.end_time) body.end_time = args.end_time;
@@ -284,6 +291,20 @@ export async function createAdSet(
     body.start_time = new Date().toISOString();
   }
   return metaPOST(`/act_${adAccountId}/adsets`, accessToken, body);
+}
+
+/** Numele Paginii Facebook — folosit ca beneficiar/plătitor DSA. */
+export async function fetchPageName(pageId: string, accessToken: string): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `${GRAPH}/${metaApiVersion()}/${pageId}?fields=name&access_token=${encodeURIComponent(accessToken)}`,
+    );
+    const json = await res.json();
+    if (!res.ok || !json?.name) return null;
+    return String(json.name);
+  } catch {
+    return null;
+  }
 }
 
 /** Search Meta's targeting database for a city by free-text name. Returns the first match. */
