@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { type StripeEnv, verifyWebhook } from "@/lib/stripe.server";
+import { type StripeEnv, verifyWebhook, createStripeClient } from "@/lib/stripe.server";
 
 let _supabase: any | null = null;
 async function getSupabase(): Promise<any> {
@@ -17,6 +17,57 @@ function resolvePriceId(item: any): string {
     item?.price?.id ||
     ""
   );
+}
+
+/**
+ * Card verification: charge 1 leu on the saved card and refund it immediately.
+ * Runs once per customer (guarded by customer metadata).
+ */
+async function verifyCardWithOneLeu(subscription: any, env: StripeEnv) {
+  try {
+    const stripe = createStripeClient(env);
+    const customerId =
+      typeof subscription.customer === "string" ? subscription.customer : subscription.customer?.id;
+    if (!customerId) return;
+
+    const customer: any = await stripe.customers.retrieve(customerId);
+    if (customer?.deleted) return;
+    if (customer?.metadata?.card_verified === "true") return;
+
+    let paymentMethod =
+      (typeof subscription.default_payment_method === "string"
+        ? subscription.default_payment_method
+        : subscription.default_payment_method?.id) ||
+      (typeof customer?.invoice_settings?.default_payment_method === "string"
+        ? customer.invoice_settings.default_payment_method
+        : customer?.invoice_settings?.default_payment_method?.id);
+
+    if (!paymentMethod) {
+      const pms = await stripe.paymentMethods.list({ customer: customerId, type: "card", limit: 1 });
+      paymentMethod = pms.data[0]?.id;
+    }
+    if (!paymentMethod) return;
+
+    const intent = await stripe.paymentIntents.create({
+      amount: 100, // 1,00 RON
+      currency: "ron",
+      customer: customerId,
+      payment_method: paymentMethod,
+      off_session: true,
+      confirm: true,
+      description: "AdPilot — verificare card (1 leu, se returnează imediat)",
+      metadata: { kind: "card_verification", subscription: subscription.id },
+    });
+
+    if (intent.status === "succeeded") {
+      await stripe.refunds.create({ payment_intent: intent.id });
+    }
+    await stripe.customers.update(customerId, {
+      metadata: { ...(customer.metadata ?? {}), card_verified: "true" },
+    });
+  } catch (e) {
+    console.error("[webhook] card verification failed:", e);
+  }
 }
 
 async function handleSubscriptionCreated(subscription: any, env: StripeEnv) {
@@ -50,6 +101,8 @@ async function handleSubscriptionCreated(subscription: any, env: StripeEnv) {
     },
     { onConflict: "stripe_subscription_id" },
   );
+
+  await verifyCardWithOneLeu(subscription, env);
 }
 
 async function handleSubscriptionUpdated(subscription: any, env: StripeEnv) {
