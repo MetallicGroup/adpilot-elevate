@@ -14,9 +14,9 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "AdPilot — Reclame Facebook & Google. Lead-uri pe WhatsApp." },
-      { name: "description", content: "Platforma AI care creează, lansează și optimizează reclame Facebook și Google Ads în câteva minute. Fiecare lead ajunge direct pe WhatsApp. 7 zile gratuit." },
+      { name: "description", content: "Platforma AI care creează, lansează și optimizează reclame Facebook și Google Ads în câteva minute. Fiecare lead ajunge direct pe WhatsApp. 3 zile gratuit." },
       { property: "og:title", content: "AdPilot — Reclame Facebook & Google. Lead-uri pe WhatsApp." },
-      { property: "og:description", content: "Creează și optimizează reclame Facebook și Google Ads cu AI. Lead-urile vin direct pe WhatsApp. 7 zile gratuit." },
+      { property: "og:description", content: "Creează și optimizează reclame Facebook și Google Ads cu AI. Lead-urile vin direct pe WhatsApp. 3 zile gratuit." },
     ],
   }),
   component: Index,
@@ -93,7 +93,7 @@ function Index() {
                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass text-xs font-medium text-muted-foreground"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-success pulse-dot text-success" />
-                ✨ 7 zile gratuit · fără retragere înainte de a 8-a zi
+                ✨ 3 zile gratuit · fără retragere înainte de a 4-a zi
               </motion.div>
 
               <h1 className="mt-8 text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight">
@@ -107,7 +107,7 @@ function Index() {
 
               <div className="mt-10 flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
                 <Link to="/auth" className="press btn-primary inline-flex items-center justify-center gap-2 px-7 py-4 rounded-xl font-semibold">
-                  Începe cele 7 zile gratuit <ArrowRight className="w-4 h-4" />
+                  Începe cele 3 zile gratuit <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link to="/contact" className="press inline-flex items-center justify-center gap-2 px-7 py-4 glass rounded-xl font-medium text-foreground hover:bg-card transition-colors">
                   <PlayCircle className="w-4 h-4" /> Vezi demo
@@ -374,7 +374,7 @@ function Index() {
               <Link to="/auth" className={`press mt-7 inline-flex w-full items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold ${p.featured ? "btn-primary" : "glass hover:bg-card text-foreground"}`}>
                 Începe gratuit
               </Link>
-              <p className="mt-3 text-xs text-center text-muted-foreground">7 zile gratuit · fără card</p>
+              <p className="mt-3 text-xs text-center text-muted-foreground">3 zile gratuit · fără card</p>
             </div>
           ))}
         </div>
@@ -404,7 +404,7 @@ function Index() {
           <h2 className="text-4xl md:text-6xl font-extrabold tracking-tight">
             Gata să lansezi <span className="gradient-text">prima ta reclamă?</span>
           </h2>
-          <p className="mt-5 text-lg text-muted-foreground">Gratuit 7 zile. Fără card. Anulezi oricând. 🎉</p>
+          <p className="mt-5 text-lg text-muted-foreground">Gratuit 3 zile. Fără card. Anulezi oricând. 🎉</p>
           <Link to="/auth" className="press btn-primary mt-10 inline-flex items-center gap-2 px-8 py-4 rounded-xl text-lg font-semibold">
             Începe acum <ArrowRight className="w-5 h-5" />
           </Link>
