@@ -267,6 +267,35 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
               }
 
               // Load history
+              // Plan gate: Starter has no WhatsApp assistant.
+              {
+                const { getUserPlanTier, whatsappAllowedForTier, WHATSAPP_UPGRADE_MESSAGE } =
+                  await import("@/lib/plan.server");
+                const tier = await getUserPlanTier(supabaseAdmin, conn.user_id);
+                if (!whatsappAllowedForTier(tier)) {
+                  try {
+                    const { id } = await sendWhatsAppMessage(
+                      central.phoneNumberId,
+                      central.accessToken,
+                      fromPhone,
+                      { type: "text", text: WHATSAPP_UPGRADE_MESSAGE },
+                    );
+                    await supabaseAdmin.from("whatsapp_messages").insert({
+                      user_id: conn.user_id,
+                      connection_id: conn.id,
+                      wa_message_id: id,
+                      direction: "out",
+                      msg_type: "text",
+                      text: WHATSAPP_UPGRADE_MESSAGE,
+                      meta: { kind: "plan_gate" },
+                    });
+                  } catch (e) {
+                    console.error("[wa] plan gate notice failed", e);
+                  }
+                  continue;
+                }
+              }
+
               const { data: hist } = await supabaseAdmin
                 .from("whatsapp_messages")
                 .select("direction, text, created_at")
