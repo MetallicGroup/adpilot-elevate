@@ -742,6 +742,7 @@ async function retryLastDraftCampaign(supabaseAdmin: any, ctx: AgentCtx) {
     description: String(creative.description ?? ""),
     cta: creative.cta ?? "Learn More",
     landing_url: creative.landing_url ?? "https://adpilot.ro",
+    beneficiary: typeof creative.beneficiary === "string" ? creative.beneficiary : undefined,
     custom_questions: leadForm.custom_questions ?? [],
     countries: countries.length ? countries : ["RO"],
     cities: cities.length ? cities : undefined,
