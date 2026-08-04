@@ -933,7 +933,7 @@ async function publishCampaignToMeta(
         return {
           error:
             "Meta cere numele firmei/persoanei promovate de reclamă (regula UE - DSA). " +
-            "Spune-mi te rog exact numele afacerii (ex: „Salon Bella SRL") și relansez campania imediat — " +
+            "Spune-mi te rog exact numele afacerii (ex: Salon Bella SRL) si relansez campania imediat — " +
             "îl trimit eu automat la Meta, nu trebuie să intri nicăieri.",
         };
       }
