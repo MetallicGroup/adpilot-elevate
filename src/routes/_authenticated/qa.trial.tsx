@@ -32,16 +32,16 @@ function QATrialPage() {
       <div>
         <p className="text-sm text-muted-foreground">QA · Plăți</p>
         <h1 className="text-3xl font-bold tracking-tight mt-1 flex items-center gap-2">
-          <FlaskConical className="w-7 h-7" /> Test E2E Trial 7 zile
+          <FlaskConical className="w-7 h-7" /> Test E2E Trial 3 zile
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Rulează un test în <strong>sandbox</strong> folosind Stripe test clocks. Creează un client cu card de test,
-          deschide abonament cu trial 7 zile, avansează ceasul și verifică strict:
+          deschide abonament cu trial 3 zile, avansează ceasul și verifică strict:
         </p>
         <ul className="mt-2 text-sm text-muted-foreground list-disc list-inside space-y-1">
-          <li>Nu apare niciun charge în primele 6 zile.</li>
-          <li>Abonamentul rămâne în <code>trialing</code> în ziua 6.</li>
-          <li>După ziua 7+, abonamentul trece în <code>active</code>.</li>
+          <li>Nu apare niciun charge în primele 2 zile.</li>
+          <li>Abonamentul rămâne în <code>trialing</code> în ziua 2.</li>
+          <li>După ziua 3+, abonamentul trece în <code>active</code>.</li>
           <li>Există exact o factură plătită după trial.</li>
         </ul>
       </div>

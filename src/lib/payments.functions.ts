@@ -6,7 +6,7 @@ import {
   getStripeErrorMessage,
 } from "@/lib/stripe.server";
 
-const TRIAL_DAYS = 7;
+const TRIAL_DAYS = 3;
 
 type CheckoutSessionResult = { clientSecret: string } | { error: string };
 type PortalSessionResult = { url: string } | { error: string };

@@ -9,9 +9,9 @@ import { useNavigate } from "@tanstack/react-router";
 export const Route = createFileRoute("/pricing")({
   head: () => ({ meta: [
     { title: "Prețuri — AdPilot" },
-    { name: "description", content: "Planuri lunare simple pentru afaceri de orice mărime. 7 zile gratuit. Anulezi oricând." },
+    { name: "description", content: "Planuri lunare simple pentru afaceri de orice mărime. 3 zile gratuit. Anulezi oricând." },
     { property: "og:title", content: "Prețuri — AdPilot" },
-    { property: "og:description", content: "7 zile gratuit. Anulezi oricând." },
+    { property: "og:description", content: "3 zile gratuit. Anulezi oricând." },
     { property: "og:url", content: "https://adpilot.ro/pricing" },
   ], links: [{ rel: "canonical", href: "https://adpilot.ro/pricing" }] }),
   component: PricingPage,
@@ -62,7 +62,7 @@ const plans = [
 ];
 
 const faqs = [
-  { q: "Există perioadă de probă gratuită?", a: "Da. Fiecare plan include 7 zile gratuit. Îți cerem cardul la activare pentru a evita întreruperea după probă, dar nu îți retragem nimic înainte de a 8-a zi." },
+  { q: "Există perioadă de probă gratuită?", a: "Da. Fiecare plan include 3 zile gratuit. Îți cerem cardul la activare pentru a evita întreruperea după probă, dar nu îți retragem nimic înainte de a 4-a zi." },
   { q: "Pot anula oricând?", a: "Da. Poți anula oricând în timpul perioadei de probă fără să fii taxat, sau ulterior direct din contul tău, fără întrebări." },
   { q: "Prețul include bugetul de reclame?", a: "Nu. Abonamentul AdPilot acoperă doar platforma. Bugetul de reclame este plătit direct către Meta (Facebook & Instagram), din contul tău." },
   { q: "Ce metode de plată acceptați?", a: "Toate cardurile majore: Visa, Mastercard, Maestro. Plățile sunt procesate securizat prin Stripe." },
@@ -90,7 +90,7 @@ function PricingPage() {
       <PageHero
         eyebrow="Prețuri"
         title="Planuri simple care cresc o dată cu tine."
-        subtitle="7 zile gratuit pe orice plan. Nu îți retragem nimic înainte de a 8-a zi."
+        subtitle="3 zile gratuit pe orice plan. Nu îți retragem nimic înainte de a 4-a zi."
       />
       <section className="px-6 pb-20 max-w-6xl mx-auto w-full grid gap-5 md:grid-cols-3">
         {plans.map((p) => (
@@ -103,7 +103,7 @@ function PricingPage() {
             <h3 className="font-semibold text-xl">{p.name}</h3>
             <p className="mt-2 text-sm text-muted-foreground">{p.desc}</p>
             <p className="mt-6 font-serif text-5xl">{p.price}<span className="text-base text-muted-foreground font-sans">/lună</span></p>
-            <p className="mt-2 text-xs text-success font-medium">✨ 7 zile gratuit</p>
+            <p className="mt-2 text-xs text-success font-medium">✨ 3 zile gratuit</p>
             <ul className="mt-6 space-y-2">
               {p.items.map((it) => (
                 <li key={it} className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-success" />{it}</li>
@@ -118,7 +118,7 @@ function PricingPage() {
                 p.featured ? "bg-primary text-primary-foreground" : "bg-foreground text-background"
               }`}
             >
-              Începe cele 7 zile gratuit
+              Începe cele 3 zile gratuit
             </button>
           </div>
         ))}
