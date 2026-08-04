@@ -3,7 +3,7 @@
  */
 import { fetchCampaignInsights } from "./meta-insights.server";
 import { getCentralWhatsApp, sendWhatsAppMessage } from "./whatsapp.server";
-import { syncMetaCampaignStatuses } from "./campaign-control.server";
+import { syncMetaCampaignStatuses, isMetaCampaignActive } from "./campaign-control.server";
 
 type Camp = {
   id: string;
@@ -130,6 +130,9 @@ export async function runPeriodicUpdates(): Promise<{ sent: number; errors: numb
 
       for (const c of due) {
         try {
+          // Nu trimite update dacă reclama nu e ACTIVĂ pe Meta chiar acum
+          const live = await isMetaCampaignActive(c.meta_campaign_id, metaConn.access_token);
+          if (!live) continue;
           const snap = await fetchCampaignInsights(c.meta_campaign_id, metaConn.access_token);
           const lines = [
             `📣 *${c.name}* — actualizare`,

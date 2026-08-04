@@ -81,6 +81,25 @@ export async function setMetaCampaignStatus(opts: {
 }
 
 /** Pull current status of every published Meta campaign and mirror to DB. */
+export async function isMetaCampaignActive(
+  metaCampaignId: string,
+  token: string,
+): Promise<boolean> {
+  try {
+    const v = metaApiVersion();
+    const r = await fetch(
+      `${GRAPH}/${v}/${metaCampaignId}?fields=status,effective_status&access_token=${encodeURIComponent(token)}`,
+    );
+    const j: any = await r.json();
+    if (!r.ok) return false;
+    const status = String(j?.status ?? "").toUpperCase();
+    const eff = String(j?.effective_status ?? status).toUpperCase();
+    return status === "ACTIVE" && eff === "ACTIVE";
+  } catch {
+    return false;
+  }
+}
+
 export async function syncMetaCampaignStatuses(): Promise<{ synced: number; changed: number }> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data: camps } = await supabaseAdmin

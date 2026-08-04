@@ -4,6 +4,7 @@
  */
 import { fetchCampaignInsights } from "./meta-insights.server";
 import { getCentralWhatsApp, sendWhatsAppMessage } from "./whatsapp.server";
+import { isMetaCampaignActive } from "./campaign-control.server";
 
 const GRAPH = "https://graph.facebook.com";
 
@@ -96,6 +97,7 @@ export async function runDailyReports(): Promise<{ sent: number; errors: number 
         .select("id, name, meta_campaign_id, status")
         .eq("user_id", conn.user_id)
         .eq("platform", "meta")
+        .eq("status", "active")
         .not("meta_campaign_id", "is", null);
       if (!camps || !camps.length) continue;
 
@@ -105,6 +107,7 @@ export async function runDailyReports(): Promise<{ sent: number; errors: number 
       const perCamp: Array<{ name: string; spend: number; leads: number }> = [];
       for (const c of camps) {
         try {
+          if (!(await isMetaCampaignActive(c.meta_campaign_id!, token))) continue;
           const url = new URL(`${GRAPH}/v23.0/${c.meta_campaign_id}/insights`);
           url.searchParams.set("fields", "spend,clicks,actions");
           url.searchParams.set("date_preset", "yesterday");
@@ -200,6 +203,9 @@ export async function runAnomalyScan(): Promise<{ alerts: number; errors: number
             ? new Date(c.last_anomaly_check_at).getTime()
             : 0;
           if (Date.now() - last < 12 * 60 * 60 * 1000) continue;
+
+          // Nu alerta pentru reclame care nu rulează pe Meta
+          if (!(await isMetaCampaignActive(c.meta_campaign_id!, token))) continue;
 
           // Need at least 12h of life to judge
           const ageH = (Date.now() - new Date(c.created_at).getTime()) / 3_600_000;
