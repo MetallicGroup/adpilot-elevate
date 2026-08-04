@@ -47,6 +47,26 @@ export function WhatsAppConnectionCard() {
   const conn = data?.connection ?? null;
   const activationLink = data?.activation_link ?? null;
   const isActive = conn?.status === "active";
+  const allowed = data?.allowed !== false;
+
+  if (!isLoading && !allowed) {
+    return (
+      <div className="card-floating p-5">
+        <div className="flex items-center gap-2">
+          <MessageCircle className="w-4 h-4 text-[#25D366]" />
+          <p className="text-xs text-muted-foreground">Asistent AdPilot pe WhatsApp 💬</p>
+        </div>
+        <p className="mt-3 text-sm font-medium">Disponibil în planurile Pro și Premium</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Planul Starter nu include asistentul pe WhatsApp. Fă upgrade ca să primești lead-uri și
+          să controlezi campaniile direct din WhatsApp.
+        </p>
+        <a href="/pricing" className="btn-primary mt-4 inline-flex items-center gap-2 text-sm">
+          Vezi planurile <ExternalLink className="w-3.5 h-3.5" />
+        </a>
+      </div>
+    );
+  }
 
   return (
     <div className="card-floating p-5">

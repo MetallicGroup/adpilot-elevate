@@ -40,6 +40,7 @@ Capacități:
 - Poți crea o campanie complet nouă cu \`create_campaign\` — necesită o imagine trimisă de user pe WhatsApp + buget + descrierea ofertei. Confirmă mereu cu user-ul DETALIILE (nume, buget, copy) înainte să apelezi tool-ul. Dacă lipsește permisiunea Meta pages_manage_ads, campaniile pentru clienți potențiali se lansează automat ca "Sună acum" folosind numărul de telefon salvat.
 - Poți reîncerca publicarea ultimului draft eșuat cu \`retry_last_campaign\` când userul spune „încearcă iar”.
 - Poți lista lead-urile recente cu \`list_recent_leads\`.
+- Poți anula sau reactiva abonamentul AdPilot cu \`cancel_subscription\`. Dacă userul scrie orice legat de anulare/dezabonare/oprire abonament, cere o confirmare scurtă ("Confirmi anularea? Da/Nu") și apoi apelează tool-ul. Explică-i că păstrează accesul până la finalul perioadei deja plătite.
 
 IMPORTANT despre lead-uri (datele de contact):
 - Userul cu care vorbești pe WhatsApp ESTE PROPRIETARUL contului și al lead-urilor. Lead-urile îi aparțin lui — au fost generate de campaniile lui Meta plătite din banii lui.
@@ -612,6 +613,47 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
           return await getMetaInvoices(adAcc.ad_account_id, token, months);
         } catch (e: any) {
           return { error: e?.message ?? "Nu am putut citi facturile" };
+        }
+      },
+    }),
+
+    cancel_subscription: tool({
+      description:
+        "Anulează abonamentul AdPilot al userului (la finalul perioadei plătite) sau îl reactivează. Folosește-l când userul cere anulare / dezabonare / oprire abonament.",
+      inputSchema: z.object({
+        reactivate: z.boolean().default(false).describe("true = anulează anularea (reactivează)"),
+      }),
+      execute: async ({ reactivate }) => {
+        try {
+          const { data: sub } = await supabaseAdmin
+            .from("subscriptions")
+            .select("stripe_subscription_id, status, current_period_end, environment")
+            .eq("user_id", ctx.userId)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (!sub?.stripe_subscription_id) return { error: "Nu am găsit un abonament activ pe contul tău." };
+
+          const { createStripeClient } = await import("./stripe.server");
+          const stripe = createStripeClient(sub.environment === "sandbox" ? "sandbox" : "live");
+          const updated: any = await stripe.subscriptions.update(sub.stripe_subscription_id, {
+            cancel_at_period_end: !reactivate,
+          });
+
+          await supabaseAdmin
+            .from("subscriptions")
+            .update({ cancel_at_period_end: !reactivate, updated_at: new Date().toISOString() })
+            .eq("stripe_subscription_id", sub.stripe_subscription_id);
+
+          const endUnix =
+            updated?.items?.data?.[0]?.current_period_end ?? updated?.current_period_end ?? null;
+          return {
+            ok: true,
+            canceled: !reactivate,
+            access_until: endUnix ? new Date(endUnix * 1000).toISOString() : sub.current_period_end,
+          };
+        } catch (e: any) {
+          return { error: e?.message ?? "Nu am putut modifica abonamentul" };
         }
       },
     }),
