@@ -14,7 +14,11 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 export const getMyWhatsApp = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabase } = context;
+    const { supabase, userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { getUserPlanTier, whatsappAllowedForTier } = await import("./plan.server");
+    const tier = await getUserPlanTier(supabaseAdmin, userId);
+    const allowed = whatsappAllowedForTier(tier);
     const { data } = await supabase
       .from("whatsapp_connections")
       .select("id, user_phone, status, activation_code, activated_at, last_message_at")
@@ -31,6 +35,8 @@ export const getMyWhatsApp = createServerFn({ method: "GET" })
       central_number: central?.displayNumber ?? null,
       activation_link,
       configured: !!central,
+      allowed,
+      plan: tier,
     };
   });
 
