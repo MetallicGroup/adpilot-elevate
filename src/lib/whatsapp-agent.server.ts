@@ -37,7 +37,7 @@ Capacități:
 - Poți porni/opri/pune pe pauză campanii (\`pause_campaign\`, \`resume_campaign\`).
 - Poți modifica bugetul zilnic (\`update_budget\`).
 - Poți genera copy nou (headline + text + CTA) cu \`generate_copy\` — folosește emoji-uri și subtexte clare.
-- Poți crea o campanie complet nouă cu \`create_campaign\` — necesită o imagine trimisă de user pe WhatsApp + buget + descrierea ofertei. Confirmă mereu cu user-ul DETALIILE (nume, buget, copy) înainte să apelezi tool-ul.
+- Poți crea o campanie complet nouă cu \`create_campaign\` — necesită o imagine trimisă de user pe WhatsApp + buget + descrierea ofertei. Confirmă mereu cu user-ul DETALIILE (nume, buget, copy) înainte să apelezi tool-ul. Dacă lipsește permisiunea Meta pages_manage_ads, campaniile pentru clienți potențiali se lansează automat ca "Sună acum" folosind numărul de telefon salvat.
 - Poți reîncerca publicarea ultimului draft eșuat cu \`retry_last_campaign\` când userul spune „încearcă iar”.
 - Poți lista lead-urile recente cu \`list_recent_leads\`.
 
@@ -325,7 +325,7 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
         headline: z.string().max(40),
         primary_text: z.string().max(500),
         description: z.string().max(50).optional(),
-        cta: z.enum(["Learn More", "Sign Up", "Shop Now", "Book Now", "Apply Now"]).default("Learn More"),
+        cta: z.enum(["Learn More", "Sign Up", "Shop Now", "Book Now", "Apply Now", "Call Now"]).default("Learn More"),
           landing_url: z
             .string()
             .url()
@@ -630,6 +630,21 @@ async function getMetaToken(supabaseAdmin: any, userId: string): Promise<string 
   return data?.access_token ?? null;
 }
 
+async function getClickToCallPhone(supabaseAdmin: any, userId: string): Promise<string | null> {
+  const { data } = await supabaseAdmin
+    .from("whatsapp_connections")
+    .select("display_phone, user_phone")
+    .eq("user_id", userId)
+    .eq("status", "active")
+    .maybeSingle();
+  const raw = data?.display_phone || data?.user_phone;
+  if (!raw) return null;
+  const digits = raw.replace(/[^\d+]/g, "");
+  if (!digits) return null;
+  if (digits.startsWith("+")) return digits;
+  return `+40${digits.replace(/^0/, "")}`;
+}
+
 function isRetryPublishRequest(message: string): boolean {
   const normalized = message.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   return /\b(incearca|reincearca|retry)\b/.test(normalized) && /\b(iar|din nou|inca o data|retry)?\b/.test(normalized);
@@ -739,6 +754,7 @@ async function retryLastDraftCampaign(supabaseAdmin: any, ctx: AgentCtx) {
     args,
     objective: args.objective,
     cityKeys,
+    userId: ctx.userId,
   });
 }
 
@@ -816,6 +832,7 @@ async function publishCampaignToMeta(
     };
     objective: "leads" | "traffic";
     cityKeys: Array<{ key: string; radius?: number }>;
+    userId: string;
   },
 ) {
   const { createLeadForm, uploadAdImageFromBytes, createCampaign, createAdSet, createAdCreative, createAd } =
@@ -823,21 +840,59 @@ async function publishCampaignToMeta(
 
   try {
     let form: { id: string } | null = null;
+    let objective: "leads" | "traffic" = input.objective;
+    let cta = input.args.cta;
+    let landing_url = input.args.landing_url ?? "https://adpilot.ro";
+    let fallbackNote = "";
+
     if (input.objective === "leads") {
-      form = await createLeadForm(input.pageId, input.pageAccessToken, {
-        name: input.args.name,
-        fields: ["Name", "Phone"],
-        privacy_url: "https://adpilot.ro/privacy-policy",
-        custom_questions: input.args.custom_questions,
-      });
-      await supabaseAdmin.from("campaigns").update({ meta_lead_form_id: form?.id ?? null }).eq("id", input.campaignRowId);
+      try {
+        form = await createLeadForm(input.pageId, input.pageAccessToken, {
+          name: input.args.name,
+          fields: ["Name", "Phone"],
+          privacy_url: "https://adpilot.ro/privacy-policy",
+          custom_questions: input.args.custom_questions,
+        });
+        await supabaseAdmin.from("campaigns").update({ meta_lead_form_id: form?.id ?? null }).eq("id", input.campaignRowId);
+      } catch (e: any) {
+        const msg = String(e?.message ?? "");
+        if (/pages_manage_ads/i.test(msg)) {
+          const phone = await getClickToCallPhone(supabaseAdmin, input.userId);
+          if (!phone) {
+            return {
+              error:
+                "Meta nu acordă încă permisiunea pages_manage_ads pentru formulare de lead, iar eu nu găsesc un număr de telefon salvat. " +
+                "Pentru a lansa o campanie 'Sună acum', trimite-mi te rog numărul de telefon pe care vrei să sune clienții.",
+            };
+          }
+          objective = "traffic";
+          cta = "Call Now";
+          landing_url = `tel:${phone}`;
+          fallbackNote = "formular lead dezactivat — campanie 'Sună acum'";
+          await supabaseAdmin
+            .from("campaigns")
+            .update({
+              objective: "LINK_CLICKS",
+              lead_form: null,
+              creative: {
+                ...input.args,
+                cta: "Call Now",
+                landing_url,
+              },
+            })
+            .eq("id", input.campaignRowId);
+        } else {
+          throw e;
+        }
+      }
     }
+
     const metaCamp = await createCampaign(
       input.adAccountId,
       input.accessToken,
       input.args.name,
       "ACTIVE",
-      input.objective === "traffic" ? "OUTCOME_TRAFFIC" : "OUTCOME_LEADS",
+      objective === "traffic" ? "OUTCOME_TRAFFIC" : "OUTCOME_LEADS",
     );
     await supabaseAdmin.from("campaigns").update({ meta_campaign_id: metaCamp.id }).eq("id", input.campaignRowId);
     const adset = await createAdSet(input.adAccountId, input.accessToken, {
@@ -852,7 +907,7 @@ async function publishCampaignToMeta(
         cities: input.cityKeys.length ? input.cityKeys : undefined,
       },
       status: "ACTIVE",
-      objective: input.objective,
+      objective,
     });
     await supabaseAdmin.from("campaigns").update({ meta_adset_id: adset.id }).eq("id", input.campaignRowId);
     const isVideo = (input.mediaMime || "").toLowerCase().startsWith("video/");
@@ -876,8 +931,8 @@ async function publishCampaignToMeta(
       thumbnail_url,
       headline: input.args.headline,
       description: input.args.primary_text,
-      cta: input.args.cta,
-      landing_url: input.args.landing_url ?? "https://adpilot.ro",
+      cta,
+      landing_url,
       lead_gen_form_id: form?.id,
     });
     const ad = await createAd(input.adAccountId, input.accessToken, {
@@ -895,13 +950,17 @@ async function publishCampaignToMeta(
         meta_ad_id: ad.id,
         meta_lead_form_id: form?.id ?? null,
         status: "active",
+        ...(objective === "traffic" ? { objective: "LINK_CLICKS", lead_form: null } : {}),
       })
       .eq("id", input.campaignRowId);
     return {
       ok: true,
       campaign_id: input.campaignRowId,
       meta_campaign_id: metaCamp.id,
-      message: input.objective === "traffic" ? "Campanie LIVE (trafic pe site) ✅" : "Campanie LIVE (lead form) ✅",
+      message:
+        objective === "traffic"
+          ? `Campanie LIVE (Sună acum) ✅${fallbackNote ? " — " + fallbackNote : ""}`
+          : "Campanie LIVE (lead form) ✅",
     };
   } catch (e: any) {
     const msg = e?.message ?? "Publish failed";
@@ -1039,5 +1098,6 @@ async function createMetaCampaignFromAgent(
     args,
     objective,
     cityKeys,
+    userId: ctx.userId,
   });
 }

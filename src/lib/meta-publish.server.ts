@@ -25,6 +25,7 @@ const CTA_MAP: Record<string, string> = {
   "Download": "DOWNLOAD",
   "Apply Now": "APPLY_NOW",
   "Book Now": "BOOK_TRAVEL",
+  "Call Now": "CALL_NOW",
 };
 
 const LEAD_FIELD_MAP: Record<string, string> = {
@@ -325,10 +326,9 @@ export async function createAdCreative(
   },
 ) {
   const cta_type = CTA_MAP[args.cta] || "LEARN_MORE";
-  const link =
-    args.landing_url && /^https?:\/\//i.test(args.landing_url) && !/facebook\.com/i.test(args.landing_url)
-      ? args.landing_url
-      : "https://adpilot.ro";
+  const isTel = args.landing_url && /^tel:/i.test(args.landing_url);
+  const isHttp = args.landing_url && /^https?:\/\//i.test(args.landing_url) && !/facebook\.com/i.test(args.landing_url);
+  const link = isTel || isHttp ? args.landing_url : "https://adpilot.ro";
   const call_to_action: Record<string, unknown> = { type: cta_type };
   if (args.lead_gen_form_id) {
     call_to_action.value = { lead_gen_form_id: args.lead_gen_form_id };
