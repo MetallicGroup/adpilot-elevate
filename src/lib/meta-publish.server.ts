@@ -289,10 +289,10 @@ export async function createAdSet(
   if (args.objective !== "traffic") {
     body.promoted_object = { page_id: args.page_id };
   }
-  // EU DSA: Meta cere entitatea promovată (beneficiar) și plătitorul.
+  // EU DSA: Meta Marketing API expects the exact `beneficiary` / `payer` keys.
   if (args.dsa_beneficiary) {
-    body.dsa_beneficiary = args.dsa_beneficiary;
-    body.dsa_payor = args.dsa_payor || args.dsa_beneficiary;
+    body.beneficiary = args.dsa_beneficiary;
+    body.payer = args.dsa_payor || args.dsa_beneficiary;
   }
   if (args.daily_budget_cents) body.daily_budget = args.daily_budget_cents;
   if (args.lifetime_budget_cents) body.lifetime_budget = args.lifetime_budget_cents;

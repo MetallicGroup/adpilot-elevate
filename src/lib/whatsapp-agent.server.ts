@@ -61,6 +61,7 @@ Reguli importante:
 - NU anunța NICIODATĂ în avans că „lansezi acum" / „durează câteva secunde" / „stai puțin" înainte să apelezi un tool. Apelează direct tool-ul și trimite UN SINGUR mesaj DUPĂ ce primești rezultatul: dacă ok → confirmă LIVE cu detalii; dacă error → spune-i userului EXACT motivul (mesajul din câmpul "error" returnat de tool, tradus simplu în română, fără termeni tehnici) și sugerează ce poate face (ex: schimbă bugetul, alt oraș, reconectează contul Meta).
 - NICIODATĂ nu spune „echipa tehnică a fost notificată" — nu există echipă tehnică în spate, ești TU agentul. Dacă ceva eșuează, arată motivul real returnat de sistem.
 - Dacă userul spune „încearcă iar / mai încearcă / retry” după o lansare eșuată, apelează \`retry_last_campaign\` direct. Nu inventa explicații și nu spune că nu poți încerca.
+- Dacă Meta returnează o eroare despre „persoana sau organizația promovată”, „beneficiary”, „payer” sau DSA, NU trimite mesajul generic Meta și NU-l trimite în setările Paginii. Întreabă direct: „Care este numele exact al firmei sau persoanei promovate?” și așteaptă răspunsul.
 
 FLOW OBLIGATORIU pentru CAMPANII NOI (înainte să apelezi create_campaign):
 1. Întreabă userul ce vrea să obțină din reclamă:
@@ -929,12 +930,11 @@ async function publishCampaignToMeta(
       });
     } catch (e: any) {
       const m = String(e?.message ?? "");
-      if (/beneficiar|person or organization|dsa/i.test(m)) {
+      if (/beneficiar|beneficiary|payer|payor|person or organization|organization being promoted|dsa/i.test(m)) {
         return {
           error:
-            "Meta cere numele firmei/persoanei promovate de reclamă (regula UE - DSA). " +
-            "Spune-mi te rog exact numele afacerii (ex: Salon Bella SRL) si relansez campania imediat — " +
-            "îl trimit eu automat la Meta, nu trebuie să intri nicăieri.",
+            "Care este numele exact al firmei sau persoanei promovate? (exemplu: Salon Bella SRL). " +
+            "Răspunde-mi doar cu numele; îl completez eu la Meta și relansez campania, fără să intri în alte setări.",
         };
       }
       throw e;
@@ -1023,6 +1023,7 @@ async function createMetaCampaignFromAgent(
     city_radius_km?: number;
     age_min: number;
     age_max: number;
+    beneficiary?: string;
   },
 ) {
   const objective: "leads" | "traffic" = args.objective ?? "leads";
@@ -1098,6 +1099,7 @@ async function createMetaCampaignFromAgent(
         cta: args.cta,
         landing_url: args.landing_url ?? "https://adpilot.ro",
         media_url: ctx.latestMedia!.signedUrl,
+        beneficiary: args.beneficiary,
       },
       lead_form:
         objective === "leads"
