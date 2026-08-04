@@ -845,7 +845,7 @@ async function publishCampaignToMeta(
     userId: string;
   },
 ) {
-  const { createLeadForm, uploadAdImageFromBytes, createCampaign, createAdSet, createAdCreative, createAd, fetchPageName } =
+  const { createLeadForm, uploadAdImageFromBytes, createCampaign, createAdSet, createAdCreative, createAd, fetchPageName, fetchPageInstagramId } =
     await import("./meta-publish.server");
 
   try {
@@ -957,6 +957,9 @@ async function publishCampaignToMeta(
     const adCreative = await createAdCreative(input.adAccountId, input.accessToken, {
       name: `${input.args.name} — Creative`,
       page_id: input.pageId,
+      instagram_user_id:
+        (await fetchPageInstagramId(input.pageId, input.pageAccessToken)) ||
+        (await fetchPageInstagramId(input.pageId, input.accessToken)),
       image_hash,
       video_id,
       thumbnail_url,
