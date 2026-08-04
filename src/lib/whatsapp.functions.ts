@@ -49,6 +49,13 @@ export const saveMyWhatsAppPhone = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { getUserPlanTier, whatsappAllowedForTier } = await import("./plan.server");
+    const tier = await getUserPlanTier(supabaseAdmin, userId);
+    if (!whatsappAllowedForTier(tier)) {
+      throw new Error(
+        "Asistentul WhatsApp este disponibil doar în planurile Pro și Premium. Fă upgrade ca să îl activezi.",
+      );
+    }
     const { normalizePhone, generateActivationCode, getCentralWhatsApp, buildWaMeLink } =
       await import("./whatsapp.server");
     const phone = normalizePhone(data.phone);
