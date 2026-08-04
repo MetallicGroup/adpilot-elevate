@@ -754,6 +754,7 @@ async function retryLastDraftCampaign(supabaseAdmin: any, ctx: AgentCtx) {
     args,
     objective: args.objective,
     cityKeys,
+    userId: ctx.userId,
   });
 }
 
@@ -852,7 +853,7 @@ async function publishCampaignToMeta(
           privacy_url: "https://adpilot.ro/privacy-policy",
           custom_questions: input.args.custom_questions,
         });
-        await supabaseAdmin.from("campaigns").update({ meta_lead_form_id: form.id }).eq("id", input.campaignRowId);
+        await supabaseAdmin.from("campaigns").update({ meta_lead_form_id: form?.id ?? null }).eq("id", input.campaignRowId);
       } catch (e: any) {
         const msg = String(e?.message ?? "");
         if (/pages_manage_ads/i.test(msg)) {
@@ -1097,5 +1098,6 @@ async function createMetaCampaignFromAgent(
     args,
     objective,
     cityKeys,
+    userId: ctx.userId,
   });
 }
