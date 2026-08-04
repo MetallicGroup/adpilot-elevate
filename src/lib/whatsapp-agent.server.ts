@@ -835,7 +835,7 @@ async function publishCampaignToMeta(
     userId: string;
   },
 ) {
-  const { createLeadForm, uploadAdImageFromBytes, createCampaign, createAdSet, createAdCreative, createAd } =
+  const { createLeadForm, uploadAdImageFromBytes, createCampaign, createAdSet, createAdCreative, createAd, fetchPageName } =
     await import("./meta-publish.server");
 
   try {
@@ -895,11 +895,18 @@ async function publishCampaignToMeta(
       objective === "traffic" ? "OUTCOME_TRAFFIC" : "OUTCOME_LEADS",
     );
     await supabaseAdmin.from("campaigns").update({ meta_campaign_id: metaCamp.id }).eq("id", input.campaignRowId);
+    // EU DSA: numele entității promovate (beneficiar/plătitor) — luat automat din Pagina Facebook.
+    const dsaName =
+      (await fetchPageName(input.pageId, input.pageAccessToken)) ||
+      (await fetchPageName(input.pageId, input.accessToken)) ||
+      "AdPilot";
     const adset = await createAdSet(input.adAccountId, input.accessToken, {
       name: `${input.args.name} — AdSet`,
       campaign_id: metaCamp.id,
       daily_budget_cents: Math.round(input.args.daily_budget * 100),
       page_id: input.pageId,
+      dsa_beneficiary: dsaName,
+      dsa_payor: dsaName,
       targeting: {
         countries: input.args.countries,
         age_min: input.args.age_min,
