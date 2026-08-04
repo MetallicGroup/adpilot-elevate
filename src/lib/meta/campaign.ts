@@ -113,6 +113,8 @@ export async function createMetaLeadCampaign(userId: string, input: MetaCampaign
 
   // TODO: Upload image/video from input.creative_urls to Meta Ad Library and set image_hash.
   // Creative URLs stored in draft_campaigns for reference until upload is implemented.
+  const { fetchPageInstagramId } = await import("@/lib/meta-publish.server");
+  const igUserId = await fetchPageInstagramId(input.page_id, token);
   const creative = await metaGraphRequest<IdResponse>(`/${actId}/adcreatives`, {
     method: "POST",
     accessToken: token,
@@ -120,6 +122,7 @@ export async function createMetaLeadCampaign(userId: string, input: MetaCampaign
       name: `${input.generated.campaign_name} — Creative`,
       object_story_spec: {
         page_id: input.page_id,
+        ...(igUserId ? { instagram_user_id: igUserId } : {}),
         link_data: {
           message: input.generated.primary_text,
           name: input.generated.headline,

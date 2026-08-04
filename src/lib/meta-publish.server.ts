@@ -318,7 +318,23 @@ export async function fetchPageName(pageId: string, accessToken: string): Promis
   }
 }
 
+/** Contul Instagram legat de Pagina Facebook — ca reclama să ruleze și pe Instagram. */
+export async function fetchPageInstagramId(pageId: string, accessToken: string): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `${GRAPH}/${metaApiVersion()}/${pageId}?fields=instagram_business_account,connected_instagram_account&access_token=${encodeURIComponent(accessToken)}`,
+    );
+    const json = await res.json();
+    if (!res.ok) return null;
+    const id = json?.instagram_business_account?.id ?? json?.connected_instagram_account?.id;
+    return id ? String(id) : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Search Meta's targeting database for a city by free-text name. Returns the first match. */
+
 export async function findCityKey(
   accessToken: string,
   query: string,
@@ -355,6 +371,7 @@ export async function createAdCreative(
     cta: string;
     landing_url: string;
     lead_gen_form_id?: string;
+    instagram_user_id?: string | null;
   },
 ) {
   const cta_type = CTA_MAP[args.cta] || "LEARN_MORE";
@@ -379,6 +396,7 @@ export async function createAdCreative(
       name: args.name.slice(0, 200),
       object_story_spec: {
         page_id: args.page_id,
+        ...(args.instagram_user_id ? { instagram_user_id: args.instagram_user_id } : {}),
         video_data,
       },
     });
@@ -390,6 +408,7 @@ export async function createAdCreative(
     name: args.name.slice(0, 200),
     object_story_spec: {
       page_id: args.page_id,
+      ...(args.instagram_user_id ? { instagram_user_id: args.instagram_user_id } : {}),
       link_data: {
         image_hash: args.image_hash,
         link,
