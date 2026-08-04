@@ -91,8 +91,8 @@ export async function createMetaLeadCampaign(userId: string, input: MetaCampaign
       },
       promoted_object: { page_id: input.page_id },
       status,
-      dsa_beneficiary: input.business_details.business_name || page.name,
-      dsa_payor: input.business_details.business_name || page.name,
+      beneficiary: input.business_details.business_name || page.name,
+      payer: input.business_details.business_name || page.name,
     },
   });
 
