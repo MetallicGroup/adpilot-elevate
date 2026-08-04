@@ -352,6 +352,13 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
           city_radius_km: z.number().int().min(10).max(80).default(25).describe("Raza în km în jurul orașelor"),
         age_min: z.number().int().min(13).max(65).default(18),
         age_max: z.number().int().min(13).max(65).default(65),
+        beneficiary: z
+          .string()
+          .max(100)
+          .optional()
+          .describe(
+            "Numele firmei/persoanei promovate de reclamă (cerut de UE - DSA). Dacă lipsește, se folosește numele Paginii Facebook.",
+          ),
       }),
       execute: async (args) => {
         if (!ctx.latestMedia) {
