@@ -37,7 +37,7 @@ Capacități:
 - Poți porni/opri/pune pe pauză campanii (\`pause_campaign\`, \`resume_campaign\`).
 - Poți modifica bugetul zilnic (\`update_budget\`).
 - Poți genera copy nou (headline + text + CTA) cu \`generate_copy\` — folosește emoji-uri și subtexte clare.
-- Poți crea o campanie complet nouă cu \`create_campaign\` — necesită o imagine trimisă de user pe WhatsApp + buget + descrierea ofertei. Confirmă mereu cu user-ul DETALIILE (nume, buget, copy) înainte să apelezi tool-ul.
+- Poți crea o campanie complet nouă cu \`create_campaign\` — necesită o imagine trimisă de user pe WhatsApp + buget + descrierea ofertei. Confirmă mereu cu user-ul DETALIILE (nume, buget, copy) înainte să apelezi tool-ul. Dacă lipsește permisiunea Meta pages_manage_ads, campaniile pentru clienți potențiali se lansează automat ca "Sună acum" folosind numărul de telefon salvat.
 - Poți reîncerca publicarea ultimului draft eșuat cu \`retry_last_campaign\` când userul spune „încearcă iar”.
 - Poți lista lead-urile recente cu \`list_recent_leads\`.
 
@@ -325,7 +325,7 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
         headline: z.string().max(40),
         primary_text: z.string().max(500),
         description: z.string().max(50).optional(),
-        cta: z.enum(["Learn More", "Sign Up", "Shop Now", "Book Now", "Apply Now"]).default("Learn More"),
+        cta: z.enum(["Learn More", "Sign Up", "Shop Now", "Book Now", "Apply Now", "Call Now"]).default("Learn More"),
           landing_url: z
             .string()
             .url()
@@ -628,6 +628,21 @@ async function getMetaToken(supabaseAdmin: any, userId: string): Promise<string 
     .eq("is_active", true)
     .maybeSingle();
   return data?.access_token ?? null;
+}
+
+async function getClickToCallPhone(supabaseAdmin: any, userId: string): Promise<string | null> {
+  const { data } = await supabaseAdmin
+    .from("whatsapp_connections")
+    .select("display_phone, user_phone")
+    .eq("user_id", userId)
+    .eq("status", "active")
+    .maybeSingle();
+  const raw = data?.display_phone || data?.user_phone;
+  if (!raw) return null;
+  const digits = raw.replace(/[^\d+]/g, "");
+  if (!digits) return null;
+  if (digits.startsWith("+")) return digits;
+  return `+40${digits.replace(/^0/, "")}`;
 }
 
 function isRetryPublishRequest(message: string): boolean {
