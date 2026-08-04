@@ -49,7 +49,18 @@ async function metaPOST(path: string, accessToken: string, body: Record<string, 
   const json = await res.json();
   if (!res.ok) {
     const msg = json?.error?.error_user_msg || json?.error?.message || `Meta ${path} failed`;
-    throw new Error(`${msg} (${res.status})`);
+    const step = path.includes("/adsets")
+      ? "ad set"
+      : path.includes("/campaigns")
+        ? "campanie"
+        : path.includes("/adcreatives")
+          ? "creative"
+          : path.includes("/ads")
+            ? "ad"
+            : path.includes("leadgen_forms")
+              ? "formular lead"
+              : path;
+    throw new Error(`${msg} (${res.status}) [pas: ${step}]`);
   }
   return json;
 }

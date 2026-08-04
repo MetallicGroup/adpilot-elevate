@@ -352,6 +352,13 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
           city_radius_km: z.number().int().min(10).max(80).default(25).describe("Raza în km în jurul orașelor"),
         age_min: z.number().int().min(13).max(65).default(18),
         age_max: z.number().int().min(13).max(65).default(65),
+        beneficiary: z
+          .string()
+          .max(100)
+          .optional()
+          .describe(
+            "Numele firmei/persoanei promovate de reclamă (cerut de UE - DSA). Dacă lipsește, se folosește numele Paginii Facebook.",
+          ),
       }),
       execute: async (args) => {
         if (!ctx.latestMedia) {
@@ -829,6 +836,7 @@ async function publishCampaignToMeta(
       countries: string[];
       age_min: number;
       age_max: number;
+      beneficiary?: string;
     };
     objective: "leads" | "traffic";
     cityKeys: Array<{ key: string; radius?: number }>;
@@ -897,25 +905,40 @@ async function publishCampaignToMeta(
     await supabaseAdmin.from("campaigns").update({ meta_campaign_id: metaCamp.id }).eq("id", input.campaignRowId);
     // EU DSA: numele entității promovate (beneficiar/plătitor) — luat automat din Pagina Facebook.
     const dsaName =
+      (input.args.beneficiary && input.args.beneficiary.trim()) ||
       (await fetchPageName(input.pageId, input.pageAccessToken)) ||
       (await fetchPageName(input.pageId, input.accessToken)) ||
       "AdPilot";
-    const adset = await createAdSet(input.adAccountId, input.accessToken, {
-      name: `${input.args.name} — AdSet`,
-      campaign_id: metaCamp.id,
-      daily_budget_cents: Math.round(input.args.daily_budget * 100),
-      page_id: input.pageId,
-      dsa_beneficiary: dsaName,
-      dsa_payor: dsaName,
-      targeting: {
-        countries: input.args.countries,
-        age_min: input.args.age_min,
-        age_max: input.args.age_max,
-        cities: input.cityKeys.length ? input.cityKeys : undefined,
-      },
-      status: "ACTIVE",
-      objective,
-    });
+    let adset: { id: string };
+    try {
+      adset = await createAdSet(input.adAccountId, input.accessToken, {
+        name: `${input.args.name} — AdSet`,
+        campaign_id: metaCamp.id,
+        daily_budget_cents: Math.round(input.args.daily_budget * 100),
+        page_id: input.pageId,
+        dsa_beneficiary: dsaName,
+        dsa_payor: dsaName,
+        targeting: {
+          countries: input.args.countries,
+          age_min: input.args.age_min,
+          age_max: input.args.age_max,
+          cities: input.cityKeys.length ? input.cityKeys : undefined,
+        },
+        status: "ACTIVE",
+        objective,
+      });
+    } catch (e: any) {
+      const m = String(e?.message ?? "");
+      if (/beneficiar|person or organization|dsa/i.test(m)) {
+        return {
+          error:
+            "Meta cere numele firmei/persoanei promovate de reclamă (regula UE - DSA). " +
+            "Spune-mi te rog exact numele afacerii (ex: Salon Bella SRL) si relansez campania imediat — " +
+            "îl trimit eu automat la Meta, nu trebuie să intri nicăieri.",
+        };
+      }
+      throw e;
+    }
     await supabaseAdmin.from("campaigns").update({ meta_adset_id: adset.id }).eq("id", input.campaignRowId);
     const isVideo = (input.mediaMime || "").toLowerCase().startsWith("video/");
     let image_hash: string | undefined;
