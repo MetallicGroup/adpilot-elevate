@@ -6,7 +6,7 @@ import { createStripeClient, getStripeErrorMessage } from "@/lib/stripe.server";
  * End-to-end trial test against Stripe SANDBOX using test clocks.
  *
  * Verifies:
- *  1. During the 7-day trial, NO charges are issued on the customer.
+ *  1. During the 3-day trial, NO charges are issued on the customer.
  *  2. After the trial expires, the subscription transitions to `active`
  *     and exactly one paid invoice is generated.
  *
@@ -28,7 +28,7 @@ export type TrialTestResult =
     }
   | { error: string };
 
-const TRIAL_DAYS = 7;
+const TRIAL_DAYS = 3;
 const SECONDS_PER_DAY = 86_400;
 
 async function waitForClock(
@@ -96,7 +96,7 @@ export const runTrialSandboxTest = createServerFn({ method: "POST" })
       });
       steps.push({ name: "create_customer", ok: true, detail: customer.id });
 
-      // 3. Create the subscription with a 7-day trial.
+      // 3. Create the subscription with a 3-day trial.
       const sub = await stripe.subscriptions.create({
         customer: customer.id,
         items: [{ price: price.id }],
@@ -111,10 +111,10 @@ export const runTrialSandboxTest = createServerFn({ method: "POST" })
         detail: `status=${sub.status} trial_end=${new Date(trialEnd * 1000).toISOString()}`,
       });
 
-      // 4. ASSERT — no charges during trial. Advance clock by 6 days
+      // 4. ASSERT — no charges during trial. Advance clock by 2 days
       //    (still inside the trial window).
       await stripe.testHelpers.testClocks.advance(clock.id, {
-        frozen_time: nowSec + 6 * SECONDS_PER_DAY,
+        frozen_time: nowSec + 2 * SECONDS_PER_DAY,
       });
       await waitForClock(stripe, clock.id);
 
@@ -132,14 +132,14 @@ export const runTrialSandboxTest = createServerFn({ method: "POST" })
 
       const midSub = await stripe.subscriptions.retrieve(sub.id);
       steps.push({
-        name: "still_trialing_at_day_6",
+        name: "still_trialing_at_day_2",
         ok: midSub.status === "trialing",
         detail: `status=${midSub.status}`,
       });
 
-      // 5. Advance past trial end (+8 days from start, well past trial_end).
+      // 5. Advance past trial end (+4 days from start, well past trial_end).
       await stripe.testHelpers.testClocks.advance(clock.id, {
-        frozen_time: nowSec + 8 * SECONDS_PER_DAY,
+        frozen_time: nowSec + 4 * SECONDS_PER_DAY,
       });
       await waitForClock(stripe, clock.id);
 
@@ -186,7 +186,7 @@ export const runTrialSandboxTest = createServerFn({ method: "POST" })
     return {
       ok,
       summary: ok
-        ? "✅ Trialul nu generează niciun charge timp de 7 zile, iar abonamentul devine activ după expirare."
+        ? "✅ Trialul nu generează niciun charge timp de 3 zile, iar abonamentul devine activ după expirare."
         : "❌ Cel puțin o aserțiune a eșuat — vezi pașii pentru detalii.",
       steps,
       cleanup,
