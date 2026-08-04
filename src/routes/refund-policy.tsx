@@ -25,7 +25,7 @@ export const Route = createFileRoute("/refund-policy")({
       </P>
 
       <H2>Perioadă de trial gratuită</H2>
-      <P>Toți utilizatorii noi beneficiază de 7 zile gratuite la începerea primului abonament. Trialul nu presupune obligații și îl poți anula oricând înainte de expirare.</P>
+      <P>Toți utilizatorii noi beneficiază de 3 zile gratuite la începerea primului abonament. Trialul nu presupune obligații și îl poți anula oricând înainte de expirare.</P>
 
       <H2>Rambursări după activarea abonamentului</H2>
       <P>Dacă nu ești mulțumit de platformă, poți solicita o rambursare completă în primele 7 zile de la prima plată. După acest interval, taxele de abonament deja plătite nu se mai rambursează.</P>
