@@ -120,6 +120,7 @@ export async function createMetaLeadCampaign(userId: string, input: MetaCampaign
       name: `${input.generated.campaign_name} — Creative`,
       object_story_spec: {
         page_id: input.page_id,
+        ...(igUserId ? { instagram_user_id: igUserId } : {}),
         link_data: {
           message: input.generated.primary_text,
           name: input.generated.headline,
