@@ -84,50 +84,44 @@ export const warmupMetaCalls = createServerFn({ method: "POST" })
     let errors = 0;
     const errorSamples: string[] = [];
 
+    const finish = async (stopped: boolean, reason?: string | null) => {
+      const { supabaseAdmin: sa } = await import("@/integrations/supabase/client.server");
+      await sa.from("meta_warmup_runs").insert({
+        user_id: userId,
+        requested: data.count,
+        ok,
+        errors,
+        stopped,
+        reason: reason ?? null,
+      });
+      return { ok, errors, stopped, reason: reason ?? undefined, samples: errorSamples };
+    };
+
     for (let i = 0; i < data.count; i++) {
       const path = endpoints[i % endpoints.length];
+      let failure: string | null = null;
       try {
         const r = await fetch(`https://graph.facebook.com/${v}${path}&access_token=${token}`);
         const j: any = await r.json();
         if (!r.ok || j?.error) {
-          errors++;
-          if (errorSamples.length < 3) {
-            errorSamples.push(`${path} → ${j?.error?.message ?? r.status}`);
-          }
-          // Stop early on auth/permission/rate-limit failures — no point spamming errors.
-          // 190=token, 200=permission, 10=auth, 17=user rate limit, 613=throttle, 4=app rate limit, 32=page-level rate limit
-          const code = j?.error?.code;
-          if ([190, 200, 10, 17, 613, 4, 32].includes(code)) {
-            const { supabaseAdmin: sa2 } = await import("@/integrations/supabase/client.server");
-            await sa2.from("meta_warmup_runs").insert({
-              user_id: userId,
-              requested: data.count,
-              ok,
-              errors,
-              stopped: true,
-              reason: j?.error?.message ?? null,
-            });
-            return { ok, errors, stopped: true, reason: j?.error?.message, samples: errorSamples };
-          }
+          failure = `${j?.error?.message ?? `HTTP ${r.status}`}${j?.error?.code ? ` (cod ${j.error.code})` : ""}`;
         } else {
           ok++;
         }
       } catch (e: any) {
+        failure = e?.message ?? "eroare de rețea";
+      }
+
+      // HARD STOP: orice eroare oprește imediat rularea, ca să nu murdărim
+      // statistica de error-rate a app-ului cu zeci de apeluri eșuate.
+      if (failure) {
         errors++;
-        if (errorSamples.length < 3) errorSamples.push(`${path} → ${e?.message}`);
+        errorSamples.push(`apel #${i + 1}: ${path} → ${failure}`);
+        return await finish(true, failure);
       }
       // Slow pacing (~1 req / 2s) — Meta user-level rate limit is aggressive.
       await new Promise((res) => setTimeout(res, 2000));
     }
 
-    const { supabaseAdmin: sa } = await import("@/integrations/supabase/client.server");
-    await sa.from("meta_warmup_runs").insert({
-      user_id: userId,
-      requested: data.count,
-      ok,
-      errors,
-      stopped: false,
-    });
-
-    return { ok, errors, stopped: false, samples: errorSamples };
+    return await finish(false);
   });
