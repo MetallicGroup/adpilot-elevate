@@ -11,13 +11,17 @@ import { resolvePostAuthPath } from "@/lib/post-auth";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
+type AuthSearch = { email?: string; mode?: "signin" | "signup" };
+
 export const Route = createFileRoute("/auth")({
   ssr: false,
   component: AuthPage,
-  validateSearch: (s: Record<string, unknown>) => ({
-    email: typeof s.email === "string" ? s.email : undefined,
-    mode: s.mode === "signin" || s.mode === "signup" ? s.mode : undefined,
-  }),
+  validateSearch: (s: Record<string, unknown>): AuthSearch => {
+    const out: AuthSearch = {};
+    if (typeof s.email === "string") out.email = s.email;
+    if (s.mode === "signin" || s.mode === "signup") out.mode = s.mode;
+    return out;
+  },
   head: () => ({ meta: [{ title: "Autentificare — AdPilot" }] }),
 });
 
