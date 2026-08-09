@@ -7,6 +7,7 @@ const REQUIRED_SCOPES = [
   "leads_retrieval",
   "pages_read_engagement",
   "pages_show_list",
+  "pages_manage_ads",
 ];
 
 export type PageStatus = {
