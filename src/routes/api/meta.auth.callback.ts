@@ -158,11 +158,7 @@ export const Route = createFileRoute("/api/meta/auth/callback")({
             console.warn("Meta pages sync failed", e);
           }
 
-          return back(
-            missingScopes.length
-              ? `meta=connected&limited=${encodeURIComponent(missingScopes.join(","))}`
-              : "meta=connected",
-          );
+          return back("meta=connected");
         } catch (e) {
           console.error("Meta OAuth callback error", e);
           return back("meta=error&reason=callback_failed");
