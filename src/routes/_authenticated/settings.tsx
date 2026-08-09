@@ -31,28 +31,20 @@ function Settings() {
   useEffect(() => {
     if (search.meta === "connected") {
       toast.success("Cont Meta conectat ✅");
-      if (search.limited) {
-        toast.warning(
-          `Conectat cu funcționalitate limitată — Meta nu a acordat: ${search.limited}. Lead forms și webhook-ul instant vor fi indisponibile până la aprobarea App Review.`,
-          { duration: 10000 },
-        );
-      }
       navigate({ to: "/settings", replace: true, search: {} as MetaSearch });
     } else if (search.meta === "error") {
       const reason =
-        search.reason === "pages_manage_ads_missing"
-          ? "Trebuie să acorzi permisiunea de management pagini pentru contul tău Meta."
-          : search.reason === "bad_state"
-            ? "Sesiune expirată — încearcă din nou."
-            : search.reason === "missing_params"
-              ? "Meta nu a returnat toate datele necesare."
-              : search.reason === "callback_failed"
-                ? "Ceva a mers prost la finalizarea autentificării."
-                : search.reason;
+        search.reason === "bad_state"
+          ? "Sesiune expirată — încearcă din nou."
+          : search.reason === "missing_params"
+            ? "Meta nu a returnat toate datele necesare."
+            : search.reason === "callback_failed"
+              ? "Ceva a mers prost la finalizarea autentificării."
+              : search.reason;
       toast.error(`Nu am putut conecta Meta${reason ? `: ${reason}` : ""}`);
       navigate({ to: "/settings", replace: true, search: {} as MetaSearch });
     }
-  }, [search.meta, search.reason, search.limited, navigate]);
+  }, [search.meta, search.reason, navigate]);
 
   async function signOut() {
     await qc.cancelQueries();
