@@ -913,7 +913,7 @@ async function publishCampaignToMeta(
           if (!phone) {
             return {
               error:
-                "Meta nu acordă încă permisiunea pages_manage_ads pentru formulare de lead, iar eu nu găsesc un număr de telefon salvat. " +
+                "Lipsește permisiunea pages_manage_ads (face parte din Marketing API) și nu găsesc un număr de telefon salvat. " +
                 "Pentru a lansa o campanie 'Sună acum', trimite-mi te rog numărul de telefon pe care vrei să sune clienții.",
             };
           }
