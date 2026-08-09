@@ -78,26 +78,18 @@ function OnboardingPage() {
   useEffect(() => {
     if (search.meta === "connected") {
       toast.success("Cont Meta conectat ✅");
-      if (search.limited) {
-        toast.warning(
-          `Conectat cu funcționalitate limitată — Meta nu a acordat: ${search.limited}.`,
-          { duration: 10000 },
-        );
-      }
       navigate({ to: "/onboarding", replace: true, search: {} as OnboardingSearch });
     } else if (search.meta === "error") {
       const reason =
-        search.reason === "pages_manage_ads_missing"
-          ? "Trebuie să acorzi permisiunea de management pagini."
-          : search.reason === "bad_state"
-            ? "Sesiune expirată — încearcă din nou."
-            : search.reason === "missing_params"
-              ? "Meta nu a returnat toate datele necesare."
-              : search.reason;
+        search.reason === "bad_state"
+          ? "Sesiune expirată — încearcă din nou."
+          : search.reason === "missing_params"
+            ? "Meta nu a returnat toate datele necesare."
+            : search.reason;
       toast.error(`Nu am putut conecta Meta${reason ? `: ${reason}` : ""}`);
       navigate({ to: "/onboarding", replace: true, search: {} as OnboardingSearch });
     }
-  }, [search.meta, search.reason, search.limited, navigate]);
+  }, [search.meta, search.reason, navigate]);
 
   async function connectMeta() {
     try {

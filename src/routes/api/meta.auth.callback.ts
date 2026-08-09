@@ -59,11 +59,8 @@ export const Route = createFileRoute("/api/meta/auth/callback")({
               .filter((p: any) => p.status === "granted")
               .map((p: any) => p.permission),
           );
-          // `pages_manage_ads` e încă Standard Access: pentru userii externi Meta
-          // nu îl returnează. Nu blocăm conectarea — salvăm scope-urile primite
-          // și semnalăm limitarea în UI. `pages_manage_metadata` nu mai e cerut:
-          // lead-urile vin prin sincronizare periodică (`leads_retrieval`).
-          const missingScopes = ["pages_manage_ads"].filter((s) => !granted.has(s));
+          // `pages_manage_ads` face parte din Marketing API aprobat.
+          // `pages_manage_metadata` nu mai e cerut: lead-urile vin prin sincronizare periodică (`leads_retrieval`).
           const expiresAt = expiresIn ? new Date(Date.now() + expiresIn * 1000).toISOString() : null;
 
           const { data: conn, error: connErr } = await supabaseAdmin
@@ -161,11 +158,7 @@ export const Route = createFileRoute("/api/meta/auth/callback")({
             console.warn("Meta pages sync failed", e);
           }
 
-          return back(
-            missingScopes.length
-              ? `meta=connected&limited=${encodeURIComponent(missingScopes.join(","))}`
-              : "meta=connected",
-          );
+          return back("meta=connected");
         } catch (e) {
           console.error("Meta OAuth callback error", e);
           return back("meta=error&reason=callback_failed");

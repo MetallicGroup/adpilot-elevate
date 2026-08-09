@@ -5,7 +5,6 @@ const REQUIRED_SCOPES = [
   "ads_management",
   "ads_read",
   "leads_retrieval",
-  "pages_manage_ads",
   "pages_read_engagement",
   "pages_show_list",
 ];

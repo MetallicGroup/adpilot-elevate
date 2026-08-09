@@ -136,9 +136,8 @@ export async function createLeadForm(
     console.error("createLeadForm failed", { pageId, msg });
     if (/pages_manage_ads|\(#200\)/i.test(msg)) {
       throw new Error(
-        "Meta nu acordă încă permisiunea pages_manage_ads pentru această aplicație, deci formularele de lead nu pot fi create. " +
-          "Adaugă permisiunea în Meta App Review (App Review → Permissions and Features → pages_manage_ads) și reconectează contul din Setări. " +
-          "Până atunci poți lansa campanii care nu folosesc formular de lead (trafic / Click-to-WhatsApp).",
+        "Lipsește permisiunea pages_manage_ads (face parte din Marketing API). " +
+          "Reconectează contul Meta din Setări și acceptă toate permisiunile, sau lansează campanii fără formular de lead (trafic / Click-to-WhatsApp).",
       );
     }
     if (/permission|OAuth|\(#10\)/i.test(msg)) {
