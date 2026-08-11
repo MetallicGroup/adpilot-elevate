@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { resolvePostAuthPath } from "@/lib/post-auth";
 import {
   ArrowRight, Check, MessageCircle, Bot, Inbox, LineChart, Zap, Rocket, Target,
-  Star, PlayCircle, Facebook, Search,
+  Star, PlayCircle, Facebook, Search, ShoppingBag, CalendarCheck, Users,
 } from "lucide-react";
 import { MarketingLayout } from "@/components/marketing/MarketingLayout";
 import { CommandStage } from "@/components/marketing/CommandStage";
