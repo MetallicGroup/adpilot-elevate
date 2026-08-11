@@ -16,7 +16,29 @@ export type BusinessNiche =
   | "construction"
   | "auto"
   | "ecommerce"
-  | "general";
+  | "general"
+  // extinderi pentru flow-ul de Programări
+  | "dentist"
+  | "medical_clinic"
+  | "barber"
+  | "detailing"
+  | "tires"
+  | "hvac"
+  | "plumbing"
+  | "electrician"
+  | "solar"
+  | "nutrition"
+  | "physiotherapy"
+  | "massage"
+  | "psychology"
+  | "lawyer"
+  | "accounting"
+  | "consulting"
+  | "real_estate"
+  | "photography"
+  | "events"
+  | "fencing"
+  | "other";
 
 export type LeadFieldKey =
   | "full_name"
