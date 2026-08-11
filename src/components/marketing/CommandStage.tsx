@@ -18,8 +18,9 @@ export function CommandStage() {
 
       <div className="relative mx-auto flex min-h-[520px] max-w-[760px] items-center justify-center lg:min-h-[620px]">
         {/* control panel */}
+        <div className="tilt-left absolute left-0 top-2 hidden w-[70%] sm:block">
         <div
-          className="tilt-left wow-float absolute left-0 top-2 hidden w-[74%] overflow-hidden rounded-[27px] sm:block"
+          className="wow-float overflow-hidden rounded-[27px]"
           style={{
             border: "1px solid oklch(0.62 0.2 300 / 0.44)",
             background: "linear-gradient(180deg, oklch(0.21 0.04 280) 0%, oklch(0.12 0.028 278) 100%)",
@@ -94,10 +95,13 @@ export function CommandStage() {
             ))}
           </div>
         </div>
+        </div>
 
         {/* phone */}
-        <div className="tilt-right wow-float-slow relative z-10 sm:absolute sm:-right-2 sm:top-16">
-          <IphoneWhatsAppMockup />
+        <div className="tilt-right relative z-10 sm:absolute sm:-right-8 sm:top-20">
+          <div className="wow-float-slow">
+            <IphoneWhatsAppMockup />
+          </div>
         </div>
       </div>
     </div>
