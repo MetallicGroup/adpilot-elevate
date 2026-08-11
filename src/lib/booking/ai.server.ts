@@ -109,7 +109,7 @@ Format: {"questions":[{"id":"snake_case","label":"...","type":"...","options":["
 
 /** Clasifică un domeniu scris liber într-una din nișele cunoscute. */
 export async function classifyNiche(text: string): Promise<BusinessNiche> {
-  const ids = BUSINESS_NICHES.map((n) => n.id).filter((id) => id !== "other");
+  const ids: string[] = BUSINESS_NICHES.map((n) => String(n.id)).filter((id) => id !== "other");
   try {
     const raw = await askAi(
       "Clasifici domenii de business.",
@@ -120,7 +120,7 @@ Format: {"niche":"..."}`,
     );
     const parsed = parseJson<{ niche?: string }>(raw);
     const niche = parsed?.niche;
-    if (niche && ids.includes(niche as BusinessNiche)) return niche as BusinessNiche;
+    if (niche && ids.includes(niche)) return niche as BusinessNiche;
   } catch {
     /* fallback below */
   }
