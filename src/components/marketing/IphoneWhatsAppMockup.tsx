@@ -194,11 +194,11 @@ export function IphoneWhatsAppMockup() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: 60, rotate: -6 }}
-      animate={{ opacity: 1, x: 0, rotate: -6 }}
+      initial={{ opacity: 0, x: 40 }}
+      animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.7, delay: 0.4, ease: "easeOut" }}
-      className="relative mx-auto"
-      style={{ width: "min(320px, 85%)" }}
+      className="relative mx-auto sm:-rotate-6"
+      style={{ width: "min(320px, 78%)" }}
     >
       {/* Purple glow */}
       <div
@@ -270,19 +270,26 @@ export function IphoneWhatsAppMockup() {
                 height: "calc(100% - 76px)",
               }}
             >
-              <AnimatePresence>
-                {show &&
-                  SCENES[sceneIdx].script.slice(0, visible).map((m, i) => (
+              <AnimatePresence mode="wait">
+                {show && (
+                  <motion.div
+                    key={sceneIdx}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.35, ease: "linear" }}
+                    className="space-y-2"
+                  >
+                    {SCENES[sceneIdx].script.slice(0, visible).map((m, i) => (
                     <motion.div
                       key={`${sceneIdx}-${i}`}
-                      initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.25 }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.28, ease: "linear" }}
                       className={`flex ${m.side === "user" ? "justify-end" : "justify-start"}`}
                     >
                       <div
-                        className={`max-w-[82%] px-2.5 py-1.5 text-[11px] leading-snug whitespace-pre-line shadow-sm ${
+                        className={`max-w-[82%] px-2.5 py-1.5 text-[10px] sm:text-[11px] leading-snug whitespace-pre-line shadow-sm ${
                           m.side === "user"
                             ? "rounded-2xl rounded-tr-sm text-white"
                             : "rounded-2xl rounded-tl-sm text-white/95"
@@ -296,13 +303,12 @@ export function IphoneWhatsAppMockup() {
                         {m.text}
                       </div>
                     </motion.div>
-                  ))}
-                {show && typing && (
+                    ))}
+                    {typing && (
                   <motion.div
-                    key={`typing-${sceneIdx}`}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.2, ease: "linear" }}
                     className="flex justify-start"
                   >
                     <div
@@ -322,6 +328,8 @@ export function IphoneWhatsAppMockup() {
                         />
                       ))}
                     </div>
+                  </motion.div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>

@@ -16,7 +16,7 @@ export function CommandStage() {
         style={{ background: "radial-gradient(circle, oklch(0.55 0.24 296 / 0.22), oklch(0.45 0.16 288 / 0.07) 45%, transparent 70%)" }}
       />
 
-      <div className="relative mx-auto flex min-h-[520px] max-w-[760px] items-center justify-center lg:min-h-[620px]">
+      <div className="relative mx-auto flex min-h-[420px] max-w-[760px] sm:min-h-[520px] items-center justify-center lg:min-h-[620px]">
         {/* control panel */}
         <div className="tilt-left absolute left-0 top-2 hidden w-[70%] sm:block">
         <div
