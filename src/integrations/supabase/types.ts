@@ -1472,10 +1472,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      booking_campaign_is_published: {
-        Args: { _bc_id: string }
-        Returns: boolean
-      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
