@@ -163,9 +163,9 @@ function AuthPage() {
             <span className="pulse-dot inline-block h-1.5 w-1.5 rounded-full bg-success" />
             3 zile gratuit · anulezi oricând
           </span>
-          <h1 className="mt-6 max-w-[690px] text-[clamp(44px,4.4vw,72px)] font-extrabold leading-[0.96] tracking-[-0.055em]">
-            Centrul tău de comandă pentru{" "}
-            <span className="gradient-text">reclame Facebook &amp; Google</span>.
+          <h1 className="mt-6 max-w-[690px] text-[clamp(40px,4.4vw,72px)] font-extrabold leading-[0.98] tracking-[-0.055em]">
+            Tu conduci afacerea.{" "}
+            <span className="gradient-text">AdPilot conduce reclamele.</span>
           </h1>
           <p className="mt-6 max-w-[560px] text-base leading-relaxed text-muted-foreground">
             Campanii create de AI, buget optimizat automat și fiecare lead livrat direct pe
