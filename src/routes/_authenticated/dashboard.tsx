@@ -116,6 +116,15 @@ function Dashboard() {
             <p className="text-xs text-muted-foreground">Facebook & Instagram</p>
           </div>
         </Link>
+        <Link to="/bookings" className="press card-floating p-4 flex items-center gap-3 hover:border-primary/40 transition-colors">
+          <div className="w-10 h-10 rounded-xl bg-secondary border border-border flex items-center justify-center">
+            <Inbox className="w-4 h-4" />
+          </div>
+          <div>
+            <p className="text-sm font-medium">Programări</p>
+            <p className="text-xs text-muted-foreground">Din paginile de booking</p>
+          </div>
+        </Link>
         <Link to="/leads" className="press card-floating p-4 flex items-center gap-3 hover:border-primary/40 transition-colors">
           <div className="w-10 h-10 rounded-xl bg-secondary border border-border flex items-center justify-center">
             <Inbox className="w-4 h-4" />
