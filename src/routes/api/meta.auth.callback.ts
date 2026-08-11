@@ -126,10 +126,9 @@ export const Route = createFileRoute("/api/meta/auth/callback")({
                 .upsert(rows, { onConflict: "connection_id,page_id" });
             }
 
-            // Webhook-ul `leadgen` la nivel de pagină necesită `pages_manage_metadata`,
-            // care nu mai e cerut la login. Abonăm paginile doar dacă permisiunea
-            // există deja (admini/testeri); altfel lead-urile vin prin cron incremental.
-            if (granted.has("pages_manage_metadata")) {
+            // `pages_manage_metadata` e aprobat: abonăm mereu paginile la `leadgen`
+            // pentru lead-uri instant (sync-ul periodic rămâne ca plasă de siguranță).
+            {
               const { metaApiVersion } = await import("@/lib/meta.server");
               const version = metaApiVersion();
               await Promise.all(
