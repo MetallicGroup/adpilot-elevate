@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { signInWithProvider, translateAuthError, waitForClientSession } from "@/lib/auth";
 import { resolvePostAuthPath } from "@/lib/post-auth";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, MessageCircle, Sparkles } from "lucide-react";
 
 type AuthSearch = { email?: string; mode?: "signin" | "signup" };
 
@@ -119,29 +119,105 @@ function AuthPage() {
     }
   }
 
+  const isSignup = mode === "signup";
+
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="px-6 pt-6">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="w-4 h-4" /> Înapoi
+    <div className="grid min-h-screen lg:grid-cols-[1.05fr_.95fr]">
+      {/* Brand side */}
+      <aside
+        className="relative hidden flex-col justify-between overflow-hidden px-14 py-10 lg:flex"
+        style={{
+          background:
+            "radial-gradient(circle at 25% 35%, oklch(0.55 0.24 297 / 0.22), transparent 28%), radial-gradient(circle at 72% 70%, oklch(0.52 0.2 265 / 0.14), transparent 25%), linear-gradient(145deg, oklch(0.11 0.028 278), oklch(0.088 0.024 278))",
+        }}
+      >
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage:
+              "linear-gradient(oklch(1 0 0 / 0.028) 1px, transparent 1px), linear-gradient(90deg, oklch(1 0 0 / 0.028) 1px, transparent 1px)",
+            backgroundSize: "54px 54px",
+            maskImage: "linear-gradient(to bottom, #000, transparent 85%)",
+            WebkitMaskImage: "linear-gradient(to bottom, #000, transparent 85%)",
+          }}
+        />
+        <Link to="/" className="relative z-10 flex items-center gap-2.5 font-bold tracking-tight">
+          <span
+            className="grid h-9 w-9 place-items-center rounded-xl"
+            style={{ background: "var(--gradient-primary)", boxShadow: "var(--shadow-glow)" }}
+          >
+            <Sparkles className="h-4.5 w-4.5 text-white" />
+          </span>
+          AdPilot
         </Link>
-      </header>
-      <main className="flex-1 flex items-center justify-center px-6 py-12">
+
+        <div className="relative z-10">
+          <span className="eyebrow">
+            <span className="pulse-dot inline-block h-1.5 w-1.5 rounded-full bg-success" />
+            3 zile gratuit · anulezi oricând
+          </span>
+          <h1 className="mt-6 max-w-[690px] text-[clamp(44px,4.4vw,72px)] font-extrabold leading-[0.96] tracking-[-0.055em]">
+            Centrul tău de comandă pentru{" "}
+            <span className="gradient-text">reclame Facebook &amp; Google</span>.
+          </h1>
+          <p className="mt-6 max-w-[560px] text-base leading-relaxed text-muted-foreground">
+            Campanii create de AI, buget optimizat automat și fiecare lead livrat direct pe
+            WhatsApp. Fără agenție, fără dashboard-uri complicate.
+          </p>
+
+          {/* floating proof cards */}
+          <div className="relative mt-12 h-[300px]">
+            <div className="wow-float absolute left-[4%] top-2 w-[340px] rotate-[-4deg] rounded-[22px] border border-primary/25 bg-card/80 p-0 shadow-2xl backdrop-blur-md">
+              <div className="flex h-11 items-center border-b border-white/[0.055] px-3.5 text-[10px] text-muted-foreground">
+                Campanie · Reduceri de Primăvară
+              </div>
+              <div className="p-3.5">
+                <div className="my-2.5 h-2 w-[92%] rounded-full" style={{ background: "var(--gradient-primary)" }} />
+                <div className="my-2.5 h-2 w-[76%] rounded-full opacity-70" style={{ background: "var(--gradient-primary)" }} />
+                <div className="my-2.5 h-2 w-[58%] rounded-full opacity-45" style={{ background: "var(--gradient-primary)" }} />
+                <p className="mt-3 text-[11px] text-success">+23% lead-uri față de ieri</p>
+              </div>
+            </div>
+            <div className="wow-float-slow absolute right-[6%] top-[110px] w-[290px] rotate-[6deg] rounded-[22px] border border-primary/25 bg-card/80 p-0 shadow-2xl backdrop-blur-md">
+              <div className="flex h-11 items-center gap-2 border-b border-white/[0.055] px-3.5 text-[10px] text-muted-foreground">
+                <MessageCircle className="h-3.5 w-3.5" /> WhatsApp AI
+              </div>
+              <div className="p-3.5">
+                <div className="rounded-[10px] bg-secondary p-2.5 text-[10px]">Câte lead-uri azi?</div>
+                <div className="mt-2 ml-8 rounded-[10px] p-2.5 text-[10px] text-white" style={{ background: "oklch(0.45 0.11 165)" }}>
+                  47 lead-uri — cost/lead 6,8 lei 🚀
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p className="relative z-10 text-[11px] text-muted-foreground">
+          Peste 200 de afaceri din România folosesc AdPilot zilnic.
+        </p>
+      </aside>
+
+      {/* Form side */}
+      <main className="relative grid place-items-center px-6 py-12">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="w-full max-w-sm"
+          className="w-full max-w-[430px]"
         >
-          <h1 className="font-serif text-4xl font-semibold tracking-tight text-center">
-            {mode === "signup" ? "Creează cont" : "Bine ai revenit"}
-          </h1>
-          <p className="text-center text-muted-foreground text-sm mt-2">
-            {mode === "signup"
-              ? "Lansează reclame în mai puțin de 5 minute."
+          <Link
+            to="/"
+            className="mb-9 inline-flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" /> Înapoi la site
+          </Link>
+
+          <h2 className="text-[34px] font-bold leading-tight tracking-[-0.045em]">
+            {isSignup ? "Creează cont" : "Bine ai revenit"}
+          </h2>
+          <p className="mt-2 text-[13px] text-muted-foreground">
+            {isSignup
+              ? "3 zile gratuit. Lansează prima campanie în 5 minute."
               : "Intră în contul tău AdPilot."}
           </p>
 
@@ -149,7 +225,7 @@ function AuthPage() {
             type="button"
             onClick={() => oauth("google")}
             disabled={loading}
-            className="press mt-8 w-full flex items-center justify-center gap-2 py-3 border border-border rounded-xl text-sm font-medium hover:bg-secondary transition-colors"
+            className="press mt-7 flex h-12 w-full items-center justify-center gap-2 rounded-[13px] border border-white/[0.08] bg-secondary/50 text-sm font-medium transition-colors hover:bg-secondary disabled:opacity-50"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden>
               <path
@@ -172,73 +248,93 @@ function AuthPage() {
             Continuă cu Google
           </button>
 
-          <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
-            <div className="flex-1 h-px bg-border" /> sau <div className="flex-1 h-px bg-border" />
+          <div className="my-6 flex items-center gap-3 text-[10px] uppercase tracking-widest text-muted-foreground">
+            <div className="h-px flex-1 bg-border" /> sau <div className="h-px flex-1 bg-border" />
           </div>
 
-          <form onSubmit={submit} className="space-y-3">
-            {mode === "signup" && (
-              <input
-                type="text"
-                placeholder="Nume complet"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="w-full px-4 py-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              />
+          <form onSubmit={submit} className="grid gap-3.5">
+            {isSignup && (
+              <div>
+                <label className="mb-2 block text-[11px] text-muted-foreground" htmlFor="auth-name">
+                  Nume complet
+                </label>
+                <input
+                  id="auth-name"
+                  type="text"
+                  placeholder="Andrei Popescu"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  className="h-[52px] w-full rounded-[13px] border border-white/[0.08] bg-black/25 px-3.5 text-sm outline-none transition focus:border-primary/55 focus:ring-4 focus:ring-primary/10"
+                />
+              </div>
             )}
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-4 py-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-            <input
-              type="password"
-              placeholder="Parolă"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              className="w-full px-4 py-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
+            <div>
+              <label className="mb-2 block text-[11px] text-muted-foreground" htmlFor="auth-email">
+                Email
+              </label>
+              <input
+                id="auth-email"
+                type="email"
+                placeholder="nume@firma.ro"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="h-[52px] w-full rounded-[13px] border border-white/[0.08] bg-black/25 px-3.5 text-sm outline-none transition focus:border-primary/55 focus:ring-4 focus:ring-primary/10"
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-[11px] text-muted-foreground" htmlFor="auth-password">
+                Parolă
+              </label>
+              <input
+                id="auth-password"
+                type="password"
+                placeholder="Minim 6 caractere"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                className="h-[52px] w-full rounded-[13px] border border-white/[0.08] bg-black/25 px-3.5 text-sm outline-none transition focus:border-primary/55 focus:ring-4 focus:ring-primary/10"
+              />
+            </div>
             <button
               type="submit"
               disabled={loading}
-              className="press w-full py-3 rounded-xl bg-foreground text-background text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+              className="press btn-primary shine mt-1 flex h-[52px] w-full items-center justify-center gap-2 rounded-[14px] text-sm font-semibold disabled:opacity-50"
             >
-              {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-              {mode === "signup" ? "Creează cont" : "Intră în cont"}
+              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+              {isSignup ? "Începe cele 3 zile gratuit" : "Intră în cont"}
             </button>
           </form>
 
-          {mode === "signin" && (
+          {!isSignup && (
             <div className="mt-3 text-right">
               <Link
                 to="/forgot-password"
                 search={email ? { email } : undefined}
-                className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-4"
+                className="text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
               >
                 Am uitat parola
               </Link>
             </div>
           )}
 
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            {mode === "signup" ? "Ai deja cont?" : "Nou pe AdPilot?"}{" "}
+          <p className="mt-6 text-center text-xs text-muted-foreground">
+            {isSignup ? "Ai deja cont?" : "Nou pe AdPilot?"}{" "}
             <button
               type="button"
-              onClick={() => setMode(mode === "signup" ? "signin" : "signup")}
-              className="text-foreground font-medium hover:underline"
+              onClick={() => setMode(isSignup ? "signin" : "signup")}
+              className="font-bold text-primary hover:underline"
             >
-              {mode === "signup" ? "Autentifică-te" : "Creează cont"}
+              {isSignup ? "Autentifică-te" : "Creează cont"}
             </button>
           </p>
 
-          <p className="mt-6 text-center text-[11px] text-muted-foreground leading-relaxed">
-            Continuând, accepți Termenii și Politica de confidențialitate.
+          <p className="mt-6 text-center text-[10px] leading-relaxed text-muted-foreground">
+            Continuând, accepți{" "}
+            <Link to="/terms-of-service" className="underline underline-offset-2">Termenii</Link> și{" "}
+            <Link to="/privacy-policy" className="underline underline-offset-2">Politica de confidențialitate</Link>.
           </p>
         </motion.div>
       </main>
