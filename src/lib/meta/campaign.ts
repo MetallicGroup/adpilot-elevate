@@ -93,6 +93,8 @@ export async function createMetaLeadCampaign(userId: string, input: MetaCampaign
       status,
       beneficiary: input.business_details.business_name || page.name,
       payer: input.business_details.business_name || page.name,
+      dsa_beneficiary: input.business_details.business_name || page.name,
+      dsa_payor: input.business_details.business_name || page.name,
     },
   });
 

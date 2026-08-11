@@ -288,10 +288,15 @@ export async function createAdSet(
   if (args.objective !== "traffic") {
     body.promoted_object = { page_id: args.page_id };
   }
-  // EU DSA: Meta Marketing API expects the exact `beneficiary` / `payer` keys.
+  // EU DSA: în funcție de versiunea API, Meta acceptă `beneficiary`/`payer`
+  // sau `dsa_beneficiary`/`dsa_payor`. Le trimitem pe ambele ca să nu mai
+  // ceară niciodată completare manuală în Pagină.
   if (args.dsa_beneficiary) {
+    const payor = args.dsa_payor || args.dsa_beneficiary;
     body.beneficiary = args.dsa_beneficiary;
-    body.payer = args.dsa_payor || args.dsa_beneficiary;
+    body.payer = payor;
+    body.dsa_beneficiary = args.dsa_beneficiary;
+    body.dsa_payor = payor;
   }
   if (args.daily_budget_cents) body.daily_budget = args.daily_budget_cents;
   if (args.lifetime_budget_cents) body.lifetime_budget = args.lifetime_budget_cents;

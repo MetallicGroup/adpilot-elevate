@@ -953,15 +953,14 @@ async function publishCampaignToMeta(
       (await fetchPageName(input.pageId, input.pageAccessToken)) ||
       (await fetchPageName(input.pageId, input.accessToken)) ||
       "AdPilot";
-    let adset: { id: string };
-    try {
-      adset = await createAdSet(input.adAccountId, input.accessToken, {
+    const buildAdSet = (beneficiary: string) =>
+      createAdSet(input.adAccountId, input.accessToken, {
         name: `${input.args.name} — AdSet`,
         campaign_id: metaCamp.id,
         daily_budget_cents: Math.round(input.args.daily_budget * 100),
         page_id: input.pageId,
-        dsa_beneficiary: dsaName,
-        dsa_payor: dsaName,
+        dsa_beneficiary: beneficiary,
+        dsa_payor: beneficiary,
         targeting: {
           countries: input.args.countries,
           age_min: input.args.age_min,
@@ -971,16 +970,33 @@ async function publishCampaignToMeta(
         status: "ACTIVE",
         objective,
       });
+
+    let adset: { id: string };
+    try {
+      adset = await buildAdSet(dsaName);
     } catch (e: any) {
       const m = String(e?.message ?? "");
-      if (/beneficiar|beneficiary|payer|payor|person or organization|organization being promoted|dsa/i.test(m)) {
-        return {
-          error:
-            "Care este numele exact al firmei sau persoanei promovate? (exemplu: Salon Bella SRL). " +
-            "Răspunde-mi doar cu numele; îl completez eu la Meta și relansez campania, fără să intri în alte setări.",
-        };
+      const isDsa = /beneficiar|beneficiary|payer|payor|person or organization|organization being promoted|dsa/i.test(m);
+      if (!isDsa) throw e;
+      // Fallback automat: reîncercăm cu numele Paginii (sau cu numele campaniei),
+      // ca utilizatorul să nu fie nevoit să completeze nimic manual în Meta.
+      const fallbacks = [
+        (await fetchPageName(input.pageId, input.pageAccessToken)) || "",
+        (await fetchPageName(input.pageId, input.accessToken)) || "",
+        input.args.name,
+      ].filter((n) => n && n.trim() && n.trim() !== dsaName.trim());
+      let last: any = e;
+      let ok: { id: string } | null = null;
+      for (const name of fallbacks) {
+        try {
+          ok = await buildAdSet(name.trim().slice(0, 100));
+          break;
+        } catch (err) {
+          last = err;
+        }
       }
-      throw e;
+      if (!ok) throw last;
+      adset = ok;
     }
     await supabaseAdmin.from("campaigns").update({ meta_adset_id: adset.id }).eq("id", input.campaignRowId);
     const isVideo = (input.mediaMime || "").toLowerCase().startsWith("video/");
