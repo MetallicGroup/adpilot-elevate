@@ -38,6 +38,7 @@ import { Route as AuthenticatedWhatsappRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedProgramariRouteImport } from './routes/_authenticated/programari'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedMetaStatusRouteImport } from './routes/_authenticated/meta-status'
 import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
@@ -204,6 +205,11 @@ const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProgramariRoute = AuthenticatedProgramariRouteImport.update({
+  id: '/programari',
+  path: '/programari',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -347,6 +353,7 @@ export interface FileRoutesByFullPath {
   '/leads': typeof AuthenticatedLeadsRoute
   '/meta-status': typeof AuthenticatedMetaStatusRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/programari': typeof AuthenticatedProgramariRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/support': typeof AuthenticatedSupportRoute
@@ -398,6 +405,7 @@ export interface FileRoutesByTo {
   '/leads': typeof AuthenticatedLeadsRoute
   '/meta-status': typeof AuthenticatedMetaStatusRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/programari': typeof AuthenticatedProgramariRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/support': typeof AuthenticatedSupportRoute
@@ -451,6 +459,7 @@ export interface FileRoutesById {
   '/_authenticated/leads': typeof AuthenticatedLeadsRoute
   '/_authenticated/meta-status': typeof AuthenticatedMetaStatusRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/programari': typeof AuthenticatedProgramariRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/support': typeof AuthenticatedSupportRoute
@@ -504,6 +513,7 @@ export interface FileRouteTypes {
     | '/leads'
     | '/meta-status'
     | '/onboarding'
+    | '/programari'
     | '/reports'
     | '/settings'
     | '/support'
@@ -555,6 +565,7 @@ export interface FileRouteTypes {
     | '/leads'
     | '/meta-status'
     | '/onboarding'
+    | '/programari'
     | '/reports'
     | '/settings'
     | '/support'
@@ -607,6 +618,7 @@ export interface FileRouteTypes {
     | '/_authenticated/leads'
     | '/_authenticated/meta-status'
     | '/_authenticated/onboarding'
+    | '/_authenticated/programari'
     | '/_authenticated/reports'
     | '/_authenticated/settings'
     | '/_authenticated/support'
@@ -874,6 +886,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReportsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/programari': {
+      id: '/_authenticated/programari'
+      path: '/programari'
+      fullPath: '/programari'
+      preLoaderRoute: typeof AuthenticatedProgramariRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/onboarding': {
       id: '/_authenticated/onboarding'
       path: '/onboarding'
@@ -1044,6 +1063,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
   AuthenticatedMetaStatusRoute: typeof AuthenticatedMetaStatusRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedProgramariRoute: typeof AuthenticatedProgramariRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
@@ -1059,6 +1079,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
   AuthenticatedMetaStatusRoute: AuthenticatedMetaStatusRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedProgramariRoute: AuthenticatedProgramariRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSupportRoute: AuthenticatedSupportRoute,
