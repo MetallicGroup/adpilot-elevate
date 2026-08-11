@@ -423,13 +423,18 @@ function Index() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[600px] rounded-full pointer-events-none"
              style={{ background: "var(--gradient-glow)" }} />
         <div className="relative max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl md:text-6xl font-extrabold tracking-tight">
-            Gata să lansezi <span className="gradient-text">prima ta reclamă?</span>
+          <h2 className="text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tight text-balance">
+            Care este <span className="gradient-text">obiectivul afacerii tale?</span>
           </h2>
-          <p className="mt-5 text-lg text-muted-foreground">Gratuit 3 zile. Fără card. Anulezi oricând. 🎉</p>
-          <Link to="/auth" className="press btn-primary mt-10 inline-flex items-center gap-2 px-8 py-4 rounded-xl text-lg font-semibold">
-            Începe acum <ArrowRight className="w-5 h-5" />
-          </Link>
+          <p className="mt-5 text-base sm:text-lg text-muted-foreground">
+            Spune-i lui AdPilot. De restul ne ocupăm noi.
+          </p>
+          <a href="#obiectiv" className="press btn-primary mt-9 inline-flex items-center gap-2 px-7 sm:px-8 py-4 rounded-xl text-base sm:text-lg font-semibold">
+            Vreau să încep <ArrowRight className="w-5 h-5" />
+          </a>
+          <p className="mt-5 text-[13px] text-muted-foreground">
+            3 zile gratuit · anulezi oricând · fără costuri ascunse
+          </p>
         </div>
       </section>
     </MarketingLayout>
