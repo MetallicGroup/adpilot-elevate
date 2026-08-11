@@ -441,9 +441,21 @@ function Section({ eyebrow, title, children }: { eyebrow: string; title: string;
     <section className="px-6 py-24 max-w-6xl mx-auto w-full">
       <Reveal className="text-center max-w-2xl mx-auto mb-12">
         <p className="text-xs uppercase tracking-[0.2em] gradient-text font-semibold mb-4">{eyebrow}</p>
-        <h2 className="text-4xl md:text-5xl font-bold tracking-tight">{title}</h2>
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-balance">{title}</h2>
       </Reveal>
       {children}
+    </section>
+  );
+}
+
+function Divider({ text }: { text: string }) {
+  return (
+    <section className="px-6 py-16 sm:py-24">
+      <Reveal className="mx-auto max-w-4xl text-center">
+        <p className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-tight text-balance text-foreground/90">
+          {text}
+        </p>
+      </Reveal>
     </section>
   );
 }
