@@ -65,7 +65,7 @@ const AGES = ["13-17", "18-24", "25-34", "35-44", "45-54", "55+"];
 const GENDERS = ["Toți", "Femei", "Bărbați"];
 const INTERESTS = ["Frumusețe", "Modă", "Fitness", "Food", "Gaming", "Tech", "Călătorii", "Finanțe", "Educație", "Casă", "Animale", "Auto"];
 const LANGUAGES = ["Română", "Engleză", "Maghiară", "Germană"];
-const CTAS = ["Află mai mult", "Înscrie-te", "Cumpără acum", "Descarcă", "Aplică acum", "Rezervă acum"];
+const CTAS = ["Află mai mult", "Înscrie-te", "Cumpără acum", "Descarcă", "Aplică acum", "Rezervă acum", "Sună acum"];
 const LEAD_FIELDS = ["Nume", "Email", "Telefon", "Oraș", "Cod poștal", "Companie", "Funcție"];
 
 function CreateWizard() {
