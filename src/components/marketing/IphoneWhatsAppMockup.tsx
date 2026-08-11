@@ -194,11 +194,11 @@ export function IphoneWhatsAppMockup() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: 60, rotate: -6 }}
-      animate={{ opacity: 1, x: 0, rotate: -6 }}
+      initial={{ opacity: 0, x: 40 }}
+      animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.7, delay: 0.4, ease: "easeOut" }}
-      className="relative mx-auto"
-      style={{ width: "min(320px, 85%)" }}
+      className="relative mx-auto sm:-rotate-6"
+      style={{ width: "min(320px, 78%)" }}
     >
       {/* Purple glow */}
       <div
