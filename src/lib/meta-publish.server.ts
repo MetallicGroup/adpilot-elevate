@@ -249,7 +249,8 @@ export async function createAdSet(
       cities?: Array<{ key: string; radius?: number; distance_unit?: "kilometer" | "mile" }>;
     };
     status: "ACTIVE" | "PAUSED";
-    objective?: "leads" | "traffic";
+    objective?: "leads" | "traffic" | "bookings";
+    pixel_id?: string;
     dsa_beneficiary?: string;
     dsa_payor?: string;
   },
@@ -275,17 +276,27 @@ export async function createAdSet(
   if (args.targeting.genders && args.targeting.genders.length) {
     targeting.genders = args.targeting.genders;
   }
+  const optimization_goal =
+    args.objective === "traffic"
+      ? "LINK_CLICKS"
+      : args.objective === "bookings"
+        ? "OFFSITE_CONVERSIONS"
+        : "LEAD_GENERATION";
   const body: Record<string, unknown> = {
     name: args.name,
     campaign_id: args.campaign_id,
-    optimization_goal: args.objective === "traffic" ? "LINK_CLICKS" : "LEAD_GENERATION",
+    optimization_goal,
     billing_event: "IMPRESSIONS",
     bid_strategy: "LOWEST_COST_WITHOUT_CAP",
     targeting,
     status: args.status,
-    destination_type: args.objective === "traffic" ? "WEBSITE" : "ON_AD",
+    destination_type: args.objective === "leads" ? "ON_AD" : "WEBSITE",
   };
-  if (args.objective !== "traffic") {
+  if (args.objective === "bookings") {
+    // Optimizare pe programări reale (eveniment Schedule trimis prin CAPI)
+    if (!args.pixel_id) throw new Error("Lipsește pixelul Meta pentru campania de programări.");
+    body.promoted_object = { pixel_id: args.pixel_id, custom_event_type: "SCHEDULE" };
+  } else if (args.objective !== "traffic") {
     body.promoted_object = { page_id: args.page_id };
   }
   // EU DSA: în funcție de versiunea API, Meta acceptă `beneficiary`/`payer`
