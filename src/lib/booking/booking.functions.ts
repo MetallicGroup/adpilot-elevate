@@ -297,7 +297,12 @@ export const updateBookingStatus = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    const patch: Record<string, unknown> = { status: data.status };
+    const patch: {
+      status: string;
+      revenue?: number | null;
+      notes?: string | null;
+      verified_at?: string;
+    } = { status: data.status };
     if (data.revenue !== undefined) patch.revenue = data.revenue;
     if (data.notes !== undefined) patch.notes = data.notes;
     if (data.status === "confirmed") patch.verified_at = new Date().toISOString();
