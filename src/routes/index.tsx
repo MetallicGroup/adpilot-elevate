@@ -497,6 +497,7 @@ function BentoCard({ icon: Icon, title, children, className = "" }: { icon: any;
 }
 
 const steps = [
+*** MARKER2 ***
   { icon: Zap, title: "Conectează Facebook", body: "OAuth securizat. Durează 30 de secunde." },
   { icon: Target, title: "Spune-ne obiectivul", body: "Lead-uri sau vânzări? Buget? Restul rezolvăm noi." },
   { icon: Bot, title: "AI construiește campania", body: "Audiențe, text, structură — totul generat." },
