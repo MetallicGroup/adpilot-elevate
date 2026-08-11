@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -397,7 +397,7 @@ function StepGoal({ s, update }: { s: State; update: <K extends keyof State>(k: 
             </div>
           </div>
         </ChoiceCard>
-        <a href="/programari" className="block">
+        <Link to="/programari" className="block">
           <ChoiceCard active={false} onClick={() => {}}>
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 rounded-xl bg-foreground text-background flex items-center justify-center">
@@ -411,7 +411,7 @@ function StepGoal({ s, update }: { s: State; update: <K extends keyof State>(k: 
               </div>
             </div>
           </ChoiceCard>
-        </a>
+        </Link>
       </div>
     </div>
   );
