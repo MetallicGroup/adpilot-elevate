@@ -229,9 +229,53 @@ function Index() {
         </div>
       </Section>
 
+      {/* AGENCY */}
+      <section className="px-6 py-20 sm:py-24 max-w-6xl mx-auto w-full">
+        <Reveal className="glass rounded-3xl p-8 sm:p-12 text-center">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">
+            Reclamele tale, <span className="gradient-text">fără agenție.</span>
+          </h2>
+          <p className="mt-5 mx-auto max-w-2xl text-base sm:text-lg leading-relaxed text-muted-foreground">
+            Fără comisioane lunare, fără rapoarte pe care nu le înțelegi și fără să aștepți trei zile pentru o modificare. AdPilot lucrează non-stop, la o fracțiune din costul unei agenții.
+          </p>
+          <div className="mt-8 grid gap-3 sm:grid-cols-3 text-left text-sm">
+            {[
+              "Costuri fixe, transparente — de la 249 lei pe lună",
+              "Modificări instant, direct de pe WhatsApp",
+              "Contul de reclame rămâne 100% al tău",
+            ].map((t) => (
+              <div key={t} className="flex items-start gap-2 rounded-xl border border-border bg-card/60 p-4">
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" /> <span>{t}</span>
+              </div>
+            ))}
+          </div>
+          <Link to="/auth" className="press btn-primary mt-8 inline-flex items-center gap-2 rounded-xl px-6 sm:px-7 py-4 font-semibold">
+            Înlocuiește complexitatea cu AdPilot <ArrowRight className="h-4 w-4" />
+          </Link>
+        </Reveal>
+      </section>
+
+      {/* VERTICALS */}
+      <Section eyebrow="Pentru afacerea ta" title="Funcționează în orice domeniu.">
+        <div className="grid gap-4 md:grid-cols-3">
+          {verticals.map((v, i) => (
+            <Reveal key={v.title} delay={i}>
+              <div className="h-full rounded-2xl border border-border bg-card p-6 transition-all hover:-translate-y-1 hover:border-primary/40">
+                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: "oklch(0.62 0.22 295 / 0.15)" }}>
+                  <v.icon className="h-5 w-5 text-primary" />
+                </div>
+                <h3 className="text-lg font-semibold">{v.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{v.body}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </Section>
+
+      <Divider text="AdPilot muncește. Tu urmărești rezultatele." />
+
       {/* STATS */}
       <section className="px-6 py-20">
-*** MARKER ***
         <div className="max-w-6xl mx-auto relative rounded-3xl p-12 md:p-16 overflow-hidden border" style={{ borderColor: "oklch(0.62 0.22 295 / 0.3)", background: "linear-gradient(135deg, oklch(0.16 0.014 285), oklch(0.13 0.012 285))" }}>
           <div className="absolute inset-0 grid-bg opacity-30 pointer-events-none" />
           <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full pointer-events-none"
