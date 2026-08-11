@@ -11,14 +11,15 @@ import { MarketingLayout } from "@/components/marketing/MarketingLayout";
 import { CommandStage } from "@/components/marketing/CommandStage";
 import { CountUp } from "@/components/wow/CountUp";
 import { Reveal } from "@/components/wow/Reveal";
+import { GoalPicker } from "@/components/marketing/GoalPicker";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "AdPilot — Reclame Facebook & Google. Lead-uri pe WhatsApp." },
-      { name: "description", content: "Platforma AI care creează, lansează și optimizează reclame Facebook și Google Ads în câteva minute. Fiecare lead ajunge direct pe WhatsApp. 3 zile gratuit." },
-      { property: "og:title", content: "AdPilot — Reclame Facebook & Google. Lead-uri pe WhatsApp." },
-      { property: "og:description", content: "Creează și optimizează reclame Facebook și Google Ads cu AI. Lead-urile vin direct pe WhatsApp. 3 zile gratuit." },
+      { title: "AdPilot — Tu conduci afacerea. AdPilot conduce reclamele." },
+      { name: "description", content: "Tu conduci afacerea. AdPilot conduce reclamele: creează, lansează și optimizează campanii Facebook, Instagram și Google Ads, iar lead-urile vin pe WhatsApp. 3 zile gratuit." },
+      { property: "og:title", content: "AdPilot — Tu conduci afacerea. AdPilot conduce reclamele." },
+      { property: "og:description", content: "Spune-i ce vrei să obții. AdPilot creează, lansează și optimizează reclamele tale Facebook, Instagram și Google Ads. 3 zile gratuit." },
     ],
   }),
   component: Index,
