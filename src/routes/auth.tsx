@@ -7,7 +7,7 @@ import { resolvePostAuthPath } from "@/lib/post-auth";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2, MessageCircle, Sparkles } from "lucide-react";
 
-type AuthSearch = { email?: string; mode?: "signin" | "signup" };
+type AuthSearch = { email?: string; mode?: "signin" | "signup"; goal?: string };
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -16,6 +16,7 @@ export const Route = createFileRoute("/auth")({
     const out: AuthSearch = {};
     if (typeof s.email === "string") out.email = s.email;
     if (s.mode === "signin" || s.mode === "signup") out.mode = s.mode;
+    if (typeof s.goal === "string") out.goal = s.goal;
     return out;
   },
   head: () => ({ meta: [{ title: "Autentificare — AdPilot" }] }),
@@ -29,6 +30,12 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Persist the objective picked on the homepage so the wizard can preselect it.
+  useEffect(() => {
+    if (!search.goal) return;
+    try { window.localStorage.setItem("adpilot:goal", search.goal); } catch { /* ignore */ }
+  }, [search.goal]);
 
   useEffect(() => {
     let cancelled = false;
