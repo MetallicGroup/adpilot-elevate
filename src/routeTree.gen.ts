@@ -29,6 +29,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
+import { Route as BSlugRouteImport } from './routes/b.$slug'
 import { Route as AuthWelcomeRouteImport } from './routes/auth.welcome'
 import { Route as AuthVerifiedRouteImport } from './routes/auth.verified'
 import { Route as AuthConfirmEmailRouteImport } from './routes/auth.confirm-email'
@@ -156,6 +157,11 @@ const IndexRoute = IndexRouteImport.update({
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   id: '/checkout/return',
   path: '/checkout/return',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BSlugRoute = BSlugRouteImport.update({
+  id: '/b/$slug',
+  path: '/b/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthWelcomeRoute = AuthWelcomeRouteImport.update({
@@ -349,6 +355,7 @@ export interface FileRoutesByFullPath {
   '/auth/confirm-email': typeof AuthConfirmEmailRoute
   '/auth/verified': typeof AuthVerifiedRoute
   '/auth/welcome': typeof AuthWelcomeRoute
+  '/b/$slug': typeof BSlugRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/qa/trial': typeof AuthenticatedQaTrialRoute
@@ -399,6 +406,7 @@ export interface FileRoutesByTo {
   '/auth/confirm-email': typeof AuthConfirmEmailRoute
   '/auth/verified': typeof AuthVerifiedRoute
   '/auth/welcome': typeof AuthWelcomeRoute
+  '/b/$slug': typeof BSlugRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/qa/trial': typeof AuthenticatedQaTrialRoute
@@ -451,6 +459,7 @@ export interface FileRoutesById {
   '/auth/confirm-email': typeof AuthConfirmEmailRoute
   '/auth/verified': typeof AuthVerifiedRoute
   '/auth/welcome': typeof AuthWelcomeRoute
+  '/b/$slug': typeof BSlugRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/_authenticated/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/_authenticated/qa/trial': typeof AuthenticatedQaTrialRoute
@@ -503,6 +512,7 @@ export interface FileRouteTypes {
     | '/auth/confirm-email'
     | '/auth/verified'
     | '/auth/welcome'
+    | '/b/$slug'
     | '/checkout/return'
     | '/campaigns/$id'
     | '/qa/trial'
@@ -553,6 +563,7 @@ export interface FileRouteTypes {
     | '/auth/confirm-email'
     | '/auth/verified'
     | '/auth/welcome'
+    | '/b/$slug'
     | '/checkout/return'
     | '/campaigns/$id'
     | '/qa/trial'
@@ -604,6 +615,7 @@ export interface FileRouteTypes {
     | '/auth/confirm-email'
     | '/auth/verified'
     | '/auth/welcome'
+    | '/b/$slug'
     | '/checkout/return'
     | '/_authenticated/campaigns/$id'
     | '/_authenticated/qa/trial'
@@ -642,6 +654,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SecurityRoute: typeof SecurityRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
+  BSlugRoute: typeof BSlugRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   ApiMetaAuthCallbackRoute: typeof ApiMetaAuthCallbackRoute
   ApiPublicHooksAnomalyScanRoute: typeof ApiPublicHooksAnomalyScanRoute
@@ -796,6 +809,13 @@ declare module '@tanstack/react-router' {
       path: '/checkout/return'
       fullPath: '/checkout/return'
       preLoaderRoute: typeof CheckoutReturnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/b/$slug': {
+      id: '/b/$slug'
+      path: '/b/$slug'
+      fullPath: '/b/$slug'
+      preLoaderRoute: typeof BSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/welcome': {
@@ -1086,6 +1106,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SecurityRoute: SecurityRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
+  BSlugRoute: BSlugRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   ApiMetaAuthCallbackRoute: ApiMetaAuthCallbackRoute,
   ApiPublicHooksAnomalyScanRoute: ApiPublicHooksAnomalyScanRoute,
@@ -1102,13 +1123,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

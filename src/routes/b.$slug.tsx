@@ -271,7 +271,7 @@ function BookingLandingPage() {
               <div>
                 <label className="text-sm font-medium">Serviciu</label>
                 <div className="mt-2 grid gap-2">
-                  {services.map((s) => (
+                  {services.map((s: any) => (
                     <button
                       type="button"
                       key={s.id}
