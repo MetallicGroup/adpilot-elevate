@@ -25,6 +25,8 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/create")({
+  validateSearch: (s: Record<string, unknown>): { goal?: string } =>
+    typeof s.goal === "string" ? { goal: s.goal } : {},
   component: CreateWizard,
 });
 
@@ -68,6 +70,7 @@ const LEAD_FIELDS = ["Nume", "Email", "Telefon", "Oraș", "Cod poștal", "Compan
 
 function CreateWizard() {
   const navigate = useNavigate();
+  const search = Route.useSearch();
   const submit = useServerFn(saveCampaign);
   const checkMeta = useServerFn(checkMetaReady);
   const fetchPages = useServerFn(listMetaPages);
