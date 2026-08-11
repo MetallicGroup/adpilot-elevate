@@ -496,8 +496,13 @@ function BentoCard({ icon: Icon, title, children, className = "" }: { icon: any;
   );
 }
 
+const verticals = [
+  { icon: ShoppingBag, title: "E-commerce", body: "Reclame care duc clienții direct la produsele tale și campanii de conversii optimizate zilnic pentru vânzări, nu pentru like-uri." },
+  { icon: CalendarCheck, title: "Programări", body: "Salon, clinică sau service: primești o pagină de programări proprie și reclame optimizate pentru rezervări confirmate." },
+  { icon: Users, title: "Servicii & lead gen", body: "Formulare native Facebook, lead-uri livrate instant pe WhatsApp și follow-up automat, ca să nu pierzi niciun client." },
+];
+
 const steps = [
-*** MARKER2 ***
   { icon: Zap, title: "Conectează Facebook", body: "OAuth securizat. Durează 30 de secunde." },
   { icon: Target, title: "Spune-ne obiectivul", body: "Lead-uri sau vânzări? Buget? Restul rezolvăm noi." },
   { icon: Bot, title: "AI construiește campania", body: "Audiențe, text, structură — totul generat." },
