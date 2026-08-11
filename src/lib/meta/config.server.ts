@@ -8,6 +8,7 @@ export const META_SCOPES = [
   "pages_read_engagement",
   "pages_show_list",
   "pages_manage_ads",
+  "pages_manage_metadata",
 ].join(",");
 
 export function getMetaConfig() {
