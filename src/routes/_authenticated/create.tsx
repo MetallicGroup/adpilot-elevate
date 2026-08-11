@@ -124,6 +124,27 @@ function CreateWizard() {
     return () => clearTimeout(t);
   }, [s, draftRestored]);
 
+  // Apply the objective picked on the homepage (?goal= or stored choice)
+  useEffect(() => {
+    if (!draftRestored) return;
+    let goal = search.goal;
+    if (!goal) {
+      try { goal = window.localStorage.getItem("adpilot:goal") ?? undefined; } catch { goal = undefined; }
+    }
+    if (!goal) return;
+    try { window.localStorage.removeItem("adpilot:goal"); } catch { /* ignore */ }
+
+    if (goal === "bookings") { navigate({ to: "/programari", replace: true }); return; }
+    if (goal === "sales") {
+      setS((p) => ({ ...p, objective: "CONVERSIONS", name: p.name || "Campanie vânzări" }));
+    } else if (goal === "leads") {
+      setS((p) => ({ ...p, objective: "LEAD_GENERATION", name: p.name || "Campanie clienți potențiali" }));
+    } else if (goal === "calls") {
+      setS((p) => ({ ...p, objective: "LEAD_GENERATION", cta: "Sună acum", name: p.name || "Campanie apeluri" }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftRestored]);
+
   const update = <K extends keyof State>(k: K, v: State[K]) => setS((p) => ({ ...p, [k]: v }));
   const toggle = <K extends keyof State>(k: K, v: string) => {
     const arr = s[k] as unknown as string[];
