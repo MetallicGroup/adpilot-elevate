@@ -15,6 +15,9 @@ export function SiteFooter() {
             </div>
             <span className="font-semibold tracking-tight">AdPilot</span>
           </div>
+          <p className="mt-3 text-sm font-medium text-foreground/90">
+            Tu conduci afacerea. AdPilot conduce reclamele.
+          </p>
           <p className="mt-4 text-sm text-muted-foreground max-w-xs">
             Platforma AI care lansează, gestionează și optimizează reclame Facebook, Instagram și Google Ads — fără agenție, fără bătăi de cap.
           </p>

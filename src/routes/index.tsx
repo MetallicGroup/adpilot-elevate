@@ -5,20 +5,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { resolvePostAuthPath } from "@/lib/post-auth";
 import {
   ArrowRight, Check, MessageCircle, Bot, Inbox, LineChart, Zap, Rocket, Target,
-  Star, PlayCircle, Facebook, Search,
+  Star, PlayCircle, Facebook, Search, ShoppingBag, CalendarCheck, Users,
 } from "lucide-react";
 import { MarketingLayout } from "@/components/marketing/MarketingLayout";
 import { CommandStage } from "@/components/marketing/CommandStage";
 import { CountUp } from "@/components/wow/CountUp";
 import { Reveal } from "@/components/wow/Reveal";
+import { GoalPicker } from "@/components/marketing/GoalPicker";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "AdPilot — Reclame Facebook & Google. Lead-uri pe WhatsApp." },
-      { name: "description", content: "Platforma AI care creează, lansează și optimizează reclame Facebook și Google Ads în câteva minute. Fiecare lead ajunge direct pe WhatsApp. 3 zile gratuit." },
-      { property: "og:title", content: "AdPilot — Reclame Facebook & Google. Lead-uri pe WhatsApp." },
-      { property: "og:description", content: "Creează și optimizează reclame Facebook și Google Ads cu AI. Lead-urile vin direct pe WhatsApp. 3 zile gratuit." },
+      { title: "AdPilot — Tu conduci afacerea. AdPilot conduce reclamele." },
+      { name: "description", content: "Tu conduci afacerea. AdPilot conduce reclamele: creează, lansează și optimizează campanii Facebook, Instagram și Google Ads, iar lead-urile vin pe WhatsApp. 3 zile gratuit." },
+      { property: "og:title", content: "AdPilot — Tu conduci afacerea. AdPilot conduce reclamele." },
+      { property: "og:description", content: "Spune-i ce vrei să obții. AdPilot creează, lansează și optimizează reclamele tale Facebook, Instagram și Google Ads. 3 zile gratuit." },
     ],
   }),
   component: Index,
@@ -98,25 +99,29 @@ function Index() {
                 ✨ 3 zile gratuit · fără retragere înainte de a 4-a zi
               </motion.div>
 
-              <h1 className="mt-8 text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight">
-                Reclame Facebook &amp; Google.<br/>
-                <span className="gradient-text">Fără agenție.</span>
+              <h1 className="mt-7 text-[2.45rem] leading-[1.06] sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight">
+                Spune-i ce vrei să obții.{" "}
+                <span className="gradient-text">AdPilot se ocupă de reclame.</span>
               </h1>
 
-              <p className="mt-6 text-lg text-muted-foreground leading-relaxed max-w-xl mx-auto md:mx-0">
-                AdPilot creează, lansează și optimizează campaniile tale Facebook, Instagram și Google Ads în câteva minute — iar fiecare lead ajunge direct pe WhatsApp-ul tău. ✨
+              <p className="mt-5 text-base sm:text-lg text-muted-foreground leading-relaxed max-w-xl mx-auto md:mx-0">
+                Mai multe vânzări, programări sau clienți. AdPilot creează, lansează și optimizează reclamele tale pe Facebook, Instagram și Google — fără agenție și fără experiență.
               </p>
 
-              <div className="mt-10 flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
-                <Link to="/auth" className="press btn-primary inline-flex items-center justify-center gap-2 px-7 py-4 rounded-xl font-semibold">
-                  Începe cele 3 zile gratuit <ArrowRight className="w-4 h-4" />
-                </Link>
-                <Link to="/contact" className="press inline-flex items-center justify-center gap-2 px-7 py-4 glass rounded-xl font-medium text-foreground hover:bg-card transition-colors">
-                  <PlayCircle className="w-4 h-4" /> Vezi demo
+              <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
+                <a href="#obiectiv" className="press btn-primary inline-flex items-center justify-center gap-2 px-6 sm:px-7 py-4 rounded-xl font-semibold">
+                  Spune-i lui AdPilot ce vreau <ArrowRight className="w-4 h-4" />
+                </a>
+                <Link to="/contact" className="press inline-flex items-center justify-center gap-2 px-6 sm:px-7 py-4 glass rounded-xl font-medium text-foreground hover:bg-card transition-colors">
+                  <PlayCircle className="w-4 h-4" /> Vezi cum funcționează
                 </Link>
               </div>
 
-              <div className="mt-10 flex items-center justify-center md:justify-start gap-3 text-sm text-muted-foreground">
+              <p className="mt-5 text-[13px] text-muted-foreground">
+                3 zile gratuit · Fără experiență necesară · Configurare în câteva minute
+              </p>
+
+              <div className="mt-8 flex items-center justify-center md:justify-start gap-3 text-sm text-muted-foreground">
                 <div className="flex">
                   {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />)}
                 </div>
@@ -129,10 +134,22 @@ function Index() {
         </div>
       </section>
 
+      {/* GOAL PICKER */}
+      <section id="obiectiv" className="px-6 py-20 sm:py-24 max-w-6xl mx-auto w-full scroll-mt-24">
+        <Reveal className="text-center max-w-2xl mx-auto mb-10">
+          <p className="text-xs uppercase tracking-[0.2em] gradient-text font-semibold mb-4">Începe de aici</p>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">Tu ce vrei să obții?</h2>
+          <p className="mt-4 text-muted-foreground">Alege obiectivul. De restul se ocupă AdPilot.</p>
+        </Reveal>
+        <GoalPicker />
+      </section>
+
+      <Divider text="Fără Ads Manager. Fără bătăi de cap." />
+
       {/* HOW IT WORKS */}
       <Section eyebrow="Cum funcționează" title="De la zero la campanie live în 5 minute">
         <p className="text-center text-muted-foreground -mt-6 mb-12 max-w-xl mx-auto">Fără agenție. Fără curbă de învățare. Doar rezultate.</p>
-        <div className="grid md:grid-cols-5 gap-4">
+        <div className="grid sm:grid-cols-2 md:grid-cols-5 gap-4">
           {steps.map((s, i) => (
             <motion.div
               key={s.title}
@@ -148,6 +165,8 @@ function Index() {
           ))}
         </div>
       </Section>
+
+      <Divider text="De la idee la reclamă activă. În câteva minute." />
 
       {/* PLATFORMS WE MANAGE */}
       <Section eyebrow="Platformele pe care le gestionăm" title="Facebook, Instagram & Google Ads — într-un singur loc.">
@@ -209,6 +228,51 @@ function Index() {
           </BentoCard>
         </div>
       </Section>
+
+      {/* AGENCY */}
+      <section className="px-6 py-20 sm:py-24 max-w-6xl mx-auto w-full">
+        <Reveal className="glass rounded-3xl p-8 sm:p-12 text-center">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">
+            Reclamele tale, <span className="gradient-text">fără agenție.</span>
+          </h2>
+          <p className="mt-5 mx-auto max-w-2xl text-base sm:text-lg leading-relaxed text-muted-foreground">
+            Fără comisioane lunare, fără rapoarte pe care nu le înțelegi și fără să aștepți trei zile pentru o modificare. AdPilot lucrează non-stop, la o fracțiune din costul unei agenții.
+          </p>
+          <div className="mt-8 grid gap-3 sm:grid-cols-3 text-left text-sm">
+            {[
+              "Costuri fixe, transparente — de la 249 lei pe lună",
+              "Modificări instant, direct de pe WhatsApp",
+              "Contul de reclame rămâne 100% al tău",
+            ].map((t) => (
+              <div key={t} className="flex items-start gap-2 rounded-xl border border-border bg-card/60 p-4">
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" /> <span>{t}</span>
+              </div>
+            ))}
+          </div>
+          <Link to="/auth" className="press btn-primary mt-8 inline-flex items-center gap-2 rounded-xl px-6 sm:px-7 py-4 font-semibold">
+            Înlocuiește complexitatea cu AdPilot <ArrowRight className="h-4 w-4" />
+          </Link>
+        </Reveal>
+      </section>
+
+      {/* VERTICALS */}
+      <Section eyebrow="Pentru afacerea ta" title="Funcționează în orice domeniu.">
+        <div className="grid gap-4 md:grid-cols-3">
+          {verticals.map((v, i) => (
+            <Reveal key={v.title} delay={i}>
+              <div className="h-full rounded-2xl border border-border bg-card p-6 transition-all hover:-translate-y-1 hover:border-primary/40">
+                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: "oklch(0.62 0.22 295 / 0.15)" }}>
+                  <v.icon className="h-5 w-5 text-primary" />
+                </div>
+                <h3 className="text-lg font-semibold">{v.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{v.body}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </Section>
+
+      <Divider text="AdPilot muncește. Tu urmărești rezultatele." />
 
       {/* STATS */}
       <section className="px-6 py-20">
@@ -359,13 +423,18 @@ function Index() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[600px] rounded-full pointer-events-none"
              style={{ background: "var(--gradient-glow)" }} />
         <div className="relative max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl md:text-6xl font-extrabold tracking-tight">
-            Gata să lansezi <span className="gradient-text">prima ta reclamă?</span>
+          <h2 className="text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tight text-balance">
+            Care este <span className="gradient-text">obiectivul afacerii tale?</span>
           </h2>
-          <p className="mt-5 text-lg text-muted-foreground">Gratuit 3 zile. Fără card. Anulezi oricând. 🎉</p>
-          <Link to="/auth" className="press btn-primary mt-10 inline-flex items-center gap-2 px-8 py-4 rounded-xl text-lg font-semibold">
-            Începe acum <ArrowRight className="w-5 h-5" />
-          </Link>
+          <p className="mt-5 text-base sm:text-lg text-muted-foreground">
+            Spune-i lui AdPilot. De restul ne ocupăm noi.
+          </p>
+          <a href="#obiectiv" className="press btn-primary mt-9 inline-flex items-center gap-2 px-7 sm:px-8 py-4 rounded-xl text-base sm:text-lg font-semibold">
+            Vreau să încep <ArrowRight className="w-5 h-5" />
+          </a>
+          <p className="mt-5 text-[13px] text-muted-foreground">
+            3 zile gratuit · anulezi oricând · fără costuri ascunse
+          </p>
         </div>
       </section>
     </MarketingLayout>
@@ -377,9 +446,21 @@ function Section({ eyebrow, title, children }: { eyebrow: string; title: string;
     <section className="px-6 py-24 max-w-6xl mx-auto w-full">
       <Reveal className="text-center max-w-2xl mx-auto mb-12">
         <p className="text-xs uppercase tracking-[0.2em] gradient-text font-semibold mb-4">{eyebrow}</p>
-        <h2 className="text-4xl md:text-5xl font-bold tracking-tight">{title}</h2>
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-balance">{title}</h2>
       </Reveal>
       {children}
+    </section>
+  );
+}
+
+function Divider({ text }: { text: string }) {
+  return (
+    <section className="px-6 py-16 sm:py-24">
+      <Reveal className="mx-auto max-w-4xl text-center">
+        <p className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-tight text-balance text-foreground/90">
+          {text}
+        </p>
+      </Reveal>
     </section>
   );
 }
@@ -419,6 +500,12 @@ function BentoCard({ icon: Icon, title, children, className = "" }: { icon: any;
     </motion.div>
   );
 }
+
+const verticals = [
+  { icon: ShoppingBag, title: "E-commerce", body: "Reclame care duc clienții direct la produsele tale și campanii de conversii optimizate zilnic pentru vânzări, nu pentru like-uri." },
+  { icon: CalendarCheck, title: "Programări", body: "Salon, clinică sau service: primești o pagină de programări proprie și reclame optimizate pentru rezervări confirmate." },
+  { icon: Users, title: "Servicii & lead gen", body: "Formulare native Facebook, lead-uri livrate instant pe WhatsApp și follow-up automat, ca să nu pierzi niciun client." },
+];
 
 const steps = [
   { icon: Zap, title: "Conectează Facebook", body: "OAuth securizat. Durează 30 de secunde." },

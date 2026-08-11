@@ -7,7 +7,7 @@ import { resolvePostAuthPath } from "@/lib/post-auth";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2, MessageCircle, Sparkles } from "lucide-react";
 
-type AuthSearch = { email?: string; mode?: "signin" | "signup" };
+type AuthSearch = { email?: string; mode?: "signin" | "signup"; goal?: string };
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -16,6 +16,7 @@ export const Route = createFileRoute("/auth")({
     const out: AuthSearch = {};
     if (typeof s.email === "string") out.email = s.email;
     if (s.mode === "signin" || s.mode === "signup") out.mode = s.mode;
+    if (typeof s.goal === "string") out.goal = s.goal;
     return out;
   },
   head: () => ({ meta: [{ title: "Autentificare — AdPilot" }] }),
@@ -29,6 +30,12 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Persist the objective picked on the homepage so the wizard can preselect it.
+  useEffect(() => {
+    if (!search.goal) return;
+    try { window.localStorage.setItem("adpilot:goal", search.goal); } catch { /* ignore */ }
+  }, [search.goal]);
 
   useEffect(() => {
     let cancelled = false;
@@ -156,9 +163,9 @@ function AuthPage() {
             <span className="pulse-dot inline-block h-1.5 w-1.5 rounded-full bg-success" />
             3 zile gratuit · anulezi oricând
           </span>
-          <h1 className="mt-6 max-w-[690px] text-[clamp(44px,4.4vw,72px)] font-extrabold leading-[0.96] tracking-[-0.055em]">
-            Centrul tău de comandă pentru{" "}
-            <span className="gradient-text">reclame Facebook &amp; Google</span>.
+          <h1 className="mt-6 max-w-[690px] text-[clamp(40px,4.4vw,72px)] font-extrabold leading-[0.98] tracking-[-0.055em]">
+            Tu conduci afacerea.{" "}
+            <span className="gradient-text">AdPilot conduce reclamele.</span>
           </h1>
           <p className="mt-6 max-w-[560px] text-base leading-relaxed text-muted-foreground">
             Campanii create de AI, buget optimizat automat și fiecare lead livrat direct pe
