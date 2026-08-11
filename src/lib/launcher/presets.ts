@@ -70,6 +70,111 @@ export const BUSINESS_NICHES: Array<{
     title: "Alt tip de business",
     services: ["Serviciul principal", "Ofertă specială", "Consultație gratuită"],
   },
+  {
+    id: "dentist",
+    title: "Clinică stomatologică",
+    services: ["Implant dentar", "Aparat dentar", "Igienizare profesională", "Fațete dentare", "Consultație gratuită"],
+  },
+  {
+    id: "medical_clinic",
+    title: "Clinică medicală",
+    services: ["Consultație de specialitate", "Analize", "Ecografie", "Control periodic", "Pachet preventiv"],
+  },
+  {
+    id: "barber",
+    title: "Barber shop",
+    services: ["Tuns", "Aranjat barbă", "Pachet tuns + barbă", "Tuns copii", "Abonament lunar"],
+  },
+  {
+    id: "detailing",
+    title: "Detailing auto",
+    services: ["Detailing complet", "Detailing interior", "Polish & ceramică", "Curățare tapițerie", "Pachet premium"],
+  },
+  {
+    id: "tires",
+    title: "Vulcanizare",
+    services: ["Schimb anvelope", "Echilibrare", "Reparație pană", "Depozitare anvelope", "Pachet sezon"],
+  },
+  {
+    id: "hvac",
+    title: "HVAC / Climatizare",
+    services: ["Montaj aer condiționat", "Montaj centrală", "Pompă de căldură", "Reparație", "Mentenanță"],
+  },
+  {
+    id: "plumbing",
+    title: "Instalații sanitare",
+    services: ["Reparație urgentă", "Instalații apartament", "Desfundare", "Montaj obiecte sanitare", "Evaluare gratuită"],
+  },
+  {
+    id: "electrician",
+    title: "Electrician",
+    services: ["Intervenție urgentă", "Instalație electrică", "Tablou electric", "Montaj corpuri de iluminat", "Verificare instalație"],
+  },
+  {
+    id: "solar",
+    title: "Panouri fotovoltaice",
+    services: ["Sistem fotovoltaic rezidențial", "Sistem industrial", "Consultanță & ofertă", "Mentenanță", "Baterii stocare"],
+  },
+  {
+    id: "nutrition",
+    title: "Nutriție",
+    services: ["Consultație nutriție", "Plan alimentar personalizat", "Monitorizare lunară", "Analiză corporală", "Pachet 3 luni"],
+  },
+  {
+    id: "physiotherapy",
+    title: "Fizioterapie / Recuperare",
+    services: ["Ședință de kinetoterapie", "Evaluare posturală", "Recuperare post-operatorie", "Terapie durere lombară", "Pachet 10 ședințe"],
+  },
+  {
+    id: "massage",
+    title: "Masaj / SPA",
+    services: ["Masaj de relaxare", "Masaj terapeutic", "Masaj anticelulitic", "Pachet cuplu", "Abonament lunar"],
+  },
+  {
+    id: "psychology",
+    title: "Psihologie / Terapie",
+    services: ["Ședință individuală", "Terapie de cuplu", "Consiliere adolescenți", "Evaluare psihologică", "Pachet 5 ședințe"],
+  },
+  {
+    id: "lawyer",
+    title: "Avocatură",
+    services: ["Consultanță juridică", "Divorț", "Litigii comerciale", "Dreptul muncii", "Reprezentare în instanță"],
+  },
+  {
+    id: "accounting",
+    title: "Contabilitate",
+    services: ["Contabilitate SRL", "Contabilitate PFA", "Consultanță fiscală", "Înființare firmă", "Salarizare"],
+  },
+  {
+    id: "consulting",
+    title: "Consultanță business",
+    services: ["Sesiune de strategie", "Audit business", "Fonduri europene", "Consultanță vânzări", "Mentorat lunar"],
+  },
+  {
+    id: "real_estate",
+    title: "Imobiliare",
+    services: ["Evaluare gratuită proprietate", "Vizionare apartament", "Consultanță achiziție", "Intermediere vânzare", "Consultanță credit"],
+  },
+  {
+    id: "photography",
+    title: "Fotograf",
+    services: ["Ședință foto de familie", "Fotografie nuntă", "Fotografie produs", "Botez", "Ședință foto personal branding"],
+  },
+  {
+    id: "events",
+    title: "Evenimente",
+    services: ["Organizare nuntă", "Organizare botez", "Evenimente corporate", "Decor evenimente", "Consultanță eveniment"],
+  },
+  {
+    id: "fencing",
+    title: "Garduri / Amenajări",
+    services: ["Montaj gard", "Poartă automată", "Amenajare curte", "Măsurători și deviz", "Reparații gard"],
+  },
+  {
+    id: "other",
+    title: "Alt domeniu (îl scriu eu)",
+    services: ["Serviciul principal", "Ofertă specială", "Consultație gratuită"],
+  },
 ];
 
 export const BUDGET_PRESETS_RON = [30, 50, 100] as const;
@@ -102,6 +207,27 @@ export function getNicheAudience(niche: BusinessNiche): { age_min: number; age_m
     auto: { age_min: 22, age_max: 65, interests: ["automotive", "cars"], genders: ["all"] },
     ecommerce: { age_min: 18, age_max: 55, interests: ["shopping", "fashion", "deals"], genders: ["all"] },
     general: { age_min: 18, age_max: 65, interests: [], genders: ["all"] },
+    dentist: { age_min: 25, age_max: 65, interests: ["health", "dental_care", "wellness"], genders: ["all"] },
+    medical_clinic: { age_min: 25, age_max: 65, interests: ["health", "wellness"], genders: ["all"] },
+    barber: { age_min: 18, age_max: 55, interests: ["grooming", "fashion"], genders: ["male"] },
+    detailing: { age_min: 22, age_max: 60, interests: ["automotive", "cars", "car_care"], genders: ["all"] },
+    tires: { age_min: 22, age_max: 65, interests: ["automotive", "cars"], genders: ["all"] },
+    hvac: { age_min: 28, age_max: 65, interests: ["home", "home_improvement"], genders: ["all"] },
+    plumbing: { age_min: 25, age_max: 65, interests: ["home", "home_improvement"], genders: ["all"] },
+    electrician: { age_min: 25, age_max: 65, interests: ["home", "home_improvement"], genders: ["all"] },
+    solar: { age_min: 30, age_max: 65, interests: ["home", "renewable_energy", "real_estate"], genders: ["all"] },
+    nutrition: { age_min: 20, age_max: 60, interests: ["health", "nutrition", "fitness"], genders: ["all"] },
+    physiotherapy: { age_min: 25, age_max: 65, interests: ["health", "wellness", "fitness"], genders: ["all"] },
+    massage: { age_min: 22, age_max: 60, interests: ["wellness", "spa", "health"], genders: ["all"] },
+    psychology: { age_min: 20, age_max: 60, interests: ["mental_health", "wellness"], genders: ["all"] },
+    lawyer: { age_min: 25, age_max: 65, interests: ["legal", "business"], genders: ["all"] },
+    accounting: { age_min: 25, age_max: 65, interests: ["business", "finance"], genders: ["all"] },
+    consulting: { age_min: 25, age_max: 65, interests: ["business", "entrepreneurship"], genders: ["all"] },
+    real_estate: { age_min: 25, age_max: 65, interests: ["real_estate", "home"], genders: ["all"] },
+    photography: { age_min: 20, age_max: 60, interests: ["photography", "weddings", "family"], genders: ["all"] },
+    events: { age_min: 20, age_max: 60, interests: ["weddings", "events", "party"], genders: ["all"] },
+    fencing: { age_min: 28, age_max: 65, interests: ["home", "renovation", "real_estate"], genders: ["all"] },
+    other: { age_min: 18, age_max: 65, interests: [], genders: ["all"] },
   };
   return map[niche];
 }
