@@ -231,6 +231,7 @@ function Index() {
 
       {/* STATS */}
       <section className="px-6 py-20">
+*** MARKER ***
         <div className="max-w-6xl mx-auto relative rounded-3xl p-12 md:p-16 overflow-hidden border" style={{ borderColor: "oklch(0.62 0.22 295 / 0.3)", background: "linear-gradient(135deg, oklch(0.16 0.014 285), oklch(0.13 0.012 285))" }}>
           <div className="absolute inset-0 grid-bg opacity-30 pointer-events-none" />
           <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full pointer-events-none"
