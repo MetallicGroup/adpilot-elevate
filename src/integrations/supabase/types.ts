@@ -115,6 +115,427 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_availability: {
+        Row: {
+          buffer_min: number
+          business_id: string
+          created_at: string
+          end_time: string
+          id: string
+          slot_min: number
+          start_time: string
+          updated_at: string
+          user_id: string
+          weekday: number
+        }
+        Insert: {
+          buffer_min?: number
+          business_id: string
+          created_at?: string
+          end_time?: string
+          id?: string
+          slot_min?: number
+          start_time?: string
+          updated_at?: string
+          user_id: string
+          weekday: number
+        }
+        Update: {
+          buffer_min?: number
+          business_id?: string
+          created_at?: string
+          end_time?: string
+          id?: string
+          slot_min?: number
+          start_time?: string
+          updated_at?: string
+          user_id?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_availability_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_blackouts: {
+        Row: {
+          business_id: string
+          created_at: string
+          ends_at: string
+          id: string
+          reason: string | null
+          starts_at: string
+          user_id: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          ends_at: string
+          id?: string
+          reason?: string | null
+          starts_at: string
+          user_id: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          ends_at?: string
+          id?: string
+          reason?: string | null
+          starts_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_blackouts_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_campaigns: {
+        Row: {
+          business_id: string
+          campaign_id: string | null
+          created_at: string
+          hero_image_url: string | null
+          id: string
+          landing_copy: Json
+          meta_ad_id: string | null
+          meta_adset_id: string | null
+          meta_campaign_id: string | null
+          offer: string | null
+          pixel_id: string | null
+          service: string
+          slug: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_id: string
+          campaign_id?: string | null
+          created_at?: string
+          hero_image_url?: string | null
+          id?: string
+          landing_copy?: Json
+          meta_ad_id?: string | null
+          meta_adset_id?: string | null
+          meta_campaign_id?: string | null
+          offer?: string | null
+          pixel_id?: string | null
+          service: string
+          slug: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_id?: string
+          campaign_id?: string | null
+          created_at?: string
+          hero_image_url?: string | null
+          id?: string
+          landing_copy?: Json
+          meta_ad_id?: string | null
+          meta_adset_id?: string | null
+          meta_campaign_id?: string | null
+          offer?: string | null
+          pixel_id?: string | null
+          service?: string
+          slug?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_campaigns_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_campaigns_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_page_views: {
+        Row: {
+          attribution: Json
+          booking_campaign_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          attribution?: Json
+          booking_campaign_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          attribution?: Json
+          booking_campaign_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_page_views_booking_campaign_id_fkey"
+            columns: ["booking_campaign_id"]
+            isOneToOne: false
+            referencedRelation: "booking_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_questions: {
+        Row: {
+          booking_campaign_id: string
+          created_at: string
+          help_text: string | null
+          id: string
+          key: string
+          label: string
+          options: Json
+          position: number
+          required: boolean
+          scoring_weight: Json | null
+          source: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          booking_campaign_id: string
+          created_at?: string
+          help_text?: string | null
+          id?: string
+          key: string
+          label: string
+          options?: Json
+          position?: number
+          required?: boolean
+          scoring_weight?: Json | null
+          source?: string
+          type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          booking_campaign_id?: string
+          created_at?: string
+          help_text?: string | null
+          id?: string
+          key?: string
+          label?: string
+          options?: Json
+          position?: number
+          required?: boolean
+          scoring_weight?: Json | null
+          source?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_questions_booking_campaign_id_fkey"
+            columns: ["booking_campaign_id"]
+            isOneToOne: false
+            referencedRelation: "booking_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_services: {
+        Row: {
+          booking_campaign_id: string
+          created_at: string
+          currency: string
+          description: string | null
+          duration_min: number
+          id: string
+          is_active: boolean
+          name: string
+          position: number
+          price: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          booking_campaign_id: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          duration_min?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          position?: number
+          price?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          booking_campaign_id?: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          duration_min?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          position?: number
+          price?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_services_booking_campaign_id_fkey"
+            columns: ["booking_campaign_id"]
+            isOneToOne: false
+            referencedRelation: "booking_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bookings: {
+        Row: {
+          answers: Json
+          attribution: Json
+          booking_campaign_id: string
+          business_id: string
+          campaign_id: string | null
+          capi_event_id: string | null
+          capi_sent_at: string | null
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          lead_id: string | null
+          notes: string | null
+          phone: string
+          qualification_score: number | null
+          qualification_tier: string | null
+          revenue: number | null
+          service_id: string | null
+          service_name: string | null
+          slot_end: string
+          slot_start: string
+          status: string
+          updated_at: string
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          answers?: Json
+          attribution?: Json
+          booking_campaign_id: string
+          business_id: string
+          campaign_id?: string | null
+          capi_event_id?: string | null
+          capi_sent_at?: string | null
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          lead_id?: string | null
+          notes?: string | null
+          phone: string
+          qualification_score?: number | null
+          qualification_tier?: string | null
+          revenue?: number | null
+          service_id?: string | null
+          service_name?: string | null
+          slot_end: string
+          slot_start: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          answers?: Json
+          attribution?: Json
+          booking_campaign_id?: string
+          business_id?: string
+          campaign_id?: string | null
+          capi_event_id?: string | null
+          capi_sent_at?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          lead_id?: string | null
+          notes?: string | null
+          phone?: string
+          qualification_score?: number | null
+          qualification_tier?: string | null
+          revenue?: number | null
+          service_id?: string | null
+          service_name?: string | null
+          slot_end?: string
+          slot_start?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_booking_campaign_id_fkey"
+            columns: ["booking_campaign_id"]
+            isOneToOne: false
+            referencedRelation: "booking_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "booking_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       broadcasts: {
         Row: {
           body: string
@@ -157,11 +578,73 @@ export type Database = {
         }
         Relationships: []
       }
+      business_profiles: {
+        Row: {
+          address: string | null
+          brand_colors: Json
+          city: string | null
+          created_at: string
+          description: string | null
+          email: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          niche: string
+          niche_custom: string | null
+          phone: string | null
+          privacy_policy_url: string | null
+          timezone: string
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          brand_colors?: Json
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          niche?: string
+          niche_custom?: string | null
+          phone?: string | null
+          privacy_policy_url?: string | null
+          timezone?: string
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          brand_colors?: Json
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          niche?: string
+          niche_custom?: string | null
+          phone?: string | null
+          privacy_policy_url?: string | null
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       campaigns: {
         Row: {
           ad_account_id: string | null
+          booking_campaign_id: string | null
           budget: number
           budget_mode: string
+          campaign_type: string
           created_at: string
           creative: Json
           end_date: string | null
@@ -175,6 +658,7 @@ export type Database = {
           meta_lead_form_id: string | null
           name: string
           objective: string
+          pixel_id: string | null
           platform: string
           start_date: string | null
           status: string
@@ -187,8 +671,10 @@ export type Database = {
         }
         Insert: {
           ad_account_id?: string | null
+          booking_campaign_id?: string | null
           budget?: number
           budget_mode?: string
+          campaign_type?: string
           created_at?: string
           creative?: Json
           end_date?: string | null
@@ -202,6 +688,7 @@ export type Database = {
           meta_lead_form_id?: string | null
           name: string
           objective?: string
+          pixel_id?: string | null
           platform?: string
           start_date?: string | null
           status?: string
@@ -214,8 +701,10 @@ export type Database = {
         }
         Update: {
           ad_account_id?: string | null
+          booking_campaign_id?: string | null
           budget?: number
           budget_mode?: string
+          campaign_type?: string
           created_at?: string
           creative?: Json
           end_date?: string | null
@@ -229,6 +718,7 @@ export type Database = {
           meta_lead_form_id?: string | null
           name?: string
           objective?: string
+          pixel_id?: string | null
           platform?: string
           start_date?: string | null
           status?: string
@@ -245,6 +735,13 @@ export type Database = {
             columns: ["ad_account_id"]
             isOneToOne: false
             referencedRelation: "ad_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaigns_booking_campaign_id_fkey"
+            columns: ["booking_campaign_id"]
+            isOneToOne: false
+            referencedRelation: "booking_campaigns"
             referencedColumns: ["id"]
           },
         ]
@@ -419,6 +916,7 @@ export type Database = {
           currency: string | null
           id: string
           is_active: boolean
+          pixel_id: string | null
           status: number | null
           timezone_name: string | null
           updated_at: string
@@ -432,6 +930,7 @@ export type Database = {
           currency?: string | null
           id?: string
           is_active?: boolean
+          pixel_id?: string | null
           status?: number | null
           timezone_name?: string | null
           updated_at?: string
@@ -445,6 +944,7 @@ export type Database = {
           currency?: string | null
           id?: string
           is_active?: boolean
+          pixel_id?: string | null
           status?: number | null
           timezone_name?: string | null
           updated_at?: string
@@ -587,6 +1087,7 @@ export type Database = {
       }
       performance_data: {
         Row: {
+          bookings: number
           campaign_id: string
           clicks: number
           cpl: number
@@ -598,8 +1099,10 @@ export type Database = {
           leads: number
           spend: number
           user_id: string
+          verified_bookings: number
         }
         Insert: {
+          bookings?: number
           campaign_id: string
           clicks?: number
           cpl?: number
@@ -611,8 +1114,10 @@ export type Database = {
           leads?: number
           spend?: number
           user_id: string
+          verified_bookings?: number
         }
         Update: {
+          bookings?: number
           campaign_id?: string
           clicks?: number
           cpl?: number
@@ -624,6 +1129,7 @@ export type Database = {
           leads?: number
           spend?: number
           user_id?: string
+          verified_bookings?: number
         }
         Relationships: [
           {

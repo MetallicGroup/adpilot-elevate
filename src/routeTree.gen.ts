@@ -29,6 +29,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
+import { Route as BSlugRouteImport } from './routes/b.$slug'
 import { Route as AuthWelcomeRouteImport } from './routes/auth.welcome'
 import { Route as AuthVerifiedRouteImport } from './routes/auth.verified'
 import { Route as AuthConfirmEmailRouteImport } from './routes/auth.confirm-email'
@@ -37,11 +38,13 @@ import { Route as AuthenticatedWhatsappRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedProgramariRouteImport } from './routes/_authenticated/programari'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedMetaStatusRouteImport } from './routes/_authenticated/meta-status'
 import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCreateRouteImport } from './routes/_authenticated/create'
+import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticated/bookings'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedQaTrialRouteImport } from './routes/_authenticated/qa.trial'
 import { Route as AuthenticatedCampaignsIdRouteImport } from './routes/_authenticated/campaigns.$id'
@@ -158,6 +161,11 @@ const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   path: '/checkout/return',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BSlugRoute = BSlugRouteImport.update({
+  id: '/b/$slug',
+  path: '/b/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthWelcomeRoute = AuthWelcomeRouteImport.update({
   id: '/welcome',
   path: '/welcome',
@@ -198,6 +206,11 @@ const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProgramariRoute = AuthenticatedProgramariRouteImport.update({
+  id: '/programari',
+  path: '/programari',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -221,6 +234,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
 const AuthenticatedCreateRoute = AuthenticatedCreateRouteImport.update({
   id: '/create',
   path: '/create',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedBookingsRoute = AuthenticatedBookingsRouteImport.update({
+  id: '/bookings',
+  path: '/bookings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
@@ -336,11 +354,13 @@ export interface FileRoutesByFullPath {
   '/security': typeof SecurityRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/bookings': typeof AuthenticatedBookingsRoute
   '/create': typeof AuthenticatedCreateRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/leads': typeof AuthenticatedLeadsRoute
   '/meta-status': typeof AuthenticatedMetaStatusRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/programari': typeof AuthenticatedProgramariRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/support': typeof AuthenticatedSupportRoute
@@ -349,6 +369,7 @@ export interface FileRoutesByFullPath {
   '/auth/confirm-email': typeof AuthConfirmEmailRoute
   '/auth/verified': typeof AuthVerifiedRoute
   '/auth/welcome': typeof AuthWelcomeRoute
+  '/b/$slug': typeof BSlugRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/qa/trial': typeof AuthenticatedQaTrialRoute
@@ -386,11 +407,13 @@ export interface FileRoutesByTo {
   '/security': typeof SecurityRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/bookings': typeof AuthenticatedBookingsRoute
   '/create': typeof AuthenticatedCreateRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/leads': typeof AuthenticatedLeadsRoute
   '/meta-status': typeof AuthenticatedMetaStatusRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/programari': typeof AuthenticatedProgramariRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/support': typeof AuthenticatedSupportRoute
@@ -399,6 +422,7 @@ export interface FileRoutesByTo {
   '/auth/confirm-email': typeof AuthConfirmEmailRoute
   '/auth/verified': typeof AuthVerifiedRoute
   '/auth/welcome': typeof AuthWelcomeRoute
+  '/b/$slug': typeof BSlugRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/qa/trial': typeof AuthenticatedQaTrialRoute
@@ -438,11 +462,13 @@ export interface FileRoutesById {
   '/security': typeof SecurityRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/_authenticated/bookings': typeof AuthenticatedBookingsRoute
   '/_authenticated/create': typeof AuthenticatedCreateRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/leads': typeof AuthenticatedLeadsRoute
   '/_authenticated/meta-status': typeof AuthenticatedMetaStatusRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/programari': typeof AuthenticatedProgramariRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/support': typeof AuthenticatedSupportRoute
@@ -451,6 +477,7 @@ export interface FileRoutesById {
   '/auth/confirm-email': typeof AuthConfirmEmailRoute
   '/auth/verified': typeof AuthVerifiedRoute
   '/auth/welcome': typeof AuthWelcomeRoute
+  '/b/$slug': typeof BSlugRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/_authenticated/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/_authenticated/qa/trial': typeof AuthenticatedQaTrialRoute
@@ -490,11 +517,13 @@ export interface FileRouteTypes {
     | '/security'
     | '/terms-of-service'
     | '/admin'
+    | '/bookings'
     | '/create'
     | '/dashboard'
     | '/leads'
     | '/meta-status'
     | '/onboarding'
+    | '/programari'
     | '/reports'
     | '/settings'
     | '/support'
@@ -503,6 +532,7 @@ export interface FileRouteTypes {
     | '/auth/confirm-email'
     | '/auth/verified'
     | '/auth/welcome'
+    | '/b/$slug'
     | '/checkout/return'
     | '/campaigns/$id'
     | '/qa/trial'
@@ -540,11 +570,13 @@ export interface FileRouteTypes {
     | '/security'
     | '/terms-of-service'
     | '/admin'
+    | '/bookings'
     | '/create'
     | '/dashboard'
     | '/leads'
     | '/meta-status'
     | '/onboarding'
+    | '/programari'
     | '/reports'
     | '/settings'
     | '/support'
@@ -553,6 +585,7 @@ export interface FileRouteTypes {
     | '/auth/confirm-email'
     | '/auth/verified'
     | '/auth/welcome'
+    | '/b/$slug'
     | '/checkout/return'
     | '/campaigns/$id'
     | '/qa/trial'
@@ -591,11 +624,13 @@ export interface FileRouteTypes {
     | '/security'
     | '/terms-of-service'
     | '/_authenticated/admin'
+    | '/_authenticated/bookings'
     | '/_authenticated/create'
     | '/_authenticated/dashboard'
     | '/_authenticated/leads'
     | '/_authenticated/meta-status'
     | '/_authenticated/onboarding'
+    | '/_authenticated/programari'
     | '/_authenticated/reports'
     | '/_authenticated/settings'
     | '/_authenticated/support'
@@ -604,6 +639,7 @@ export interface FileRouteTypes {
     | '/auth/confirm-email'
     | '/auth/verified'
     | '/auth/welcome'
+    | '/b/$slug'
     | '/checkout/return'
     | '/_authenticated/campaigns/$id'
     | '/_authenticated/qa/trial'
@@ -642,6 +678,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SecurityRoute: typeof SecurityRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
+  BSlugRoute: typeof BSlugRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   ApiMetaAuthCallbackRoute: typeof ApiMetaAuthCallbackRoute
   ApiPublicHooksAnomalyScanRoute: typeof ApiPublicHooksAnomalyScanRoute
@@ -798,6 +835,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CheckoutReturnRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/b/$slug': {
+      id: '/b/$slug'
+      path: '/b/$slug'
+      fullPath: '/b/$slug'
+      preLoaderRoute: typeof BSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/welcome': {
       id: '/auth/welcome'
       path: '/welcome'
@@ -854,6 +898,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReportsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/programari': {
+      id: '/_authenticated/programari'
+      path: '/programari'
+      fullPath: '/programari'
+      preLoaderRoute: typeof AuthenticatedProgramariRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/onboarding': {
       id: '/_authenticated/onboarding'
       path: '/onboarding'
@@ -887,6 +938,13 @@ declare module '@tanstack/react-router' {
       path: '/create'
       fullPath: '/create'
       preLoaderRoute: typeof AuthenticatedCreateRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/bookings': {
+      id: '/_authenticated/bookings'
+      path: '/bookings'
+      fullPath: '/bookings'
+      preLoaderRoute: typeof AuthenticatedBookingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin': {
@@ -1019,11 +1077,13 @@ const AuthenticatedAdminRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
+  AuthenticatedBookingsRoute: typeof AuthenticatedBookingsRoute
   AuthenticatedCreateRoute: typeof AuthenticatedCreateRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
   AuthenticatedMetaStatusRoute: typeof AuthenticatedMetaStatusRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedProgramariRoute: typeof AuthenticatedProgramariRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
@@ -1034,11 +1094,13 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
+  AuthenticatedBookingsRoute: AuthenticatedBookingsRoute,
   AuthenticatedCreateRoute: AuthenticatedCreateRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
   AuthenticatedMetaStatusRoute: AuthenticatedMetaStatusRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedProgramariRoute: AuthenticatedProgramariRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSupportRoute: AuthenticatedSupportRoute,
@@ -1086,6 +1148,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SecurityRoute: SecurityRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
+  BSlugRoute: BSlugRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   ApiMetaAuthCallbackRoute: ApiMetaAuthCallbackRoute,
   ApiPublicHooksAnomalyScanRoute: ApiPublicHooksAnomalyScanRoute,
@@ -1102,13 +1165,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -397,17 +397,21 @@ function StepGoal({ s, update }: { s: State; update: <K extends keyof State>(k: 
             </div>
           </div>
         </ChoiceCard>
-        <ChoiceCard active={s.objective === "CONVERSIONS"} onClick={() => update("objective", "CONVERSIONS")}>
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-xl bg-foreground text-background flex items-center justify-center">
-              <TrendingUp className="w-5 h-5" />
+        <Link to="/programari" className="block">
+          <ChoiceCard active={false} onClick={() => {}}>
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-foreground text-background flex items-center justify-center">
+                <TrendingUp className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="font-semibold text-foreground">Programări</div>
+                <div className="mt-0.5 text-sm text-muted-foreground">
+                  Pagină proprie de programare, calendar și optimizare pe programări reale.
+                </div>
+              </div>
             </div>
-            <div>
-              <div className="font-semibold text-foreground">Conversii</div>
-              <div className="mt-0.5 text-sm text-muted-foreground">Generează achiziții sau înscrieri pe site-ul tău.</div>
-            </div>
-          </div>
-        </ChoiceCard>
+          </ChoiceCard>
+        </Link>
       </div>
     </div>
   );
