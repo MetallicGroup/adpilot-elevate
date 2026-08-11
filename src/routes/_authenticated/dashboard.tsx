@@ -255,7 +255,7 @@ function Dashboard() {
             </div>
           </div>
           <div className="relative px-4 pb-4 sm:px-5">
-            <Link to="/whatsapp-assistant" className="press flex h-11 items-center gap-2 rounded-xl border border-border bg-background/60 px-3 text-[11px] text-muted-foreground">
+            <Link to="/whatsapp" className="press flex h-11 items-center gap-2 rounded-xl border border-border bg-background/60 px-3 text-[11px] text-muted-foreground">
               Întreabă AdPilot AI orice...
               <span className="ml-auto grid h-7 w-7 place-items-center rounded-lg text-primary-foreground" style={{ background: "var(--gradient-primary)" }}>
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -272,7 +272,7 @@ function Dashboard() {
             title="Campaniile tale"
             sub="Performanță în timp real"
             right={
-              <Link to="/campaigns" className="press rounded-lg border border-border bg-secondary/40 px-2.5 py-1.5 text-[10px] text-muted-foreground">
+              <Link to="/reports" className="press rounded-lg border border-border bg-secondary/40 px-2.5 py-1.5 text-[10px] text-muted-foreground">
                 Vezi toate →
               </Link>
             }
