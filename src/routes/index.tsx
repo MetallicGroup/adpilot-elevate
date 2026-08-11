@@ -166,6 +166,8 @@ function Index() {
         </div>
       </Section>
 
+      <Divider text="De la idee la reclamă activă. În câteva minute." />
+
       {/* PLATFORMS WE MANAGE */}
       <Section eyebrow="Platformele pe care le gestionăm" title="Facebook, Instagram & Google Ads — într-un singur loc.">
         <div className="grid md:grid-cols-3 gap-5">
