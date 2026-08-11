@@ -99,25 +99,29 @@ function Index() {
                 ✨ 3 zile gratuit · fără retragere înainte de a 4-a zi
               </motion.div>
 
-              <h1 className="mt-8 text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight">
-                Reclame Facebook &amp; Google.<br/>
-                <span className="gradient-text">Fără agenție.</span>
+              <h1 className="mt-7 text-[2.45rem] leading-[1.06] sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight">
+                Spune-i ce vrei să obții.{" "}
+                <span className="gradient-text">AdPilot se ocupă de reclame.</span>
               </h1>
 
-              <p className="mt-6 text-lg text-muted-foreground leading-relaxed max-w-xl mx-auto md:mx-0">
-                AdPilot creează, lansează și optimizează campaniile tale Facebook, Instagram și Google Ads în câteva minute — iar fiecare lead ajunge direct pe WhatsApp-ul tău. ✨
+              <p className="mt-5 text-base sm:text-lg text-muted-foreground leading-relaxed max-w-xl mx-auto md:mx-0">
+                Mai multe vânzări, programări sau clienți. AdPilot creează, lansează și optimizează reclamele tale pe Facebook, Instagram și Google — fără agenție și fără experiență.
               </p>
 
-              <div className="mt-10 flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
-                <Link to="/auth" className="press btn-primary inline-flex items-center justify-center gap-2 px-7 py-4 rounded-xl font-semibold">
-                  Începe cele 3 zile gratuit <ArrowRight className="w-4 h-4" />
-                </Link>
-                <Link to="/contact" className="press inline-flex items-center justify-center gap-2 px-7 py-4 glass rounded-xl font-medium text-foreground hover:bg-card transition-colors">
-                  <PlayCircle className="w-4 h-4" /> Vezi demo
+              <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
+                <a href="#obiectiv" className="press btn-primary inline-flex items-center justify-center gap-2 px-6 sm:px-7 py-4 rounded-xl font-semibold">
+                  Spune-i lui AdPilot ce vreau <ArrowRight className="w-4 h-4" />
+                </a>
+                <Link to="/contact" className="press inline-flex items-center justify-center gap-2 px-6 sm:px-7 py-4 glass rounded-xl font-medium text-foreground hover:bg-card transition-colors">
+                  <PlayCircle className="w-4 h-4" /> Vezi cum funcționează
                 </Link>
               </div>
 
-              <div className="mt-10 flex items-center justify-center md:justify-start gap-3 text-sm text-muted-foreground">
+              <p className="mt-5 text-[13px] text-muted-foreground">
+                3 zile gratuit · Fără experiență necesară · Configurare în câteva minute
+              </p>
+
+              <div className="mt-8 flex items-center justify-center md:justify-start gap-3 text-sm text-muted-foreground">
                 <div className="flex">
                   {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />)}
                 </div>
@@ -130,10 +134,22 @@ function Index() {
         </div>
       </section>
 
+      {/* GOAL PICKER */}
+      <section id="obiectiv" className="px-6 py-20 sm:py-24 max-w-6xl mx-auto w-full scroll-mt-24">
+        <Reveal className="text-center max-w-2xl mx-auto mb-10">
+          <p className="text-xs uppercase tracking-[0.2em] gradient-text font-semibold mb-4">Începe de aici</p>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">Tu ce vrei să obții?</h2>
+          <p className="mt-4 text-muted-foreground">Alege obiectivul. De restul se ocupă AdPilot.</p>
+        </Reveal>
+        <GoalPicker />
+      </section>
+
+      <Divider text="Fără Ads Manager. Fără bătăi de cap." />
+
       {/* HOW IT WORKS */}
       <Section eyebrow="Cum funcționează" title="De la zero la campanie live în 5 minute">
         <p className="text-center text-muted-foreground -mt-6 mb-12 max-w-xl mx-auto">Fără agenție. Fără curbă de învățare. Doar rezultate.</p>
-        <div className="grid md:grid-cols-5 gap-4">
+        <div className="grid sm:grid-cols-2 md:grid-cols-5 gap-4">
           {steps.map((s, i) => (
             <motion.div
               key={s.title}
