@@ -17,10 +17,11 @@ import { Toaster } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { runOAuthConfigCheck } from "@/lib/oauth-config-check";
 import { CookieConsent } from "@/components/CookieConsent";
+import { WowBackground } from "@/components/wow/WowBackground";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-screen items-center justify-center px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
         <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
@@ -48,7 +49,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-screen items-center justify-center px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
           This page didn't load
@@ -84,19 +85,39 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "AdPilot — Reclame Facebook. Lead-uri pe WhatsApp." },
-      { name: "description", content: "Lansează și optimizează reclame Facebook dintr-o singură aplicație, iar fiecare lead ajunge direct pe WhatsApp. 3 zile gratuit." },
+      {
+        name: "description",
+        content:
+          "Lansează și optimizează reclame Facebook dintr-o singură aplicație, iar fiecare lead ajunge direct pe WhatsApp. 3 zile gratuit.",
+      },
       { name: "author", content: "AdPilot" },
       { property: "og:title", content: "AdPilot — Reclame Facebook. Lead-uri pe WhatsApp." },
-      { property: "og:description", content: "Lansează și optimizează reclame Facebook dintr-o singură aplicație, iar fiecare lead ajunge direct pe WhatsApp. 3 zile gratuit." },
+      {
+        property: "og:description",
+        content:
+          "Lansează și optimizează reclame Facebook dintr-o singură aplicație, iar fiecare lead ajunge direct pe WhatsApp. 3 zile gratuit.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "AdPilot — Reclame Facebook. Lead-uri pe WhatsApp." },
-      { name: "twitter:description", content: "Lansează și optimizează reclame Facebook dintr-o singură aplicație, iar fiecare lead ajunge direct pe WhatsApp. 3 zile gratuit." },
+      {
+        name: "twitter:description",
+        content:
+          "Lansează și optimizează reclame Facebook dintr-o singură aplicație, iar fiecare lead ajunge direct pe WhatsApp. 3 zile gratuit.",
+      },
       { property: "og:image", content: `https://adpilot.ro${ogHeroAsset.url}` },
       { name: "twitter:image", content: `https://adpilot.ro${ogHeroAsset.url}` },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/4cOJ83UnP8SAkbV0euFNWpJ4Knp2/social-images/social-1781442030101-Screenshot_2026-06-14_at_15.59.44.webp" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/4cOJ83UnP8SAkbV0euFNWpJ4Knp2/social-images/social-1781442030101-Screenshot_2026-06-14_at_15.59.44.webp" },
+      {
+        property: "og:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/4cOJ83UnP8SAkbV0euFNWpJ4Knp2/social-images/social-1781442030101-Screenshot_2026-06-14_at_15.59.44.webp",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/4cOJ83UnP8SAkbV0euFNWpJ4Knp2/social-images/social-1781442030101-Screenshot_2026-06-14_at_15.59.44.webp",
+      },
     ],
     links: [
       {
@@ -109,7 +130,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Playfair+Display:wght@500;600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap",
       },
     ],
   }),
@@ -139,7 +160,9 @@ function RootComponent() {
 
   useEffect(() => {
     runOAuthConfigCheck();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
       if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
@@ -149,6 +172,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <WowBackground />
       <Outlet />
       <Toaster position="bottom-center" theme="dark" />
       <CookieConsent />

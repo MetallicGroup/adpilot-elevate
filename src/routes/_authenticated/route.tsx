@@ -1,6 +1,6 @@
-import { createFileRoute, Outlet, redirect, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { Home, Plus, BarChart3, Settings, Users } from "lucide-react";
+import { Home, Plus, BarChart3, Settings, Users, Sparkles, CalendarCheck } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -15,32 +15,84 @@ export const Route = createFileRoute("/_authenticated")({
   component: AuthLayout,
 });
 
+const TABS = [
+  { to: "/dashboard", icon: Home, label: "Acasă" },
+  { to: "/create", icon: Plus, label: "Creează" },
+  { to: "/leads", icon: Users, label: "Clienți" },
+  { to: "/reports", icon: BarChart3, label: "Rapoarte" },
+  { to: "/settings", icon: Settings, label: "Setări" },
+] as const;
+
 function AuthLayout() {
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen pb-24 lg:pb-0 lg:pl-[248px]">
+      <DesktopSidebar />
       <Outlet />
       <BottomNav />
     </div>
   );
 }
 
-function BottomNav() {
-  const tabs = [
-    { to: "/dashboard", icon: Home, label: "Home" },
-    { to: "/create", icon: Plus, label: "Create" },
-    { to: "/leads", icon: Users, label: "Clienți" },
-    { to: "/reports", icon: BarChart3, label: "Reports" },
-    { to: "/settings", icon: Settings, label: "Settings" },
-  ] as const;
+function DesktopSidebar() {
   return (
-    <nav className="fixed bottom-0 inset-x-0 bg-background/90 backdrop-blur border-t border-border z-50">
+    <aside className="fixed inset-y-0 left-0 z-40 hidden w-[248px] flex-col justify-between border-r border-white/[0.06] bg-black/25 px-4 py-6 backdrop-blur-xl lg:flex">
+      <div>
+        <Link to="/dashboard" className="mb-8 flex items-center gap-2.5 px-2 font-bold tracking-tight">
+          <span
+            className="grid h-9 w-9 place-items-center rounded-xl"
+            style={{ background: "var(--gradient-primary)", boxShadow: "var(--shadow-glow)" }}
+          >
+            <Sparkles className="h-4 w-4 text-white" />
+          </span>
+          AdPilot
+        </Link>
+
+        <nav className="grid gap-1">
+          {TABS.map((t) => (
+            <Link
+              key={t.to}
+              to={t.to}
+              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-white/[0.04] hover:text-foreground"
+              activeProps={{
+                className:
+                  "bg-primary/12 text-foreground border border-primary/25 shadow-[inset_0_1px_0_oklch(1_0_0/0.06)]",
+              }}
+            >
+              <t.icon className="h-4 w-4" />
+              {t.label}
+            </Link>
+          ))}
+          <Link
+            to="/bookings"
+            className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-white/[0.04] hover:text-foreground"
+            activeProps={{ className: "bg-primary/12 text-foreground border border-primary/25" }}
+          >
+            <CalendarCheck className="h-4 w-4" />
+            Programări
+          </Link>
+        </nav>
+      </div>
+
+      <Link
+        to="/create"
+        className="press btn-primary shine flex h-11 items-center justify-center gap-2 rounded-xl text-sm font-semibold"
+      >
+        <Plus className="h-4 w-4" /> Campanie nouă
+      </Link>
+    </aside>
+  );
+}
+
+function BottomNav() {
+  return (
+    <nav className="fixed bottom-0 inset-x-0 z-50 border-t border-white/[0.06] bg-background/85 backdrop-blur-xl lg:hidden">
       <div className="max-w-md mx-auto flex justify-around px-2 py-2">
-        {tabs.map((t) => (
+        {TABS.map((t) => (
           <Link
             key={t.to}
             to={t.to}
-            className="flex-1 flex flex-col items-center gap-1 py-2 text-muted-foreground data-[status=active]:text-foreground transition-colors"
-            activeProps={{ className: "text-foreground" }}
+            className="flex-1 flex flex-col items-center gap-1 py-2 text-muted-foreground transition-colors"
+            activeProps={{ className: "text-primary" }}
           >
             <t.icon className="w-5 h-5" />
             <span className="text-[10px] font-medium">{t.label}</span>

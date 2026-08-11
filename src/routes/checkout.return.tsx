@@ -33,14 +33,15 @@ function CheckoutReturn() {
     : null;
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-6 bg-background">
+    <main className="min-h-screen flex items-center justify-center px-6 ">
       <div className="max-w-md w-full card-floating p-10 text-center">
         <div className="w-14 h-14 mx-auto rounded-full bg-success/15 flex items-center justify-center">
           <CheckCircle2 className="w-8 h-8 text-success" />
         </div>
         <h1 className="mt-6 font-serif text-3xl font-semibold">Trialul tău a început 🎉</h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          Ai 3 zile gratuite la AdPilot. Nu îți retragem nimic de pe card înainte de finalul perioadei de probă — poți anula oricând din Setări → Plan & facturare.
+          Ai 3 zile gratuite la AdPilot. Nu îți retragem nimic de pe card înainte de finalul
+          perioadei de probă — poți anula oricând din Setări → Plan & facturare.
         </p>
         {trialEnd && (
           <div className="mt-5 inline-flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full bg-success/15 text-success">

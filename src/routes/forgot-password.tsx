@@ -38,7 +38,7 @@ function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen flex flex-col">
       <header className="px-6 pt-6">
         <Link
           to="/auth"
@@ -63,11 +63,13 @@ function ForgotPasswordPage() {
                 Verifică emailul
               </h1>
               <p className="text-muted-foreground text-sm mt-3 leading-relaxed">
-                Dacă adresa <span className="text-foreground font-medium">{email}</span> are cont
-                la noi, ți-am trimis un link să-ți setezi o parolă nouă.
+                Dacă adresa <span className="text-foreground font-medium">{email}</span> are cont la
+                noi, ți-am trimis un link să-ți setezi o parolă nouă.
               </p>
               <button
-                onClick={() => navigate({ to: "/auth", search: { mode: "signin" as const, email } })}
+                onClick={() =>
+                  navigate({ to: "/auth", search: { mode: "signin" as const, email } })
+                }
                 className="press mt-8 w-full py-3 rounded-xl bg-foreground text-background text-sm font-medium hover:opacity-90"
               >
                 Înapoi la login

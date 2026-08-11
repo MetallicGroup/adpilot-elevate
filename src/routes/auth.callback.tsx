@@ -104,7 +104,7 @@ function AuthCallbackPage() {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-3 bg-background">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-3 ">
       <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
       <p className="text-sm text-muted-foreground">Te conectăm la cont...</p>
     </div>
