@@ -8,7 +8,9 @@ import {
   Star, PlayCircle, Facebook, Search,
 } from "lucide-react";
 import { MarketingLayout } from "@/components/marketing/MarketingLayout";
-import { IphoneWhatsAppMockup } from "@/components/marketing/IphoneWhatsAppMockup";
+import { CommandStage } from "@/components/marketing/CommandStage";
+import { CountUp } from "@/components/wow/CountUp";
+import { Reveal } from "@/components/wow/Reveal";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -90,7 +92,7 @@ function Index() {
               <motion.div
                 initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass text-xs font-medium text-muted-foreground"
+                className="eyebrow"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-success pulse-dot text-success" />
                 ✨ 3 zile gratuit · fără retragere înainte de a 4-a zi
@@ -122,54 +124,8 @@ function Index() {
               </div>
             </motion.div>
 
-            <div className="flex justify-center md:justify-end">
-              <IphoneWhatsAppMockup />
-            </div>
+            <CommandStage />
           </div>
-
-          {/* Dashboard mockup */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="mt-20 relative max-w-5xl mx-auto"
-            style={{ perspective: "2000px" }}
-          >
-            <div className="card-floating-lg p-6 md:p-8 grid md:grid-cols-3 gap-4"
-                 style={{ transform: "rotateX(6deg)", boxShadow: "0 50px 100px -20px oklch(0.62 0.22 295 / 0.4), 0 30px 60px -30px oklch(0 0 0 / 0.7)" }}>
-              <KpiTile label="Cheltuiți azi" value="1.284 lei" delta="+12%" />
-              <KpiTile label="Clienți noi azi" value="47" delta="+23%" />
-              <KpiTile label="Cost/client" value="32 lei" delta="-8%" />
-              <div className="md:col-span-2 rounded-xl bg-secondary p-6 border border-border">
-                <p className="text-xs uppercase tracking-widest text-muted-foreground">Campanie activă</p>
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-success pulse-dot text-success" />
-                  <p className="font-semibold">Reduceri de Primăvară · Lead Gen</p>
-                </div>
-                <div className="mt-4 flex items-center gap-3">
-                  <div className="h-2 flex-1 rounded-full bg-background overflow-hidden">
-                    <div className="h-full w-3/4 rounded-full" style={{ background: "var(--gradient-primary)" }} />
-                  </div>
-                  <span className="text-xs text-muted-foreground font-mono">750 / 1.000 lei</span>
-                </div>
-                <div className="mt-6 grid grid-cols-3 gap-3 text-center">
-                  <Mini label="CTR" value="3,2%" />
-                  <Mini label="Cost/client" value="32 lei" />
-                  <Mini label="ROAS" value="4,1x" />
-                </div>
-              </div>
-              <div className="rounded-xl p-5 flex flex-col border border-border" style={{ background: "linear-gradient(160deg, oklch(0.18 0.02 285), oklch(0.14 0.012 285))" }}>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <MessageCircle className="w-3.5 h-3.5" /> WhatsApp AI
-                </div>
-                <div className="mt-4 space-y-3 text-sm flex-1">
-                  <div className="bg-secondary rounded-2xl rounded-tl-sm p-3">Câte lead-uri azi?</div>
-                  <div className="rounded-2xl rounded-tr-sm p-3 ml-6 text-white" style={{ background: "var(--gradient-primary)" }}>
-                    47 lead-uri — cu 23% mai mult decât ieri 🚀
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
         </div>
       </section>
 
@@ -262,12 +218,14 @@ function Index() {
                style={{ background: "var(--gradient-glow)" }} />
           <div className="relative grid md:grid-cols-3 gap-10 text-center">
             {[
-              { v: "200+", l: "Afaceri din România" },
-              { v: "12M+ lei", l: "Buget gestionat" },
-              { v: "4,2x", l: "ROAS mediu" },
+              { n: 200, suffix: "+", l: "Afaceri din România" },
+              { n: 12, suffix: "M+ lei", l: "Buget gestionat" },
+              { n: 4.2, suffix: "x", dec: 1, l: "ROAS mediu" },
             ].map((s) => (
               <div key={s.l} className="md:border-r md:last:border-r-0 border-border">
-                <p className="font-mono text-5xl md:text-6xl font-bold gradient-text">{s.v}</p>
+                <p className="font-mono text-5xl md:text-6xl font-bold gradient-text">
+                  <CountUp to={s.n} decimals={s.dec ?? 0} suffix={s.suffix} />
+                </p>
                 <p className="mt-3 text-sm text-muted-foreground">{s.l}</p>
               </div>
             ))}
@@ -374,7 +332,7 @@ function Index() {
               <Link to="/auth" className={`press mt-7 inline-flex w-full items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold ${p.featured ? "btn-primary" : "glass hover:bg-card text-foreground"}`}>
                 Începe gratuit
               </Link>
-              <p className="mt-3 text-xs text-center text-muted-foreground">3 zile gratuit · fără card</p>
+              <p className="mt-3 text-xs text-center text-muted-foreground">3 zile gratuit · anulezi oricând</p>
             </div>
           ))}
         </div>
@@ -417,22 +375,12 @@ function Index() {
 function Section({ eyebrow, title, children }: { eyebrow: string; title: string; children: React.ReactNode }) {
   return (
     <section className="px-6 py-24 max-w-6xl mx-auto w-full">
-      <div className="text-center max-w-2xl mx-auto mb-12">
+      <Reveal className="text-center max-w-2xl mx-auto mb-12">
         <p className="text-xs uppercase tracking-[0.2em] gradient-text font-semibold mb-4">{eyebrow}</p>
         <h2 className="text-4xl md:text-5xl font-bold tracking-tight">{title}</h2>
-      </div>
+      </Reveal>
       {children}
     </section>
-  );
-}
-
-function KpiTile({ label, value, delta }: { label: string; value: string; delta: string }) {
-  return (
-    <div className="rounded-xl bg-secondary p-5 border border-border">
-      <p className="text-xs uppercase tracking-widest text-muted-foreground">{label}</p>
-      <p className="mt-2 font-mono text-3xl font-bold">{value}</p>
-      <p className="mt-1 text-xs text-success">{delta} față de ieri</p>
-    </div>
   );
 }
 

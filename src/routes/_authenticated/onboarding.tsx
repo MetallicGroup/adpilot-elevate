@@ -36,14 +36,25 @@ const PLANS = [
     price: "495 lei",
     featured: true,
     desc: "Pentru afacerile care vor să crească rapid.",
-    items: ["Campanii nelimitate", "10 clipuri AI pe lună", "20 de poze AI pe lună", "Asistent WhatsApp AI", "Suport prioritar"],
+    items: [
+      "Campanii nelimitate",
+      "10 clipuri AI pe lună",
+      "20 de poze AI pe lună",
+      "Asistent WhatsApp AI",
+      "Suport prioritar",
+    ],
   },
   {
     id: "premium_monthly",
     name: "Premium",
     price: "995 lei",
     desc: "Pentru branduri și agenții care scalează agresiv.",
-    items: ["Campanii nelimitate", "Clipuri AI nelimitate", "Poze AI nelimitate", "Success manager dedicat"],
+    items: [
+      "Campanii nelimitate",
+      "Clipuri AI nelimitate",
+      "Poze AI nelimitate",
+      "Success manager dedicat",
+    ],
   },
 ];
 
@@ -120,10 +131,16 @@ function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen ">
       <div className="max-w-3xl mx-auto px-5 pt-12 pb-32">
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-          <p className="text-xs uppercase tracking-widest text-muted-foreground">Bun venit la AdPilot</p>
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <p className="text-xs uppercase tracking-widest text-muted-foreground">
+            Bun venit la AdPilot
+          </p>
           <h1 className="mt-2 font-serif text-4xl md:text-5xl font-semibold tracking-tight">
             Două minute și ești gata să lansezi.
           </h1>
@@ -142,7 +159,9 @@ function OnboardingPage() {
         </div>
 
         {/* Step 1: Meta */}
-        <section className={`mt-8 card-floating p-7 transition-opacity ${activeStep > 1 && !step1Done ? "opacity-60" : ""}`}>
+        <section
+          className={`mt-8 card-floating p-7 transition-opacity ${activeStep > 1 && !step1Done ? "opacity-60" : ""}`}
+        >
           <div className="flex items-start gap-4">
             <div className="w-11 h-11 rounded-xl bg-[#1877F2]/15 text-[#1877F2] flex items-center justify-center shrink-0">
               <Facebook className="w-5 h-5" />
@@ -150,7 +169,8 @@ function OnboardingPage() {
             <div className="flex-1 min-w-0">
               <h2 className="font-semibold text-lg">Conectează pagina ta de Facebook</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Avem nevoie de acces la pagina și contul tău de reclame Meta pentru a-ți lansa campaniile și colecta lead-urile în timp real.
+                Avem nevoie de acces la pagina și contul tău de reclame Meta pentru a-ți lansa
+                campaniile și colecta lead-urile în timp real.
               </p>
               {step1Done ? (
                 <div className="mt-4 inline-flex items-center gap-2 text-sm text-emerald-500">
@@ -170,7 +190,9 @@ function OnboardingPage() {
         </section>
 
         {/* Step 2: Plan */}
-        <section className={`mt-5 card-floating p-7 transition-opacity ${!step1Done ? "opacity-40 pointer-events-none" : ""}`}>
+        <section
+          className={`mt-5 card-floating p-7 transition-opacity ${!step1Done ? "opacity-40 pointer-events-none" : ""}`}
+        >
           <div className="flex items-start gap-4">
             <div className="w-11 h-11 rounded-xl bg-primary/15 text-primary flex items-center justify-center shrink-0">
               <Sparkles className="w-5 h-5" />
@@ -178,7 +200,8 @@ function OnboardingPage() {
             <div className="flex-1">
               <h2 className="font-semibold text-lg">Alege planul tău</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                3 zile gratuit pe orice plan. Cardul e necesar pentru activare — nu îți retragem nimic înainte de a 4-a zi.
+                3 zile gratuit pe orice plan. Cardul e necesar pentru activare — nu îți retragem
+                nimic înainte de a 4-a zi.
               </p>
             </div>
           </div>
@@ -213,7 +236,9 @@ function OnboardingPage() {
                 <button
                   onClick={() => selectPlan(p.id)}
                   className={`press mt-5 w-full py-2.5 rounded-xl text-sm font-medium ${
-                    p.featured ? "bg-primary text-primary-foreground" : "bg-foreground text-background"
+                    p.featured
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-foreground text-background"
                   }`}
                 >
                   Începe 3 zile gratuit
@@ -224,15 +249,21 @@ function OnboardingPage() {
         </section>
 
         {/* Step 3: WhatsApp (optional) */}
-        <section className={`mt-5 card-floating p-7 transition-opacity ${!step2Done ? "opacity-40 pointer-events-none" : ""}`}>
+        <section
+          className={`mt-5 card-floating p-7 transition-opacity ${!step2Done ? "opacity-40 pointer-events-none" : ""}`}
+        >
           <div className="flex items-start gap-4">
             <div className="w-11 h-11 rounded-xl bg-[#25D366]/15 text-[#25D366] flex items-center justify-center shrink-0">
               <MessageCircle className="w-5 h-5" />
             </div>
             <div className="flex-1">
-              <h2 className="font-semibold text-lg">Conectează WhatsApp <span className="text-xs font-normal text-muted-foreground">(opțional)</span></h2>
+              <h2 className="font-semibold text-lg">
+                Conectează WhatsApp{" "}
+                <span className="text-xs font-normal text-muted-foreground">(opțional)</span>
+              </h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Primește lead-uri, rapoarte și controlează campaniile direct din WhatsApp. Poți face asta și mai târziu din Dashboard.
+                Primește lead-uri, rapoarte și controlează campaniile direct din WhatsApp. Poți face
+                asta și mai târziu din Dashboard.
               </p>
             </div>
           </div>
@@ -251,7 +282,10 @@ function OnboardingPage() {
       {isOpen && (
         <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm overflow-y-auto">
           <div className="max-w-3xl mx-auto p-4 md:p-8">
-            <button onClick={closeCheckout} className="mb-4 text-sm text-muted-foreground hover:text-foreground">
+            <button
+              onClick={closeCheckout}
+              className="mb-4 text-sm text-muted-foreground hover:text-foreground"
+            >
               ← Înapoi
             </button>
             {checkoutElement}
@@ -262,7 +296,17 @@ function OnboardingPage() {
   );
 }
 
-function StepBadge({ n, done, active, label }: { n: number; done: boolean; active: boolean; label: string }) {
+function StepBadge({
+  n,
+  done,
+  active,
+  label,
+}: {
+  n: number;
+  done: boolean;
+  active: boolean;
+  label: string;
+}) {
   return (
     <div className="flex items-center gap-2 min-w-0">
       <div
@@ -270,13 +314,15 @@ function StepBadge({ n, done, active, label }: { n: number; done: boolean; activ
           done
             ? "bg-emerald-500 text-white"
             : active
-            ? "bg-primary text-primary-foreground"
-            : "bg-secondary text-muted-foreground"
+              ? "bg-primary text-primary-foreground"
+              : "bg-secondary text-muted-foreground"
         }`}
       >
         {done ? <Check className="w-3.5 h-3.5" /> : n}
       </div>
-      <span className={`truncate ${active || done ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+      <span
+        className={`truncate ${active || done ? "text-foreground font-medium" : "text-muted-foreground"}`}
+      >
         {label}
       </span>
     </div>

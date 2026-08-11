@@ -2,11 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  signInWithProvider,
-  translateAuthError,
-  waitForClientSession,
-} from "@/lib/auth";
+import { signInWithProvider, translateAuthError, waitForClientSession } from "@/lib/auth";
 import { resolvePostAuthPath } from "@/lib/post-auth";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -124,9 +120,12 @@ function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen flex flex-col">
       <header className="px-6 pt-6">
-        <Link to="/" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        >
           <ArrowLeft className="w-4 h-4" /> Înapoi
         </Link>
       </header>

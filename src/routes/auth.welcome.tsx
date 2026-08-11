@@ -27,7 +27,7 @@ function WelcomePage() {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-6">
+    <div className="min-h-screen flex items-center justify-center px-6">
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
@@ -41,8 +41,8 @@ function WelcomePage() {
           {name ? `Bun venit, ${name}!` : "Bun venit!"}
         </h1>
         <p className="text-muted-foreground text-sm mt-3 leading-relaxed">
-          Suntem gata să-ți lansăm prima reclamă Facebook. Îți conectăm contul Meta și pornim în
-          mai puțin de 5 minute.
+          Suntem gata să-ți lansăm prima reclamă Facebook. Îți conectăm contul Meta și pornim în mai
+          puțin de 5 minute.
         </p>
         <button
           onClick={() => navigate({ to: "/onboarding", replace: true })}

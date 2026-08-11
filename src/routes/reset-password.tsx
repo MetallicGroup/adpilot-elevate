@@ -58,9 +58,12 @@ function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen flex flex-col">
       <header className="px-6 pt-6">
-        <Link to="/auth" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+        <Link
+          to="/auth"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        >
           <ArrowLeft className="w-4 h-4" /> Înapoi la login
         </Link>
       </header>
@@ -75,9 +78,7 @@ function ResetPasswordPage() {
             Resetare parolă
           </h1>
           <p className="text-center text-muted-foreground text-sm mt-2">
-            {ready
-              ? "Alege o parolă nouă pentru contul tău."
-              : "Verificăm link-ul de resetare..."}
+            {ready ? "Alege o parolă nouă pentru contul tău." : "Verificăm link-ul de resetare..."}
           </p>
 
           {ready && (
