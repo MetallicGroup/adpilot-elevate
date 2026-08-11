@@ -78,11 +78,27 @@ function Dashboard() {
   ];
 
   return (
-    <div className="max-w-md mx-auto px-5 pt-10">
-      <p className="text-sm text-muted-foreground">Bună dimineața{name ? `, ${name}` : ""} 👋</p>
-      <h1 className="text-3xl font-bold mt-1 tracking-tight">Iată cum merg <span className="gradient-text">campaniile tale</span></h1>
+    <div className="mx-auto max-w-md px-5 pt-10 lg:max-w-6xl lg:px-10">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <span className="eyebrow">
+            <span className="pulse-dot inline-block h-1.5 w-1.5 rounded-full bg-success" />
+            Command center
+          </span>
+          <h1 className="mt-3 text-3xl font-bold tracking-[-0.04em] lg:text-[40px]">
+            Bună{name ? `, ${name}` : ""} — iată cum merg{" "}
+            <span className="gradient-text">campaniile tale</span>
+          </h1>
+        </div>
+        <Link
+          to="/create"
+          className="press btn-primary shine hidden h-11 items-center gap-2 rounded-xl px-5 text-sm font-semibold lg:inline-flex"
+        >
+          <Plus className="h-4 w-4" /> Campanie nouă
+        </Link>
+      </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-3">
+      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
         {loading
           ? [0,1,2,3].map((i) => (
               <div key={i} className="card-floating p-4 overflow-hidden relative">
@@ -101,12 +117,12 @@ function Dashboard() {
               >
                 <div className={`pointer-events-none absolute -top-12 -right-8 w-32 h-32 rounded-full bg-gradient-to-br ${s.accent} blur-2xl`} />
                 <p className="relative text-xs text-muted-foreground">{s.label}</p>
-                <p className="relative mt-1 text-2xl font-bold font-mono tracking-tight">{s.value}</p>
+                <p className="relative mt-1 font-mono text-2xl font-bold tracking-tight lg:text-[32px]">{s.value}</p>
               </motion.div>
             ))}
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3">
+      <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-4">
         <Link to="/create" className="press card-floating p-4 flex items-center gap-3 hover:border-primary/40 transition-colors">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white" style={{ background: "var(--gradient-primary)" }}>
             <Plus className="w-4 h-4" />
