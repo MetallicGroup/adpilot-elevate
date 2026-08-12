@@ -91,6 +91,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Lansează și optimizează reclame Facebook dintr-o singură aplicație, iar fiecare lead ajunge direct pe WhatsApp. 3 zile gratuit.",
       },
       { name: "author", content: "AdPilot" },
+      { name: "google-site-verification", content: "c5wTyndeBq7gVkBTee-nP_NuFsK769W9Wv0N3GbzHC4" },
       { property: "og:title", content: "AdPilot — Reclame Facebook. Lead-uri pe WhatsApp." },
       {
         property: "og:description",
