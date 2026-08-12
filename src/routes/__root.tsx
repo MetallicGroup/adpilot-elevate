@@ -108,15 +108,32 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:image", content: `https://adpilot.ro${ogHeroAsset.url}` },
       { name: "twitter:image", content: `https://adpilot.ro${ogHeroAsset.url}` },
+    ],
+    scripts: [
       {
-        property: "og:image",
-        content:
-          "https://storage.googleapis.com/gpt-engineer-file-uploads/4cOJ83UnP8SAkbV0euFNWpJ4Knp2/social-images/social-1781442030101-Screenshot_2026-06-14_at_15.59.44.webp",
-      },
-      {
-        name: "twitter:image",
-        content:
-          "https://storage.googleapis.com/gpt-engineer-file-uploads/4cOJ83UnP8SAkbV0euFNWpJ4Knp2/social-images/social-1781442030101-Screenshot_2026-06-14_at_15.59.44.webp",
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              "@id": "https://adpilot.ro/#organization",
+              name: "AdPilot",
+              url: "https://adpilot.ro",
+              logo: `https://adpilot.ro${logoAsset.url}`,
+              email: "support@adpilot.ro",
+              sameAs: ["https://www.adpilot.ro"],
+            },
+            {
+              "@type": "WebSite",
+              "@id": "https://adpilot.ro/#website",
+              name: "AdPilot",
+              url: "https://adpilot.ro",
+              inLanguage: "ro-RO",
+              publisher: { "@id": "https://adpilot.ro/#organization" },
+            },
+          ],
+        }),
       },
     ],
     links: [
