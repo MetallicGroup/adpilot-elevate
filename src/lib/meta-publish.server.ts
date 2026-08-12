@@ -249,7 +249,7 @@ export async function createAdSet(
       cities?: Array<{ key: string; radius?: number; distance_unit?: "kilometer" | "mile" }>;
     };
     status: "ACTIVE" | "PAUSED";
-    objective?: "leads" | "traffic" | "bookings";
+    objective?: "leads" | "traffic" | "bookings" | "landing_lead";
     pixel_id?: string;
     dsa_beneficiary?: string;
     dsa_payor?: string;
@@ -279,7 +279,7 @@ export async function createAdSet(
   const optimization_goal =
     args.objective === "traffic"
       ? "LINK_CLICKS"
-      : args.objective === "bookings"
+      : args.objective === "bookings" || args.objective === "landing_lead"
         ? "OFFSITE_CONVERSIONS"
         : "LEAD_GENERATION";
   const body: Record<string, unknown> = {
@@ -292,10 +292,13 @@ export async function createAdSet(
     status: args.status,
     destination_type: args.objective === "leads" ? "ON_AD" : "WEBSITE",
   };
-  if (args.objective === "bookings") {
-    // Optimizare pe programări reale (eveniment Schedule trimis prin CAPI)
-    if (!args.pixel_id) throw new Error("Lipsește pixelul Meta pentru campania de programări.");
-    body.promoted_object = { pixel_id: args.pixel_id, custom_event_type: "SCHEDULE" };
+  if (args.objective === "bookings" || args.objective === "landing_lead") {
+    // Optimizare pe conversii reale de pe landing page (evenimente trimise prin CAPI)
+    if (!args.pixel_id) throw new Error("Lipsește pixelul Meta pentru această campanie.");
+    body.promoted_object = {
+      pixel_id: args.pixel_id,
+      custom_event_type: args.objective === "bookings" ? "SCHEDULE" : "LEAD",
+    };
   } else if (args.objective !== "traffic") {
     body.promoted_object = { page_id: args.page_id };
   }

@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router"
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Check, Facebook, Loader2, Sparkles, ArrowRight, MessageCircle } from "lucide-react";
+import { Check, Facebook, Loader2, Sparkles, ArrowRight, MessageCircle, Target } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getOnboardingStatus, type OnboardingStatus } from "@/lib/onboarding.functions";
 import { startMetaOAuth } from "@/lib/meta-oauth.functions";
@@ -10,6 +10,7 @@ import { getStripeEnvironment } from "@/lib/stripe";
 import { useStripeCheckout } from "@/hooks/useStripeCheckout";
 import { toast } from "sonner";
 import { WhatsAppConnectionCard } from "@/components/whatsapp/WhatsAppConnectionCard";
+import { GoalSetupStep } from "@/components/onboarding/goal/GoalSetupStep";
 
 type OnboardingSearch = { meta?: string; reason?: string; limited?: string };
 
@@ -71,7 +72,13 @@ function OnboardingPage() {
     try {
       const r = await fetchStatus({ data: { environment: getStripeEnvironment() } });
       setStatus(r);
-      if (r.hasMetaConnection && r.hasActiveSubscription) {
+      let pendingGoal: string | null = null;
+      try {
+        pendingGoal = window.localStorage.getItem("adpilot:goal");
+      } catch {
+        pendingGoal = null;
+      }
+      if (r.hasMetaConnection && r.hasActiveSubscription && !pendingGoal) {
         navigate({ to: "/dashboard", replace: true });
       }
     } catch (e: any) {
@@ -156,6 +163,8 @@ function OnboardingPage() {
           <StepBadge n={2} done={step2Done} active={activeStep === 2} label="Alege plan" />
           <div className="flex-1 h-px bg-border" />
           <StepBadge n={3} done={false} active={activeStep === 3} label="WhatsApp (opțional)" />
+          <div className="flex-1 h-px bg-border" />
+          <StepBadge n={4} done={false} active={activeStep === 3} label="Obiectivul tău" />
         </div>
 
         {/* Step 1: Meta */}
@@ -270,9 +279,30 @@ function OnboardingPage() {
           <div className="mt-5">
             <WhatsAppConnectionCard />
           </div>
+        </section>
+
+        {/* Step 4: obiectiv */}
+        <section
+          className={`mt-5 card-floating p-7 transition-opacity ${!step2Done ? "opacity-40 pointer-events-none" : ""}`}
+        >
+          <div className="flex items-start gap-4">
+            <div className="w-11 h-11 rounded-xl bg-primary/15 text-primary flex items-center justify-center shrink-0">
+              <Target className="w-5 h-5" />
+            </div>
+            <div className="flex-1">
+              <h2 className="font-semibold text-lg">Ce vrei să obții?</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Configurăm campania exact pentru obiectivul tău — Pixel pentru vânzări, pagină de
+                programări, pagină de ofertă sau buton de apel.
+              </p>
+            </div>
+          </div>
+          <div className="mt-6">
+            <GoalSetupStep />
+          </div>
           <button
             onClick={() => navigate({ to: "/dashboard" })}
-            className="press mt-5 w-full py-2.5 rounded-xl text-sm font-medium bg-foreground text-background"
+            className="press mt-6 w-full py-2.5 rounded-xl text-sm font-medium bg-foreground text-background"
           >
             Intră în Dashboard
           </button>

@@ -26,7 +26,7 @@ export const getBookingLanding = createServerFn({ method: "GET" })
 
     const { data: page } = await supabaseAdmin
       .from("booking_campaigns")
-      .select("id, slug, service, offer, landing_copy, hero_image_url, business_id, status, pixel_id")
+      .select("id, slug, service, offer, landing_copy, hero_image_url, business_id, status, pixel_id, objective, call_phone")
       .eq("slug", data.slug)
       .eq("status", "published")
       .maybeSingle();
@@ -59,6 +59,8 @@ export const getBookingLanding = createServerFn({ method: "GET" })
         landing_copy: page.landing_copy,
         hero_image_url: page.hero_image_url,
         pixel_id: page.pixel_id,
+        objective: (page as { objective?: string }).objective ?? "bookings",
+        call_phone: (page as { call_phone?: string | null }).call_phone ?? null,
       },
       business: biz ?? null,
       questions: questions ?? [],
@@ -157,7 +159,7 @@ export const submitBooking = createServerFn({ method: "POST" })
         phone: z.string().min(6).max(40),
         email: z.string().email().max(160).nullable().optional(),
         service_id: z.string().uuid().nullable().optional(),
-        slot_start: z.string().datetime(),
+        slot_start: z.string().datetime().nullable().optional(),
         answers: z.record(z.string().max(40), z.union([z.string().max(500), z.array(z.string().max(120)).max(10), z.boolean(), z.number()])).default({}),
         attribution: AttributionSchema,
       })

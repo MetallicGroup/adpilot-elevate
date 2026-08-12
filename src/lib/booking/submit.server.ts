@@ -10,7 +10,7 @@ type SubmitInput = {
   phone: string;
   email?: string | null;
   service_id?: string | null;
-  slot_start: string;
+  slot_start?: string | null;
   answers: Record<string, unknown>;
   attribution: Record<string, unknown>;
 };
@@ -40,7 +40,7 @@ export function scoreBooking(args: {
 export async function submitBookingCore(supabaseAdmin: any, input: SubmitInput) {
   const { data: page } = await supabaseAdmin
     .from("booking_campaigns")
-    .select("id, user_id, business_id, service, slug, pixel_id, campaign_id, meta_campaign_id")
+    .select("id, user_id, business_id, service, slug, pixel_id, campaign_id, meta_campaign_id, objective")
     .eq("slug", input.slug)
     .eq("status", "published")
     .maybeSingle();
@@ -70,8 +70,10 @@ export async function submitBookingCore(supabaseAdmin: any, input: SubmitInput) 
     }
   }
 
+  const objective = page.objective ?? "bookings";
+  const needsSlot = objective === "bookings";
   const durationMin = service?.duration_min ?? 60;
-  const start = new Date(input.slot_start);
+  const start = needsSlot && input.slot_start ? new Date(input.slot_start) : new Date();
   if (Number.isNaN(start.getTime())) throw new Error("Interval orar invalid.");
   const end = new Date(start.getTime() + durationMin * 60_000);
   const date = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-${String(start.getDate()).padStart(2, "0")}`;
@@ -94,14 +96,14 @@ export async function submitBookingCore(supabaseAdmin: any, input: SubmitInput) 
       .gt("ends_at", dayStart),
   ]);
 
-  const free = slotsForDay({
+  const free = !needsSlot ? [] : slotsForDay({
     date,
     rules: (rules ?? []) as AvailabilityRule[],
     durationMin,
     busy: (busy ?? []).map((b: any) => ({ start: b.slot_start, end: b.slot_end })),
     blackouts: (blackouts ?? []).map((b: any) => ({ start: b.starts_at, end: b.ends_at })),
   });
-  if (!free.includes(start.toISOString())) {
+  if (needsSlot && !free.includes(start.toISOString())) {
     throw new Error("Intervalul ales tocmai a fost ocupat. Alege alt interval.");
   }
 
@@ -155,7 +157,9 @@ export async function submitBookingCore(supabaseAdmin: any, input: SubmitInput) 
         full_name: input.full_name,
         phone: input.phone,
         email: input.email ?? null,
-        message: `Programare: ${service?.name ?? page.service} — ${start.toLocaleString("ro-RO")}`,
+        message: needsSlot
+          ? `Programare: ${service?.name ?? page.service} — ${start.toLocaleString("ro-RO")}`
+          : `Cerere ${objective === "calls" ? "de apel" : "de ofertă"}: ${service?.name ?? page.service}`,
         raw: { booking_id: booking.id, answers: input.answers, attribution },
         source_url: (attribution as any).landing_url ?? null,
         status: "new",
@@ -178,7 +182,7 @@ export async function submitBookingCore(supabaseAdmin: any, input: SubmitInput) 
         .maybeSingle();
       if (conn?.access_token) {
         const r = await sendCapiEvent(page.pixel_id, conn.access_token, {
-          eventName: "Schedule",
+          eventName: needsSlot ? "Schedule" : "Lead",
           eventId,
           eventSourceUrl: (attribution as any).landing_url ?? null,
           value: service?.price ?? null,

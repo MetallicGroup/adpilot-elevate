@@ -203,6 +203,7 @@ export type Database = {
       booking_campaigns: {
         Row: {
           business_id: string
+          call_phone: string | null
           campaign_id: string | null
           created_at: string
           hero_image_url: string | null
@@ -211,6 +212,7 @@ export type Database = {
           meta_ad_id: string | null
           meta_adset_id: string | null
           meta_campaign_id: string | null
+          objective: string
           offer: string | null
           pixel_id: string | null
           service: string
@@ -221,6 +223,7 @@ export type Database = {
         }
         Insert: {
           business_id: string
+          call_phone?: string | null
           campaign_id?: string | null
           created_at?: string
           hero_image_url?: string | null
@@ -229,6 +232,7 @@ export type Database = {
           meta_ad_id?: string | null
           meta_adset_id?: string | null
           meta_campaign_id?: string | null
+          objective?: string
           offer?: string | null
           pixel_id?: string | null
           service: string
@@ -239,6 +243,7 @@ export type Database = {
         }
         Update: {
           business_id?: string
+          call_phone?: string | null
           campaign_id?: string | null
           created_at?: string
           hero_image_url?: string | null
@@ -247,6 +252,7 @@ export type Database = {
           meta_ad_id?: string | null
           meta_adset_id?: string | null
           meta_campaign_id?: string | null
+          objective?: string
           offer?: string | null
           pixel_id?: string | null
           service?: string
@@ -1147,6 +1153,7 @@ export type Database = {
           created_at: string
           full_name: string | null
           id: string
+          onboarding_goal: string | null
           plan: string
           subscription_status: string
           suspended: boolean
@@ -1158,6 +1165,7 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id: string
+          onboarding_goal?: string | null
           plan?: string
           subscription_status?: string
           suspended?: boolean
@@ -1169,6 +1177,7 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          onboarding_goal?: string | null
           plan?: string
           subscription_status?: string
           suspended?: boolean

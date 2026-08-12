@@ -189,3 +189,118 @@ Format JSON: {"headline":"","subheadline":"","offer_label":"","benefits":["",""]
     return fallback;
   }
 }
+type GoalObjective = "bookings" | "leads" | "calls";
+
+const OBJECTIVE_BRIEF: Record<GoalObjective, { kind: string; cta: string; goal: string }> = {
+  bookings: {
+    kind: "PROGRAMĂRI",
+    cta: "Programează-te acum",
+    goal: "vizitatorul să aleagă o zi și o oră din calendar",
+  },
+  leads: {
+    kind: "CERERE DE OFERTĂ",
+    cta: "Vreau ofertă",
+    goal: "vizitatorul să lase nume și telefon pentru a fi contactat rapid",
+  },
+  calls: {
+    kind: "APEL TELEFONIC",
+    cta: "Sună acum",
+    goal: "vizitatorul să apese butonul de apel și să sune direct",
+  },
+};
+
+/** Copy pentru landing page, adaptat obiectivului campaniei (programări / lead-uri / apeluri). */
+export async function generateObjectiveLandingCopy(input: {
+  objective: GoalObjective;
+  businessName: string;
+  service: string;
+  city?: string | null;
+  offer?: string | null;
+  description?: string | null;
+}): Promise<LandingCopy> {
+  const brief = OBJECTIVE_BRIEF[input.objective];
+  const fallback: LandingCopy = {
+    headline: `${input.service}${input.city ? ` în ${input.city}` : ""}`,
+    subheadline:
+      input.objective === "calls"
+        ? `Sună acum la ${input.businessName} și primești răspuns pe loc.`
+        : input.objective === "leads"
+          ? `Lasă-ne un număr de telefon și te contactăm în cel mult o oră.`
+          : `Programează-te online la ${input.businessName} în mai puțin de un minut.`,
+    offer_label: input.offer ?? "",
+    benefits: ["Răspuns rapid", "Prețuri corecte", "Specialiști cu experiență", "Fără drumuri inutile"],
+    about: `${input.businessName} oferă ${input.service.toLowerCase()}${input.city ? ` în ${input.city}` : ""}.`,
+    faq: [],
+    cta_label: brief.cta,
+    trust_points: [],
+  };
+
+  try {
+    const raw = await askAi(
+      "Ești copywriter de landing pages cu conversie mare, mobile-first, în limba română. Ton direct, concret, fără clișee de marketing.",
+      `Business: ${input.businessName}
+Oraș: ${input.city ?? "-"}
+Serviciu/ofertă promovată: ${input.service}
+Ofertă specială: ${input.offer ?? "-"}
+Descriere: ${input.description ?? "-"}
+
+Scrie textele pentru un landing page de tip ${brief.kind}.
+Obiectiv: ${brief.goal}.
+Format JSON: {"headline":"","subheadline":"","offer_label":"","benefits":["",""],"about":"","faq":[{"q":"","a":""}],"cta_label":"","trust_points":["",""]}`,
+    );
+    const ok = LandingSchema.safeParse(parseJson<unknown>(raw));
+    if (!ok.success) return fallback;
+    return {
+      headline: ok.data.headline,
+      subheadline: ok.data.subheadline,
+      offer_label: ok.data.offer_label ?? input.offer ?? "",
+      benefits: ok.data.benefits,
+      about: ok.data.about,
+      faq: ok.data.faq ?? [],
+      cta_label: ok.data.cta_label || brief.cta,
+      trust_points: ok.data.trust_points ?? [],
+    };
+  } catch {
+    return fallback;
+  }
+}
+
+/** Regenerează o singură secțiune din landing copy („altă variantă"). */
+export async function regenerateLandingSection(input: {
+  objective: GoalObjective;
+  section: "headline" | "subheadline" | "benefits" | "about";
+  current: LandingCopy;
+  businessName: string;
+  service: string;
+  city?: string | null;
+}): Promise<Partial<LandingCopy>> {
+  const brief = OBJECTIVE_BRIEF[input.objective];
+  try {
+    const raw = await askAi(
+      "Ești copywriter de landing pages cu conversie mare, în limba română.",
+      `Business: ${input.businessName}. Serviciu: ${input.service}. Oraș: ${input.city ?? "-"}.
+Tip pagină: ${brief.kind}. Obiectiv: ${brief.goal}.
+Varianta actuală pentru secțiunea "${input.section}": ${JSON.stringify(
+        (input.current as Record<string, unknown>)[input.section] ?? "",
+      )}.
+Scrie o variantă COMPLET diferită, mai bună, pentru aceeași secțiune.
+Format JSON: ${
+        input.section === "benefits"
+          ? '{"benefits":["","","",""]}'
+          : `{"${input.section}":""}`
+      }`,
+    );
+    const parsed = parseJson<Record<string, unknown>>(raw);
+    if (!parsed) return {};
+    if (input.section === "benefits") {
+      const list = Array.isArray(parsed.benefits)
+        ? parsed.benefits.filter((b): b is string => typeof b === "string").slice(0, 6)
+        : [];
+      return list.length >= 2 ? { benefits: list } : {};
+    }
+    const v = parsed[input.section];
+    return typeof v === "string" && v.length > 4 ? ({ [input.section]: v } as Partial<LandingCopy>) : {};
+  } catch {
+    return {};
+  }
+}
