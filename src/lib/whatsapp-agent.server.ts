@@ -696,6 +696,104 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
         }
       },
     }),
+
+    request_human_support: tool({
+      description:
+        "Escaladează conversația către echipa umană AdPilot. Creează un tichet de suport și trimite alertă pe WhatsApp echipei. Folosește-l când userul cere ajutor uman sau problema nu poate fi rezolvată automat.",
+      inputSchema: z.object({
+        name: z.string().min(2).max(80).describe("Numele clientului"),
+        phone: z.string().max(30).nullable().default(null).describe("Telefonul de contact"),
+        problem: z.string().min(5).max(600).describe("Rezumatul clar al problemei"),
+        urgency: z.enum(["normal", "urgent"]).default("normal"),
+      }),
+      execute: async ({ name, phone, problem, urgency }) => {
+        try {
+          const contactPhone = phone ?? ctx.toPhone ?? null;
+          let email: string | null = null;
+          try {
+            const { data: u } = await supabaseAdmin.auth.admin.getUserById(ctx.userId);
+            email = u?.user?.email ?? null;
+          } catch {
+            email = null;
+          }
+
+          const { data: ticket } = await supabaseAdmin
+            .from("support_tickets")
+            .insert({
+              user_id: ctx.userId,
+              subject: `WhatsApp: ${problem.slice(0, 60)}`,
+              status: "open",
+              priority: urgency === "urgent" ? "high" : "normal",
+              last_message_at: new Date().toISOString(),
+            })
+            .select("id")
+            .maybeSingle();
+
+          if (ticket?.id) {
+            await supabaseAdmin.from("support_messages").insert({
+              ticket_id: ticket.id,
+              sender: "user",
+              body: `${problem}\n\nContact: ${name} — ${contactPhone ?? "n/a"}`,
+              sent_to_whatsapp: true,
+            });
+          }
+
+          const { notifyAdminSupportRequest } = await import("./whatsapp/admin-alerts.server");
+          await notifyAdminSupportRequest({
+            name,
+            phone: contactPhone,
+            email,
+            problem,
+            urgency,
+          });
+
+          return { ok: true, ticket_id: ticket?.id ?? null };
+        } catch (e: any) {
+          return { error: e?.message ?? "Nu am putut trimite solicitarea către echipă." };
+        }
+      },
+    }),
+
+    _cancel_subscription_legacy: tool({
+      description:
+        "Anulează abonamentul AdPilot al userului (la finalul perioadei plătite) sau îl reactivează. Folosește-l când userul cere anulare / dezabonare / oprire abonament.",
+      inputSchema: z.object({
+        reactivate: z.boolean().default(false).describe("true = anulează anularea (reactivează)"),
+      }),
+      execute: async ({ reactivate }) => {
+        try {
+          const { data: sub } = await supabaseAdmin
+            .from("subscriptions")
+            .select("stripe_subscription_id, status, current_period_end, environment")
+            .eq("user_id", ctx.userId)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (!sub?.stripe_subscription_id) return { error: "Nu am găsit un abonament activ pe contul tău." };
+
+          const { createStripeClient } = await import("./stripe.server");
+          const stripe = createStripeClient(sub.environment === "sandbox" ? "sandbox" : "live");
+          const updated: any = await stripe.subscriptions.update(sub.stripe_subscription_id, {
+            cancel_at_period_end: !reactivate,
+          });
+
+          await supabaseAdmin
+            .from("subscriptions")
+            .update({ cancel_at_period_end: !reactivate, updated_at: new Date().toISOString() })
+            .eq("stripe_subscription_id", sub.stripe_subscription_id);
+
+          const endUnix =
+            updated?.items?.data?.[0]?.current_period_end ?? updated?.current_period_end ?? null;
+          return {
+            ok: true,
+            canceled: !reactivate,
+            access_until: endUnix ? new Date(endUnix * 1000).toISOString() : sub.current_period_end,
+          };
+        } catch (e: any) {
+          return { error: e?.message ?? "Nu am putut modifica abonamentul" };
+        }
+      },
+    }),
   };
 }
 
