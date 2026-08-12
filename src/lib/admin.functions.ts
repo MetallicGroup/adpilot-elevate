@@ -3,10 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 async function assertAdmin(ctx: { supabase: any; userId: string }) {
-  const { data, error } = await ctx.supabase.rpc("has_role", {
-    _user_id: ctx.userId,
-    _role: "admin",
-  });
+  const { data, error } = await (ctx.supabase as any).rpc("is_admin");
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Forbidden");
 }
@@ -37,10 +34,7 @@ async function logAudit(
 export const isAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
+    const { data } = await (context.supabase as any).rpc("is_admin");
     return { admin: !!data };
   });
 
@@ -254,7 +248,7 @@ export const getTicketThread = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => TicketIdInput.parse(d))
   .handler(async ({ data, context }) => {
     const { supabaseAdmin: _sa } = await import("@/integrations/supabase/client.server"); const supabaseAdmin = _sa as any;
-    const admin = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+    const admin = await (context.supabase as any).rpc("is_admin");
     const isAdminUser = !!admin.data;
 
     const { data: ticket } = await supabaseAdmin

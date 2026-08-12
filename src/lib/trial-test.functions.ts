@@ -51,10 +51,7 @@ export const runTrialSandboxTest = createServerFn({ method: "POST" })
   .inputValidator((data: { priceId?: string }) => data)
   .handler(async ({ data, context }): Promise<TrialTestResult> => {
     // Admin-only — never expose this on the published site.
-    const { data: isAdmin } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
+    const { data: isAdmin } = await (context.supabase as any).rpc("is_admin");
     if (!isAdmin) return { error: "Forbidden" };
 
     const stripe = createStripeClient("sandbox");
