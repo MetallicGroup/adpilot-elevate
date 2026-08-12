@@ -13,7 +13,22 @@ export const Route = createFileRoute("/pricing")({
     { property: "og:title", content: "Prețuri — AdPilot" },
     { property: "og:description", content: "3 zile gratuit. Anulezi oricând." },
     { property: "og:url", content: "https://adpilot.ro/pricing" },
-  ], links: [{ rel: "canonical", href: "https://adpilot.ro/pricing" }] }),
+  ], links: [{ rel: "canonical", href: "https://adpilot.ro/pricing" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqs.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        }),
+      },
+    ],
+  }),
   component: PricingPage,
 });
 
@@ -92,7 +107,9 @@ function PricingPage() {
         title="Planuri simple care cresc o dată cu tine."
         subtitle="3 zile gratuit pe orice plan. Nu îți retragem nimic înainte de a 4-a zi."
       />
-      <section className="px-6 pb-20 max-w-6xl mx-auto w-full grid gap-5 md:grid-cols-3">
+      <section className="px-6 pb-20 max-w-6xl mx-auto w-full">
+        <h2 className="sr-only">Planuri și prețuri AdPilot</h2>
+        <div className="grid gap-5 md:grid-cols-3">
         {plans.map((p) => (
           <div key={p.name} className={`card-floating p-8 ${p.featured ? "ring-2 ring-primary relative" : ""}`}>
             {p.featured && (
@@ -122,6 +139,7 @@ function PricingPage() {
             </button>
           </div>
         ))}
+        </div>
       </section>
       <section className="px-6 pb-24 max-w-3xl mx-auto w-full">
         <h2 className="font-serif text-3xl font-semibold mb-6">Întrebări frecvente</h2>

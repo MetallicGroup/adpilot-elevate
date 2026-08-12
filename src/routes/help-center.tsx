@@ -4,9 +4,12 @@ import { Rocket, CreditCard, ShieldCheck, Megaphone, Inbox, MessageCircle, Setti
 
 export const Route = createFileRoute("/help-center")({
   head: () => ({ meta: [
-    { title: "Help Center — AdPilot" },
-    { name: "description", content: "Guides, walkthroughs and answers to help you get the most out of AdPilot." },
-  ] }),
+    { title: "Centru de ajutor — AdPilot" },
+    { name: "description", content: "Ghiduri, pași și răspunsuri care te ajută să folosești AdPilot la maximum." },
+    { property: "og:title", content: "Centru de ajutor — AdPilot" },
+    { property: "og:description", content: "Ghiduri, pași și răspunsuri care te ajută să folosești AdPilot la maximum." },
+    { property: "og:url", content: "https://adpilot.ro/help-center" },
+  ], links: [{ rel: "canonical", href: "https://adpilot.ro/help-center" }] }),
   component: HelpCenter,
 });
 
@@ -24,8 +27,10 @@ const categories = [
 function HelpCenter() {
   return (
     <MarketingLayout>
-      <PageHero eyebrow="Help Center" title="How can we help?" subtitle="Browse guides by topic or write to support@adpilot.ro and our team will get back to you within one business day." />
-      <section className="px-6 pb-12 max-w-5xl mx-auto w-full grid gap-4 md:grid-cols-2">
+      <PageHero eyebrow="Centru de ajutor" title="Cu ce te putem ajuta?" subtitle="Caută ghiduri pe categorii sau scrie-ne la support@adpilot.ro — răspundem într-o zi lucrătoare." />
+      <section className="px-6 pb-12 max-w-5xl mx-auto w-full">
+        <h2 className="sr-only">Categorii de ajutor</h2>
+        <div className="grid gap-4 md:grid-cols-2">
         {categories.map((c) => (
           <div key={c.title} className="card-floating p-6 flex items-start gap-4">
             <c.icon className="w-5 h-5 text-facebook shrink-0 mt-0.5" />
@@ -35,11 +40,12 @@ function HelpCenter() {
             </div>
           </div>
         ))}
+        </div>
       </section>
       <section className="px-6 pb-24 max-w-3xl mx-auto w-full text-center">
         <div className="card-floating-lg p-8">
-          <h3 className="font-semibold text-lg">Still need help?</h3>
-          <p className="mt-2 text-sm text-muted-foreground">Our team is one email away.</p>
+          <h2 className="font-semibold text-lg">Ai nevoie de ajutor?</h2>
+          <p className="mt-2 text-sm text-muted-foreground">Echipa noastră e la un email distanță.</p>
           <a href="mailto:support@adpilot.ro" className="press mt-6 inline-flex items-center px-6 py-3 rounded-lg bg-foreground text-background text-sm font-medium">
             Email support@adpilot.ro
           </a>

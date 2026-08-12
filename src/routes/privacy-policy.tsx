@@ -3,7 +3,13 @@ import { LegalPage, H2, P, UL } from "@/components/marketing/LegalPage";
 import { CompanyDetails } from "@/components/marketing/CompanyDetails";
 
 export const Route = createFileRoute("/privacy-policy")({
-  head: () => ({ meta: [{ title: "Politica de confidențialitate — AdPilot" }, { name: "description", content: "Cum colectează, folosește, stochează și protejează AdPilot datele tale personale." }] }),
+  head: () => ({ meta: [
+    { title: "Politica de confidențialitate — AdPilot" },
+    { name: "description", content: "Cum colectează, folosește, stochează și protejează AdPilot datele tale personale." },
+    { property: "og:title", content: "Politica de confidențialitate — AdPilot" },
+    { property: "og:description", content: "Cum colectează, folosește, stochează și protejează AdPilot datele tale personale." },
+    { property: "og:url", content: "https://adpilot.ro/privacy-policy" },
+  ], links: [{ rel: "canonical", href: "https://adpilot.ro/privacy-policy" }] }),
   component: () => (
     <LegalPage title="Politica de confidențialitate" updated="10 iunie 2026">
       <CompanyDetails />

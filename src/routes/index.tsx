@@ -20,7 +20,9 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "Tu conduci afacerea. AdPilot conduce reclamele: creează, lansează și optimizează campanii Facebook, Instagram și Google Ads, iar lead-urile vin pe WhatsApp. 3 zile gratuit." },
       { property: "og:title", content: "AdPilot — Tu conduci afacerea. AdPilot conduce reclamele." },
       { property: "og:description", content: "Spune-i ce vrei să obții. AdPilot creează, lansează și optimizează reclamele tale Facebook, Instagram și Google Ads. 3 zile gratuit." },
+      { property: "og:url", content: "https://adpilot.ro/" },
     ],
+    links: [{ rel: "canonical", href: "https://adpilot.ro/" }],
   }),
   component: Index,
 });

@@ -6,7 +6,10 @@ export const Route = createFileRoute("/security")({
   head: () => ({ meta: [
     { title: "Securitate & Confidențialitate — AdPilot" },
     { name: "description", content: "Autentificare OAuth, conformitate GDPR, stocare criptată și deținere completă a contului de reclame." },
-  ] }),
+    { property: "og:title", content: "Securitate & Confidențialitate — AdPilot" },
+    { property: "og:description", content: "Autentificare OAuth, conformitate GDPR, stocare criptată și deținere completă a contului de reclame." },
+    { property: "og:url", content: "https://adpilot.ro/security" },
+  ], links: [{ rel: "canonical", href: "https://adpilot.ro/security" }] }),
   component: SecurityPage,
 });
 
@@ -21,7 +24,9 @@ function SecurityPage() {
   return (
     <MarketingLayout>
       <PageHero eyebrow="Securitate & Confidențialitate" title="Datele tale. Contul tău. Controlul tău." subtitle="Securitatea nu e o funcționalitate — e fundația AdPilot. Iată cum îți protejăm contul și datele clienților tăi." />
-      <section className="px-6 pb-12 max-w-5xl mx-auto w-full grid gap-5 md:grid-cols-2">
+      <section className="px-6 pb-12 max-w-5xl mx-auto w-full">
+        <h2 className="sr-only">Pilonii de securitate AdPilot</h2>
+        <div className="grid gap-5 md:grid-cols-2">
         {pillars.map((p) => (
           <div key={p.title} className="card-floating p-7">
             <p.icon className="w-6 h-6 text-facebook" />
@@ -29,10 +34,11 @@ function SecurityPage() {
             <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{p.body}</p>
           </div>
         ))}
+        </div>
       </section>
       <section className="px-6 pb-20 max-w-3xl mx-auto w-full">
         <div className="card-floating-lg p-8">
-          <h3 className="font-semibold">Promisiunile noastre</h3>
+          <h2 className="font-semibold">Promisiunile noastre</h2>
           <ul className="mt-5 space-y-3">
             {[
               "Nu vindem și nu împărtășim niciodată datele tale cu terți.",
