@@ -24,13 +24,16 @@ function IntegrationsPage() {
   return (
     <MarketingLayout>
       <PageHero eyebrow="Integrări" title="Conectează instrumentele pe care le folosești deja." subtitle="AdPilot se integrează în stack-ul tău — fără migrări, fără înlocuiri." />
-      <section className="px-6 pb-20 max-w-5xl mx-auto w-full grid gap-5 md:grid-cols-2">
+      <section className="px-6 pb-20 max-w-5xl mx-auto w-full">
+        <h2 className="sr-only">Integrări disponibile</h2>
+        <div className="grid gap-5 md:grid-cols-2">
         {integrations.map((i) => (
           <div key={i.name} className="card-floating p-7">
             <h3 className="font-semibold text-lg">{i.name}</h3>
             <p className="mt-2 text-sm text-muted-foreground">{i.body}</p>
           </div>
         ))}
+        </div>
       </section>
     </MarketingLayout>
   );

@@ -11,7 +11,9 @@ export const Route = createFileRoute("/refund-policy")({
       { property: "og:description", content: "Politica de rambursare și anulare a abonamentului AdPilot." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { property: "og:url", content: "https://adpilot.ro/refund-policy" },
     ],
+    links: [{ rel: "canonical", href: "https://adpilot.ro/refund-policy" }],
   }),
   component: () => (
     <LegalPage title="Politica de rambursare" updated="3 august 2026">

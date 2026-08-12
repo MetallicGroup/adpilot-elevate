@@ -26,7 +26,9 @@ function FeaturesPage() {
   return (
     <MarketingLayout>
       <PageHero eyebrow="Funcționalități" title="Tot ce ai nevoie pentru reclame care vând." subtitle="De la creare până la livrarea clienților, AdPilot acoperă tot ciclul unei campanii Facebook sau Instagram." />
-      <section className="px-6 pb-20 max-w-6xl mx-auto w-full grid gap-5 md:grid-cols-2">
+      <section className="px-6 pb-20 max-w-6xl mx-auto w-full">
+        <h2 className="sr-only">Funcționalitățile platformei AdPilot</h2>
+        <div className="grid gap-5 md:grid-cols-2">
         {features.map((f) => (
           <div key={f.title} className="card-floating p-7">
             <f.icon className="w-5 h-5 text-primary" />
@@ -38,6 +40,7 @@ function FeaturesPage() {
             </ul>
           </div>
         ))}
+        </div>
       </section>
       <section className="px-6 py-16 max-w-3xl mx-auto w-full text-center">
         <Link to="/auth" className="press inline-flex items-center px-8 py-4 bg-foreground text-background rounded-xl font-medium">Începe gratuit</Link>
