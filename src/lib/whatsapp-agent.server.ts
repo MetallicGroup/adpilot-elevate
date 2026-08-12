@@ -40,6 +40,7 @@ Capacități:
 - Poți crea o campanie complet nouă cu \`create_campaign\` — necesită o imagine trimisă de user pe WhatsApp + buget + descrierea ofertei. Confirmă mereu cu user-ul DETALIILE (nume, buget, copy) înainte să apelezi tool-ul. Dacă lipsește permisiunea pages_manage_ads (acum parte din Marketing API), campaniile pentru clienți potențiali se lansează automat ca "Sună acum" folosind numărul de telefon salvat.
 - Poți reîncerca publicarea ultimului draft eșuat cu \`retry_last_campaign\` când userul spune „încearcă iar”.
 - Poți lista lead-urile recente cu \`list_recent_leads\`.
+- Poți crea o pagină de prezentare (landing page) direct din WhatsApp cu \`create_landing_page\`, pentru obiectivele: programări, clienți potențiali sau apeluri. Întreabă scurt 3 lucruri (numele afacerii, serviciul promovat, orașul — plus telefonul dacă e „apeluri"), apoi apelează tool-ul și trimite-i userului link-ul public rezultat. Nu cere alte detalii tehnice — textele le scrie AI-ul automat.
 - Poți anula sau reactiva abonamentul AdPilot cu \`cancel_subscription\`. Dacă userul scrie orice legat de anulare/dezabonare/oprire abonament, cere o confirmare scurtă ("Confirmi anularea? Da/Nu") și apoi apelează tool-ul. Explică-i că păstrează accesul până la finalul perioadei deja plătite.
 
 IMPORTANT despre lead-uri (datele de contact):
@@ -613,6 +614,43 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
           return await getMetaInvoices(adAcc.ad_account_id, token, months);
         } catch (e: any) {
           return { error: e?.message ?? "Nu am putut citi facturile" };
+        }
+      },
+    }),
+
+    create_landing_page: tool({
+      description:
+        "Creează o pagină de prezentare AdPilot (landing page) pentru obiectivul ales și returnează link-ul public. Folosește-o când userul vrea programări, clienți potențiali sau apeluri și nu are site.",
+      inputSchema: z.object({
+        objective: z.enum(["bookings", "leads", "calls"]),
+        business_name: z.string().min(2).max(80),
+        service: z.string().min(2).max(120).describe("Ce serviciu/ofertă promovează"),
+        city: z.string().max(80).nullable().default(null),
+        offer: z.string().max(200).nullable().default(null),
+        phone: z.string().max(30).nullable().default(null),
+      }),
+      execute: async ({ objective, business_name, service, city, offer, phone }) => {
+        try {
+          const { buildLandingDraftCore, saveLandingCore } = await import("@/lib/goal-setup.server");
+          const fallbackPhone =
+            phone ?? (objective === "calls" ? await getClickToCallPhone(supabaseAdmin, ctx.userId) : null);
+          const draft = await buildLandingDraftCore(ctx.userId, {
+            objective,
+            business_name,
+            service,
+            city,
+            offer,
+            phone: fallbackPhone,
+          });
+          const saved = await saveLandingCore(ctx.userId, draft);
+          return {
+            ok: true,
+            url: saved.url,
+            headline: draft.copy.headline,
+            questions: draft.questions.map((q) => q.label),
+          };
+        } catch (e: any) {
+          return { error: e?.message ?? "Nu am putut crea pagina de prezentare." };
         }
       },
     }),
