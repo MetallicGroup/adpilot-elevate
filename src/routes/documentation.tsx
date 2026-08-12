@@ -5,7 +5,10 @@ export const Route = createFileRoute("/documentation")({
   head: () => ({ meta: [
     { title: "Documentație — AdPilot" },
     { name: "description", content: "Documentația produsului: primii pași, creare campanii, integrări și mai mult." },
-  ] }),
+    { property: "og:title", content: "Documentație — AdPilot" },
+    { property: "og:description", content: "Documentația produsului: primii pași, creare campanii, integrări și mai mult." },
+    { property: "og:url", content: "https://adpilot.ro/documentation" },
+  ], links: [{ rel: "canonical", href: "https://adpilot.ro/documentation" }] }),
   component: Documentation,
 });
 

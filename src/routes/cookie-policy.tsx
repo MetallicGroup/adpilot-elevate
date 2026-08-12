@@ -3,7 +3,13 @@ import { LegalPage, H2, P, UL } from "@/components/marketing/LegalPage";
 import { CompanyDetails } from "@/components/marketing/CompanyDetails";
 
 export const Route = createFileRoute("/cookie-policy")({
-  head: () => ({ meta: [{ title: "Politica de cookies — AdPilot" }, { name: "description", content: "Cum folosește AdPilot cookies și tehnologii similare." }] }),
+  head: () => ({ meta: [
+    { title: "Politica de cookies — AdPilot" },
+    { name: "description", content: "Cum folosește AdPilot cookies și tehnologii similare." },
+    { property: "og:title", content: "Politica de cookies — AdPilot" },
+    { property: "og:description", content: "Cum folosește AdPilot cookies și tehnologii similare." },
+    { property: "og:url", content: "https://adpilot.ro/cookie-policy" },
+  ], links: [{ rel: "canonical", href: "https://adpilot.ro/cookie-policy" }] }),
   component: () => (
     <LegalPage title="Politica de cookies" updated="10 iunie 2026">
       <CompanyDetails />

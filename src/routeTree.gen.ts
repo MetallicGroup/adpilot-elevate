@@ -10,7 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SecurityRouteImport } from './routes/security'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RefundPolicyRouteImport } from './routes/refund-policy'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
@@ -68,9 +70,19 @@ const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
   path: '/terms-of-service',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SecurityRoute = SecurityRouteImport.update({
   id: '/security',
   path: '/security',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -357,7 +369,9 @@ export interface FileRoutesByFullPath {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/refund-policy': typeof RefundPolicyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/security': typeof SecurityRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/bookings': typeof AuthenticatedBookingsRoute
@@ -411,7 +425,9 @@ export interface FileRoutesByTo {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/refund-policy': typeof RefundPolicyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/security': typeof SecurityRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/bookings': typeof AuthenticatedBookingsRoute
@@ -467,7 +483,9 @@ export interface FileRoutesById {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/refund-policy': typeof RefundPolicyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/security': typeof SecurityRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/bookings': typeof AuthenticatedBookingsRoute
@@ -523,7 +541,9 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/refund-policy'
     | '/reset-password'
+    | '/robots.txt'
     | '/security'
+    | '/sitemap.xml'
     | '/terms-of-service'
     | '/admin'
     | '/bookings'
@@ -577,7 +597,9 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/refund-policy'
     | '/reset-password'
+    | '/robots.txt'
     | '/security'
+    | '/sitemap.xml'
     | '/terms-of-service'
     | '/admin'
     | '/bookings'
@@ -632,7 +654,9 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/refund-policy'
     | '/reset-password'
+    | '/robots.txt'
     | '/security'
+    | '/sitemap.xml'
     | '/terms-of-service'
     | '/_authenticated/admin'
     | '/_authenticated/bookings'
@@ -688,7 +712,9 @@ export interface RootRouteChildren {
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   RefundPolicyRoute: typeof RefundPolicyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
   SecurityRoute: typeof SecurityRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
   BSlugRoute: typeof BSlugRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
@@ -715,11 +741,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsOfServiceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/security': {
       id: '/security'
       path: '/security'
       fullPath: '/security'
       preLoaderRoute: typeof SecurityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -1166,7 +1206,9 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   RefundPolicyRoute: RefundPolicyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  RobotsDottxtRoute: RobotsDottxtRoute,
   SecurityRoute: SecurityRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
   BSlugRoute: BSlugRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,

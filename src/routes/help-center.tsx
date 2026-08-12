@@ -4,9 +4,12 @@ import { Rocket, CreditCard, ShieldCheck, Megaphone, Inbox, MessageCircle, Setti
 
 export const Route = createFileRoute("/help-center")({
   head: () => ({ meta: [
-    { title: "Help Center — AdPilot" },
-    { name: "description", content: "Guides, walkthroughs and answers to help you get the most out of AdPilot." },
-  ] }),
+    { title: "Centru de ajutor — AdPilot" },
+    { name: "description", content: "Ghiduri, pași și răspunsuri care te ajută să folosești AdPilot la maximum." },
+    { property: "og:title", content: "Centru de ajutor — AdPilot" },
+    { property: "og:description", content: "Ghiduri, pași și răspunsuri care te ajută să folosești AdPilot la maximum." },
+    { property: "og:url", content: "https://adpilot.ro/help-center" },
+  ], links: [{ rel: "canonical", href: "https://adpilot.ro/help-center" }] }),
   component: HelpCenter,
 });
 

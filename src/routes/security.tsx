@@ -6,7 +6,10 @@ export const Route = createFileRoute("/security")({
   head: () => ({ meta: [
     { title: "Securitate & Confidențialitate — AdPilot" },
     { name: "description", content: "Autentificare OAuth, conformitate GDPR, stocare criptată și deținere completă a contului de reclame." },
-  ] }),
+    { property: "og:title", content: "Securitate & Confidențialitate — AdPilot" },
+    { property: "og:description", content: "Autentificare OAuth, conformitate GDPR, stocare criptată și deținere completă a contului de reclame." },
+    { property: "og:url", content: "https://adpilot.ro/security" },
+  ], links: [{ rel: "canonical", href: "https://adpilot.ro/security" }] }),
   component: SecurityPage,
 });
 

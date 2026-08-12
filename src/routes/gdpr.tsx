@@ -3,7 +3,13 @@ import { LegalPage, H2, P, UL } from "@/components/marketing/LegalPage";
 import { CompanyDetails } from "@/components/marketing/CompanyDetails";
 
 export const Route = createFileRoute("/gdpr")({
-  head: () => ({ meta: [{ title: "Conformitate GDPR — AdPilot" }, { name: "description", content: "Cum respectă AdPilot Regulamentul General privind Protecția Datelor." }] }),
+  head: () => ({ meta: [
+    { title: "Conformitate GDPR — AdPilot" },
+    { name: "description", content: "Cum respectă AdPilot Regulamentul General privind Protecția Datelor." },
+    { property: "og:title", content: "Conformitate GDPR — AdPilot" },
+    { property: "og:description", content: "Cum respectă AdPilot Regulamentul General privind Protecția Datelor." },
+    { property: "og:url", content: "https://adpilot.ro/gdpr" },
+  ], links: [{ rel: "canonical", href: "https://adpilot.ro/gdpr" }] }),
   component: () => (
     <LegalPage title="Conformitate GDPR" updated="10 iunie 2026">
       <CompanyDetails />

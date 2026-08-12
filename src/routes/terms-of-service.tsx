@@ -3,7 +3,13 @@ import { LegalPage, H2, P, UL } from "@/components/marketing/LegalPage";
 import { CompanyDetails } from "@/components/marketing/CompanyDetails";
 
 export const Route = createFileRoute("/terms-of-service")({
-  head: () => ({ meta: [{ title: "Termeni și condiții — AdPilot" }, { name: "description", content: "Termenii care guvernează folosirea platformei AdPilot." }] }),
+  head: () => ({ meta: [
+    { title: "Termeni și condiții — AdPilot" },
+    { name: "description", content: "Termenii care guvernează folosirea platformei AdPilot." },
+    { property: "og:title", content: "Termeni și condiții — AdPilot" },
+    { property: "og:description", content: "Termenii care guvernează folosirea platformei AdPilot." },
+    { property: "og:url", content: "https://adpilot.ro/terms-of-service" },
+  ], links: [{ rel: "canonical", href: "https://adpilot.ro/terms-of-service" }] }),
   component: () => (
     <LegalPage title="Termeni și condiții" updated="10 iunie 2026">
       <CompanyDetails />

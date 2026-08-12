@@ -5,7 +5,10 @@ export const Route = createFileRoute("/integrations")({
   head: () => ({ meta: [
     { title: "Integrări — AdPilot" },
     { name: "description", content: "AdPilot se integrează cu Meta Ads (Facebook & Instagram), WhatsApp, Stripe, Google Analytics și Meta Pixel." },
-  ] }),
+    { property: "og:title", content: "Integrări — AdPilot" },
+    { property: "og:description", content: "AdPilot se integrează cu Meta Ads (Facebook & Instagram), WhatsApp, Stripe, Google Analytics și Meta Pixel." },
+    { property: "og:url", content: "https://adpilot.ro/integrations" },
+  ], links: [{ rel: "canonical", href: "https://adpilot.ro/integrations" }] }),
   component: IntegrationsPage,
 });
 
