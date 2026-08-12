@@ -103,6 +103,54 @@ async function handleSubscriptionCreated(subscription: any, env: StripeEnv) {
   );
 
   await verifyCardWithOneLeu(subscription, env);
+  await notifyOwnerOfSubscription(subscription, env, userId, priceId, item);
+}
+
+/** WhatsApp "cha-ching" to the AdPilot owner on every new subscription. */
+async function notifyOwnerOfSubscription(
+  subscription: any,
+  env: StripeEnv,
+  userId: string,
+  priceId: string,
+  item: any,
+) {
+  try {
+    const sb = await getSupabase();
+    const [{ data: userRes }, { data: profile }, { data: biz }] = await Promise.all([
+      sb.auth.admin.getUserById(userId),
+      sb.from("profiles").select("full_name").eq("id", userId).maybeSingle(),
+      sb
+        .from("business_profiles")
+        .select("name, niche, niche_custom, website, phone")
+        .eq("user_id", userId)
+        .maybeSingle(),
+    ]);
+
+    const unit = item?.price?.unit_amount;
+    const currency = (item?.price?.currency ?? "ron").toUpperCase();
+    const amount = typeof unit === "number" ? `${(unit / 100).toFixed(2)} ${currency}` : null;
+
+    const { notifyAdminNewSubscription } = await import("@/lib/whatsapp/admin-alerts.server");
+    await notifyAdminNewSubscription({
+      email: userRes?.user?.email ?? null,
+      name: profile?.full_name ?? (userRes?.user?.user_metadata as any)?.full_name ?? null,
+      plan: priceId || null,
+      amount,
+      status: subscription.status ?? null,
+      trialEnd: subscription.trial_end
+        ? new Date(subscription.trial_end * 1000).toLocaleString("ro-RO", {
+            timeZone: "Europe/Bucharest",
+          })
+        : null,
+      business: biz?.name ?? null,
+      niche: biz?.niche_custom || biz?.niche || null,
+      website: biz?.website ?? null,
+      phone: biz?.phone ?? null,
+      environment: env,
+    });
+  } catch (e) {
+    console.error("[webhook] owner notification failed:", e);
+  }
 }
 
 async function handleSubscriptionUpdated(subscription: any, env: StripeEnv) {

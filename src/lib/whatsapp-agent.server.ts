@@ -42,6 +42,7 @@ Capacități:
 - Poți lista lead-urile recente cu \`list_recent_leads\`.
 - Poți crea o pagină de prezentare (landing page) direct din WhatsApp cu \`create_landing_page\`, pentru obiectivele: programări, clienți potențiali sau apeluri. Întreabă scurt 3 lucruri (numele afacerii, serviciul promovat, orașul — plus telefonul dacă e „apeluri"), apoi apelează tool-ul și trimite-i userului link-ul public rezultat. Nu cere alte detalii tehnice — textele le scrie AI-ul automat.
 - Poți anula sau reactiva abonamentul AdPilot cu \`cancel_subscription\`. Dacă userul scrie orice legat de anulare/dezabonare/oprire abonament, cere o confirmare scurtă ("Confirmi anularea? Da/Nu") și apoi apelează tool-ul. Explică-i că păstrează accesul până la finalul perioadei deja plătite.
+- Poți escalada către echipa umană AdPilot cu \`request_human_support\`. Folosește-l când: userul cere explicit să vorbească cu un om, este nemulțumit/frustrat, ai încercat deja o soluție și problema persistă, sau e ceva ce tu nu poți rezolva (plăți blocate, cont Meta suspendat, erori repetate). ÎNTÂI întreabă-l scurt: „Vrei să te preia un coleg din echipă? Îmi confirmi numele și numărul de telefon" — apoi apelează tool-ul cu numele, telefonul și un rezumat clar al problemei. Confirmă-i după aceea că echipa îl contactează în cel mai scurt timp.
 
 IMPORTANT despre lead-uri (datele de contact):
 - Userul cu care vorbești pe WhatsApp ESTE PROPRIETARUL contului și al lead-urilor. Lead-urile îi aparțin lui — au fost generate de campaniile lui Meta plătite din banii lui.
@@ -692,6 +693,63 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
           };
         } catch (e: any) {
           return { error: e?.message ?? "Nu am putut modifica abonamentul" };
+        }
+      },
+    }),
+
+    request_human_support: tool({
+      description:
+        "Escaladează conversația către echipa umană AdPilot. Creează un tichet de suport și trimite alertă pe WhatsApp echipei. Folosește-l când userul cere ajutor uman sau problema nu poate fi rezolvată automat.",
+      inputSchema: z.object({
+        name: z.string().min(2).max(80).describe("Numele clientului"),
+        phone: z.string().max(30).nullable().default(null).describe("Telefonul de contact"),
+        problem: z.string().min(5).max(600).describe("Rezumatul clar al problemei"),
+        urgency: z.enum(["normal", "urgent"]).default("normal"),
+      }),
+      execute: async ({ name, phone, problem, urgency }) => {
+        try {
+          const contactPhone = phone ?? ctx.toPhone ?? null;
+          let email: string | null = null;
+          try {
+            const { data: u } = await supabaseAdmin.auth.admin.getUserById(ctx.userId);
+            email = u?.user?.email ?? null;
+          } catch {
+            email = null;
+          }
+
+          const { data: ticket } = await supabaseAdmin
+            .from("support_tickets")
+            .insert({
+              user_id: ctx.userId,
+              subject: `WhatsApp: ${problem.slice(0, 60)}`,
+              status: "open",
+              priority: urgency === "urgent" ? "high" : "normal",
+              last_message_at: new Date().toISOString(),
+            })
+            .select("id")
+            .maybeSingle();
+
+          if (ticket?.id) {
+            await supabaseAdmin.from("support_messages").insert({
+              ticket_id: ticket.id,
+              sender: "user",
+              body: `${problem}\n\nContact: ${name} — ${contactPhone ?? "n/a"}`,
+              sent_to_whatsapp: true,
+            });
+          }
+
+          const { notifyAdminSupportRequest } = await import("./whatsapp/admin-alerts.server");
+          await notifyAdminSupportRequest({
+            name,
+            phone: contactPhone,
+            email,
+            problem,
+            urgency,
+          });
+
+          return { ok: true, ticket_id: ticket?.id ?? null };
+        } catch (e: any) {
+          return { error: e?.message ?? "Nu am putut trimite solicitarea către echipă." };
         }
       },
     }),
