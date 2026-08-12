@@ -753,7 +753,6 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
         }
       },
     }),
-    }),
   };
 }
 
