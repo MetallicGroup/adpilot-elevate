@@ -753,46 +753,6 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
         }
       },
     }),
-
-    _cancel_subscription_legacy: tool({
-      description:
-        "Anulează abonamentul AdPilot al userului (la finalul perioadei plătite) sau îl reactivează. Folosește-l când userul cere anulare / dezabonare / oprire abonament.",
-      inputSchema: z.object({
-        reactivate: z.boolean().default(false).describe("true = anulează anularea (reactivează)"),
-      }),
-      execute: async ({ reactivate }) => {
-        try {
-          const { data: sub } = await supabaseAdmin
-            .from("subscriptions")
-            .select("stripe_subscription_id, status, current_period_end, environment")
-            .eq("user_id", ctx.userId)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          if (!sub?.stripe_subscription_id) return { error: "Nu am găsit un abonament activ pe contul tău." };
-
-          const { createStripeClient } = await import("./stripe.server");
-          const stripe = createStripeClient(sub.environment === "sandbox" ? "sandbox" : "live");
-          const updated: any = await stripe.subscriptions.update(sub.stripe_subscription_id, {
-            cancel_at_period_end: !reactivate,
-          });
-
-          await supabaseAdmin
-            .from("subscriptions")
-            .update({ cancel_at_period_end: !reactivate, updated_at: new Date().toISOString() })
-            .eq("stripe_subscription_id", sub.stripe_subscription_id);
-
-          const endUnix =
-            updated?.items?.data?.[0]?.current_period_end ?? updated?.current_period_end ?? null;
-          return {
-            ok: true,
-            canceled: !reactivate,
-            access_until: endUnix ? new Date(endUnix * 1000).toISOString() : sub.current_period_end,
-          };
-        } catch (e: any) {
-          return { error: e?.message ?? "Nu am putut modifica abonamentul" };
-        }
-      },
     }),
   };
 }
