@@ -1,24 +1,10 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ShoppingBag, CalendarCheck, Users, PhoneCall, ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { Reveal } from "@/components/wow/Reveal";
+import { GOALS, GOAL_STORAGE_KEY, type GoalId } from "@/lib/goals";
 
-export type GoalId = "sales" | "bookings" | "leads" | "calls";
-
-export const GOALS: {
-  id: GoalId;
-  icon: typeof ShoppingBag;
-  label: string;
-  short: string;
-  confirm: string;
-}[] = [
-  { id: "sales", icon: ShoppingBag, label: "Mai multe vânzări", short: "Magazin online sau produse fizice", confirm: "Perfect. AdPilot construiește o campanie de conversii care duce clienții direct la produsele tale." },
-  { id: "bookings", icon: CalendarCheck, label: "Mai multe programări", short: "Salon, clinică, service, consultanță", confirm: "Perfect. Primești o pagină de programări + reclame optimizate pentru rezervări reale." },
-  { id: "leads", icon: Users, label: "Mai mulți clienți potențiali", short: "Servicii, imobiliare, educație", confirm: "Perfect. AdPilot lansează campanii de lead generation, iar fiecare lead ajunge pe WhatsApp." },
-  { id: "calls", icon: PhoneCall, label: "Mai multe apeluri", short: "Vrei clienți care sună direct", confirm: "Perfect. Reclamele tale vor avea buton de apel, optimizate pentru telefoane care sună." },
-];
-
-export const GOAL_STORAGE_KEY = "adpilot:goal";
+export { GOALS, GOAL_STORAGE_KEY, type GoalId };
 
 export function GoalPicker() {
   const [selected, setSelected] = useState<GoalId | null>(null);

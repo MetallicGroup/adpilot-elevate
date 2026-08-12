@@ -89,6 +89,13 @@ function BookingLandingPage() {
 
   const copy = (data.page.landing_copy ?? {}) as LandingCopy;
   const services = data.services;
+  const objective = ((data.page as { objective?: string }).objective ?? "bookings") as
+    | "bookings"
+    | "leads"
+    | "calls"
+    | "sales";
+  const needsSlot = objective === "bookings";
+  const callPhone = (data.page as { call_phone?: string | null }).call_phone ?? data.business?.phone ?? null;
 
   const [serviceId, setServiceId] = useState<string | null>(services[0]?.id ?? null);
   const [date, setDate] = useState<string>(ymd(new Date()));
@@ -117,6 +124,7 @@ function BookingLandingPage() {
   }, [slug]);
 
   useEffect(() => {
+    if (!needsSlot) return;
     let cancelled = false;
     setSlotsLoading(true);
     setSlot(null);
@@ -128,11 +136,11 @@ function BookingLandingPage() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slug, serviceId, date]);
+  }, [slug, serviceId, date, needsSlot]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!slot) {
+    if (needsSlot && !slot) {
       setError("Alege un interval orar.");
       return;
     }
@@ -146,13 +154,14 @@ function BookingLandingPage() {
           phone: form.phone.trim(),
           email: form.email.trim() || null,
           service_id: serviceId,
-          slot_start: slot,
+          slot_start: needsSlot ? slot : null,
           answers,
           attribution,
         },
       });
       setDone({ slot_start: r.slot_start });
-      if (typeof (window as any).fbq === "function") (window as any).fbq("track", "Schedule");
+      if (typeof (window as any).fbq === "function")
+        (window as any).fbq("track", needsSlot ? "Schedule" : "Lead");
     } catch (err: any) {
       setError(err?.message ?? "Nu am putut trimite programarea. Încearcă din nou.");
     } finally {
@@ -168,8 +177,10 @@ function BookingLandingPage() {
           <div className="w-14 h-14 rounded-full bg-success/15 text-success flex items-center justify-center mx-auto">
             <Check className="w-7 h-7" />
           </div>
-          <h1 className="mt-5 font-serif text-3xl">Programarea ta e înregistrată</h1>
-          <p className="mt-3 text-muted-foreground">{when}</p>
+          <h1 className="mt-5 font-serif text-3xl">
+            {needsSlot ? "Programarea ta e înregistrată" : "Cererea ta a fost trimisă"}
+          </h1>
+          {needsSlot ? <p className="mt-3 text-muted-foreground">{when}</p> : null}
           <p className="mt-4 text-sm text-muted-foreground">
             {data.business?.name} te va contacta la <strong className="text-foreground">{form.phone}</strong> pentru
             confirmare.
@@ -263,8 +274,25 @@ function BookingLandingPage() {
 
         <section className="lg:sticky lg:top-8 h-fit card-floating p-6">
           <h2 className="font-semibold text-lg flex items-center gap-2">
-            <CalendarDays className="w-5 h-5 text-primary" /> {copy.cta_label || "Programează-te acum"}
+            {needsSlot ? (
+              <CalendarDays className="w-5 h-5 text-primary" />
+            ) : (
+              <Phone className="w-5 h-5 text-primary" />
+            )}{" "}
+            {copy.cta_label || (needsSlot ? "Programează-te acum" : "Lasă-ne un număr")}
           </h2>
+
+          {objective === "calls" && callPhone ? (
+            <a
+              href={`tel:${callPhone}`}
+              className="press mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 font-medium text-primary-foreground"
+            >
+              <Phone className="w-4 h-4" /> Sună acum {callPhone}
+            </a>
+          ) : null}
+          {objective === "calls" ? (
+            <p className="mt-4 text-sm text-muted-foreground">Sau lasă-ne numărul tău și te sunăm noi.</p>
+          ) : null}
 
           <form onSubmit={onSubmit} className="mt-5 space-y-5">
             {services.length > 1 && (
@@ -290,6 +318,7 @@ function BookingLandingPage() {
               </div>
             )}
 
+            {needsSlot && (
             <div>
               <label className="text-sm font-medium">Ziua</label>
               <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
@@ -314,7 +343,9 @@ function BookingLandingPage() {
                 })}
               </div>
             </div>
+            )}
 
+            {needsSlot && (
             <div>
               <label className="text-sm font-medium flex items-center gap-2">
                 <Clock className="w-4 h-4" /> Ora
@@ -340,6 +371,7 @@ function BookingLandingPage() {
                 <p className="mt-2 text-sm text-muted-foreground">Nu sunt intervale libere în această zi.</p>
               )}
             </div>
+            )}
 
             {data.questions.map((q: any) => (
               <div key={q.key}>
@@ -430,15 +462,19 @@ function BookingLandingPage() {
 
             <button
               type="submit"
-              disabled={submitting || !slot}
+              disabled={submitting || (needsSlot && !slot)}
               className="press w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-medium disabled:opacity-50"
             >
-              {submitting ? "Se trimite…" : copy.cta_label || "Programează-te acum"}
+              {submitting
+                ? "Se trimite…"
+                : objective === "calls"
+                  ? "Sună-mă tu"
+                  : copy.cta_label || (needsSlot ? "Programează-te acum" : "Trimite cererea")}
             </button>
 
             <p className="text-[11px] text-muted-foreground flex items-start gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-              Datele tale sunt folosite doar pentru această programare.
+              Datele tale sunt folosite doar pentru a te contacta legat de această solicitare.
               {data.business?.privacy_policy_url ? (
                 <a href={data.business.privacy_policy_url} className="underline ml-1" target="_blank" rel="noreferrer">
                   Politica de confidențialitate

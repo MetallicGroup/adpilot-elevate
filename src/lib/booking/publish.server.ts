@@ -25,7 +25,7 @@ async function fetchMediaBytes(userId: string, mediaUrl: string) {
 export async function publishBookingCampaignCore(userId: string, input: any) {
   const { data: page } = await supabaseAdmin
     .from("booking_campaigns")
-    .select("id, user_id, slug, service, business_id, landing_copy, pixel_id")
+    .select("id, user_id, slug, service, business_id, landing_copy, pixel_id, objective, call_phone")
     .eq("id", input.booking_campaign_id)
     .eq("user_id", userId)
     .maybeSingle();
@@ -81,8 +81,21 @@ export async function publishBookingCampaignCore(userId: string, input: any) {
     .update({ status: "published", pixel_id: pixelId, hero_image_url: input.hero_image_url })
     .eq("id", page.id);
 
-  const landingUrl = `${SITE_URL}/b/${page.slug}?utm_source=facebook&utm_medium=paid&utm_campaign=programari`;
-  const name = `${biz?.name ?? "AdPilot"} — ${page.service} (Programări)`;
+  const objective = page.objective ?? "bookings";
+  const OBJECTIVE_LABEL: Record<string, string> = {
+    bookings: "Programări",
+    leads: "Clienți potențiali",
+    calls: "Apeluri",
+    sales: "Vânzări",
+  };
+  const OBJECTIVE_CTA: Record<string, string> = {
+    bookings: "Book Now",
+    leads: "Sign Up",
+    calls: "Call Now",
+    sales: "Shop Now",
+  };
+  const landingUrl = `${SITE_URL}/b/${page.slug}?utm_source=facebook&utm_medium=paid&utm_campaign=${objective}`;
+  const name = `${biz?.name ?? "AdPilot"} — ${page.service} (${OBJECTIVE_LABEL[objective] ?? "Campanie"})`;
   const STATUS = input.launch_active ? "ACTIVE" : "PAUSED";
 
   try {
@@ -137,7 +150,7 @@ export async function publishBookingCampaignCore(userId: string, input: any) {
       image_hash,
       headline: input.headline,
       description: input.primary_text,
-      cta: "Book Now",
+      cta: OBJECTIVE_CTA[objective] ?? "Learn More",
       landing_url: landingUrl,
     });
 
@@ -154,7 +167,7 @@ export async function publishBookingCampaignCore(userId: string, input: any) {
       .insert({
         user_id: userId,
         platform: "meta",
-        campaign_type: "booking",
+        campaign_type: objective === "bookings" ? "booking" : objective,
         name,
         objective: "OUTCOME_LEADS",
         status: input.launch_active ? "active" : "paused",
@@ -175,7 +188,7 @@ export async function publishBookingCampaignCore(userId: string, input: any) {
           primary_text: input.primary_text,
           media_url: input.hero_image_url,
           landing_url: landingUrl,
-          cta: "Book Now",
+          cta: OBJECTIVE_CTA[objective] ?? "Learn More",
         },
         meta_campaign_id: metaCamp.id,
         meta_adset_id: adset.id,
