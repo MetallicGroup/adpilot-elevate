@@ -1,0 +1,1 @@
+revoke all on function public.notify_new_signup() from public, anon, authenticated;
