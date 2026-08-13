@@ -241,5 +241,8 @@ export async function submitBookingCore(supabaseAdmin: any, input: SubmitInput) 
     slot_start: start.toISOString(),
     business_name: biz?.name ?? null,
     business_phone: biz?.phone ?? null,
+    // Pentru deduplicarea Pixel (browser) <-> CAPI (server): același event_id.
+    event_id: eventId,
+    event_name: needsSlot ? ("Schedule" as const) : ("Lead" as const),
   };
 }

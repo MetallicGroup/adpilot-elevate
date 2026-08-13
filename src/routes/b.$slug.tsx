@@ -123,6 +123,39 @@ function BookingLandingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
+  // Meta Pixel base code — încarcă fbq, inițializează pixelul campaniei și
+  // trimite PageView. Fără el, evenimentele din browser (Schedule/Lead) nu
+  // ajung la Meta, iar deduplicarea cu CAPI e imposibilă.
+  useEffect(() => {
+    const pixelId = data.page.pixel_id;
+    if (!pixelId || typeof window === "undefined") return;
+    const w = window as any;
+    if (!w.fbq) {
+      (function (f: any, b: any, e: string, v: string) {
+        if (f.fbq) return;
+        const n: any = (f.fbq = function (...args: any[]) {
+          n.callMethod ? n.callMethod.apply(n, args) : n.queue.push(args);
+        });
+        if (!f._fbq) f._fbq = n;
+        n.push = n;
+        n.loaded = true;
+        n.version = "2.0";
+        n.queue = [];
+        const t: any = b.createElement(e);
+        t.async = true;
+        t.src = v;
+        const s: any = b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t, s);
+      })(w, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
+    }
+    if (w.__adpilotPixel !== pixelId) {
+      w.fbq("init", pixelId);
+      w.__adpilotPixel = pixelId;
+    }
+    w.fbq("track", "PageView");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.page.pixel_id]);
+
   useEffect(() => {
     if (!needsSlot) return;
     let cancelled = false;
@@ -160,8 +193,12 @@ function BookingLandingPage() {
         },
       });
       setDone({ slot_start: r.slot_start });
-      if (typeof (window as any).fbq === "function")
-        (window as any).fbq("track", needsSlot ? "Schedule" : "Lead");
+      // Același event_id ca pe server (CAPI) -> Meta deduplică cele două semnale.
+      if (typeof (window as any).fbq === "function") {
+        const eventName = (r as any).event_name ?? (needsSlot ? "Schedule" : "Lead");
+        const eventId = (r as any).event_id;
+        (window as any).fbq("track", eventName, {}, eventId ? { eventID: eventId } : undefined);
+      }
     } catch (err: any) {
       setError(err?.message ?? "Nu am putut trimite programarea. Încearcă din nou.");
     } finally {
