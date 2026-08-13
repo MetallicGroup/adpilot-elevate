@@ -40,8 +40,9 @@ function CheckoutReturn() {
         </div>
         <h1 className="mt-6 font-serif text-3xl font-semibold">Trialul tău a început 🎉</h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          Ai 3 zile gratuite la AdPilot. Nu îți retragem nimic de pe card înainte de finalul
-          perioadei de probă — poți anula oricând din Setări → Plan & facturare.
+          Ai 3 zile gratuite la AdPilot. La activare verificăm cardul cu 1 leu, returnat imediat;
+          prima plată reală o facem abia la finalul perioadei de probă — poți anula oricând din
+          Setări → Plan & facturare.
         </p>
         {trialEnd && (
           <div className="mt-5 inline-flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full bg-success/15 text-success">

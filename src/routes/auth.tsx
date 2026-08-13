@@ -7,7 +7,7 @@ import { resolvePostAuthPath } from "@/lib/post-auth";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2, MessageCircle, Sparkles } from "lucide-react";
 
-type AuthSearch = { email?: string; mode?: "signin" | "signup"; goal?: string };
+type AuthSearch = { email?: string; mode?: "signin" | "signup"; goal?: string; redirect?: string };
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -17,6 +17,10 @@ export const Route = createFileRoute("/auth")({
     if (typeof s.email === "string") out.email = s.email;
     if (s.mode === "signin" || s.mode === "signup") out.mode = s.mode;
     if (typeof s.goal === "string") out.goal = s.goal;
+    // Doar căi interne — niciodată un URL absolut (evită open-redirect).
+    if (typeof s.redirect === "string" && s.redirect.startsWith("/") && !s.redirect.startsWith("//")) {
+      out.redirect = s.redirect;
+    }
     return out;
   },
   head: () => ({ meta: [{ title: "Autentificare — AdPilot" }] }),
@@ -40,19 +44,25 @@ function AuthPage() {
   useEffect(() => {
     let cancelled = false;
     supabase.auth.getSession().then(async ({ data }) => {
-      if (cancelled) return;
-      if (data.session) {
-        const dest = await resolvePostAuthPath();
-        if (!cancelled) navigate({ to: dest, replace: true });
-      }
+      if (cancelled || !data.session) return;
+      await goPostAuth();
     });
     return () => {
       cancelled = true;
     };
-  }, [navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function goPostAuth() {
     await waitForClientSession();
+    // Onorează redirect-ul (ex. planul ales din /pricing) înainte de rutarea implicită.
+    if (search.redirect) {
+      const url = new URL(search.redirect, window.location.origin);
+      const sp: Record<string, string> = {};
+      url.searchParams.forEach((v, k) => (sp[k] = v));
+      navigate({ to: url.pathname, search: sp as never, replace: true });
+      return;
+    }
     const dest = await resolvePostAuthPath();
     navigate({ to: dest, replace: true });
   }

@@ -98,7 +98,7 @@ function Index() {
                 className="eyebrow"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-success pulse-dot text-success" />
-                ✨ 3 zile gratuit · fără retragere înainte de a 4-a zi
+                ✨ 3 zile gratuit · prima plată abia din ziua a 4-a
               </motion.div>
 
               <h1 className="mt-7 text-[2.45rem] leading-[1.06] sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight">

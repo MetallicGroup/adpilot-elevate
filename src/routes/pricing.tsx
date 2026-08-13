@@ -7,6 +7,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/pricing")({
+  validateSearch: (s: Record<string, unknown>): { plan?: string; redirect?: string } => ({
+    plan: typeof s.plan === "string" ? s.plan : undefined,
+    redirect: typeof s.redirect === "string" ? s.redirect : undefined,
+  }),
   head: () => ({ meta: [
     { title: "Prețuri — AdPilot" },
     { name: "description", content: "Planuri lunare simple pentru afaceri de orice mărime. 3 zile gratuit. Anulezi oricând." },
@@ -77,7 +81,7 @@ const plans = [
 ];
 
 const faqs = [
-  { q: "Există perioadă de probă gratuită?", a: "Da. Fiecare plan include 3 zile gratuit. Îți cerem cardul la activare pentru a evita întreruperea după probă, dar nu îți retragem nimic înainte de a 4-a zi." },
+  { q: "Există perioadă de probă gratuită?", a: "Da. Fiecare plan include 3 zile gratuit. La activare îți cerem cardul și verificăm că e valid printr-o tranzacție de 1 leu, returnată imediat. Prima plată reală o facem abia în ziua a 4-a, dacă nu anulezi până atunci." },
   { q: "Pot anula oricând?", a: "Da. Poți anula oricând în timpul perioadei de probă fără să fii taxat, sau ulterior direct din contul tău, fără întrebări." },
   { q: "Prețul include bugetul de reclame?", a: "Nu. Abonamentul AdPilot acoperă doar platforma. Bugetul de reclame este plătit direct către Meta (Facebook & Instagram), din contul tău." },
   { q: "Ce metode de plată acceptați?", a: "Toate cardurile majore: Visa, Mastercard, Maestro. Plățile sunt procesate securizat prin Stripe." },
@@ -86,10 +90,23 @@ const faqs = [
 function PricingPage() {
   const { openCheckout, closeCheckout, isOpen, checkoutElement } = useStripeCheckout();
   const navigate = useNavigate();
+  const search = Route.useSearch();
   const [authed, setAuthed] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setAuthed(!!data.user));
+    let opened = false;
+    supabase.auth.getUser().then(({ data }) => {
+      const isAuthed = !!data.user;
+      setAuthed(isAuthed);
+      // Utilizator revenit din /auth cu planul ales -> deschide direct checkout-ul.
+      const plan = search.plan;
+      if (isAuthed && plan && !opened) {
+        opened = true;
+        openCheckout({ priceId: plan });
+        navigate({ to: "/pricing", search: {}, replace: true });
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSelect = (priceId: string) => {
@@ -105,7 +122,7 @@ function PricingPage() {
       <PageHero
         eyebrow="Prețuri"
         title="Planuri simple care cresc o dată cu tine."
-        subtitle="3 zile gratuit pe orice plan. Nu îți retragem nimic înainte de a 4-a zi."
+        subtitle="3 zile gratuit pe orice plan. La activare verificăm cardul cu 1 leu (returnat imediat); prima plată abia din ziua a 4-a."
       />
       <section className="px-6 pb-20 max-w-6xl mx-auto w-full">
         <h2 className="sr-only">Planuri și prețuri AdPilot</h2>
