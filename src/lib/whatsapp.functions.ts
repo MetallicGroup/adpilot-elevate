@@ -117,3 +117,50 @@ export const disconnectMyWhatsApp = createServerFn({ method: "POST" })
       .eq("user_id", userId);
     return { ok: true };
   });
+
+/**
+ * Read-only inbox: real conversation between the user and the AdPilot AI
+ * assistant on the shared WhatsApp number. There is a single thread per user
+ * (leads live in the CRM /leads, not here). Sending happens on WhatsApp itself
+ * via the agent, so this view is read-only.
+ */
+export const getMyWhatsAppInbox = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { getUserPlanTier, whatsappAllowedForTier } = await import("./plan.server");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { getCentralWhatsApp } = await import("./whatsapp.server");
+
+    const tier = await getUserPlanTier(supabaseAdmin, userId);
+
+    const { data: connection } = await supabase
+      .from("whatsapp_connections")
+      .select("id, user_phone, status, last_message_at")
+      .maybeSingle();
+
+    const { data: rows } = await supabase
+      .from("whatsapp_messages")
+      .select("id, direction, msg_type, text, created_at")
+      .order("created_at", { ascending: false })
+      .limit(200);
+
+    const messages = (rows ?? [])
+      .reverse()
+      .map((m) => ({
+        id: m.id as string,
+        // direction "in" = userul a scris pe WhatsApp; "out" = răspunsul AdPilot.
+        from: (m.direction === "in" ? "me" : "them") as "me" | "them",
+        type: (m.msg_type ?? "text") as string,
+        text: (m.text ?? "") as string,
+        at: m.created_at as string,
+      }));
+
+    return {
+      connection: connection ?? null,
+      central_number: getCentralWhatsApp()?.displayNumber ?? null,
+      allowed: whatsappAllowedForTier(tier),
+      plan: tier,
+      messages,
+    };
+  });
