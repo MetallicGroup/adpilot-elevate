@@ -209,8 +209,8 @@ function OnboardingPage() {
             <div className="flex-1">
               <h2 className="font-semibold text-lg">Alege planul tău</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                3 zile gratuit pe orice plan. Cardul e necesar pentru activare — nu îți retragem
-                nimic înainte de a 4-a zi.
+                3 zile gratuit pe orice plan. La activare verificăm cardul cu 1 leu (returnat
+                imediat); prima plată abia în ziua a 4-a.
               </p>
             </div>
           </div>

@@ -132,7 +132,7 @@ export function SubscriptionBadge() {
           </p>
           {trialActive && (
             <p className="text-xs text-muted-foreground">
-              Nu îți retragem nimic de pe card înainte de {formatDate(sub.trial_end)}.
+              Prima plată abia pe {formatDate(sub.trial_end)}. La activare verificăm cardul cu 1 leu, returnat imediat.
             </p>
           )}
         </div>
