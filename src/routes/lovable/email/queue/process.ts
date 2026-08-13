@@ -1,6 +1,56 @@
-import { sendLovableEmail } from '@lovable.dev/email-js'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { createFileRoute } from '@tanstack/react-router'
+
+/**
+ * Send one email via Resend. Throws an error carrying `.status` (and
+ * `.retryAfterSeconds` on 429) so the existing rate-limit / DLQ logic keeps
+ * working unchanged.
+ */
+async function sendViaResend(
+  payload: {
+    to: string
+    from?: string
+    subject: string
+    html?: string
+    text?: string
+    unsubscribe_token?: string
+  },
+  apiKey: string,
+): Promise<void> {
+  const from = payload.from || process.env.EMAIL_FROM || 'AdPilot <noreply@adpilot.ro>'
+  const headers: Record<string, string> = {}
+  if (payload.unsubscribe_token) {
+    const base = process.env.APP_URL || 'https://adpilot.ro'
+    headers['List-Unsubscribe'] = `<${base}/unsubscribe?token=${encodeURIComponent(payload.unsubscribe_token)}>`
+    headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click'
+  }
+  const r = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from,
+      to: payload.to,
+      subject: payload.subject,
+      html: payload.html,
+      text: payload.text,
+      ...(Object.keys(headers).length ? { headers } : {}),
+    }),
+  })
+  if (!r.ok) {
+    let message = `Resend error (${r.status})`
+    try {
+      const j = (await r.json()) as { message?: string; error?: { message?: string } }
+      message = j?.message || j?.error?.message || message
+    } catch {
+      /* non-JSON body */
+    }
+    const retryAfter = Number(r.headers.get('retry-after'))
+    const err = new Error(message) as Error & { status: number; retryAfterSeconds?: number }
+    err.status = r.status
+    if (!Number.isNaN(retryAfter) && retryAfter > 0) err.retryAfterSeconds = retryAfter
+    throw err
+  }
+}
 
 const MAX_RETRIES = 5
 const DEFAULT_BATCH_SIZE = 10
@@ -64,7 +114,7 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apiKey = process.env.LOVABLE_API_KEY
+        const apiKey = process.env.RESEND_API_KEY
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
         const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
@@ -221,22 +271,16 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
             }
 
             try {
-              await sendLovableEmail(
+              await sendViaResend(
                 {
-                  run_id: payload.run_id,
                   to: payload.to,
                   from: payload.from,
-                  sender_domain: payload.sender_domain,
                   subject: payload.subject,
                   html: payload.html,
                   text: payload.text,
-                  purpose: payload.purpose,
-                  label: payload.label,
-                  idempotency_key: payload.idempotency_key,
                   unsubscribe_token: payload.unsubscribe_token,
-                  message_id: payload.message_id,
                 },
-                { apiKey, sendUrl: process.env.LOVABLE_SEND_URL }
+                apiKey
               )
 
               // Log success
