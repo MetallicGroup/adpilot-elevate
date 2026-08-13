@@ -3,7 +3,11 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { handleMetaApiRequest } from "./lib/api/meta/router";
-import { handleWhatsAppWebhook } from "./lib/api/whatsapp/router";
+// NOTE: the legacy /api/whatsapp/webhook intercept was removed — it accepted
+// unsigned POSTs and could launch real (money-spending) campaigns from a
+// spoofed `from` number. The real, signature-verified webhook lives at the
+// route /api/public/whatsapp/webhook. Make sure the Meta WhatsApp webhook
+// URL points there.
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -42,9 +46,6 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
-      const whatsappResponse = await handleWhatsAppWebhook(request);
-      if (whatsappResponse) return whatsappResponse;
-
       const metaResponse = await handleMetaApiRequest(request);
       if (metaResponse) return metaResponse;
 

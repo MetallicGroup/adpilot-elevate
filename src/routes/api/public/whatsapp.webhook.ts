@@ -70,6 +70,19 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
               const waMsgId: string = m.id;
               const type: string = m.type;
 
+              // Idempotență: Meta retrimite webhook-urile (inclusiv la timeout).
+              // Dacă am procesat deja acest mesaj, sărim — altfel un retry ar
+              // putea relansa aceeași campanie / retrimite același răspuns.
+              if (waMsgId) {
+                const { data: dup } = await supabaseAdmin
+                  .from("whatsapp_messages")
+                  .select("id")
+                  .eq("wa_message_id", waMsgId)
+                  .eq("direction", "in")
+                  .maybeSingle();
+                if (dup) continue;
+              }
+
               let text: string | null = null;
               let mediaPath: string | null = null;
               let mediaMime: string | null = null;
@@ -185,8 +198,10 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
                 inboundCampaignId = lastCamp?.id ?? null;
               } catch { /* ignore */ }
 
-              // Persist incoming
-              await supabaseAdmin.from("whatsapp_messages").insert({
+              // Persist incoming. The partial unique index on (wa_message_id)
+              // where direction='in' makes this the idempotency claim: a
+              // concurrent retry that lost the race hits a 23505 and we skip.
+              const { error: insErr } = await supabaseAdmin.from("whatsapp_messages").insert({
                 user_id: conn.user_id,
                 connection_id: conn.id,
                 wa_message_id: waMsgId,
@@ -197,6 +212,10 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
                 media_mime: mediaMime,
                 campaign_id: inboundCampaignId,
               });
+              if (insErr) {
+                if ((insErr as { code?: string }).code === "23505") continue;
+                console.error("[wa] inbound insert failed", insErr);
+              }
 
               await supabaseAdmin
                 .from("whatsapp_connections")

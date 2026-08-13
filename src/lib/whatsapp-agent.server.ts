@@ -11,6 +11,12 @@ import { setMetaCampaignStatus } from "./campaign-control.server";
 
 const GRAPH = "https://graph.facebook.com";
 
+// Backstop server-side pentru tool-urile care cheltuie bani. Nu depinde de LLM:
+// oricât ar greși modelul (ex. "setează bugetul la 100000"), aici se oprește.
+// Peste plafon, userul trebuie să seteze bugetul din aplicație, nu din chat.
+const MIN_AGENT_DAILY_BUDGET_RON = 5;
+const MAX_AGENT_DAILY_BUDGET_RON = 1000;
+
 type AgentCtx = {
   userId: string;
   connection: {
@@ -251,6 +257,11 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
         new_daily_budget: z.number().positive().describe("Buget zilnic în unități întregi (ex 50 = 50 RON/zi)"),
       }),
       execute: async ({ campaign_id, new_daily_budget }) => {
+        if (new_daily_budget < MIN_AGENT_DAILY_BUDGET_RON || new_daily_budget > MAX_AGENT_DAILY_BUDGET_RON) {
+          return {
+            error: `Bugetul zilnic trebuie să fie între ${MIN_AGENT_DAILY_BUDGET_RON} și ${MAX_AGENT_DAILY_BUDGET_RON} RON. Pentru sume mai mari, setează-l din aplicație (Campanii).`,
+          };
+        }
         const camp = await getCampaign(supabaseAdmin, ctx.userId, campaign_id);
         if (!camp) return { error: "Campanie negăsită" };
         if (!camp.meta_adset_id) return { error: "AdSet Meta lipsă" };
@@ -365,6 +376,11 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
           ),
       }),
       execute: async (args) => {
+        if (args.daily_budget < MIN_AGENT_DAILY_BUDGET_RON || args.daily_budget > MAX_AGENT_DAILY_BUDGET_RON) {
+          return {
+            error: `Bugetul zilnic trebuie să fie între ${MIN_AGENT_DAILY_BUDGET_RON} și ${MAX_AGENT_DAILY_BUDGET_RON} RON. Pentru sume mai mari, lansează campania din aplicație.`,
+          };
+        }
         if (!ctx.latestMedia) {
           return { error: "Userul nu a trimis imagine. Cere-i să trimită o poză pentru reclamă." };
         }
