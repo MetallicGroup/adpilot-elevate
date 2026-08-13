@@ -5,22 +5,12 @@ import { BUSINESS_NICHES } from "@/lib/launcher/presets";
 import type { BusinessNiche } from "@/lib/launcher/types";
 
 async function askAi(system: string, user: string): Promise<string> {
-  const apiKey = process.env["LOVABLE_API_KEY"];
-  if (!apiKey) throw new Error("LOVABLE_API_KEY missing");
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
-      messages: [
-        { role: "system", content: `${system}\nRăspunzi DOAR cu JSON valid, fără markdown, în limba română.` },
-        { role: "user", content: user },
-      ],
-    }),
-  });
-  if (!res.ok) throw new Error(`AI gateway error (${res.status})`);
-  const json: any = await res.json();
-  return String(json?.choices?.[0]?.message?.content ?? "").replace(/```json\s*|\s*```/g, "").trim();
+  const { askClaude } = await import("@/lib/llm.server");
+  const raw = await askClaude(
+    `${system}\nRăspunzi DOAR cu JSON valid, fără markdown, în limba română.`,
+    user,
+  );
+  return raw.replace(/```json\s*|\s*```/g, "").trim();
 }
 
 function parseJson<T>(raw: string): T | null {

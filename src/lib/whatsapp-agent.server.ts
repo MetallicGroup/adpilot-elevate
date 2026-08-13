@@ -4,7 +4,6 @@
  */
 import { generateText, tool, stepCountIs } from "ai";
 import { z } from "zod";
-import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 import { sendWhatsAppMessage, uploadWhatsAppMedia } from "./whatsapp.server";
 import { metaApiVersion } from "./meta.server";
 import { setMetaCampaignStatus } from "./campaign-control.server";
@@ -92,12 +91,9 @@ export async function runWhatsAppAgent(
   history: Array<{ role: "user" | "assistant"; content: string }>,
   userMessage: string,
 ) {
-  const apiKey = process.env.LOVABLE_API_KEY;
-  if (!apiKey) throw new Error("LOVABLE_API_KEY missing");
-
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const provider = createLovableAiGatewayProvider(apiKey);
-  const model = provider("google/gemini-2.5-flash");
+  const { chatModel } = await import("./llm.server");
+  const model = chatModel();
 
   const tools = buildTools(ctx, supabaseAdmin);
 
@@ -288,10 +284,9 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
         language: z.string().default("ro"),
       }),
       execute: async ({ product_description, tone, language }) => {
-        const apiKey = process.env.LOVABLE_API_KEY!;
-        const provider = createLovableAiGatewayProvider(apiKey);
+        const { chatModel } = await import("./llm.server");
         const sub = await generateText({
-          model: provider("google/gemini-2.5-flash"),
+          model: chatModel(),
           messages: [
             {
               role: "system",

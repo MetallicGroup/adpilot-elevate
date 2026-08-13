@@ -1,18 +1,15 @@
 /**
- * Server-only helpers built on Lovable AI Gateway for the WhatsApp agent:
- *  - generateCreativeImage: text → 1024x1024 JPG saved în bucket wa-media
- *  - transcribeWaAudio: voice note (ogg/mp3/wav) → text românesc
+ * Server-only helpers for the WhatsApp agent — OpenAI (Claude nu face imagini/audio):
+ *  - generateCreativeImage: text → 1024x1024 JPG salvat în bucket wa-media (gpt-image-1)
+ *  - transcribeWaAudio: notă vocală (ogg/mp3/wav) → text românesc (Whisper)
  */
 
-const GATEWAY = "https://ai.gateway.lovable.dev/v1";
+const OPENAI = "https://api.openai.com/v1";
 
-function authHeaders() {
-  const key = process.env.LOVABLE_API_KEY;
-  if (!key) throw new Error("LOVABLE_API_KEY missing");
-  return {
-    Authorization: `Bearer ${key}`,
-    "Content-Type": "application/json",
-  };
+function openaiKey(): string {
+  const key = process.env.OPENAI_API_KEY;
+  if (!key) throw new Error("OPENAI_API_KEY missing");
+  return key;
 }
 
 /** Generate a square 1024 image and save bytes to wa-media. Returns { path, mime, signedUrl }. */
@@ -20,17 +17,19 @@ export async function generateCreativeImage(
   userId: string,
   prompt: string,
 ): Promise<{ path: string; mime: string; signedUrl: string }> {
-  const body = {
-    model: "openai/gpt-image-1-mini",
-    prompt,
-    n: 1,
-    size: "1024x1024",
-    quality: "low",
-  };
-  const r = await fetch(`${GATEWAY}/images/generations`, {
+  const r = await fetch(`${OPENAI}/images/generations`, {
     method: "POST",
-    headers: authHeaders(),
-    body: JSON.stringify(body),
+    headers: {
+      Authorization: `Bearer ${openaiKey()}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "gpt-image-1",
+      prompt,
+      n: 1,
+      size: "1024x1024",
+      quality: "low",
+    }),
   });
   const j: any = await r.json();
   if (!r.ok) {
@@ -52,49 +51,38 @@ export async function generateCreativeImage(
   return { path, mime: "image/jpeg", signedUrl: signed?.signedUrl ?? "" };
 }
 
-/** Transcribe a WhatsApp voice note. Pass mime from WA (e.g. "audio/ogg; codecs=opus"). */
+/** Transcribe a WhatsApp voice note with OpenAI Whisper. `mime` din WA (ex. "audio/ogg; codecs=opus"). */
 export async function transcribeWaAudio(bytes: Uint8Array, mime: string): Promise<string> {
-  // Map MIME → format string accepted by chat-completions input_audio
   const raw = mime.toLowerCase();
-  let format: "ogg" | "mp3" | "wav" | "m4a" | "webm" = "ogg";
-  if (raw.includes("mpeg") || raw.includes("mp3")) format = "mp3";
-  else if (raw.includes("wav")) format = "wav";
-  else if (raw.includes("mp4") || raw.includes("m4a") || raw.includes("aac")) format = "m4a";
-  else if (raw.includes("webm")) format = "webm";
+  let ext = "ogg";
+  if (raw.includes("mpeg") || raw.includes("mp3")) ext = "mp3";
+  else if (raw.includes("wav")) ext = "wav";
+  else if (raw.includes("mp4") || raw.includes("m4a") || raw.includes("aac")) ext = "m4a";
+  else if (raw.includes("webm")) ext = "webm";
 
-  let b64 = "";
-  const CHUNK = 0x8000;
-  for (let i = 0; i < bytes.length; i += CHUNK) {
-    b64 += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
-  }
-  b64 = btoa(b64);
+  const contentType = raw.split(";")[0]?.trim() || "audio/ogg";
+  const form = new FormData();
+  form.append("file", new Blob([bytes as BlobPart], { type: contentType }), `audio.${ext}`);
+  form.append("model", "whisper-1");
+  form.append("language", "ro");
+  form.append("response_format", "text");
 
-  const body = {
-    model: "google/gemini-2.5-flash",
-    messages: [
-      {
-        role: "system",
-        content:
-          "Ești un transcriptor. Returnează DOAR textul exact spus de user, în limba originală (probabil română). Fără explicații, fără ghilimele.",
-      },
-      {
-        role: "user",
-        content: [
-          { type: "text", text: "Transcrie acest mesaj vocal:" },
-          { type: "input_audio", input_audio: { data: b64, format } },
-        ],
-      },
-    ],
-  };
-  const r = await fetch(`${GATEWAY}/chat/completions`, {
+  const r = await fetch(`${OPENAI}/audio/transcriptions`, {
     method: "POST",
-    headers: authHeaders(),
-    body: JSON.stringify(body),
+    headers: { Authorization: `Bearer ${openaiKey()}` },
+    body: form,
   });
-  const j: any = await r.json();
   if (!r.ok) {
-    throw new Error(j?.error?.message || `transcribe failed (${r.status})`);
+    let msg = `transcribe failed (${r.status})`;
+    try {
+      const j: any = await r.json();
+      msg = j?.error?.message || msg;
+    } catch {
+      /* text response */
+    }
+    throw new Error(msg);
   }
-  const text: string = j?.choices?.[0]?.message?.content ?? "";
+  // response_format=text → corpul e chiar transcrierea
+  const text = await r.text();
   return text.trim();
 }
