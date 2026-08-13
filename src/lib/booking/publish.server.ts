@@ -104,8 +104,8 @@ export async function publishBookingCampaignCore(userId: string, input: any) {
     const city = input.city || biz?.city || null;
     let cities: Array<{ key: string; radius: number; distance_unit: "kilometer" }> | undefined;
     if (city) {
-      const key = await findCityKey(city, conn.access_token).catch(() => null);
-      if (key) cities = [{ key, radius: input.radius_km, distance_unit: "kilometer" }];
+      const hit = await findCityKey(conn.access_token, city, "RO").catch(() => null);
+      if (hit) cities = [{ key: hit.key, radius: input.radius_km, distance_unit: "kilometer" }];
     }
 
     const beneficiary =
@@ -129,7 +129,10 @@ export async function publishBookingCampaignCore(userId: string, input: any) {
         cities,
       },
       status: STATUS,
-      objective: "bookings",
+      // Optimizează pe evenimentul pe care îl trimite chiar landing-ul prin CAPI:
+      // programări -> SCHEDULE, restul (leads/apeluri) -> LEAD. Toate rămân pe
+      // destinație WEBSITE (pagina /b/slug), nu lead-form pe reclamă.
+      objective: objective === "bookings" ? "bookings" : "landing_lead",
       pixel_id: pixelId,
       dsa_beneficiary: beneficiary,
       dsa_payor: beneficiary,

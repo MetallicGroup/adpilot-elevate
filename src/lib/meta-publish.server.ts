@@ -6,23 +6,46 @@ import { metaApiVersion } from "./meta.server";
 const GRAPH = "https://graph.facebook.com";
 
 export const COUNTRY_CODES: Record<string, string> = {
+  // Romanian labels — what the wizard UI actually produces
+  România: "RO",
+  "Republica Moldova": "MD",
+  "Marea Britanie": "GB",
+  Germania: "DE",
+  Italia: "IT",
+  Spania: "ES",
+  Franța: "FR",
+  SUA: "US",
+  // English labels — legacy drafts / other surfaces
+  Romania: "RO",
+  Moldova: "MD",
   "United States": "US",
   "United Kingdom": "GB",
-  "Canada": "CA",
-  "Australia": "AU",
-  "Germany": "DE",
-  "France": "FR",
-  "Brazil": "BR",
-  "Mexico": "MX",
-  "Japan": "JP",
-  "India": "IN",
+  Canada: "CA",
+  Australia: "AU",
+  Germany: "DE",
+  France: "FR",
+  Italy: "IT",
+  Spain: "ES",
+  Brazil: "BR",
+  Mexico: "MX",
+  Japan: "JP",
+  India: "IN",
 };
 
 const CTA_MAP: Record<string, string> = {
+  // Romanian labels — what the wizard UI produces
+  "Află mai mult": "LEARN_MORE",
+  "Înscrie-te": "SIGN_UP",
+  "Cumpără acum": "SHOP_NOW",
+  Descarcă: "DOWNLOAD",
+  "Aplică acum": "APPLY_NOW",
+  "Rezervă acum": "BOOK_TRAVEL",
+  "Sună acum": "CALL_NOW",
+  // English labels — legacy / other surfaces
   "Learn More": "LEARN_MORE",
   "Sign Up": "SIGN_UP",
   "Shop Now": "SHOP_NOW",
-  "Download": "DOWNLOAD",
+  Download: "DOWNLOAD",
   "Apply Now": "APPLY_NOW",
   "Book Now": "BOOK_TRAVEL",
   "Call Now": "CALL_NOW",
@@ -469,14 +492,17 @@ export function mapAgeGroupsToRange(ageGroups: string[]): { age_min: number; age
 }
 
 export function mapGendersToMeta(genders: string[]): number[] {
-  if (!genders.length || genders.includes("All")) return [];
+  // Empty result = all genders. "Toți"/"All" mean all; a specific pick narrows it.
   const out: number[] = [];
-  if (genders.includes("Male")) out.push(1);
-  if (genders.includes("Female")) out.push(2);
-  return out;
+  for (const g of genders) {
+    if (g === "Male" || g === "Bărbați") out.push(1);
+    if (g === "Female" || g === "Femei") out.push(2);
+  }
+  return [...new Set(out)];
 }
 
 export function mapLocationsToCountries(locations: string[]): string[] {
-  const codes = locations.map((l) => COUNTRY_CODES[l]).filter(Boolean);
-  return codes.length ? codes : ["US"];
+  const codes = [...new Set(locations.map((l) => COUNTRY_CODES[l]).filter(Boolean))];
+  // Romanian-first product: fall back to RO, never silently to the US.
+  return codes.length ? codes : ["RO"];
 }
