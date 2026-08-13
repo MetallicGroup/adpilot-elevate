@@ -32,6 +32,21 @@ export const unpublishBookingCampaign = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ booking_campaign_id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
+    // Oprește și reclama pe Meta — altfel landing-ul dă „indisponibil” dar
+    // reclama continuă să ducă trafic plătit spre o pagină moartă.
+    const { data: page } = await context.supabase
+      .from("booking_campaigns")
+      .select("campaign_id")
+      .eq("id", data.booking_campaign_id)
+      .maybeSingle();
+    if (page?.campaign_id) {
+      const { setMetaCampaignStatus } = await import("@/lib/campaign-control.server");
+      await setMetaCampaignStatus({
+        userId: context.userId,
+        campaignId: page.campaign_id,
+        next: "PAUSED",
+      }).catch(() => {});
+    }
     const { error } = await context.supabase
       .from("booking_campaigns")
       .update({ status: "paused" })
