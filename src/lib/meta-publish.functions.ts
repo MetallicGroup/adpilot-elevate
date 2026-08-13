@@ -22,7 +22,9 @@ export const publishMetaCampaign = createServerFn({ method: "POST" })
       .maybeSingle();
     if (cErr || !campaign) throw new Error("Campaign not found");
     if (campaign.platform !== "meta") throw new Error("Campaign is not a Meta campaign");
-    if (campaign.objective !== "LEAD_GENERATION") throw new Error("Only LEAD_GENERATION is supported for Meta in v1");
+    if (campaign.objective !== "LEAD_GENERATION" && campaign.objective !== "CONVERSIONS") {
+      throw new Error("Doar campaniile Lead Generation și Conversii sunt suportate pe Meta.");
+    }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -142,9 +144,92 @@ export const publishMetaCampaign = createServerFn({ method: "POST" })
       mapAgeGroupsToRange,
       mapGendersToMeta,
       mapLocationsToCountries,
+      findExistingPixel,
+      fetchPageName,
     } = await import("./meta-publish.server");
 
     const STATUS: "ACTIVE" | "PAUSED" = "ACTIVE";
+
+    // ── CONVERSIONS / Vânzări: optimizează pe achiziții pe site-ul clientului ──
+    // Nu folosim lead form; folosim Pixel-ul lor + eveniment Purchase.
+    if (campaign.objective === "CONVERSIONS") {
+      const landingUrl: string = creative.landing_url ?? "";
+      if (!/^https?:\/\//i.test(landingUrl)) {
+        throw new Error("Pentru campaniile de vânzări e nevoie de un URL de site valid (https://...).");
+      }
+      const pixel = await findExistingPixel(adAcc.ad_account_id, conn.access_token);
+      if (!pixel) {
+        throw new Error(
+          "Nu am găsit un Pixel Meta pe contul tău. Instalează Pixel-ul pe site (Meta Events Manager) și reîncearcă.",
+        );
+      }
+      const beneficiary =
+        (await fetchPageName(page.page_id, page.page_access_token).catch(() => null)) ||
+        page.page_name ||
+        campaign.name;
+
+      const salesBudgetCents = Math.round(Number(campaign.budget) * 100);
+      const salesCamp = await createCampaign(
+        adAcc.ad_account_id,
+        conn.access_token,
+        campaign.name,
+        STATUS,
+        "OUTCOME_SALES",
+      );
+      const salesAdset = await createAdSet(adAcc.ad_account_id, conn.access_token, {
+        name: `${campaign.name} — AdSet`,
+        campaign_id: salesCamp.id,
+        daily_budget_cents: campaign.budget_mode === "BUDGET_MODE_DAY" ? salesBudgetCents : undefined,
+        lifetime_budget_cents: campaign.budget_mode === "BUDGET_MODE_TOTAL" ? salesBudgetCents : undefined,
+        end_time: campaign.end_date ? `${campaign.end_date}T23:59:59+0000` : null,
+        page_id: page.page_id,
+        targeting: {
+          countries: mapLocationsToCountries(targeting.locations ?? []),
+          ...mapAgeGroupsToRange(targeting.age_groups ?? []),
+          genders: mapGendersToMeta(targeting.genders ?? []),
+        },
+        status: STATUS,
+        objective: "sales",
+        pixel_id: pixel.id,
+        dsa_beneficiary: beneficiary,
+        dsa_payor: beneficiary,
+      });
+      const salesImageHash = await uploadAdImageFromBytes(
+        adAcc.ad_account_id,
+        conn.access_token,
+        bytes,
+        "ad.jpg",
+        contentType,
+      );
+      const salesCreative = await createAdCreative(adAcc.ad_account_id, conn.access_token, {
+        name: `${campaign.name} — Creative`,
+        page_id: page.page_id,
+        image_hash: salesImageHash,
+        headline: creative.headline ?? "",
+        description: creative.description ?? "",
+        cta: creative.cta ?? "Shop Now",
+        landing_url: landingUrl,
+      });
+      const salesAd = await createAd(adAcc.ad_account_id, conn.access_token, {
+        name: `${campaign.name} — Ad`,
+        adset_id: salesAdset.id,
+        creative_id: salesCreative.id,
+        status: STATUS,
+      });
+
+      await supabase
+        .from("campaigns")
+        .update({
+          meta_campaign_id: salesCamp.id,
+          meta_adset_id: salesAdset.id,
+          meta_ad_id: salesAd.id,
+          pixel_id: pixel.id,
+          status: "active",
+        })
+        .eq("id", campaign.id);
+
+      return { meta_campaign_id: salesCamp.id, meta_ad_id: salesAd.id, pixel_id: pixel.id };
+    }
 
     // 5. Create Lead Form
     const form = await createLeadForm(page.page_id, page.page_access_token, {
