@@ -242,7 +242,7 @@ export async function createCampaign(
   accessToken: string,
   name: string,
   status: "ACTIVE" | "PAUSED" = "ACTIVE",
-  objective: "OUTCOME_LEADS" | "OUTCOME_TRAFFIC" = "OUTCOME_LEADS",
+  objective: "OUTCOME_LEADS" | "OUTCOME_TRAFFIC" | "OUTCOME_SALES" = "OUTCOME_LEADS",
 ) {
   return metaPOST(`/act_${adAccountId}/campaigns`, accessToken, {
     name,
@@ -252,6 +252,24 @@ export async function createCampaign(
     buying_type: "AUCTION",
     is_adset_budget_sharing_enabled: false,
   });
+}
+
+/**
+ * Găsește primul Pixel Meta existent pe contul publicitar (pentru campanii de
+ * vânzări către site-ul clientului). NU creează unul — dacă nu există, clientul
+ * trebuie să instaleze Pixel-ul pe site ca să se poată optimiza pe achiziții.
+ */
+export async function findExistingPixel(
+  adAccountId: string,
+  accessToken: string,
+): Promise<{ id: string; name: string } | null> {
+  const res = await fetch(
+    `${GRAPH}/${metaApiVersion()}/act_${adAccountId}/adspixels?fields=id,name&limit=25&access_token=${encodeURIComponent(accessToken)}`,
+  );
+  const json: any = await res.json();
+  if (!res.ok || !Array.isArray(json?.data) || !json.data.length) return null;
+  const p = json.data[0];
+  return p?.id ? { id: String(p.id), name: String(p.name ?? "Pixel") } : null;
 }
 
 export async function createAdSet(
@@ -272,7 +290,7 @@ export async function createAdSet(
       cities?: Array<{ key: string; radius?: number; distance_unit?: "kilometer" | "mile" }>;
     };
     status: "ACTIVE" | "PAUSED";
-    objective?: "leads" | "traffic" | "bookings" | "landing_lead";
+    objective?: "leads" | "traffic" | "bookings" | "landing_lead" | "sales";
     pixel_id?: string;
     dsa_beneficiary?: string;
     dsa_payor?: string;
@@ -299,12 +317,11 @@ export async function createAdSet(
   if (args.targeting.genders && args.targeting.genders.length) {
     targeting.genders = args.targeting.genders;
   }
+  // Conversii pe site/landing (evenimente trimise prin Pixel + CAPI).
+  const isConversion =
+    args.objective === "bookings" || args.objective === "landing_lead" || args.objective === "sales";
   const optimization_goal =
-    args.objective === "traffic"
-      ? "LINK_CLICKS"
-      : args.objective === "bookings" || args.objective === "landing_lead"
-        ? "OFFSITE_CONVERSIONS"
-        : "LEAD_GENERATION";
+    args.objective === "traffic" ? "LINK_CLICKS" : isConversion ? "OFFSITE_CONVERSIONS" : "LEAD_GENERATION";
   const body: Record<string, unknown> = {
     name: args.name,
     campaign_id: args.campaign_id,
@@ -315,12 +332,13 @@ export async function createAdSet(
     status: args.status,
     destination_type: args.objective === "leads" ? "ON_AD" : "WEBSITE",
   };
-  if (args.objective === "bookings" || args.objective === "landing_lead") {
-    // Optimizare pe conversii reale de pe landing page (evenimente trimise prin CAPI)
+  if (isConversion) {
+    // Optimizare pe conversii reale (evenimente trimise prin Pixel + CAPI).
     if (!args.pixel_id) throw new Error("Lipsește pixelul Meta pentru această campanie.");
     body.promoted_object = {
       pixel_id: args.pixel_id,
-      custom_event_type: args.objective === "bookings" ? "SCHEDULE" : "LEAD",
+      custom_event_type:
+        args.objective === "bookings" ? "SCHEDULE" : args.objective === "sales" ? "PURCHASE" : "LEAD",
     };
   } else if (args.objective !== "traffic") {
     body.promoted_object = { page_id: args.page_id };
