@@ -123,15 +123,12 @@ function AuthPage() {
   async function oauth(provider: "google") {
     setLoading(true);
     try {
-      const result = await signInWithProvider(provider);
-      if (result.redirected) return;
-
-      toast.success("Bine ai revenit!");
-      await goPostAuth();
+      // Supabase redirecționează browserul către Google; revenirea (și schimbul
+      // de cod) se face pe /auth/callback, care rulează apoi goPostAuth.
+      await signInWithProvider(provider);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Autentificarea a eșuat";
       toast.error(translateAuthError(message));
-    } finally {
       setLoading(false);
     }
   }

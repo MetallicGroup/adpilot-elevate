@@ -1,6 +1,5 @@
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 
 export function authCallbackUrl() {
   if (typeof window === "undefined") return "/auth/callback";
@@ -19,11 +18,16 @@ export async function waitForClientSession(): Promise<Session> {
 }
 
 export async function signInWithProvider(provider: "google") {
-  const result = await lovable.auth.signInWithOAuth(provider, {
-    redirect_uri: typeof window !== "undefined" ? authCallbackUrl() : undefined,
+  // Supabase OAuth nativ (fără broker Lovable). Provider-ul Google trebuie
+  // activat în Supabase → Authentication → Providers, cu redirect pe domeniul nou.
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: {
+      redirectTo: typeof window !== "undefined" ? authCallbackUrl() : undefined,
+    },
   });
-  if (result.error) throw result.error;
-  return result;
+  if (error) throw error;
+  return data;
 }
 
 export async function resendConfirmationEmail(email: string) {
