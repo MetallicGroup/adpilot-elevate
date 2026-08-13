@@ -9,6 +9,50 @@ export function ymd(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+// Programul afacerii e ora locală românească. Serverul rulează pe UTC (Vercel),
+// deci trebuie să convertim explicit ora de perete RO în instant UTC, altfel un
+// program 09:00–18:00 ar apărea decalat cu +2/+3h la client.
+const BUSINESS_TZ = "Europe/Bucharest";
+
+/** Offset-ul (ms) al fusului la un anumit instant UTC (gestionează și DST). */
+function tzOffsetMs(utcMs: number, tz: string): number {
+  const dtf = new Intl.DateTimeFormat("en-US", {
+    timeZone: tz,
+    hour12: false,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+  const map: Record<string, number> = {};
+  for (const p of dtf.formatToParts(new Date(utcMs))) {
+    if (p.type !== "literal") map[p.type] = Number(p.value);
+  }
+  const asUTC = Date.UTC(map.year, map.month - 1, map.day, map.hour === 24 ? 0 : map.hour, map.minute, map.second);
+  return asUTC - utcMs;
+}
+
+/** Ora de perete (dată + minute de la miezul nopții) în `tz` -> instant UTC (ms). */
+function zonedWallToUtc(date: string, minutes: number, tz: string): number {
+  const [y, mo, d] = date.split("-").map(Number);
+  const h = Math.floor(minutes / 60);
+  const mi = minutes % 60;
+  const utcGuess = Date.UTC(y, mo - 1, d, h, mi);
+  // Două treceri acoperă corect marginile de schimbare a orei (DST).
+  const off1 = tzOffsetMs(utcGuess, tz);
+  const off2 = tzOffsetMs(utcGuess - off1, tz);
+  return utcGuess - off2;
+}
+
+/** Ziua săptămânii (0=Dum..6=Sâm) a datei, evaluată la prânz în `tz`. */
+function zonedWeekday(date: string, tz: string): number {
+  const noonUtc = zonedWallToUtc(date, 12 * 60, tz);
+  const wd = new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "short" }).format(new Date(noonUtc));
+  return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(wd);
+}
+
 /**
  * Generează sloturile libere pentru o zi, ținând cont de program, durata
  * serviciului, bufferul dintre programări, blocaje și programările existente.
@@ -23,9 +67,9 @@ export function slotsForDay(args: {
   minLeadMinutes?: number;
   now?: Date;
 }): string[] {
-  const day = new Date(`${args.date}T00:00:00`);
-  if (Number.isNaN(day.getTime())) return [];
-  const rule = args.rules.find((r) => r.weekday === day.getDay());
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(args.date)) return [];
+  const weekday = zonedWeekday(args.date, BUSINESS_TZ);
+  const rule = args.rules.find((r) => r.weekday === weekday);
   if (!rule) return [];
 
   const step = Math.max(10, rule.slot_min || 30);
@@ -43,9 +87,7 @@ export function slotsForDay(args: {
 
   const out: string[] = [];
   for (let m = open; m + duration <= close; m += step) {
-    const start = new Date(day);
-    start.setMinutes(m);
-    const startMs = start.getTime();
+    const startMs = zonedWallToUtc(args.date, m, BUSINESS_TZ);
     const endMs = startMs + duration * 60_000;
     if (startMs < earliest) continue;
     const overlaps = taken.some((t) => startMs < t.end + buffer * 60_000 && endMs + buffer * 60_000 > t.start);
