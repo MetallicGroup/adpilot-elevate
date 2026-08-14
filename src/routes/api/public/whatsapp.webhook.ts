@@ -344,15 +344,20 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
               // Fallback: if no media in this message, use the most recent media
               // sent by the user in the last 24h so the agent can still create a campaign
               // when the user confirms in a follow-up text message.
+              // Doar imaginile/clipurile sunt creative valide. Un mesaj VOCAL se
+              // transcrie în text și NU trebuie folosit ca poză de reclamă.
+              const isCreativeMime = (m: string | null | undefined) =>
+                !!m && (m.startsWith("image/") || m.startsWith("video/"));
+
               let effectiveMedia:
                 | { path: string; mime: string; signedUrl: string }
                 | null =
-                mediaPath && mediaMime && signedUrl
+                mediaPath && mediaMime && signedUrl && isCreativeMime(mediaMime)
                   ? { path: mediaPath, mime: mediaMime, signedUrl }
                   : null;
               if (!effectiveMedia) {
                 const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-                const { data: lastMedia } = await supabaseAdmin
+                const { data: mediaRows } = await supabaseAdmin
                   .from("whatsapp_messages")
                   .select("media_path, media_mime, created_at")
                   .eq("user_id", conn.user_id)
@@ -360,8 +365,9 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
                   .not("media_path", "is", null)
                   .gte("created_at", since)
                   .order("created_at", { ascending: false })
-                  .limit(1)
-                  .maybeSingle();
+                  .limit(5);
+                // Prima media care e imagine/video (sare peste vocale).
+                const lastMedia = (mediaRows ?? []).find((r: any) => isCreativeMime(r.media_mime));
                 if (lastMedia?.media_path) {
                   const { data: signed } = await supabaseAdmin.storage
                     .from("wa-media")
