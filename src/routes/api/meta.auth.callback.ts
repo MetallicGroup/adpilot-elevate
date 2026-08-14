@@ -100,7 +100,10 @@ export const Route = createFileRoute("/api/meta/auth/callback")({
             if (rows.length) {
               await supabaseAdmin
                 .from("meta_ad_accounts")
-                .upsert(rows, { onConflict: "connection_id,ad_account_id" });
+                // Constrângerea unică reală e (user_id, ad_account_id) — folosirea
+                // unei chei inexistente (connection_id,ad_account_id) arunca eroare
+                // prinsă silențios în catch → 0 conturi salvate pentru fiecare user.
+                .upsert(rows, { onConflict: "user_id,ad_account_id" });
             }
           } catch (e) {
             console.warn("Meta ad accounts sync failed", e);
