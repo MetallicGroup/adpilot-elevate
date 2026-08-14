@@ -82,7 +82,7 @@ export function CommandStage() {
           <div className="grid gap-1.5 p-4">
             {[
               ["Reduceri de Primăvară", "Facebook", "12 lead-uri"],
-              ["Search · Servicii locale", "Google Ads", "8 lead-uri"],
+              ["Colecția de Vară", "Instagram", "8 lead-uri"],
             ].map(([a, b, c]) => (
               <div key={a} className="grid grid-cols-[1fr_auto_auto] items-center gap-3 rounded-[10px] bg-white/[0.035] px-2.5 py-2 text-[9px] text-muted-foreground">
                 <span className="flex items-center gap-1.5 text-foreground/85">

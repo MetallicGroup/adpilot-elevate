@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { resolvePostAuthPath } from "@/lib/post-auth";
 import {
   ArrowRight, Check, MessageCircle, Bot, Inbox, LineChart, Zap, Rocket, Target,
-  Star, PlayCircle, Facebook, Search, ShoppingBag, CalendarCheck, Users,
+  Star, PlayCircle, Facebook, Instagram, ShoppingBag, CalendarCheck, Users,
 } from "lucide-react";
 import { MarketingLayout } from "@/components/marketing/MarketingLayout";
 import { CommandStage } from "@/components/marketing/CommandStage";
@@ -17,9 +17,9 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "AdPilot — Tu conduci afacerea. AdPilot conduce reclamele." },
-      { name: "description", content: "Tu conduci afacerea. AdPilot conduce reclamele: creează, lansează și optimizează campanii Facebook, Instagram și Google Ads, iar lead-urile vin pe WhatsApp. 3 zile gratuit." },
+      { name: "description", content: "Tu conduci afacerea. AdPilot conduce reclamele: creează, lansează și optimizează campanii Facebook și Instagram, iar lead-urile vin pe WhatsApp. 3 zile gratuit." },
       { property: "og:title", content: "AdPilot — Tu conduci afacerea. AdPilot conduce reclamele." },
-      { property: "og:description", content: "Spune-i ce vrei să obții. AdPilot creează, lansează și optimizează reclamele tale Facebook, Instagram și Google Ads. 3 zile gratuit." },
+      { property: "og:description", content: "Spune-i ce vrei să obții. AdPilot creează, lansează și optimizează reclamele tale Facebook și Instagram. 3 zile gratuit." },
       { property: "og:url", content: "https://adpilot.ro/" },
     ],
     links: [{ rel: "canonical", href: "https://adpilot.ro/" }],
@@ -107,7 +107,7 @@ function Index() {
               </h1>
 
               <p className="mt-5 text-base sm:text-lg text-muted-foreground leading-relaxed max-w-xl mx-auto md:mx-0">
-                Mai multe vânzări, programări sau clienți. AdPilot creează, lansează și optimizează reclamele tale pe Facebook, Instagram și Google — fără agenție și fără experiență.
+                Mai multe vânzări, programări sau clienți. AdPilot creează, lansează și optimizează reclamele tale pe Facebook și Instagram — fără agenție și fără experiență.
               </p>
 
               <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
@@ -171,17 +171,17 @@ function Index() {
       <Divider text="De la idee la reclamă activă. În câteva minute." />
 
       {/* PLATFORMS WE MANAGE */}
-      <Section eyebrow="Platformele pe care le gestionăm" title="Facebook, Instagram & Google Ads — într-un singur loc.">
+      <Section eyebrow="Platformele pe care le gestionăm" title="Facebook, Instagram & WhatsApp — într-un singur loc.">
         <div className="grid md:grid-cols-3 gap-5">
           <div className="glass p-6 rounded-2xl">
             <Facebook className="w-8 h-8 text-primary" />
-            <h3 className="mt-4 font-semibold">Facebook &amp; Instagram</h3>
+            <h3 className="mt-4 font-semibold">Facebook</h3>
             <p className="mt-2 text-sm text-muted-foreground">Campanii Lead Generation și Conversii, optimizate automat de AI.</p>
           </div>
           <div className="glass p-6 rounded-2xl">
-            <GoogleLogo className="w-8 h-8" />
-            <h3 className="mt-4 font-semibold">Google Ads</h3>
-            <p className="mt-2 text-sm text-muted-foreground">Campanii Search și Display — apari exact când clienții tăi te caută pe Google.</p>
+            <Instagram className="w-8 h-8 text-primary" />
+            <h3 className="mt-4 font-semibold">Instagram</h3>
+            <p className="mt-2 text-sm text-muted-foreground">Reels, Stories și Feed — ești acolo unde clienții tăi petrec timpul.</p>
           </div>
           <div className="glass p-6 rounded-2xl">
             <MessageCircle className="w-8 h-8 text-primary" />
@@ -225,8 +225,8 @@ function Index() {
           <BentoCard icon={Zap} title="Optimizare automată">
             <p>AdPilot identifică reclamele performante și redistribuie bugetul automat. Tu dormi, el optimizează. 😴</p>
           </BentoCard>
-          <BentoCard icon={Search} title="Google Ads Integration">
-            <p>Conectează-ți contul Google Ads și lansează campanii Search sau Display direct din AdPilot — fără să deschizi Google Ads Manager.</p>
+          <BentoCard icon={CalendarCheck} title="Programări & Booking">
+            <p>Pagini de programare cu calendar integrat — clienții își rezervă singuri, tu primești notificare pe WhatsApp. 📅</p>
           </BentoCard>
         </div>
       </Section>
@@ -473,17 +473,6 @@ function Mini({ label, value }: { label: string; value: string }) {
       <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</p>
       <p className="mt-1 font-mono font-bold">{value}</p>
     </div>
-  );
-}
-
-function GoogleLogo({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-label="Google">
-      <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.3-.4-3.5z"/>
-      <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 19 13 24 13c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
-      <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/>
-      <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.1 5.6l6.2 5.2C41 35.2 44 30 44 24c0-1.2-.1-2.3-.4-3.5z"/>
-    </svg>
   );
 }
 

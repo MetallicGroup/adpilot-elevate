@@ -19,7 +19,7 @@ export function SiteFooter() {
             Tu conduci afacerea. AdPilot conduce reclamele.
           </p>
           <p className="mt-4 text-sm text-muted-foreground max-w-xs">
-            Platforma AI care lansează, gestionează și optimizează reclame Facebook, Instagram și Google Ads — fără agenție, fără bătăi de cap.
+            Platforma AI care lansează, gestionează și optimizează reclame Facebook și Instagram — fără agenție, fără bătăi de cap.
           </p>
         </div>
         <FooterCol title="Companie" links={[
@@ -82,7 +82,7 @@ export function SiteFooter() {
       <div className="border-t border-border">
         <div className="max-w-6xl mx-auto w-full px-6 py-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs text-muted-foreground">
           <p>© {new Date().getFullYear()} AdPilot. Toate drepturile rezervate.</p>
-          <p>Construit în România 🇷🇴 · Neafiliat cu Meta Platforms, Inc. sau Google LLC.</p>
+          <p>Construit în România 🇷🇴 · Neafiliat cu Meta Platforms, Inc.</p>
         </div>
       </div>
     </footer>
