@@ -37,7 +37,10 @@ export function normalizePhone(input: string): string {
 }
 
 export function buildWaMeLink(displayNumber: string, prefilledText: string): string {
-  const digits = displayNumber.replace(/\D/g, "");
+  // wa.me cere format internațional FĂRĂ 0 la început (ex. 40731395025, nu 0731395025).
+  // normalizePhone convertește numerele RO locale (07xxxxxxxx → 407xxxxxxxx) și
+  // lasă neatinse cele deja internaționale, ca link-ul să se deschidă corect.
+  const digits = normalizePhone(displayNumber);
   return `https://wa.me/${digits}?text=${encodeURIComponent(prefilledText)}`;
 }
 
