@@ -1,5 +1,8 @@
 /**
- * Auto-refresh insights (every minute) + per-campaign WhatsApp pulse (every 30m).
+ * Auto-refresh insights (every minute) + per-campaign WhatsApp pulse (hourly).
+ * Pulse-ul cu date despre reclame se trimite DOAR pentru campanii ACTIVE fără erori
+ * pe Meta (isMetaCampaignActive verifică effective_status === "ACTIVE") și se oprește
+ * automat când reclama e pusă pe pauză / respinsă / cu probleme.
  */
 import { fetchCampaignInsights } from "./meta-insights.server";
 import { getCentralWhatsApp, sendWhatsAppMessage } from "./whatsapp.server";
@@ -81,7 +84,7 @@ export async function refreshAllInsights(): Promise<{ refreshed: number; errors:
   return { refreshed, errors };
 }
 
-/** Send a per-campaign WhatsApp pulse (spend / views / clicks / leads) every ~30m. */
+/** Send a per-campaign WhatsApp pulse (spend / views / clicks / leads) hourly. */
 export async function runPeriodicUpdates(): Promise<{ sent: number; errors: number }> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const central = getCentralWhatsApp();
@@ -121,7 +124,7 @@ export async function runPeriodicUpdates(): Promise<{ sent: number; errors: numb
         const last = c.last_periodic_update_at
           ? new Date(c.last_periodic_update_at).getTime()
           : 0;
-        return Date.now() - last >= 29 * 60 * 1000; // ~30 min
+        return Date.now() - last >= 59 * 60 * 1000; // ~1h
       });
       if (!due.length) continue;
 

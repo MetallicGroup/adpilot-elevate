@@ -2,7 +2,7 @@
  * WhatsApp AI agent: runs Lovable AI with tool-calling to control campaigns.
  * Server-only. Invoked from the WA webhook (no user JWT — we pass user_id explicitly).
  */
-import { generateText, tool, stepCountIs } from "ai";
+import { generateText, tool, stepCountIs, type ModelMessage } from "ai";
 import { z } from "zod";
 import { sendWhatsAppMessage, uploadWhatsAppMedia } from "./whatsapp.server";
 import { metaApiVersion } from "./meta.server";
@@ -121,16 +121,26 @@ export async function runWhatsAppAgent(
       ? (lastOut.meta as any).anomaly_action
       : null;
 
-  const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
+  const dynamicHint =
+    mediaHint(ctx) +
+    (pendingAction
+      ? `\n\n[Acțiune sugerată în așteptare] ${JSON.stringify(pendingAction)}. Dacă userul răspunde afirmativ (da/ok/yes/rezolvă/fă), execută-o direct prin tool-ul corespunzător (pause_campaign pentru kind=pause, generate_copy pentru regen_copy, generate_image+create_campaign sau update creative pentru regen_image) și confirmă scurt. Dacă userul refuză, lasă-o.`
+      : "");
+
+  const messages: ModelMessage[] = [
+    // Prefix STATIC (toolurile se randează înainte de system, deci breakpoint-ul
+    // de pe system cache-uiește tool-urile + system-ul împreună — ~6k tokeni).
+    // Se citesc la ~10% pe pașii următori ai buclei de tool-calling și pe mesajele
+    // ulterioare din aceeași conversație (fereastra de cache = 5 min). Taie ~40-50%
+    // din costul agentului fără să-i schimbe comportamentul.
     {
       role: "system",
-      content:
-        SYSTEM_PROMPT +
-        mediaHint(ctx) +
-        (pendingAction
-          ? `\n\n[Acțiune sugerată în așteptare] ${JSON.stringify(pendingAction)}. Dacă userul răspunde afirmativ (da/ok/yes/rezolvă/fă), execută-o direct prin tool-ul corespunzător (pause_campaign pentru kind=pause, generate_copy pentru regen_copy, generate_image+create_campaign sau update creative pentru regen_image) și confirmă scurt. Dacă userul refuză, lasă-o.`
-          : ""),
+      content: SYSTEM_PROMPT,
+      providerOptions: { anthropic: { cacheControl: { type: "ephemeral" } } },
     },
+    // Partea VOLATILĂ (media curentă, acțiune în așteptare) — după breakpoint,
+    // nu se cache-uiește, ca să nu invalideze prefixul static.
+    ...(dynamicHint ? [{ role: "system" as const, content: dynamicHint }] : []),
     ...history.map((m) => ({ role: m.role, content: m.content })),
     { role: "user", content: userMessage },
   ];
