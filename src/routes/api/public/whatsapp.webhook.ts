@@ -35,6 +35,7 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
           downloadWhatsAppMedia,
           getCentralWhatsApp,
           sendWhatsAppMessage,
+          markReadAndTyping,
           normalizePhone,
         } = await import("@/lib/whatsapp.server");
 
@@ -81,6 +82,12 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
                   .eq("direction", "in")
                   .maybeSingle();
                 if (dup) continue;
+              }
+
+              // Arată „citit" + „typing…" imediat, ca răspunsul să pară instant
+              // chiar dacă agentul lucrează câteva secunde. Best-effort, non-blocant.
+              if (type === "text" || type === "image" || type === "audio" || type === "video") {
+                void markReadAndTyping(central.phoneNumberId, central.accessToken, waMsgId);
               }
 
               let text: string | null = null;

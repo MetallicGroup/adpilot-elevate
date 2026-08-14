@@ -55,6 +55,34 @@ export type WAMessageContent =
   | { type: "image"; mediaId: string; caption?: string }
   | { type: "image_link"; url: string; caption?: string };
 
+/**
+ * Marchează mesajul primit ca CITIT și afișează indicatorul „typing…" (bulele).
+ * WhatsApp arată typing-ul până la ~25s sau până trimitem un răspuns — îl apelăm
+ * imediat ce primim mesajul, ca userul să vadă că botul „scrie" chiar dacă
+ * răspunsul complet vine în câteva secunde. Best-effort: nu blochează procesarea.
+ */
+export async function markReadAndTyping(
+  phoneNumberId: string,
+  accessToken: string,
+  incomingMessageId: string,
+): Promise<void> {
+  if (!incomingMessageId) return;
+  try {
+    await fetch(`${GRAPH}/${metaApiVersion()}/${phoneNumberId}/messages`, {
+      method: "POST",
+      headers: { "content-type": "application/json", Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        status: "read",
+        message_id: incomingMessageId,
+        typing_indicator: { type: "text" },
+      }),
+    });
+  } catch (e) {
+    console.warn("[wa] markReadAndTyping failed", e);
+  }
+}
+
 export async function sendWhatsAppMessage(
   phoneNumberId: string,
   accessToken: string,
