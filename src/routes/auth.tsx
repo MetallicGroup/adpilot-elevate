@@ -156,12 +156,7 @@ function AuthPage() {
           }}
         />
         <Link to="/" className="relative z-10 flex items-center gap-2.5 font-bold tracking-tight">
-          <span
-            className="grid h-9 w-9 place-items-center rounded-xl"
-            style={{ background: "var(--gradient-primary)", boxShadow: "var(--shadow-glow)" }}
-          >
-            <Sparkles className="h-4.5 w-4.5 text-white" />
-          </span>
+          <img src="/adpilot-icon.png" alt="AdPilot" className="h-9 w-9 rounded-xl object-contain" />
           AdPilot
         </Link>
 

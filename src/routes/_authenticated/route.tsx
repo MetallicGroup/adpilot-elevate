@@ -38,12 +38,7 @@ function DesktopSidebar() {
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-[248px] flex-col justify-between border-r border-white/[0.06] bg-black/25 px-4 py-6 backdrop-blur-xl lg:flex">
       <div>
         <Link to="/dashboard" className="mb-8 flex items-center gap-2.5 px-2 font-bold tracking-tight">
-          <span
-            className="grid h-9 w-9 place-items-center rounded-xl"
-            style={{ background: "var(--gradient-primary)", boxShadow: "var(--shadow-glow)" }}
-          >
-            <Sparkles className="h-4 w-4 text-white" />
-          </span>
+          <img src="/adpilot-icon.png" alt="AdPilot" className="h-9 w-9 rounded-xl object-contain" />
           AdPilot
         </Link>
 

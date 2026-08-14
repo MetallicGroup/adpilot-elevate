@@ -121,7 +121,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
               "@id": "https://adpilot.ro/#organization",
               name: "AdPilot",
               url: "https://adpilot.ro",
-              logo: `https://adpilot.ro${logoAsset.url}`,
+              logo: "https://www.adpilot.ro/adpilot-logo.png",
               email: "support@adpilot.ro",
               sameAs: ["https://www.adpilot.ro"],
             },

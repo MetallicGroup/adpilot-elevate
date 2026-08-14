@@ -63,9 +63,7 @@ export function AppHeader() {
     <header className="sticky top-0 z-40 border-b border-border/40 bg-background/70 backdrop-blur-2xl backdrop-saturate-150">
       <div className="max-w-7xl mx-auto px-4 md:px-6 h-14 flex items-center gap-3">
         <Link to="/dashboard" className="flex items-center gap-2 font-semibold text-sm">
-          <span className="w-7 h-7 rounded-lg flex items-center justify-center text-white shrink-0" style={{ background: "var(--gradient-primary)" }}>
-            <Sparkles className="w-4 h-4" />
-          </span>
+          <img src="/adpilot-icon.png" alt="AdPilot" className="w-7 h-7 rounded-lg object-contain shrink-0" />
           <span className="hidden sm:inline">AdPilot</span>
         </Link>
 
