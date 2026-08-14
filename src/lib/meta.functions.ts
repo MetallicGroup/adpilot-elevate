@@ -52,8 +52,8 @@ export const resyncMetaConnection = createServerFn({ method: "POST" })
       ad_account_id: a.account_id,
       account_name: a.name ?? null,
       currency: a.currency ?? null,
-      timezone_name: a.timezone_name ?? null,
-      status: a.account_status ?? null,
+      timezone: a.timezone_name ?? null,
+      status: String(a.account_status ?? ""),
       is_active: selectedAd?.ad_account_id
         ? selectedAd.ad_account_id === a.account_id
         : fallbackAdAccountId === a.account_id,
@@ -61,7 +61,7 @@ export const resyncMetaConnection = createServerFn({ method: "POST" })
     if (adRows.length) {
       await supabaseAdmin
         .from("meta_ad_accounts")
-        .upsert(adRows, { onConflict: "connection_id,ad_account_id" });
+        .upsert(adRows, { onConflict: "user_id,ad_account_id" });
     }
 
     const pages = await fetchPages(conn.access_token);

@@ -947,8 +947,8 @@ export type Database = {
           id: string
           is_active: boolean
           pixel_id: string | null
-          status: number | null
-          timezone_name: string | null
+          status: string
+          timezone: string | null
           updated_at: string
           user_id: string
         }
@@ -961,8 +961,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           pixel_id?: string | null
-          status?: number | null
-          timezone_name?: string | null
+          status?: string
+          timezone?: string | null
           updated_at?: string
           user_id: string
         }
@@ -975,8 +975,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           pixel_id?: string | null
-          status?: number | null
-          timezone_name?: string | null
+          status?: string
+          timezone?: string | null
           updated_at?: string
           user_id?: string
         }
