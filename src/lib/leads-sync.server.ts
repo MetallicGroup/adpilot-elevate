@@ -36,6 +36,20 @@ export async function syncMetaLeadsForUser(
     .eq("is_active", true);
   if (!pages?.length) return result;
 
+  // Notificare WhatsApp la lead NOU: central number → telefonul userului.
+  // Doar pentru lead-uri proaspete (fereastră), ca să nu-l inundăm la un backfill.
+  const { getCentralWhatsApp, sendWhatsAppMessage } = await import("./whatsapp.server");
+  const central = getCentralWhatsApp();
+  const { data: waConn } = await supabaseAdmin
+    .from("whatsapp_connections")
+    .select("id, user_phone")
+    .eq("user_id", userId)
+    .eq("status", "active")
+    .maybeSingle();
+  const notifyPhone =
+    central && waConn?.user_phone ? waConn.user_phone.replace(/\D/g, "") : null;
+  const LEAD_FRESH_MS = 3 * 60 * 60 * 1000;
+
   for (const p of pages) {
     if (!p.page_access_token) continue;
     result.pages++;
@@ -92,14 +106,16 @@ export async function syncMetaLeadsForUser(
             }
 
             let campaign_id: string | null = null;
+            let campaignName: string | null = null;
             if (row.ad_id) {
               const { data: camp } = await supabaseAdmin
                 .from("campaigns")
-                .select("id")
+                .select("id, name")
                 .eq("user_id", userId)
                 .eq("meta_ad_id", row.ad_id)
                 .maybeSingle();
               campaign_id = camp?.id ?? null;
+              campaignName = camp?.name ?? null;
             }
 
             const mapped = mapMetaLeadFields(row.field_data || []);
@@ -127,6 +143,43 @@ export async function syncMetaLeadsForUser(
               }
             } else {
               result.inserted++;
+              // Notifică userul pe WhatsApp — doar lead-uri proaspete (nu backfill vechi).
+              const createdMs = row.created_time
+                ? new Date(row.created_time).getTime()
+                : Date.now();
+              if (notifyPhone && central && Date.now() - createdMs < LEAD_FRESH_MS) {
+                const lines = [
+                  "🎯 *Lead nou!*",
+                  mapped.full_name ? `👤 *${mapped.full_name}*` : "",
+                  mapped.phone ? `📞 ${mapped.phone}` : "",
+                  mapped.email ? `✉️ ${mapped.email}` : "",
+                  mapped.message ? `💬 ${mapped.message}` : "",
+                  campaignName ? `📣 _${campaignName}_` : "",
+                  "",
+                  "Scrie-mi *lead-uri* ca să le vezi pe toate. 📋",
+                ]
+                  .filter(Boolean)
+                  .join("\n");
+                try {
+                  const { id: waId } = await sendWhatsAppMessage(
+                    central.phoneNumberId,
+                    central.accessToken,
+                    notifyPhone,
+                    { type: "text", text: lines },
+                  );
+                  await supabaseAdmin.from("whatsapp_messages").insert({
+                    user_id: userId,
+                    connection_id: waConn?.id ?? null,
+                    wa_message_id: waId,
+                    direction: "out",
+                    msg_type: "text",
+                    text: lines,
+                    meta: { kind: "lead_notify" },
+                  });
+                } catch (e) {
+                  console.error("[leads-sync] lead notify failed", e);
+                }
+              }
             }
           }
           next = j?.paging?.next ?? null;
