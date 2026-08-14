@@ -43,20 +43,48 @@ const STANDARD_LEAD_FIELDS = new Set([
   "phone",
 ]);
 
+/** Meta transformă labelul întrebării în slug: lowercase + runuri de caractere
+ * ne-alfanumerice (inclusiv diacritice) → „_". Reproducem asta ca să potrivim
+ * un câmp Meta cu întrebarea originală salvată în campanie. */
+function metaSlug(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, "_");
+}
+
 /**
  * Extrage întrebările custom din formular cu răspunsurile lor (tot ce NU e
- * nume/telefon/email). Numele câmpului de la Meta e „slug"-ul întrebării
- * (ex. „ce_serviciu_doriti") — îl umanizăm pentru afișare.
+ * nume/telefon/email). Dacă avem întrebările salvate în campanie
+ * (`storedQuestions`), folosim labelul ORIGINAL (cu diacritice) și rezolvăm
+ * răspunsurile grilă `option_N` → textul real al opțiunii. Altfel, umanizăm
+ * slug-ul de la Meta ca fallback.
  */
 export function extractLeadQuestions(
   field_data: MetaLeadField[],
+  storedQuestions?: Array<{ label: string; options?: string[] }> | null,
 ): Array<{ q: string; a: string }> {
+  const bySlug = new Map<string, { label: string; options?: string[] }>();
+  for (const sq of storedQuestions ?? []) {
+    if (sq?.label) bySlug.set(metaSlug(sq.label), sq);
+  }
   return (field_data ?? [])
     .filter((f) => f.name && !STANDARD_LEAD_FIELDS.has(f.name.toLowerCase()))
     .map((f) => {
-      const a = (f.values ?? []).map((v) => String(v).trim()).filter(Boolean).join(", ");
-      const raw = (f.name ?? "").replace(/_/g, " ").trim();
-      const q = raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : "Întrebare";
+      const stored = f.name ? bySlug.get(f.name.toLowerCase()) : undefined;
+      const rawSlug = (f.name ?? "").replace(/_/g, " ").trim();
+      const q =
+        stored?.label ??
+        (rawSlug ? rawSlug.charAt(0).toUpperCase() + rawSlug.slice(1) : "Întrebare");
+      const a = (f.values ?? [])
+        .map((v) => {
+          const val = String(v).trim();
+          const m = /^option_(\d+)$/i.exec(val);
+          if (m && stored?.options) {
+            const idx = parseInt(m[1], 10) - 1;
+            if (idx >= 0 && idx < stored.options.length) return stored.options[idx];
+          }
+          return val;
+        })
+        .filter(Boolean)
+        .join(", ");
       return { q, a };
     })
     .filter((x) => x.a);

@@ -107,15 +107,17 @@ export async function syncMetaLeadsForUser(
 
             let campaign_id: string | null = null;
             let campaignName: string | null = null;
+            let storedQuestions: Array<{ label: string; options?: string[] }> | null = null;
             if (row.ad_id) {
               const { data: camp } = await supabaseAdmin
                 .from("campaigns")
-                .select("id, name")
+                .select("id, name, lead_form")
                 .eq("user_id", userId)
                 .eq("meta_ad_id", row.ad_id)
                 .maybeSingle();
               campaign_id = camp?.id ?? null;
               campaignName = camp?.name ?? null;
+              storedQuestions = (camp?.lead_form as any)?.custom_questions ?? null;
             }
 
             const mapped = mapMetaLeadFields(row.field_data || []);
@@ -148,7 +150,7 @@ export async function syncMetaLeadsForUser(
                 ? new Date(row.created_time).getTime()
                 : Date.now();
               if (notifyPhone && central && Date.now() - createdMs < LEAD_FRESH_MS) {
-                const questions = extractLeadQuestions(row.field_data || []);
+                const questions = extractLeadQuestions(row.field_data || [], storedQuestions);
                 const lines = [
                   "🎯 *Lead nou!*",
                   mapped.full_name ? `👤 *${mapped.full_name}*` : "",
