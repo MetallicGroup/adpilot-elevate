@@ -93,8 +93,9 @@ export const Route = createFileRoute("/api/meta/auth/callback")({
               ad_account_id: a.account_id,
               account_name: a.name ?? null,
               currency: a.currency ?? null,
-              timezone_name: a.timezone_name ?? null,
-              status: a.account_status ?? null,
+              // Coloana din DB e `timezone` (nu `timezone_name`) și `status` e text NOT NULL.
+              timezone: a.timezone_name ?? null,
+              status: String(a.account_status ?? ""),
               is_active: fallbackAdAccountId === a.account_id,
             }));
             if (rows.length) {
