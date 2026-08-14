@@ -42,7 +42,7 @@ Capacități:
 - Poți porni/opri/pune pe pauză campanii (\`pause_campaign\`, \`resume_campaign\`).
 - Poți modifica bugetul zilnic (\`update_budget\`).
 - Poți genera copy nou (headline + text + CTA) cu \`generate_copy\` — folosește emoji-uri și subtexte clare.
-- Poți crea o campanie complet nouă cu \`create_campaign\` — necesită o imagine trimisă de user pe WhatsApp + buget + descrierea ofertei. Confirmă mereu cu user-ul DETALIILE (nume, buget, copy) înainte să apelezi tool-ul. Dacă lipsește permisiunea pages_manage_ads (acum parte din Marketing API), campaniile pentru clienți potențiali se lansează automat ca "Sună acum" folosind numărul de telefon salvat.
+- Poți crea o campanie complet nouă cu \`create_campaign\` — 4 obiective: *vânzări* (sales, magazin/produs, optimizat pe cumpărături cu Pixel), *clienți potențiali* (leads, formular), *apeluri* (calls, „Sună acum"), *trafic* (traffic). Necesită o imagine sau clip trimis de user pe WhatsApp + buget + descrierea ofertei. Confirmă mereu cu user-ul DETALIILE (obiectiv, nume, buget, copy) înainte să apelezi tool-ul. Dacă lipsește permisiunea pages_manage_ads (acum parte din Marketing API), campaniile pentru clienți potențiali se lansează automat ca "Sună acum" folosind numărul de telefon salvat.
 - Poți reîncerca publicarea ultimului draft eșuat cu \`retry_last_campaign\` când userul spune „încearcă iar”.
 - Poți lista lead-urile recente cu \`list_recent_leads\`.
 - Poți crea o pagină de prezentare (landing page) direct din WhatsApp cu \`create_landing_page\`, pentru obiectivele: programări, clienți potențiali sau apeluri. Întreabă scurt 3 lucruri (numele afacerii, serviciul promovat, orașul — plus telefonul dacă e „apeluri"), apoi apelează tool-ul și trimite-i userului link-ul public rezultat. Nu cere alte detalii tehnice — textele le scrie AI-ul automat.
@@ -72,9 +72,11 @@ Reguli importante:
 - Dacă Meta returnează o eroare despre „persoana sau organizația promovată”, „beneficiary”, „payer” sau DSA, NU trimite mesajul generic Meta și NU-l trimite în setările Paginii. Întreabă direct: „Care este numele exact al firmei sau persoanei promovate?” și așteaptă răspunsul.
 
 FLOW OBLIGATORIU pentru CAMPANII NOI (înainte să apelezi create_campaign):
-1. Întreabă userul ce vrea să obțină din reclamă:
-   a) „Clienți potențiali" (lead form direct pe Facebook/Instagram — userul nu părăsește app-ul) → objective="leads"
-   b) „Trafic pe site" (trimite oamenii pe website-ul lui) → objective="traffic" (în acest caz cere URL-ul site-ului)
+1. Întreabă userul CE VREA SĂ OBȚINĂ din reclamă — 4 variante:
+   a) 🛒 „Vânzări online" (are magazin/site cu produse) → objective="sales". Cere-i LINK-ul de promovat: tot magazinul, o categorie, sau un singur produs — orice URL (ex: pagina categoriei „garduri" sau a unui produs). Pixel-ul Meta e detectat automat de pe cont; dacă nu există, campania merge ca trafic și îi spui să instaleze Pixel-ul ca să urmărim vânzările.
+   b) 📝 „Clienți potențiali" (formular direct pe Facebook/Instagram, userul nu părăsește app-ul) → objective="leads".
+   c) 📞 „Apeluri" (clienții îl sună direct) → objective="calls". Cere-i NUMĂRUL de telefon pe care vrea să primească apelurile și trimite-l în câmpul call_phone. Butonul „Sună acum" formează acel număr.
+   d) 🌐 „Trafic pe site" (doar vizite, fără optimizare pe vânzări) → objective="traffic" (cere URL-ul site-ului).
 2. Dacă a ales „clienți potențiali", întreabă-l dacă vrea să afle DOAR nume + telefon SAU și alte informații (ex: oraș, serviciu dorit, buget, dată preferată).
 3. Dacă vrea informații suplimentare, întreabă-l CONCRET ce vrea să afle. Pentru fiecare info propune userului dacă e mai bine cu „răspuns scurt" (user tastează) sau „grilă" (user alege dintr-o listă de opțiuni). Sugerează tu opțiunile când e logic (ex: pentru „serviciu" propune lista de servicii din contextul lui).
 4. Înainte să trimiți întrebările la Meta, REFORMULEAZĂ-le frumos și fără greșeli gramaticale, scurte (max 90 caractere fiecare), clare, profesioniste. Userul nu trebuie să vadă întrebări brute cu typos.
@@ -334,14 +336,16 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
 
     create_campaign: tool({
       description:
-          "Creează și lansează o campanie Meta completă (Lead Generation SAU Traffic). Necesită imagine (latestMedia). Cere mereu CONFIRMAREA user-ului înainte să apelezi (inclusiv obiectiv, locație, întrebări).",
+          "Creează și lansează o campanie Meta completă (Vânzări / Lead Generation / Apeluri / Traffic). Necesită imagine sau video (latestMedia). Cere mereu CONFIRMAREA user-ului înainte să apelezi (inclusiv obiectiv, locație, întrebări).",
       inputSchema: z.object({
         name: z.string().max(80),
         daily_budget: z.number().positive().describe("Buget zilnic în RON/valuta cont"),
           objective: z
-            .enum(["leads", "traffic"])
+            .enum(["leads", "sales", "calls", "traffic"])
             .default("leads")
-            .describe("'leads' = formular pe Facebook/IG, 'traffic' = trimite pe site (necesită landing_url)"),
+            .describe(
+              "'leads' = formular pe Facebook/IG (nume+telefon) · 'sales' = VÂNZĂRI online: trimite pe magazin/categorie/produs și optimizează pe cumpărături (necesită landing_url; Pixel-ul Meta e detectat automat de pe cont) · 'calls' = APELURI 'Sună acum', clienții te sună direct (necesită call_phone) · 'traffic' = doar trafic pe site (necesită landing_url)",
+            ),
         headline: z.string().max(40),
         primary_text: z.string().max(500),
         description: z.string().max(50).optional(),
@@ -350,7 +354,12 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
             .string()
             .url()
             .optional()
-            .describe("Obligatoriu doar pentru objective='traffic'. Pentru 'leads' lasă gol."),
+            .describe("Obligatoriu pentru 'sales' și 'traffic' (URL magazin/categorie/produs sau site). Pentru 'leads' și 'calls' lasă gol."),
+          call_phone: z
+            .string()
+            .max(30)
+            .optional()
+            .describe("Doar pentru objective='calls': numărul pe care vrei să primești apelurile (ex '0722334455'). Butonul 'Sună acum' formează acest număr."),
           custom_questions: z
             .array(
               z.object({
@@ -389,9 +398,34 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
         if (!ctx.latestMedia) {
           return { error: "Userul nu a trimis imagine. Cere-i să trimită o poză pentru reclamă." };
         }
-          if (args.objective === "traffic" && (!args.landing_url || !/^https?:\/\//i.test(args.landing_url))) {
-            return { error: "Pentru objective='traffic' ai nevoie de landing_url valid (https://...). Cere-l userului." };
+        // Vânzări și trafic au nevoie de un URL valid (magazin/categorie/produs/site).
+        if (
+          (args.objective === "sales" || args.objective === "traffic") &&
+          (!args.landing_url || !/^https?:\/\//i.test(args.landing_url))
+        ) {
+          return {
+            error: `Pentru '${args.objective}' am nevoie de link-ul ${
+              args.objective === "sales" ? "magazinului/categoriei/produsului" : "site-ului"
+            } (https://...). Cere-l userului.`,
+          };
+        }
+        // Apeluri: campanie 'Sună acum' — o transformăm în trafic către tel:<număr>.
+        if (args.objective === "calls") {
+          const raw = (args.call_phone || "").replace(/[^\d+]/g, "");
+          if (!raw) {
+            return {
+              error:
+                "Pentru campania de apeluri am nevoie de numărul pe care vrei să primești apelurile. Cere-l userului.",
+            };
           }
+          const tel = raw.startsWith("+") ? raw : `+40${raw.replace(/^0/, "")}`;
+          return await createMetaCampaignFromAgent(supabaseAdmin, ctx, {
+            ...args,
+            objective: "traffic",
+            landing_url: `tel:${tel}`,
+            cta: "Call Now",
+          });
+        }
         return await createMetaCampaignFromAgent(supabaseAdmin, ctx, args);
       },
     }),
@@ -999,7 +1033,7 @@ async function publishCampaignToMeta(
       age_max: number;
       beneficiary?: string;
     };
-    objective: "leads" | "traffic";
+    objective: "leads" | "traffic" | "sales";
     cityKeys: Array<{ key: string; radius?: number }>;
     userId: string;
   },
@@ -1009,10 +1043,11 @@ async function publishCampaignToMeta(
 
   try {
     let form: { id: string } | null = null;
-    let objective: "leads" | "traffic" = input.objective;
+    let objective: "leads" | "traffic" | "sales" = input.objective;
     let cta = input.args.cta;
     let landing_url = input.args.landing_url ?? "https://adpilot.ro";
     let fallbackNote = "";
+    let pixel_id: string | undefined;
 
     if (input.objective === "leads") {
       try {
@@ -1056,12 +1091,29 @@ async function publishCampaignToMeta(
       }
     }
 
+    // Vânzări: detectăm automat Pixel-ul Meta de pe cont. Cu pixel → optimizăm pe
+    // achiziții (OUTCOME_SALES, stats corecte). Fără pixel → cădem pe trafic spre
+    // site și îi spunem userului să-l instaleze.
+    if (objective === "sales") {
+      const { findExistingPixel } = await import("./meta-publish.server");
+      const pixel = await findExistingPixel(input.adAccountId, input.accessToken);
+      if (pixel) {
+        pixel_id = pixel.id;
+        await supabaseAdmin.from("campaigns").update({ pixel_id: pixel.id }).eq("id", input.campaignRowId);
+      } else {
+        objective = "traffic";
+        fallbackNote =
+          "n-am găsit Pixel Meta pe cont — am făcut campanie de *trafic* spre site. Instalează Pixel-ul Meta pe site ca să optimizăm pe vânzări reale";
+        await supabaseAdmin.from("campaigns").update({ objective: "LINK_CLICKS" }).eq("id", input.campaignRowId);
+      }
+    }
+
     const metaCamp = await createCampaign(
       input.adAccountId,
       input.accessToken,
       input.args.name,
       "ACTIVE",
-      objective === "traffic" ? "OUTCOME_TRAFFIC" : "OUTCOME_LEADS",
+      objective === "traffic" ? "OUTCOME_TRAFFIC" : objective === "sales" ? "OUTCOME_SALES" : "OUTCOME_LEADS",
     );
     await supabaseAdmin.from("campaigns").update({ meta_campaign_id: metaCamp.id }).eq("id", input.campaignRowId);
     // EU DSA: numele entității promovate (beneficiar/plătitor) — luat automat din Pagina Facebook.
@@ -1086,6 +1138,7 @@ async function publishCampaignToMeta(
         },
         status: "ACTIVE",
         objective,
+        pixel_id,
       });
 
     let adset: { id: string };
@@ -1159,7 +1212,11 @@ async function publishCampaignToMeta(
         meta_ad_id: ad.id,
         meta_lead_form_id: form?.id ?? null,
         status: "active",
-        ...(objective === "traffic" ? { objective: "LINK_CLICKS", lead_form: null } : {}),
+        ...(objective === "sales"
+          ? { objective: "CONVERSIONS", lead_form: null }
+          : objective === "traffic"
+            ? { objective: "LINK_CLICKS", lead_form: null }
+            : {}),
       })
       .eq("id", input.campaignRowId);
     return {
@@ -1167,9 +1224,11 @@ async function publishCampaignToMeta(
       campaign_id: input.campaignRowId,
       meta_campaign_id: metaCamp.id,
       message:
-        objective === "traffic"
-          ? `Campanie LIVE (Sună acum) ✅${fallbackNote ? " — " + fallbackNote : ""}`
-          : "Campanie LIVE (lead form) ✅",
+        objective === "sales"
+          ? "Campanie de *vânzări* LIVE ✅ — optimizată pe cumpărături, cu Pixel."
+          : objective === "traffic"
+            ? `Campanie LIVE ✅${fallbackNote ? " — " + fallbackNote : ""}`
+            : "Campanie LIVE (lead form) ✅",
     };
   } catch (e: any) {
     const msg = e?.message ?? "Publish failed";
@@ -1190,7 +1249,7 @@ async function createMetaCampaignFromAgent(
   args: {
     name: string;
     daily_budget: number;
-    objective?: "leads" | "traffic";
+    objective?: "leads" | "traffic" | "sales" | "calls";
     headline: string;
     primary_text: string;
     description?: string;
@@ -1205,7 +1264,9 @@ async function createMetaCampaignFromAgent(
     beneficiary?: string;
   },
 ) {
-  const objective: "leads" | "traffic" = args.objective ?? "leads";
+  // 'calls' e o campanie de trafic către tel:<număr> (transformată deja în tool).
+  const objective: "leads" | "traffic" | "sales" =
+    args.objective === "calls" ? "traffic" : (args.objective ?? "leads");
   // Resolve connection / ad account / page
   const { data: conn } = await supabaseAdmin
     .from("meta_connections")
@@ -1267,7 +1328,7 @@ async function createMetaCampaignFromAgent(
       user_id: ctx.userId,
       name: args.name,
       platform: "meta",
-      objective: objective === "traffic" ? "LINK_CLICKS" : "LEAD_GENERATION",
+      objective: objective === "traffic" ? "LINK_CLICKS" : objective === "sales" ? "CONVERSIONS" : "LEAD_GENERATION",
       status: "draft",
       budget: args.daily_budget,
       budget_mode: "BUDGET_MODE_DAY",
