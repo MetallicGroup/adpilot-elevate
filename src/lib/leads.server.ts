@@ -33,6 +33,35 @@ export async function fetchMetaLead(leadgenId: string, pageAccessToken: string):
  * Meta field names are typically: full_name, first_name, last_name, email,
  * phone_number, city, company_name, custom_question_*.
  */
+/** Câmpurile standard (nume/telefon/email) — le excludem din întrebările custom. */
+const STANDARD_LEAD_FIELDS = new Set([
+  "full_name",
+  "first_name",
+  "last_name",
+  "email",
+  "phone_number",
+  "phone",
+]);
+
+/**
+ * Extrage întrebările custom din formular cu răspunsurile lor (tot ce NU e
+ * nume/telefon/email). Numele câmpului de la Meta e „slug"-ul întrebării
+ * (ex. „ce_serviciu_doriti") — îl umanizăm pentru afișare.
+ */
+export function extractLeadQuestions(
+  field_data: MetaLeadField[],
+): Array<{ q: string; a: string }> {
+  return (field_data ?? [])
+    .filter((f) => f.name && !STANDARD_LEAD_FIELDS.has(f.name.toLowerCase()))
+    .map((f) => {
+      const a = (f.values ?? []).map((v) => String(v).trim()).filter(Boolean).join(", ");
+      const raw = (f.name ?? "").replace(/_/g, " ").trim();
+      const q = raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : "Întrebare";
+      return { q, a };
+    })
+    .filter((x) => x.a);
+}
+
 export function mapMetaLeadFields(field_data: MetaLeadField[]) {
   const get = (...keys: string[]) => {
     for (const k of keys) {

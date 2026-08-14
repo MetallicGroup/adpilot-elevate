@@ -8,7 +8,7 @@
  * Dedupe is guaranteed by the unique index on (platform, external_lead_id).
  */
 import { metaApiVersion } from "./meta.server";
-import { mapMetaLeadFields } from "./leads.server";
+import { mapMetaLeadFields, extractLeadQuestions } from "./leads.server";
 
 export type SyncResult = {
   inserted: number;
@@ -148,13 +148,16 @@ export async function syncMetaLeadsForUser(
                 ? new Date(row.created_time).getTime()
                 : Date.now();
               if (notifyPhone && central && Date.now() - createdMs < LEAD_FRESH_MS) {
+                const questions = extractLeadQuestions(row.field_data || []);
                 const lines = [
                   "🎯 *Lead nou!*",
                   mapped.full_name ? `👤 *${mapped.full_name}*` : "",
                   mapped.phone ? `📞 ${mapped.phone}` : "",
                   mapped.email ? `✉️ ${mapped.email}` : "",
-                  mapped.message ? `💬 ${mapped.message}` : "",
                   campaignName ? `📣 _${campaignName}_` : "",
+                  ...(questions.length
+                    ? ["", "*Răspunsuri formular:*", ...questions.map((x) => `• ${x.q}: *${x.a}*`)]
+                    : []),
                   "",
                   "Scrie-mi *lead-uri* ca să le vezi pe toate. 📋",
                 ]
