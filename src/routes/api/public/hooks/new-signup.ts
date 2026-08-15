@@ -43,6 +43,18 @@ export const Route = createFileRoute("/api/public/hooks/new-signup")({
         const { notifyAdminNewSignup } = await import("@/lib/whatsapp/admin-alerts.server");
         await notifyAdminNewSignup({ email, name, provider, goal: body.onboarding_goal ?? null });
 
+        // TikTok Events API — conversie „CompleteRegistration" pentru reclamele AdPilot pe TikTok.
+        try {
+          const { sendTikTokEvent } = await import("@/lib/tiktok-events.server");
+          await sendTikTokEvent("CompleteRegistration", {
+            eventId: `reg_${userId}`,
+            url: "https://www.adpilot.ro/auth",
+            user: { email, externalId: userId },
+          });
+        } catch (e) {
+          console.error("[new-signup] tiktok event failed", e);
+        }
+
         return Response.json({ ok: true });
       },
     },

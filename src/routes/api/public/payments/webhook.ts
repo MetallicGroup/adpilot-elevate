@@ -104,6 +104,31 @@ async function handleSubscriptionCreated(subscription: any, env: StripeEnv) {
 
   await verifyCardWithOneLeu(subscription, env);
   await notifyOwnerOfSubscription(subscription, env, userId, priceId, item);
+
+  // TikTok Events API — conversie „Purchase" (abonament nou) pentru reclamele AdPilot pe TikTok.
+  try {
+    const { sendTikTokEvent } = await import("@/lib/tiktok-events.server");
+    const unit = item?.price?.unit_amount;
+    const value = typeof unit === "number" ? unit / 100 : undefined;
+    const currency = (item?.price?.currency ?? "ron").toUpperCase();
+    let email: string | null = null;
+    try {
+      const { data } = await sb.auth.admin.getUserById(userId);
+      email = data?.user?.email ?? null;
+    } catch {
+      /* ignore */
+    }
+    await sendTikTokEvent("Purchase", {
+      eventId: `sub_${subscription.id}`,
+      url: "https://www.adpilot.ro/pricing",
+      user: { email, externalId: userId },
+      value,
+      currency,
+      contentId: priceId,
+    });
+  } catch (e) {
+    console.error("[webhook] tiktok purchase event failed", e);
+  }
 }
 
 /** WhatsApp "cha-ching" to the AdPilot owner on every new subscription. */
