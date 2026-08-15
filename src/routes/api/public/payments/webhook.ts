@@ -118,14 +118,15 @@ async function handleSubscriptionCreated(subscription: any, env: StripeEnv) {
     } catch {
       /* ignore */
     }
-    await sendTikTokEvent("Purchase", {
-      eventId: `sub_${subscription.id}`,
-      url: "https://www.adpilot.ro/pricing",
-      user: { email, externalId: userId },
-      value,
-      currency,
-      contentId: priceId,
-    });
+    const tkUser = { email, externalId: userId };
+    const tkBase = { url: "https://www.adpilot.ro/pricing", user: tkUser, value, currency, contentId: priceId };
+    // Trial nou (au 3 zile gratuit) → StartTrial; plus Subscribe + Purchase pentru
+    // acoperirea completă a funnel-ului cerut de TikTok pentru vertical-ul de abonamente.
+    if (subscription.trial_end) {
+      await sendTikTokEvent("StartTrial", { ...tkBase, eventId: `trial_${subscription.id}` });
+    }
+    await sendTikTokEvent("Subscribe", { ...tkBase, eventId: `subscribe_${subscription.id}` });
+    await sendTikTokEvent("Purchase", { ...tkBase, eventId: `sub_${subscription.id}` });
   } catch (e) {
     console.error("[webhook] tiktok purchase event failed", e);
   }

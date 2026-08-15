@@ -12,6 +12,15 @@ export function StripeEmbeddedCheckout({ priceId, returnUrl }: Props) {
   const createSession = useServerFn(createCheckoutSession);
 
   const fetchClientSecret = async (): Promise<string> => {
+    // TikTok Pixel: userul a deschis checkout-ul (funnel — InitiateCheckout).
+    try {
+      (window as unknown as { ttq?: { track?: (e: string, p?: unknown) => void } }).ttq?.track?.(
+        "InitiateCheckout",
+        { content_id: priceId, content_type: "product" },
+      );
+    } catch {
+      /* ignore */
+    }
     const result = await createSession({
       data: {
         priceId,
