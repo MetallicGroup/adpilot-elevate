@@ -3,8 +3,6 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
 import { resolvePostAuthPath } from "@/lib/post-auth";
-import { supabase } from "@/integrations/supabase/client";
-import { tkCompleteRegistration } from "@/lib/tiktok-pixel";
 
 export const Route = createFileRoute("/auth/verified")({
   ssr: false,
@@ -15,15 +13,6 @@ export const Route = createFileRoute("/auth/verified")({
 function VerifiedPage() {
   const navigate = useNavigate();
   const [dest, setDest] = useState<"/dashboard" | "/onboarding">("/onboarding");
-
-  useEffect(() => {
-    // TikTok Pixel: CompleteRegistration client-side (email confirmat = cont finalizat).
-    // event_id = reg_<userId>, identic cu cel server-side → TikTok le deduplică.
-    supabase.auth.getUser().then(({ data }) => {
-      const u = data?.user;
-      if (u) void tkCompleteRegistration({ userId: u.id, email: u.email ?? null });
-    });
-  }, []);
 
   useEffect(() => {
     let cancelled = false;

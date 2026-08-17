@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { signInWithProvider, translateAuthError, waitForClientSession } from "@/lib/auth";
 import { resolvePostAuthPath } from "@/lib/post-auth";
-import { tkClickButton } from "@/lib/tiktok-pixel";
+import { tkClickButton, tkCompleteRegistration } from "@/lib/tiktok-pixel";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2, MessageCircle, Sparkles } from "lucide-react";
 
@@ -97,6 +97,12 @@ function AuthPage() {
           toast.error("Există deja un cont cu acest email. Loghează-te sau resetează parola.");
           setMode("signin");
           return;
+        }
+
+        // TikTok: CompleteRegistration EXACT la crearea contului (click pe Sign up),
+        // NU la confirmarea emailului. event_id = reg_<userId> → dedup cu server-side.
+        if (data.user) {
+          void tkCompleteRegistration({ userId: data.user.id, email: data.user.email ?? email });
         }
 
         if (!data.session) {
