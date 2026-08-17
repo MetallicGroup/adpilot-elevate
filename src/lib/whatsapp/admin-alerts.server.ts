@@ -2,7 +2,7 @@
  * Admin WhatsApp alerts — go to the AdPilot owner's personal number.
  * Server-only.
  */
-import { sendWhatsAppMessage } from "./sendMessage";
+import { getCentralWhatsApp, sendWhatsAppMessage } from "@/lib/whatsapp.server";
 
 /** Owner number in E.164 digits (RO). Override with ADPILOT_ADMIN_WA_NUMBER. */
 export function getAdminWaNumber(): string {
@@ -16,7 +16,17 @@ export function getAdminWaNumber(): string {
 
 export async function sendAdminAlert(text: string): Promise<void> {
   try {
-    await sendWhatsAppMessage(getAdminWaNumber(), text);
+    // Folosim WhatsApp-ul CENTRAL configurat (ADPILOT_WA_*) — vechea cale citea
+    // variabile inexistente (WHATSAPP_TOKEN) și sărea alertele în tăcere.
+    const central = getCentralWhatsApp();
+    if (!central) {
+      console.warn("[admin-alert] WhatsApp central neconfigurat — alertă sărită");
+      return;
+    }
+    await sendWhatsAppMessage(central.phoneNumberId, central.accessToken, getAdminWaNumber(), {
+      type: "text",
+      text,
+    });
   } catch (e) {
     console.error("[admin-alert] send failed:", e);
   }
