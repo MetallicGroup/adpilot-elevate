@@ -65,6 +65,15 @@ function AuthCallbackPage() {
       session = session ?? (await waitForSessionHydration());
 
       if (session) {
+        // Securitate: scoatem code/token din URL (search + hash) ACUM — parametrii au
+        // fost deja citiți mai sus. Astfel niciun analytics (ex. pixelul TikTok, care
+        // atașează location.href la evenimente) nu poate trimite tokenul la un terț.
+        window.history.replaceState(
+          window.history.state,
+          document.title,
+          window.location.pathname,
+        );
+
         // Ruteză după tipul de link din email.
         if (type === "recovery") {
           if (!cancelled) navigate({ to: "/reset-password", replace: true });
