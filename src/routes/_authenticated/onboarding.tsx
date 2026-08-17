@@ -10,6 +10,7 @@ import { getStripeEnvironment } from "@/lib/stripe";
 import { useStripeCheckout } from "@/hooks/useStripeCheckout";
 import { toast } from "sonner";
 import { WhatsAppConnectionCard } from "@/components/whatsapp/WhatsAppConnectionCard";
+import { AdAccountGate } from "@/components/onboarding/AdAccountGate";
 import { GoalSetupStep } from "@/components/onboarding/goal/GoalSetupStep";
 
 type OnboardingSearch = { meta?: string; reason?: string; limited?: string };
@@ -66,6 +67,7 @@ function OnboardingPage() {
   const startOAuth = useServerFn(startMetaOAuth);
   const [status, setStatus] = useState<OnboardingStatus | null>(null);
   const [loading, setLoading] = useState(true);
+  const [adReady, setAdReady] = useState(false);
   const { openCheckout, closeCheckout, isOpen, checkoutElement } = useStripeCheckout();
 
   const reload = async () => {
@@ -126,8 +128,9 @@ function OnboardingPage() {
   }
 
   const step1Done = !!status?.hasMetaConnection;
-  const step2Done = !!status?.hasActiveSubscription;
-  const activeStep = !step1Done ? 1 : !step2Done ? 2 : 3;
+  const planDone = !!status?.hasActiveSubscription;
+  const step2Done = planDone; // pașii de mai jos (WhatsApp / obiectiv) rămân gated pe abonament
+  const activeStep = !step1Done ? 1 : !adReady ? 2 : !planDone ? 3 : 4;
 
   if (loading) {
     return (
@@ -160,11 +163,13 @@ function OnboardingPage() {
         <div className="mt-8 flex items-center gap-3 text-sm">
           <StepBadge n={1} done={step1Done} active={activeStep === 1} label="Conectează Meta" />
           <div className="flex-1 h-px bg-border" />
-          <StepBadge n={2} done={step2Done} active={activeStep === 2} label="Alege plan" />
+          <StepBadge n={2} done={adReady} active={activeStep === 2} label="Cont & card" />
           <div className="flex-1 h-px bg-border" />
-          <StepBadge n={3} done={false} active={activeStep === 3} label="WhatsApp (opțional)" />
+          <StepBadge n={3} done={planDone} active={activeStep === 3} label="Alege plan" />
           <div className="flex-1 h-px bg-border" />
-          <StepBadge n={4} done={false} active={activeStep === 3} label="Obiectivul tău" />
+          <StepBadge n={4} done={false} active={activeStep === 4} label="WhatsApp (opțional)" />
+          <div className="flex-1 h-px bg-border" />
+          <StepBadge n={5} done={false} active={activeStep === 4} label="Obiectivul tău" />
         </div>
 
         {/* Step 1: Meta */}
@@ -198,9 +203,12 @@ function OnboardingPage() {
           </div>
         </section>
 
-        {/* Step 2: Plan */}
+        {/* Step 2: Ad account + card gate */}
+        {step1Done && <AdAccountGate connected={step1Done} onReady={() => setAdReady(true)} />}
+
+        {/* Step 3: Plan — deblocat doar după ce contul de reclame + cardul sunt gata */}
         <section
-          className={`mt-5 card-floating p-7 transition-opacity ${!step1Done ? "opacity-40 pointer-events-none" : ""}`}
+          className={`mt-5 card-floating p-7 transition-opacity ${!step1Done || !adReady ? "opacity-40 pointer-events-none" : ""}`}
         >
           <div className="flex items-start gap-4">
             <div className="w-11 h-11 rounded-xl bg-primary/15 text-primary flex items-center justify-center shrink-0">
