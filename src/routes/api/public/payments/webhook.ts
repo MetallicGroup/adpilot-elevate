@@ -120,13 +120,12 @@ async function handleSubscriptionCreated(subscription: any, env: StripeEnv) {
     }
     const tkUser = { email, externalId: userId };
     const tkBase = { url: "https://www.adpilot.ro/pricing", user: tkUser, value, currency, contentId: priceId };
-    // Trial nou (au 3 zile gratuit) → StartTrial; plus Subscribe + Purchase pentru
-    // acoperirea completă a funnel-ului cerut de TikTok pentru vertical-ul de abonamente.
-    if (subscription.trial_end) {
-      await sendTikTokEvent("StartTrial", { ...tkBase, eventId: `trial_${subscription.id}` });
-    }
+    // DOAR evenimente STANDARD TikTok (optimizabile pentru reclame):
+    //   Subscribe = abonament nou, CompletePayment = plată.
+    // „Purchase"/„StartTrial" sunt nume Facebook — la TikTok devin evenimente
+    // custom și NU pot fi folosite ca eveniment de optimizare.
     await sendTikTokEvent("Subscribe", { ...tkBase, eventId: `subscribe_${subscription.id}` });
-    await sendTikTokEvent("Purchase", { ...tkBase, eventId: `sub_${subscription.id}` });
+    await sendTikTokEvent("CompletePayment", { ...tkBase, eventId: `pay_${subscription.id}` });
   } catch (e) {
     console.error("[webhook] tiktok purchase event failed", e);
   }
