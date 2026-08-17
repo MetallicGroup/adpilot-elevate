@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { resolvePostAuthPath } from "@/lib/post-auth";
 import { translateAuthError } from "@/lib/auth";
+import { tkCompleteRegistration } from "@/lib/tiktok-pixel";
 
 export const Route = createFileRoute("/auth/callback")({
   ssr: false,
@@ -82,6 +83,13 @@ function AuthCallbackPage() {
           : created;
         const isFirstSignIn = Math.abs(lastSignIn - created) < 15_000;
         const isOAuth = (user.app_metadata?.provider ?? "email") !== "email";
+
+        // TikTok: CompleteRegistration client-side pe flow-ul PKCE (link email fara
+        // parametrul `type` in URL) sau primul sign-in OAuth — cazurile care NU trec
+        // prin /auth/verified. event_id = reg_<userId> => dedup cu cel server-side.
+        if (isFirstSignIn) {
+          void tkCompleteRegistration({ userId: user.id, email: user.email ?? null });
+        }
 
         if (isOAuth && isFirstSignIn) {
           if (!cancelled) navigate({ to: "/auth/welcome", replace: true });
