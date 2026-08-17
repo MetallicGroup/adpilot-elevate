@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, Outlet, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,6 +34,13 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // `auth.tsx` e ruta părinte pentru /auth/confirm-email, /auth/callback etc.
+  // Fără Outlet, paginile copil nu se randau (se vedea form-ul de signup la URL-ul
+  // lor). Dacă e activă o rută copil, randăm Outlet-ul; altfel form-ul de auth.
+  const childActive = useRouterState({
+    select: (s) => s.matches[s.matches.length - 1]?.routeId !== "/auth",
+  });
 
   // Persist the objective picked on the homepage so the wizard can preselect it.
   useEffect(() => {
@@ -134,6 +141,8 @@ function AuthPage() {
   }
 
   const isSignup = mode === "signup";
+
+  if (childActive) return <Outlet />;
 
   return (
     <div className="grid min-h-screen lg:grid-cols-[1.05fr_.95fr]">
