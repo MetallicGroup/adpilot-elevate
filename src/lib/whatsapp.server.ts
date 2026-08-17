@@ -119,6 +119,48 @@ export async function sendWhatsAppMessage(
   return { id: id ?? "" };
 }
 
+/**
+ * Trimite un mesaj pe bază de TEMPLATE aprobat — merge și în afara ferestrei de
+ * 24h (spre deosebire de textul liber). Parametrii de body nu pot conține
+ * newline / spații multiple (le sanitizăm) și nu pot fi goi (fallback „—").
+ */
+export async function sendWhatsAppTemplate(
+  phoneNumberId: string,
+  accessToken: string,
+  toPhone: string,
+  templateName: string,
+  langCode: string,
+  bodyParams: string[],
+): Promise<{ id: string }> {
+  const url = `${GRAPH}/${metaApiVersion()}/${phoneNumberId}/messages`;
+  const parameters = bodyParams.map((p) => ({
+    type: "text",
+    text: (p ?? "").replace(/\s+/g, " ").trim().slice(0, 900) || "—",
+  }));
+  const body = {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to: toPhone.replace(/\D/g, ""),
+    type: "template",
+    template: {
+      name: templateName,
+      language: { code: langCode },
+      ...(parameters.length ? { components: [{ type: "body", parameters }] } : {}),
+    },
+  };
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "content-type": "application/json", Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify(body),
+  });
+  const json = await res.json();
+  if (!res.ok) {
+    const msg = json?.error?.error_user_msg || json?.error?.message || "WA template send failed";
+    throw new Error(`${msg} (${res.status})`);
+  }
+  return { id: json?.messages?.[0]?.id ?? "" };
+}
+
 export async function getWhatsAppMediaUrl(mediaId: string, accessToken: string): Promise<{ url: string; mime_type: string }> {
   const r = await fetch(`${GRAPH}/${metaApiVersion()}/${mediaId}`, {
     headers: { Authorization: `Bearer ${accessToken}` },

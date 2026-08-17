@@ -47,7 +47,7 @@ Capacități:
 - Poți lista lead-urile recente cu \`list_recent_leads\`.
 - Poți crea o pagină de prezentare (landing page) direct din WhatsApp cu \`create_landing_page\`, pentru obiectivele: programări, clienți potențiali sau apeluri. Întreabă scurt 3 lucruri (numele afacerii, serviciul promovat, orașul — plus telefonul dacă e „apeluri"), apoi apelează tool-ul și trimite-i userului link-ul public rezultat. Nu cere alte detalii tehnice — textele le scrie AI-ul automat.
 - Poți anula sau reactiva abonamentul AdPilot cu \`cancel_subscription\`. Dacă userul scrie orice legat de anulare/dezabonare/oprire abonament, cere o confirmare scurtă ("Confirmi anularea? Da/Nu") și apoi apelează tool-ul. Explică-i că păstrează accesul până la finalul perioadei deja plătite.
-- Poți escalada către echipa umană AdPilot cu \`request_human_support\`. Folosește-l când: userul cere explicit să vorbească cu un om, este nemulțumit/frustrat, ai încercat deja o soluție și problema persistă, sau e ceva ce tu nu poți rezolva (plăți blocate, cont Meta suspendat, erori repetate). ÎNTÂI întreabă-l scurt: „Vrei să te preia un coleg din echipă? Îmi confirmi numele și numărul de telefon" — apoi apelează tool-ul cu numele, telefonul și un rezumat clar al problemei. Confirmă-i după aceea că echipa îl contactează în cel mai scurt timp.
+- Poți escalada către echipa umană AdPilot cu \`request_human_support\`. Folosește-l când: userul cere explicit să vorbească cu un om, este nemulțumit/frustrat, ai încercat deja o soluție și problema persistă, sau e ceva ce tu nu poți rezolva (plăți blocate, cont Meta suspendat, erori repetate). ÎNTÂI întreabă-l scurt: „Vrei să te preia un coleg din echipă? Îmi confirmi numele și numărul de telefon" — apoi apelează tool-ul cu numele, telefonul și un rezumat clar al problemei. Dacă escaladarea vine după o eroare de la Meta (o campanie/acțiune care a eșuat), pune EROAREA EXACTĂ returnată de Meta în câmpul meta_error. Confirmă-i după aceea că echipa îl contactează în cel mai scurt timp.
 
 IMPORTANT despre lead-uri (datele de contact):
 - Userul cu care vorbești pe WhatsApp ESTE PROPRIETARUL contului și al lead-urilor. Lead-urile îi aparțin lui — au fost generate de campaniile lui Meta plătite din banii lui.
@@ -772,10 +772,18 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
       inputSchema: z.object({
         name: z.string().min(2).max(80).describe("Numele clientului"),
         phone: z.string().max(30).nullable().default(null).describe("Telefonul de contact"),
-        problem: z.string().min(5).max(600).describe("Rezumatul clar al problemei"),
+        problem: z.string().min(5).max(600).describe("Ce a scris/vrea clientul — rezumat clar al problemei"),
         urgency: z.enum(["normal", "urgent"]).default("normal"),
+        meta_error: z
+          .string()
+          .max(600)
+          .nullable()
+          .default(null)
+          .describe(
+            "Eroarea EXACTĂ primită de la Meta, dacă escaladarea vine după o campanie/acțiune eșuată. Lasă gol dacă nu există o eroare Meta.",
+          ),
       }),
-      execute: async ({ name, phone, problem, urgency }) => {
+      execute: async ({ name, phone, problem, urgency, meta_error }) => {
         try {
           const contactPhone = phone ?? ctx.toPhone ?? null;
           let email: string | null = null;
@@ -814,6 +822,7 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
             email,
             problem,
             urgency,
+            metaError: meta_error,
           });
 
           return { ok: true, ticket_id: ticket?.id ?? null };
