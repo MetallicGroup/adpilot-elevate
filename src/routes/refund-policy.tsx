@@ -38,7 +38,7 @@ export const Route = createFileRoute("/refund-policy")({
       <H2>Ce nu se rambursează</H2>
       <UL>
         <li>Lunile de abonament deja consumate după primele 7 zile de la prima plată.</li>
-        <li>Bugetul de reclame cheltuit direct pe Facebook, Instagram sau Google Ads — aceste sume sunt plătite direct către Meta sau Google și nu trec prin AdPilot.</li>
+        <li>Bugetul de reclame cheltuit direct pe Facebook și Instagram — aceste sume sunt plătite direct către Meta și nu trec prin AdPilot.</li>
       </UL>
 
       <H2>Anulare abonament</H2>

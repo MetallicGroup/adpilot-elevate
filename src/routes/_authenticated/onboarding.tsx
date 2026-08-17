@@ -30,7 +30,7 @@ const PLANS = [
     name: "Starter",
     price: "249 lei",
     desc: "Pentru afaceri mici care încep cu reclamele online.",
-    items: ["3 campanii pe lună", "Asistent WhatsApp AI", "Suport pe email"],
+    items: ["3 campanii pe lună pe Facebook", "Suport pe email"],
   },
   {
     id: "pro_monthly",
@@ -39,9 +39,8 @@ const PLANS = [
     featured: true,
     desc: "Pentru afacerile care vor să crească rapid.",
     items: [
-      "Campanii nelimitate",
-      "10 clipuri AI pe lună",
-      "20 de poze AI pe lună",
+      "Campanii nelimitate pe Facebook",
+      "10 poze AI pe lună",
       "Asistent WhatsApp AI",
       "Suport prioritar",
     ],
@@ -52,10 +51,10 @@ const PLANS = [
     price: "995 lei",
     desc: "Pentru branduri și agenții care scalează agresiv.",
     items: [
-      "Campanii nelimitate",
-      "Clipuri AI nelimitate",
+      "Campanii nelimitate pe Facebook",
       "Poze AI nelimitate",
-      "Success manager dedicat",
+      "Asistent WhatsApp AI",
+      "Manager dedicat",
     ],
   },
 ];
@@ -129,6 +128,7 @@ function OnboardingPage() {
 
   const step1Done = !!status?.hasMetaConnection;
   const planDone = !!status?.hasActiveSubscription;
+  const whatsappAllowed = !!status?.whatsappAllowed; // doar Pro/Premium
   const step2Done = planDone; // pașii de mai jos (WhatsApp / obiectiv) rămân gated pe abonament
   const activeStep = !step1Done ? 1 : !adReady ? 2 : !planDone ? 3 : 4;
 
@@ -276,17 +276,31 @@ function OnboardingPage() {
             <div className="flex-1">
               <h2 className="font-semibold text-lg">
                 Conectează WhatsApp{" "}
-                <span className="text-xs font-normal text-muted-foreground">(opțional)</span>
+                <span className="text-xs font-normal text-muted-foreground">
+                  {whatsappAllowed ? "(opțional)" : "(Pro / Premium)"}
+                </span>
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Primește lead-uri, rapoarte și controlează campaniile direct din WhatsApp. Poți face
-                asta și mai târziu din Dashboard.
+                {whatsappAllowed
+                  ? "Primește lead-uri, rapoarte și controlează campaniile direct din WhatsApp. Poți face asta și mai târziu din Dashboard."
+                  : "Asistentul WhatsApp AI e disponibil în planurile Pro și Premium. Fă upgrade ca să conectezi numărul și să controlezi campaniile din conversație."}
               </p>
             </div>
           </div>
-          <div className="mt-5">
-            <WhatsAppConnectionCard />
-          </div>
+          {whatsappAllowed ? (
+            <div className="mt-5">
+              <WhatsAppConnectionCard />
+            </div>
+          ) : (
+            <div className="mt-5">
+              <button
+                onClick={() => navigate({ to: "/settings" })}
+                className="press inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium"
+              >
+                Fă upgrade la Pro <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </section>
 
         {/* Step 4: obiectiv */}

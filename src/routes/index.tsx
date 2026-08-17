@@ -507,9 +507,9 @@ const steps = [
 ];
 
 const plans = [
-  { name: "Starter", tagline: "Pentru afaceri mici care încep.", price: "249 lei", items: ["3 campanii pe lună", "Fără generare AI de poze sau clipuri", "Asistent WhatsApp AI", "Suport pe email"] },
-  { name: "Pro", tagline: "Pentru afacerile care cresc rapid.", price: "495 lei", featured: true, items: ["Campanii nelimitate", "10 clipuri AI pe lună", "20 de poze AI pe lună", "Asistent WhatsApp AI", "Suport prioritar"] },
-  { name: "Premium", tagline: "Pentru branduri și agenții care scalează.", price: "995 lei", items: ["Campanii nelimitate", "Clipuri AI nelimitate", "Poze AI nelimitate", "Success manager dedicat"] },
+  { name: "Starter", tagline: "Pentru afaceri mici care încep.", price: "249 lei", items: ["3 campanii pe lună pe Facebook", "Fără asistent WhatsApp AI", "Suport pe email"] },
+  { name: "Pro", tagline: "Pentru afacerile care cresc rapid.", price: "495 lei", featured: true, items: ["Campanii nelimitate pe Facebook", "10 poze AI pe lună", "Asistent WhatsApp AI", "Suport prioritar"] },
+  { name: "Premium", tagline: "Pentru branduri și agenții care scalează.", price: "995 lei", items: ["Campanii nelimitate pe Facebook", "Poze AI nelimitate", "Asistent WhatsApp AI", "Manager dedicat"] },
 ];
 
 const faqs = [

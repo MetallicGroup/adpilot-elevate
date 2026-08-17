@@ -7,6 +7,8 @@ export type OnboardingStatus = {
   hasActiveSubscription: boolean;
   subscriptionStatus: string | null;
   trialEnd: string | null;
+  planTier: "none" | "starter" | "pro" | "premium";
+  whatsappAllowed: boolean;
 };
 
 export const getOnboardingStatus = createServerFn({ method: "POST" })
@@ -30,7 +32,7 @@ export const getOnboardingStatus = createServerFn({ method: "POST" })
         .maybeSingle(),
       supabase
         .from("subscriptions")
-        .select("status,current_period_end,trial_end")
+        .select("status,current_period_end,trial_end,price_id")
         .eq("user_id", userId)
         .eq("environment", data.environment)
         .order("created_at", { ascending: false })
@@ -46,10 +48,23 @@ export const getOnboardingStatus = createServerFn({ method: "POST" })
       (sub.status === "canceled" && periodEnd !== null && periodEnd > now)
     );
 
+    const priceId = (sub?.price_id ?? "").toLowerCase();
+    const planTier: OnboardingStatus["planTier"] = priceId.includes("premium")
+      ? "premium"
+      : priceId.includes("pro")
+        ? "pro"
+        : priceId.includes("starter")
+          ? "starter"
+          : "none";
+    // Asistentul WhatsApp e disponibil doar în Pro și Premium.
+    const whatsappAllowed = isActive && (planTier === "pro" || planTier === "premium");
+
     return {
       hasMetaConnection: !!meta,
       hasActiveSubscription: isActive,
       subscriptionStatus: sub?.status ?? null,
       trialEnd: sub?.trial_end ?? null,
+      planTier,
+      whatsappAllowed,
     };
   });
