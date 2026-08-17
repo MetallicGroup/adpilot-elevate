@@ -1065,6 +1065,16 @@ async function publishCampaignToMeta(
     await import("./meta-publish.server");
 
   try {
+    // Fail-fast: nu crea NIMIC pe Meta dacă contul de reclame nu poate rula
+    // reclame (sold neplătit, dezactivat, în review) — altfel rămân campanii
+    // pe jumătate create. Îi dăm userului mesajul clar.
+    const { checkAdAccountRunnable } = await import("./meta-publish.server");
+    const runnable = await checkAdAccountRunnable(input.adAccountId, input.accessToken);
+    if (!runnable.ok) {
+      await supabaseAdmin.from("campaigns").update({ status: "draft" }).eq("id", input.campaignRowId);
+      return { error: runnable.message ?? "Contul de reclame nu este activ pe Facebook." };
+    }
+
     let form: { id: string } | null = null;
     let objective: "leads" | "traffic" | "sales" = input.objective;
     let cta = input.args.cta;

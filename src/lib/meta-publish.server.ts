@@ -259,6 +259,43 @@ export async function createCampaign(
  * vânzări către site-ul clientului). NU creează unul — dacă nu există, clientul
  * trebuie să instaleze Pixel-ul pe site ca să se poată optimiza pe achiziții.
  */
+/**
+ * Verifică dacă un cont de reclame poate rula reclame ACUM (account_status=1).
+ * Fail-fast înainte de a crea ceva pe Meta — altfel rămân campanii pe jumătate
+ * create. Întoarce un mesaj clar în română pentru fiecare status problematic.
+ */
+export async function checkAdAccountRunnable(
+  adAccountId: string,
+  accessToken: string,
+): Promise<{ ok: boolean; message?: string }> {
+  try {
+    const r = await fetch(
+      `${GRAPH}/${metaApiVersion()}/act_${adAccountId}?fields=account_status,disable_reason&access_token=${encodeURIComponent(accessToken)}`,
+    );
+    const j: any = await r.json();
+    if (!r.ok) return { ok: true }; // nu putem verifica → nu blocăm (fallback pe eroarea reală)
+    const status = Number(j?.account_status);
+    if (status === 1) return { ok: true };
+    const messages: Record<number, string> = {
+      2: "⚠️ Contul tău de reclame este *dezactivat* la Facebook. Intră în Facebook Ads Manager → Calitatea contului ca să vezi motivul și să faci contestație.",
+      3: "⚠️ Contul tău de reclame are un *sold neplătit* la Facebook, așa că nu poate rula reclame noi. Intră în *Facebook Ads Manager → Facturare* și achită suma restantă — apoi îmi scrii și lansăm.",
+      7: "⚠️ Contul tău de reclame este *în verificare* la Facebook (pending review). Așteaptă aprobarea Meta (de obicei câteva ore), apoi reîncercăm.",
+      8: "⚠️ Contul tău are o *plată în procesare* la Facebook. Așteaptă să se finalizeze plata, apoi reîncercăm.",
+      9: "⚠️ Contul tău e într-o *perioadă de grație* de plată la Facebook. Rezolvă plata în Facturare ca să poți lansa.",
+      100: "⚠️ Contul tău de reclame este *în curs de închidere* la Facebook. Folosește alt cont de reclame din Setări.",
+      101: "⚠️ Contul tău de reclame este *închis* la Facebook. Folosește alt cont de reclame din Setări.",
+    };
+    return {
+      ok: false,
+      message:
+        messages[status] ??
+        `⚠️ Contul tău de reclame nu este activ la Facebook (status ${status}). Verifică-l în Facebook Ads Manager (facturare / calitatea contului) înainte să lansăm.`,
+    };
+  } catch {
+    return { ok: true };
+  }
+}
+
 export async function findExistingPixel(
   adAccountId: string,
   accessToken: string,
