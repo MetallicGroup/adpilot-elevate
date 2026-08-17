@@ -438,8 +438,22 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
       }),
       execute: async ({ prompt }) => {
         try {
+          // Limită lunară de poze AI: Starter = 0, Pro = 10, Premium = nelimitat.
+          const { checkAiPhotoQuota, recordAiPhoto } = await import("./plan.server");
+          const quota = await checkAiPhotoQuota(supabaseAdmin, ctx.userId);
+          if (!quota.allowed) {
+            return quota.limit === 0
+              ? {
+                  error:
+                    "Generarea de poze cu AI e disponibilă în planurile *Pro* și *Premium*. Fă upgrade din Setări, sau trimite-mi o poză proprie pentru reclamă. 📸",
+                }
+              : {
+                  error: `Ai atins limita de *${quota.limit} poze AI* pe luna aceasta (planul Pro). Treci pe *Premium* pentru poze nelimitate, sau trimite-mi o poză proprie. 📸`,
+                };
+          }
           const { generateCreativeImage } = await import("./wa-ai-extras.server");
           const img = await generateCreativeImage(ctx.userId, prompt);
+          await recordAiPhoto(supabaseAdmin, ctx.userId);
           ctx.latestMedia = img;
           // Send preview to user on WhatsApp
           try {

@@ -57,5 +57,38 @@ export function whatsappAllowedForTier(tier: PlanTier): boolean {
   return tier === "pro" || tier === "premium";
 }
 
+/** Limita lunară de poze AI per plan: Starter/none = 0, Pro = 10, Premium = nelimitat. */
+export function aiPhotoMonthlyLimit(tier: PlanTier): number {
+  if (tier === "premium") return Infinity;
+  if (tier === "pro") return 10;
+  return 0;
+}
+
+/** Verifică dacă userul mai poate genera o poză AI luna aceasta. */
+export async function checkAiPhotoQuota(
+  supabaseAdmin: any,
+  userId: string,
+): Promise<{ allowed: boolean; limit: number; used: number; tier: PlanTier }> {
+  const tier = await getUserPlanTier(supabaseAdmin, userId);
+  const limit = aiPhotoMonthlyLimit(tier);
+  if (limit === 0) return { allowed: false, limit, used: 0, tier };
+  if (!isFinite(limit)) return { allowed: true, limit, used: 0, tier };
+  const start = new Date();
+  start.setUTCDate(1);
+  start.setUTCHours(0, 0, 0, 0);
+  const { count } = await supabaseAdmin
+    .from("ai_image_usage")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .gte("created_at", start.toISOString());
+  const used = count ?? 0;
+  return { allowed: used < limit, limit, used, tier };
+}
+
+/** Înregistrează o poză AI generată (contor lunar). */
+export async function recordAiPhoto(supabaseAdmin: any, userId: string): Promise<void> {
+  await supabaseAdmin.from("ai_image_usage").insert({ user_id: userId });
+}
+
 export const WHATSAPP_UPGRADE_MESSAGE =
   "🔒 Asistentul AdPilot pe WhatsApp este disponibil doar în planurile *Pro* și *Premium*.\n\nPlanul *Starter* include lansarea campaniilor din aplicație. Fă upgrade din contul tău (Setări → Abonament) ca să controlezi campaniile direct de aici. 🚀";
