@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { signInWithProvider, translateAuthError, waitForClientSession } from "@/lib/auth";
 import { resolvePostAuthPath } from "@/lib/post-auth";
+import { tkClickButton } from "@/lib/tiktok-pixel";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2, MessageCircle, Sparkles } from "lucide-react";
 
@@ -79,6 +80,7 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
+        tkClickButton("signup-submit");
         const { data, error } = await supabase.auth.signUp({
           email,
           password,

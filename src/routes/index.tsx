@@ -12,6 +12,7 @@ import { CommandStage } from "@/components/marketing/CommandStage";
 import { CountUp } from "@/components/wow/CountUp";
 import { Reveal } from "@/components/wow/Reveal";
 import { GoalPicker } from "@/components/marketing/GoalPicker";
+import { tkViewContent, tkClickButton } from "@/lib/tiktok-pixel";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -29,6 +30,10 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    tkViewContent({ contentId: "home", contentName: "Homepage" });
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -251,7 +256,7 @@ function Index() {
               </div>
             ))}
           </div>
-          <Link to="/auth" className="press btn-primary mt-8 inline-flex items-center gap-2 rounded-xl px-6 sm:px-7 py-4 font-semibold">
+          <Link to="/auth" onClick={() => tkClickButton("home-hero-cta")} className="press btn-primary mt-8 inline-flex items-center gap-2 rounded-xl px-6 sm:px-7 py-4 font-semibold">
             Înlocuiește complexitatea cu AdPilot <ArrowRight className="h-4 w-4" />
           </Link>
         </Reveal>
@@ -395,7 +400,7 @@ function Index() {
                   </li>
                 ))}
               </ul>
-              <Link to="/auth" className={`press mt-7 inline-flex w-full items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold ${p.featured ? "btn-primary" : "glass hover:bg-card text-foreground"}`}>
+              <Link to="/auth" onClick={() => tkClickButton(`home-plan-${p.name}`)} className={`press mt-7 inline-flex w-full items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold ${p.featured ? "btn-primary" : "glass hover:bg-card text-foreground"}`}>
                 Începe gratuit
               </Link>
               <p className="mt-3 text-xs text-center text-muted-foreground">3 zile gratuit · anulezi oricând</p>

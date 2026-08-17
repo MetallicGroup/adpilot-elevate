@@ -5,6 +5,7 @@ import { useStripeCheckout } from "@/hooks/useStripeCheckout";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "@tanstack/react-router";
+import { tkViewContent, tkClickButton } from "@/lib/tiktok-pixel";
 
 export const Route = createFileRoute("/pricing")({
   validateSearch: (s: Record<string, unknown>): { plan?: string; redirect?: string } => ({
@@ -91,6 +92,10 @@ function PricingPage() {
   const [authed, setAuthed] = useState(false);
 
   useEffect(() => {
+    tkViewContent({ contentId: "pricing", contentName: "Pricing" });
+  }, []);
+
+  useEffect(() => {
     let opened = false;
     supabase.auth.getUser().then(({ data }) => {
       const isAuthed = !!data.user;
@@ -107,6 +112,7 @@ function PricingPage() {
   }, []);
 
   const handleSelect = (priceId: string) => {
+    tkClickButton(`pricing-select-${priceId}`);
     if (!authed) {
       navigate({ to: "/auth", search: { redirect: `/pricing?plan=${priceId}` } as any });
       return;
