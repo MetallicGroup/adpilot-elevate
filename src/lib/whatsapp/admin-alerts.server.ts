@@ -18,20 +18,25 @@ export function getAdminWaNumber(): string {
   return digits;
 }
 
+export type AdminAlertResult = { sent: boolean; via: "template" | "text" | "none"; error?: string };
+
 /** Text liber (fallback) — merge doar în fereastra de 24h. */
-export async function sendAdminAlert(text: string): Promise<void> {
+export async function sendAdminAlert(text: string): Promise<AdminAlertResult> {
+  const central = getCentralWhatsApp();
+  if (!central) {
+    console.warn("[admin-alert] WhatsApp central neconfigurat — alertă sărită");
+    return { sent: false, via: "none", error: "central_not_configured" };
+  }
   try {
-    const central = getCentralWhatsApp();
-    if (!central) {
-      console.warn("[admin-alert] WhatsApp central neconfigurat — alertă sărită");
-      return;
-    }
     await sendWhatsAppMessage(central.phoneNumberId, central.accessToken, getAdminWaNumber(), {
       type: "text",
       text,
     });
+    return { sent: true, via: "text" };
   } catch (e) {
+    const err = e instanceof Error ? e.message : String(e);
     console.error("[admin-alert] send failed:", e);
+    return { sent: false, via: "none", error: err };
   }
 }
 
@@ -40,11 +45,11 @@ async function sendAdminTemplate(
   templateName: string,
   params: string[],
   fallbackText: string,
-): Promise<void> {
+): Promise<AdminAlertResult> {
   const central = getCentralWhatsApp();
   if (!central) {
     console.warn("[admin-alert] WhatsApp central neconfigurat — alertă sărită");
-    return;
+    return { sent: false, via: "none", error: "central_not_configured" };
   }
   try {
     await sendWhatsAppTemplate(
@@ -55,9 +60,13 @@ async function sendAdminTemplate(
       TEMPLATE_LANG,
       params,
     );
+    return { sent: true, via: "template" };
   } catch (e) {
+    const templateErr = e instanceof Error ? e.message : String(e);
     console.warn(`[admin-alert] template ${templateName} failed, fallback la text:`, e);
-    await sendAdminAlert(fallbackText);
+    const fb = await sendAdminAlert(fallbackText);
+    if (fb.sent) return { sent: true, via: "text", error: `template: ${templateErr}` };
+    return { sent: false, via: "none", error: `template: ${templateErr} | text: ${fb.error}` };
   }
 }
 
@@ -81,7 +90,7 @@ export async function notifyAdminNewSignup(p: {
     line("Obiectiv", p.goal) +
     `\nData: ${new Date().toLocaleString("ro-RO", { timeZone: "Europe/Bucharest" })}`;
   // template cont_nou: {{1}} nume, {{2}} email, {{3}} înregistrare
-  await sendAdminTemplate("cont_nou", [v(p.name), v(p.email), v(p.provider)], fallback);
+  return sendAdminTemplate("cont_nou", [v(p.name), v(p.email), v(p.provider)], fallback);
 }
 
 export async function notifyAdminNewSubscription(p: {
