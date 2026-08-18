@@ -34,6 +34,7 @@ function AuthPage() {
   const [email, setEmail] = useState(search.email ?? "");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
 
   // `auth.tsx` e ruta părinte pentru /auth/confirm-email, /auth/callback etc.
@@ -80,13 +81,18 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
+        const phoneDigits = phone.replace(/\D/g, "");
+        if (phoneDigits.length < 10) {
+          toast.error("Introdu un număr de telefon valid (ex. 07xx xxx xxx).");
+          return;
+        }
         tkClickButton("signup-submit");
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/auth/callback`,
-            data: { full_name: name },
+            data: { full_name: name, phone: phone.trim() },
           },
         });
         if (error) throw error;
@@ -290,6 +296,24 @@ function AuthPage() {
                   placeholder="Andrei Popescu"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  required
+                  className="h-[52px] w-full rounded-[13px] border border-white/[0.08] bg-black/25 px-3.5 text-sm outline-none transition focus:border-primary/55 focus:ring-4 focus:ring-primary/10"
+                />
+              </div>
+            )}
+            {isSignup && (
+              <div>
+                <label className="mb-2 block text-[11px] text-muted-foreground" htmlFor="auth-phone">
+                  Număr de telefon
+                </label>
+                <input
+                  id="auth-phone"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  placeholder="07xx xxx xxx"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
                   required
                   className="h-[52px] w-full rounded-[13px] border border-white/[0.08] bg-black/25 px-3.5 text-sm outline-none transition focus:border-primary/55 focus:ring-4 focus:ring-primary/10"
                 />

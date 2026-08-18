@@ -99,6 +99,11 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         customer: customerId,
         metadata: { userId },
         customer_update: { address: "auto", name: "auto" },
+        // „Factură pe firmă": bifă opțională în checkout care cere CUI + denumire
+        // firmă (pt. RO: tip `ro_tin`). Datele ajung pe factura Stripe, trimisă pe
+        // email. `customer_update.name`+`address` sunt necesare ca Stripe să le
+        // salveze pe client.
+        tax_id_collection: { enabled: true },
         ...(isRecurring && {
           payment_method_collection: "always",
           subscription_data: {

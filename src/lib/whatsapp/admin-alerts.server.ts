@@ -86,11 +86,13 @@ const v = (s?: string | null) => (s ?? "").trim() || "—";
 export async function notifyAdminNewSignup(p: {
   email?: string | null;
   name?: string | null;
+  phone?: string | null;
   provider?: string | null;
   goal?: string | null;
 }) {
   const details =
     line("Nume", p.name) +
+    line("Telefon", p.phone) +
     line("Email", p.email) +
     line("Înregistrare", p.provider) +
     line("Obiectiv", p.goal) +

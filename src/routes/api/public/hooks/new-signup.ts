@@ -31,11 +31,13 @@ export const Route = createFileRoute("/api/public/hooks/new-signup")({
         let email: string | null = null;
         let provider: string | null = null;
         let name: string | null = typeof body.full_name === "string" ? body.full_name : null;
+        let phone: string | null = null;
         try {
           const { data } = await supabaseAdmin.auth.admin.getUserById(userId);
           email = data?.user?.email ?? null;
           provider = (data?.user?.app_metadata as any)?.provider ?? null;
           name = name ?? ((data?.user?.user_metadata as any)?.full_name ?? null);
+          phone = (data?.user?.user_metadata as any)?.phone ?? null;
         } catch (e) {
           console.error("[new-signup] user lookup failed:", e);
         }
@@ -44,6 +46,7 @@ export const Route = createFileRoute("/api/public/hooks/new-signup")({
         const alert = await notifyAdminNewSignup({
           email,
           name,
+          phone,
           provider,
           goal: body.onboarding_goal ?? null,
         });
