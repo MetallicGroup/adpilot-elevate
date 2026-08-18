@@ -51,23 +51,29 @@ async function sendAdminTemplate(
     console.warn("[admin-alert] WhatsApp central neconfigurat — alertă sărită");
     return { sent: false, via: "none", error: "central_not_configured" };
   }
-  try {
-    await sendWhatsAppTemplate(
-      central.phoneNumberId,
-      central.accessToken,
-      getAdminWaNumber(),
-      templateName,
-      TEMPLATE_LANG,
-      params,
-    );
-    return { sent: true, via: "template" };
-  } catch (e) {
-    const templateErr = e instanceof Error ? e.message : String(e);
-    console.warn(`[admin-alert] template ${templateName} failed, fallback la text:`, e);
-    const fb = await sendAdminAlert(fallbackText);
-    if (fb.sent) return { sent: true, via: "text", error: `template: ${templateErr}` };
-    return { sent: false, via: "none", error: `template: ${templateErr} | text: ${fb.error}` };
+  // Retry: erorile tranzitorii (cold start, hiccup de rețea) nu trebuie să piardă
+  // notificarea. 2 încercări pe template înainte de fallback pe text liber.
+  let templateErr = "";
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      await sendWhatsAppTemplate(
+        central.phoneNumberId,
+        central.accessToken,
+        getAdminWaNumber(),
+        templateName,
+        TEMPLATE_LANG,
+        params,
+      );
+      return { sent: true, via: "template" };
+    } catch (e) {
+      templateErr = e instanceof Error ? e.message : String(e);
+      console.warn(`[admin-alert] template ${templateName} attempt ${attempt}/2 failed:`, e);
+      if (attempt < 2) await new Promise((r) => setTimeout(r, 700));
+    }
   }
+  const fb = await sendAdminAlert(fallbackText);
+  if (fb.sent) return { sent: true, via: "text", error: `template: ${templateErr}` };
+  return { sent: false, via: "none", error: `template: ${templateErr} | text: ${fb.error}` };
 }
 
 function line(label: string, value?: string | null) {
