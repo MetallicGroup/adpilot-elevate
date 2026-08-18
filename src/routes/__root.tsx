@@ -18,6 +18,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { runOAuthConfigCheck } from "@/lib/oauth-config-check";
 import { CookieConsent } from "@/components/CookieConsent";
 import { WowBackground } from "@/components/wow/WowBackground";
+// Nota: stack-ul e TanStack Start (React), deci entry-point-ul corect e
+// `/react`, NU `/next` (acela e specific Next.js și ar importa next/navigation).
+import { Analytics } from "@vercel/analytics/react";
 
 function NotFoundComponent() {
   return (
@@ -198,6 +201,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <WowBackground />
       <Outlet />
+      <Analytics />
       <Toaster position="bottom-center" theme="dark" />
       <CookieConsent />
     </QueryClientProvider>
