@@ -42,6 +42,7 @@ export type AdminUserRow = {
   id: string;
   email: string | null;
   full_name: string | null;
+  phone: string | null;
   plan: string;
   subscription_status: string;
   trial_ends_at: string | null;
@@ -62,7 +63,7 @@ export const listAdminUsers = createServerFn({ method: "GET" })
 
     const { data: profiles } = await supabaseAdmin
       .from("profiles")
-      .select("id, full_name, plan, subscription_status, trial_ends_at, created_at")
+      .select("id, full_name, phone, plan, subscription_status, trial_ends_at, created_at")
       .order("created_at", { ascending: false })
       .limit(500);
 
@@ -127,6 +128,7 @@ export const listAdminUsers = createServerFn({ method: "GET" })
         id: p.id,
         email: emailById.get(p.id) ?? null,
         full_name: p.full_name,
+        phone: p.phone ?? null,
         plan: p.plan,
         subscription_status: (p as any).subscription_status ?? "trial",
         trial_ends_at: (p as any).trial_ends_at ?? null,
@@ -395,15 +397,19 @@ export const getAdminDashboard = createServerFn({ method: "GET" })
     const sevenDaysAgo = new Date(now.getTime() - 7 * 86400_000).toISOString();
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 86400_000).toISOString();
 
-    const [profilesRes, campaignsRes, perfRes, leadsRes, ticketsRes, waConnsRes, signupsRes] = await Promise.all([
-      supabaseAdmin.from("profiles").select("id, plan, subscription_status, trial_ends_at, created_at, suspended"),
-      supabaseAdmin.from("campaigns").select("id, status, platform, created_at"),
-      supabaseAdmin.from("performance_data").select("spend, leads, clicks, impressions, date"),
-      supabaseAdmin.from("leads").select("id, created_at"),
-      supabaseAdmin.from("support_tickets").select("id, status, priority, created_at"),
-      supabaseAdmin.from("whatsapp_connections").select("id, status"),
-      supabaseAdmin.from("profiles").select("created_at").gte("created_at", thirtyDaysAgo),
-    ]);
+    const [profilesRes, campaignsRes, perfRes, leadsRes, ticketsRes, waConnsRes, signupsRes, subsRes] =
+      await Promise.all([
+        supabaseAdmin.from("profiles").select("id, plan, subscription_status, trial_ends_at, created_at, suspended"),
+        supabaseAdmin.from("campaigns").select("id, status, platform, created_at"),
+        supabaseAdmin.from("performance_data").select("spend, leads, clicks, impressions, date"),
+        supabaseAdmin.from("leads").select("id, created_at"),
+        supabaseAdmin.from("support_tickets").select("id, status, priority, created_at"),
+        supabaseAdmin.from("whatsapp_connections").select("id, status"),
+        supabaseAdmin.from("profiles").select("created_at").gte("created_at", thirtyDaysAgo),
+        supabaseAdmin
+          .from("subscriptions")
+          .select("user_id, price_id, status, current_period_end, trial_end, cancel_at_period_end, environment, created_at"),
+      ]);
 
     const profiles = profilesRes.data ?? [];
     const campaigns = campaignsRes.data ?? [];
@@ -445,6 +451,40 @@ export const getAdminDashboard = createServerFn({ method: "GET" })
       .sort((a, b) => a.date.localeCompare(b.date))
       .slice(-30);
 
+    // ====== Financiar (din subscriptions; DOAR mediul live, exclus comp) ======
+    const monthlyLei = (priceId?: string | null): number => {
+      const v = (priceId ?? "").toLowerCase();
+      if (!v || v.includes("comp")) return 0; // comp = cont gratuit (admin/propriu)
+      if (v.includes("premium")) return 995;
+      if (v.includes("pro")) return 495;
+      if (v.includes("starter")) return 249;
+      return 0;
+    };
+    const planName = (priceId?: string | null): string => {
+      const v = (priceId ?? "").toLowerCase();
+      if (v.includes("comp")) return "Comp (gratuit)";
+      if (v.includes("premium")) return "Premium";
+      if (v.includes("pro")) return "Pro";
+      if (v.includes("starter")) return "Starter";
+      return "Necunoscut";
+    };
+    const subs = (subsRes.data ?? []).filter((s: any) => s.environment === "live");
+    const payingSubs = subs.filter((s: any) => s.status === "active" && monthlyLei(s.price_id) > 0);
+    const trialingSubs = subs.filter(
+      (s: any) =>
+        s.status === "trialing" ||
+        (s.trial_end && new Date(s.trial_end).getTime() > now.getTime() && s.status !== "canceled"),
+    );
+    const canceledSubs = subs.filter((s: any) => s.status === "canceled");
+    const cancelingSubs = subs.filter((s: any) => s.status === "active" && s.cancel_at_period_end);
+    const compSubs = subs.filter((s: any) => (s.price_id ?? "").toLowerCase().includes("comp"));
+    const mrr = payingSubs.reduce((sum: number, s: any) => sum + monthlyLei(s.price_id), 0);
+    const byPlan: Record<string, number> = {};
+    for (const s of payingSubs) {
+      const n = planName(s.price_id);
+      byPlan[n] = (byPlan[n] ?? 0) + 1;
+    }
+
     return {
       kpis: {
         total_users: profiles.length,
@@ -465,6 +505,17 @@ export const getAdminDashboard = createServerFn({ method: "GET" })
       },
       signups_30d: signupsSeries,
       spend_30d: spendSeries,
+      finance: {
+        mrr,
+        arr: mrr * 12,
+        paying: payingSubs.length,
+        trialing: trialingSubs.length,
+        canceling: cancelingSubs.length,
+        canceled: canceledSubs.length,
+        comp: compSubs.length,
+        by_plan: byPlan,
+        currency: "lei",
+      },
     };
   });
 

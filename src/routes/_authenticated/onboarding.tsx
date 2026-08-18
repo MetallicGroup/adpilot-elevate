@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Facebook, Loader2, Sparkles, ArrowRight, MessageCircle, Target } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getOnboardingStatus, type OnboardingStatus } from "@/lib/onboarding.functions";
+import { getOnboardingStatus, saveUserPhone, type OnboardingStatus } from "@/lib/onboarding.functions";
 import { startMetaOAuth } from "@/lib/meta-oauth.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { useStripeCheckout } from "@/hooks/useStripeCheckout";
@@ -58,6 +58,68 @@ const PLANS = [
     ],
   },
 ];
+
+function PhoneGate({ onSaved }: { onSaved: () => void | Promise<void> }) {
+  const save = useServerFn(saveUserPhone);
+  const [phone, setPhone] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (phone.replace(/\D/g, "").length < 10) {
+      toast.error("Introdu un număr de telefon valid (ex. 07xx xxx xxx).");
+      return;
+    }
+    setSaving(true);
+    try {
+      await save({ data: { phone: phone.trim() } });
+      await onSaved();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Nu am putut salva numărul.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="min-h-[70vh] flex items-center justify-center px-5">
+      <motion.form
+        onSubmit={submit}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="card-floating p-7 w-full max-w-md"
+      >
+        <p className="text-xs uppercase tracking-widest text-muted-foreground">Un ultim detaliu</p>
+        <h1 className="mt-2 font-serif text-3xl font-semibold tracking-tight">
+          Care e numărul tău de telefon?
+        </h1>
+        <p className="mt-3 text-sm text-muted-foreground">
+          Îl folosim ca să te putem contacta despre contul și campaniile tale.
+        </p>
+        <input
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          placeholder="07xx xxx xxx"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          required
+          autoFocus
+          className="mt-5 h-[52px] w-full rounded-[13px] border border-white/[0.08] bg-black/25 px-3.5 text-sm outline-none transition focus:border-primary/55 focus:ring-4 focus:ring-primary/10"
+        />
+        <button
+          type="submit"
+          disabled={saving}
+          className="press btn-primary mt-4 flex h-[52px] w-full items-center justify-center gap-2 rounded-[14px] text-sm font-semibold disabled:opacity-50"
+        >
+          {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+          Continuă
+        </button>
+      </motion.form>
+    </div>
+  );
+}
 
 function OnboardingPage() {
   const navigate = useNavigate();
@@ -138,6 +200,12 @@ function OnboardingPage() {
         <Loader2 className="w-5 h-5 animate-spin" />
       </div>
     );
+  }
+
+  // Gate telefon: obligatoriu înainte de orice (prinde și conturile create cu Google,
+  // care nu trec prin formularul de signup unde se cere numărul).
+  if (status && !status.hasPhone) {
+    return <PhoneGate onSaved={reload} />;
   }
 
   return (

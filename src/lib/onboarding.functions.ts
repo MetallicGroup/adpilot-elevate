@@ -3,6 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { StripeEnv } from "@/lib/stripe.server";
 
 export type OnboardingStatus = {
+  hasPhone: boolean;
   hasMetaConnection: boolean;
   hasActiveSubscription: boolean;
   subscriptionStatus: string | null;
@@ -22,7 +23,7 @@ export const getOnboardingStatus = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<OnboardingStatus> => {
     const { supabase, userId } = context;
 
-    const [{ data: meta }, { data: sub }] = await Promise.all([
+    const [{ data: meta }, { data: sub }, { data: profile }] = await Promise.all([
       supabase
         .from("meta_connections")
         .select("id")
@@ -38,6 +39,7 @@ export const getOnboardingStatus = createServerFn({ method: "POST" })
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle(),
+      (supabase as any).from("profiles").select("phone").eq("id", userId).maybeSingle(),
     ]);
 
     const now = Date.now();
@@ -60,6 +62,7 @@ export const getOnboardingStatus = createServerFn({ method: "POST" })
     const whatsappAllowed = isActive && (planTier === "pro" || planTier === "premium");
 
     return {
+      hasPhone: !!(profile?.phone && String(profile.phone).trim()),
       hasMetaConnection: !!meta,
       hasActiveSubscription: isActive,
       subscriptionStatus: sub?.status ?? null,
@@ -67,4 +70,24 @@ export const getOnboardingStatus = createServerFn({ method: "POST" })
       planTier,
       whatsappAllowed,
     };
+  });
+
+/** Salvează numărul de telefon în profil (folosit de gate-ul din onboarding, ex.
+ *  pentru conturile create cu Google, care nu trec prin formularul de signup). */
+export const saveUserPhone = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { phone: string }) => {
+    const digits = (data?.phone ?? "").replace(/\D/g, "");
+    if (digits.length < 10) throw new Error("Introdu un număr de telefon valid.");
+    return { phone: data.phone.trim() };
+  })
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await (supabaseAdmin as any)
+      .from("profiles")
+      .update({ phone: data.phone })
+      .eq("id", userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });

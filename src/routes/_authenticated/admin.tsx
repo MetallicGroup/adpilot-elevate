@@ -143,9 +143,58 @@ function DashboardView({ dash }: { dash: any }) {
         <Kpi label="Conversion" value={k.total_users > 0 ? `${((k.active_subs / k.total_users) * 100).toFixed(1)}%` : "—"} sub="trial → paid" icon={<TrendingUp className="w-4 h-4" />} />
       </div>
 
+      {dash.finance && <FinanceView f={dash.finance} />}
+
       <div className="grid md:grid-cols-2 gap-4">
         <Sparkline title="Înregistrări (30 zile)" data={dash.signups_30d} valueKey="count" />
         <Sparkline title="Spend zilnic (30 zile)" data={dash.spend_30d} valueKey="spend" suffix=" lei" />
+      </div>
+    </div>
+  );
+}
+
+function FinanceView({ f }: { f: any }) {
+  const lei = (n: number) => `${Number(n ?? 0).toLocaleString("ro-RO")} lei`;
+  const plans = Object.entries(f.by_plan ?? {}) as [string, number][];
+  return (
+    <div className="rounded-xl border border-border bg-card p-4">
+      <div className="flex items-center gap-2 mb-4">
+        <TrendingUp className="w-4 h-4 text-emerald-500" />
+        <h3 className="text-sm font-semibold">Financiar (abonamente live, fără comp)</h3>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-3">
+          <p className="text-[11px] text-muted-foreground">MRR (venit lunar)</p>
+          <p className="text-2xl font-bold text-emerald-500">{lei(f.mrr)}</p>
+        </div>
+        <div className="rounded-lg bg-secondary/40 p-3">
+          <p className="text-[11px] text-muted-foreground">ARR (anualizat)</p>
+          <p className="text-2xl font-bold">{lei(f.arr)}</p>
+        </div>
+        <div className="rounded-lg bg-secondary/40 p-3">
+          <p className="text-[11px] text-muted-foreground">Clienți plătitori</p>
+          <p className="text-2xl font-bold">{f.paying}</p>
+        </div>
+        <div className="rounded-lg bg-secondary/40 p-3">
+          <p className="text-[11px] text-muted-foreground">În trial</p>
+          <p className="text-2xl font-bold text-amber-500">{f.trialing}</p>
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-x-6 gap-y-1 mt-4 text-xs text-muted-foreground">
+        <span>Anulează la final: <b className="text-foreground">{f.canceling}</b></span>
+        <span>Anulate: <b className="text-foreground">{f.canceled}</b></span>
+        <span>Comp (gratuit): <b className="text-foreground">{f.comp}</b></span>
+        {plans.length > 0 && (
+          <span>
+            Pe plan:{" "}
+            {plans.map(([name, count], i) => (
+              <span key={name}>
+                {i > 0 && " · "}
+                <b className="text-foreground">{count}</b> {name}
+              </span>
+            ))}
+          </span>
+        )}
       </div>
     </div>
   );
@@ -233,6 +282,7 @@ function UsersTable({ users }: { users: AdminUserRow[] }) {
                 <td className="px-3 py-2">
                   <div className="font-medium">{u.full_name || "—"}</div>
                   <div className="text-xs text-muted-foreground">{u.email}</div>
+                  {u.phone && <div className="text-xs text-muted-foreground">📱 {u.phone}</div>}
                 </td>
                 <td className="px-3 py-2 capitalize">{u.plan}</td>
                 <td className="px-3 py-2"><StatusBadge status={u.subscription_status} /></td>
