@@ -5,6 +5,7 @@
  * Server-only.
  */
 import { getCentralWhatsApp, sendWhatsAppMessage, sendWhatsAppTemplate } from "@/lib/whatsapp.server";
+import { sendAdminEmail } from "@/lib/admin-email.server";
 
 const TEMPLATE_LANG = "ro";
 
@@ -88,15 +89,20 @@ export async function notifyAdminNewSignup(p: {
   provider?: string | null;
   goal?: string | null;
 }) {
-  const fallback =
-    `🆕 *Cont nou AdPilot*\n\n` +
+  const details =
     line("Nume", p.name) +
     line("Email", p.email) +
     line("Înregistrare", p.provider) +
     line("Obiectiv", p.goal) +
     `\nData: ${new Date().toLocaleString("ro-RO", { timeZone: "Europe/Bucharest" })}`;
+  const waFallback = `🆕 *Cont nou AdPilot*\n\n` + details;
+  // WhatsApp + email în paralel (plasă de siguranță — email-ul e mai fiabil).
   // template cont_nou: {{1}} nume, {{2}} email, {{3}} înregistrare
-  return sendAdminTemplate("cont_nou", [v(p.name), v(p.email), v(p.provider)], fallback);
+  const [whatsapp, email] = await Promise.all([
+    sendAdminTemplate("cont_nou", [v(p.name), v(p.email), v(p.provider)], waFallback),
+    sendAdminEmail(`🆕 Cont nou AdPilot — ${v(p.name)}`, "Cont nou AdPilot\n\n" + details),
+  ]);
+  return { whatsapp, email };
 }
 
 export async function notifyAdminNewSubscription(p: {

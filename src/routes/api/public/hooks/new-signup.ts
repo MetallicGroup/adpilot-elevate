@@ -41,14 +41,17 @@ export const Route = createFileRoute("/api/public/hooks/new-signup")({
         }
 
         const { notifyAdminNewSignup } = await import("@/lib/whatsapp/admin-alerts.server");
-        const waResult = await notifyAdminNewSignup({
+        const alert = await notifyAdminNewSignup({
           email,
           name,
           provider,
           goal: body.onboarding_goal ?? null,
         });
-        if (!waResult.sent) {
-          console.error("[new-signup] WhatsApp admin alert NOT sent:", waResult.error);
+        if (!alert.whatsapp.sent) {
+          console.error("[new-signup] WhatsApp admin alert NOT sent:", alert.whatsapp.error);
+        }
+        if (!alert.email.sent) {
+          console.error("[new-signup] Email admin alert NOT sent:", alert.email.error);
         }
 
         // TikTok Events API — conversie „CompleteRegistration" pentru reclamele AdPilot pe TikTok.
@@ -63,7 +66,7 @@ export const Route = createFileRoute("/api/public/hooks/new-signup")({
           console.error("[new-signup] tiktok event failed", e);
         }
 
-        return Response.json({ ok: true, wa: waResult });
+        return Response.json({ ok: true, alert });
       },
     },
   },
