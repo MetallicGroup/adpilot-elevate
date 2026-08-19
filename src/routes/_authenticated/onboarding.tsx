@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Check, Facebook, Loader2, Sparkles, ArrowRight, MessageCircle, Target } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getOnboardingStatus, saveUserPhone, type OnboardingStatus } from "@/lib/onboarding.functions";
+import { firstMonthPrice, FIRST_MONTH_BADGE } from "@/lib/promo";
 import { startMetaOAuth } from "@/lib/meta-oauth.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { useStripeCheckout } from "@/hooks/useStripeCheckout";
@@ -306,9 +307,15 @@ function OnboardingPage() {
                 )}
                 <h3 className="font-semibold">{p.name}</h3>
                 <p className="mt-1 text-xs text-muted-foreground">{p.desc}</p>
-                <p className="mt-4 font-serif text-3xl">
-                  {p.price}
-                  <span className="text-xs text-muted-foreground font-sans">/lună</span>
+                <span className="mt-3 inline-block w-fit text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-success/15 text-success">
+                  🎉 {FIRST_MONTH_BADGE}
+                </span>
+                <p className="mt-2 font-serif text-3xl">
+                  {firstMonthPrice(p.price).first}
+                  <span className="text-xs text-muted-foreground font-sans"> prima lună</span>
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  apoi <span className="text-foreground font-medium">{p.price}</span>/lună
                 </p>
                 <p className="mt-1 text-[11px] text-success font-medium">✨ 3 zile gratuit</p>
                 <ul className="mt-4 space-y-1.5 text-xs flex-1">

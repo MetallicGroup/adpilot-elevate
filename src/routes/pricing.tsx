@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "@tanstack/react-router";
 import { tkViewContent, tkClickButton } from "@/lib/tiktok-pixel";
+import { firstMonthPrice, FIRST_MONTH_BADGE } from "@/lib/promo";
 
 export const Route = createFileRoute("/pricing")({
   validateSearch: (s: Record<string, unknown>): { plan?: string; redirect?: string } => ({
@@ -125,7 +126,7 @@ function PricingPage() {
       <PageHero
         eyebrow="Prețuri"
         title="Planuri simple care cresc o dată cu tine."
-        subtitle="3 zile gratuit pe orice plan. La activare verificăm cardul cu 1 leu (returnat imediat); prima plată abia din ziua a 4-a."
+        subtitle="🎉 Ofertă: -50% în prima lună pe orice plan. 3 zile gratuit — la activare verificăm cardul cu 1 leu (returnat imediat); prima plată abia din ziua a 4-a, cu reducerea de 50% aplicată."
       />
       <section className="px-6 pb-20 max-w-6xl mx-auto w-full">
         <h2 className="sr-only">Planuri și prețuri AdPilot</h2>
@@ -139,7 +140,18 @@ function PricingPage() {
             )}
             <h3 className="font-semibold text-xl">{p.name}</h3>
             <p className="mt-2 text-sm text-muted-foreground">{p.desc}</p>
-            <p className="mt-6 font-serif text-5xl">{p.price}<span className="text-base text-muted-foreground font-sans">/lună</span></p>
+            <div className="mt-6">
+              <span className="inline-block text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-success/15 text-success">
+                🎉 {FIRST_MONTH_BADGE}
+              </span>
+            </div>
+            <p className="mt-3 font-serif text-5xl">
+              {firstMonthPrice(p.price).first}
+              <span className="text-base text-muted-foreground font-sans"> prima lună</span>
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              apoi <span className="text-foreground font-medium">{p.price}</span>/lună
+            </p>
             <p className="mt-2 text-xs text-success font-medium">✨ 3 zile gratuit</p>
             <ul className="mt-6 space-y-2">
               {p.items.map((it) => (

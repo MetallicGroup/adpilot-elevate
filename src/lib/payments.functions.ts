@@ -44,6 +44,40 @@ async function resolveOrCreateCustomer(
   return created.id;
 }
 
+/**
+ * Cuponul „50% reducere prima lună" — get-or-create idempotent, per mediu
+ * (live/sandbox au fiecare propriul cupon). `duration: "once"` => reducerea se
+ * aplică o singură dată, pe prima factură = prima lună (după trialul de 3 zile).
+ */
+const FIRST_MONTH_COUPON_ID = "adpilot_first_month_50";
+async function getOrCreateFirstMonthCoupon(
+  stripe: ReturnType<typeof createStripeClient>,
+): Promise<string | null> {
+  try {
+    const existing = await stripe.coupons.retrieve(FIRST_MONTH_COUPON_ID);
+    if (existing && !(existing as { deleted?: boolean }).deleted) return existing.id;
+  } catch {
+    /* încă nu există */
+  }
+  try {
+    const created = await stripe.coupons.create({
+      id: FIRST_MONTH_COUPON_ID,
+      percent_off: 50,
+      duration: "once",
+      name: "50% reducere prima lună",
+    });
+    return created.id;
+  } catch {
+    // Race: creat între timp de altă cerere → îl reluăm.
+    try {
+      const again = await stripe.coupons.retrieve(FIRST_MONTH_COUPON_ID);
+      return again.id;
+    } catch {
+      return null; // nu bloca checkout-ul dacă Stripe are un hiccup pe cupon
+    }
+  }
+}
+
 export const createCheckoutSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
@@ -90,6 +124,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       const isRecurring = stripePrice.type === "recurring";
 
       const customerId = await resolveOrCreateCustomer(stripe, { email, userId });
+      const firstMonthCoupon = await getOrCreateFirstMonthCoupon(stripe);
 
       const session = await stripe.checkout.sessions.create({
         line_items: [{ price: stripePrice.id, quantity: 1 }],
@@ -97,6 +132,8 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         ui_mode: "embedded_page",
         return_url: data.returnUrl,
         customer: customerId,
+        // Ofertă: -50% prima lună (o singură factură). Nu se combină cu coduri promo.
+        ...(firstMonthCoupon ? { discounts: [{ coupon: firstMonthCoupon }] } : {}),
         metadata: { userId },
         customer_update: { address: "auto", name: "auto" },
         // „Factură pe firmă": bifă opțională în checkout care cere CUI + denumire

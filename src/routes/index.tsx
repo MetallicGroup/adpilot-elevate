@@ -13,6 +13,7 @@ import { CountUp } from "@/components/wow/CountUp";
 import { Reveal } from "@/components/wow/Reveal";
 import { GoalPicker } from "@/components/marketing/GoalPicker";
 import { tkViewContent, tkClickButton } from "@/lib/tiktok-pixel";
+import { firstMonthPrice, FIRST_MONTH_BADGE } from "@/lib/promo";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -380,7 +381,12 @@ function Index() {
 
       {/* PRICING */}
       <Section eyebrow="Prețuri" title="Simple. Transparente.">
-        <p className="text-center text-muted-foreground -mt-6 mb-12">Începe gratuit. Upgrade când ești gata. 💎</p>
+        <p className="text-center -mt-6 mb-3">
+          <span className="inline-block text-sm font-bold px-3 py-1 rounded-full bg-success/15 text-success">
+            🎉 Ofertă: -50% în prima lună pe orice plan
+          </span>
+        </p>
+        <p className="text-center text-muted-foreground mb-12">Începe gratuit. Upgrade când ești gata. 💎</p>
         <div className="grid md:grid-cols-3 gap-5 max-w-5xl mx-auto">
           {plans.map((p) => (
             <div key={p.name} className={`relative rounded-2xl p-8 ${p.featured ? "border-2" : "border card-floating"}`}
@@ -392,7 +398,18 @@ function Index() {
               )}
               <h3 className="font-semibold text-lg">{p.name}</h3>
               <p className="mt-1 text-sm text-muted-foreground">{p.tagline}</p>
-              <p className="mt-6 font-bold text-5xl">{p.price}<span className="text-base text-muted-foreground font-normal">/lună</span></p>
+              <div className="mt-6">
+                <span className="inline-block text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-primary/15 text-primary">
+                  🎉 {FIRST_MONTH_BADGE}
+                </span>
+              </div>
+              <p className="mt-3 font-bold text-5xl">
+                {firstMonthPrice(p.price).first}
+                <span className="text-base text-muted-foreground font-normal"> prima lună</span>
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                apoi <span className="text-foreground font-medium">{p.price}</span>/lună
+              </p>
               <ul className="mt-6 space-y-3">
                 {p.items.map((it) => (
                   <li key={it} className="flex items-start gap-2 text-sm">
