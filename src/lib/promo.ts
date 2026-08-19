@@ -7,6 +7,10 @@ export const FIRST_MONTH_DISCOUNT_PERCENT = 50;
 
 export const FIRST_MONTH_BADGE = `-${FIRST_MONTH_DISCOUNT_PERCENT}% prima lună`;
 
+/** Planul Starter: gratuit 3 zile/lună, cu asistent WhatsApp inclus. */
+export const FREE_STARTER_LABEL = "Gratuit 3 zile";
+export const FREE_STARTER_SUBLABEL = "Asistent WhatsApp AI inclus";
+
 /**
  * Din eticheta de preț ("249 lei") calculează prețul primei luni cu reducere.
  * Întoarce eticheta întreagă și cea redusă (formatate în lei, virgulă zecimală).

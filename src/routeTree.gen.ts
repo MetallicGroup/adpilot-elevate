@@ -17,6 +17,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RefundPolicyRouteImport } from './routes/refund-policy'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as OfertaRouteImport } from './routes/oferta'
 import { Route as IntegrationsRouteImport } from './routes/integrations'
 import { Route as HelpCenterRouteImport } from './routes/help-center'
 import { Route as HelpRouteImport } from './routes/help'
@@ -104,6 +105,11 @@ const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OfertaRoute = OfertaRouteImport.update({
+  id: '/oferta',
+  path: '/oferta',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IntegrationsRoute = IntegrationsRouteImport.update({
@@ -372,6 +378,7 @@ export interface FileRoutesByFullPath {
   '/help': typeof HelpRoute
   '/help-center': typeof HelpCenterRoute
   '/integrations': typeof IntegrationsRoute
+  '/oferta': typeof OfertaRoute
   '/pricing': typeof PricingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/refund-policy': typeof RefundPolicyRoute
@@ -429,6 +436,7 @@ export interface FileRoutesByTo {
   '/help': typeof HelpRoute
   '/help-center': typeof HelpCenterRoute
   '/integrations': typeof IntegrationsRoute
+  '/oferta': typeof OfertaRoute
   '/pricing': typeof PricingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/refund-policy': typeof RefundPolicyRoute
@@ -488,6 +496,7 @@ export interface FileRoutesById {
   '/help': typeof HelpRoute
   '/help-center': typeof HelpCenterRoute
   '/integrations': typeof IntegrationsRoute
+  '/oferta': typeof OfertaRoute
   '/pricing': typeof PricingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/refund-policy': typeof RefundPolicyRoute
@@ -547,6 +556,7 @@ export interface FileRouteTypes {
     | '/help'
     | '/help-center'
     | '/integrations'
+    | '/oferta'
     | '/pricing'
     | '/privacy-policy'
     | '/refund-policy'
@@ -604,6 +614,7 @@ export interface FileRouteTypes {
     | '/help'
     | '/help-center'
     | '/integrations'
+    | '/oferta'
     | '/pricing'
     | '/privacy-policy'
     | '/refund-policy'
@@ -662,6 +673,7 @@ export interface FileRouteTypes {
     | '/help'
     | '/help-center'
     | '/integrations'
+    | '/oferta'
     | '/pricing'
     | '/privacy-policy'
     | '/refund-policy'
@@ -721,6 +733,7 @@ export interface RootRouteChildren {
   HelpRoute: typeof HelpRoute
   HelpCenterRoute: typeof HelpCenterRoute
   IntegrationsRoute: typeof IntegrationsRoute
+  OfertaRoute: typeof OfertaRoute
   PricingRoute: typeof PricingRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   RefundPolicyRoute: typeof RefundPolicyRoute
@@ -802,6 +815,13 @@ declare module '@tanstack/react-router' {
       path: '/pricing'
       fullPath: '/pricing'
       preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/oferta': {
+      id: '/oferta'
+      path: '/oferta'
+      fullPath: '/oferta'
+      preLoaderRoute: typeof OfertaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/integrations': {
@@ -1223,6 +1243,7 @@ const rootRouteChildren: RootRouteChildren = {
   HelpRoute: HelpRoute,
   HelpCenterRoute: HelpCenterRoute,
   IntegrationsRoute: IntegrationsRoute,
+  OfertaRoute: OfertaRoute,
   PricingRoute: PricingRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   RefundPolicyRoute: RefundPolicyRoute,

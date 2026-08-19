@@ -9,7 +9,10 @@ import {
   disconnectMyWhatsApp,
 } from "@/lib/whatsapp.functions";
 
-export function WhatsAppConnectionCard() {
+export function WhatsAppConnectionCard({
+  onboarding = false,
+  planChosen = true,
+}: { onboarding?: boolean; planChosen?: boolean } = {}) {
   const get = useServerFn(getMyWhatsApp);
   const save = useServerFn(saveMyWhatsAppPhone);
   const disconnect = useServerFn(disconnectMyWhatsApp);
@@ -49,7 +52,9 @@ export function WhatsAppConnectionCard() {
   const isActive = conn?.status === "active";
   const allowed = data?.allowed !== false;
 
-  if (!isLoading && !allowed) {
+  // În onboarding permitem salvarea numărului chiar fără plan (activarea e blocată
+  // separat, mai jos). În alte contexte (Settings), fără plan → mesaj de upgrade.
+  if (!isLoading && !allowed && !onboarding) {
     return (
       <div className="card-floating p-5">
         <div className="flex items-center gap-2">
@@ -117,7 +122,7 @@ export function WhatsAppConnectionCard() {
             )}
           </div>
 
-          {!isActive && activationLink && (
+          {!isActive && activationLink && planChosen && (
             <>
               <a
                 href={activationLink}
@@ -131,6 +136,21 @@ export function WhatsAppConnectionCard() {
               <p className="text-xs text-muted-foreground text-center">
                 Se va deschide WhatsApp cu un mesaj pregătit. Trimite-l ca să primești
                 instant un răspuns de bun-venit de la AdPilot.
+              </p>
+            </>
+          )}
+
+          {!isActive && activationLink && !planChosen && (
+            <>
+              <button
+                disabled
+                className="w-full py-3 rounded-xl bg-[#25D366] text-white text-sm font-medium flex items-center justify-center gap-2 opacity-50 cursor-not-allowed"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Activează asistentul pe WhatsApp
+              </button>
+              <p className="text-xs text-amber-400 text-center font-medium">
+                Alege mai întâi un plan ⤴ ca să activezi asistentul.
               </p>
             </>
           )}

@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Facebook, Loader2, Sparkles, ArrowRight, MessageCircle, Target } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getOnboardingStatus, saveUserPhone, type OnboardingStatus } from "@/lib/onboarding.functions";
-import { firstMonthPrice, FIRST_MONTH_BADGE } from "@/lib/promo";
+import { getOnboardingStatus, saveUserPhone, startFreeStarter, type OnboardingStatus } from "@/lib/onboarding.functions";
+import { firstMonthPrice, FIRST_MONTH_BADGE, FREE_STARTER_LABEL, FREE_STARTER_SUBLABEL } from "@/lib/promo";
 import { startMetaOAuth } from "@/lib/meta-oauth.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { useStripeCheckout } from "@/hooks/useStripeCheckout";
@@ -27,11 +27,16 @@ export const Route = createFileRoute("/_authenticated/onboarding")({
 
 const PLANS = [
   {
-    id: "starter_monthly",
+    id: "starter_free",
     name: "Starter",
-    price: "249 lei",
-    desc: "Pentru afaceri mici care încep cu reclamele online.",
-    items: ["3 campanii pe lună pe Facebook", "Suport pe email"],
+    price: "Gratuit",
+    free: true,
+    desc: "Testează complet 3 zile în fiecare lună — fără card.",
+    items: [
+      "Asistent WhatsApp AI inclus",
+      "Campanii pe Facebook & Instagram",
+      "3 zile gratuit în fiecare lună",
+    ],
   },
   {
     id: "pro_monthly",
@@ -127,6 +132,7 @@ function OnboardingPage() {
   const search = useSearch({ from: "/_authenticated/onboarding" });
   const fetchStatus = useServerFn(getOnboardingStatus);
   const startOAuth = useServerFn(startMetaOAuth);
+  const startFree = useServerFn(startFreeStarter);
   const [status, setStatus] = useState<OnboardingStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [adReady, setAdReady] = useState(false);
@@ -182,18 +188,29 @@ function OnboardingPage() {
     }
   }
 
-  function selectPlan(priceId: string) {
+  async function selectPlan(plan: { id: string; free?: boolean }) {
+    if (plan.free) {
+      try {
+        await startFree({});
+        toast.success("Planul gratuit e activ! Ai 3 zile — activează WhatsApp și pornește prima reclamă.");
+        await reload();
+      } catch (e: any) {
+        toast.error(e?.message ?? "Nu am putut activa planul gratuit.");
+      }
+      return;
+    }
     openCheckout({
-      priceId,
+      priceId: plan.id,
       returnUrl: `${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
     });
   }
 
   const step1Done = !!status?.hasMetaConnection;
-  const planDone = !!status?.hasActiveSubscription;
-  const whatsappAllowed = !!status?.whatsappAllowed; // doar Pro/Premium
-  const step2Done = planDone; // pașii de mai jos (WhatsApp / obiectiv) rămân gated pe abonament
-  const activeStep = !step1Done ? 1 : !adReady ? 2 : !planDone ? 3 : 4;
+  const planChosen = !!status?.planChosen; // abonament plătit SAU Starter gratuit activ
+  const planDone = !!status?.hasActiveSubscription; // doar abonament plătit (pt. redirect)
+  const whatsappAllowed = !!status?.whatsappAllowed; // Pro/Premium sau Starter gratuit activ
+  const freeState = status?.freeStarter?.state;
+  const activeStep = !step1Done ? 1 : !adReady ? 2 : !planChosen ? 3 : 4;
 
   if (loading) {
     return (
@@ -234,9 +251,9 @@ function OnboardingPage() {
           <div className="flex-1 h-px bg-border" />
           <StepBadge n={2} done={adReady} active={activeStep === 2} label="Cont & card" />
           <div className="flex-1 h-px bg-border" />
-          <StepBadge n={3} done={planDone} active={activeStep === 3} label="Alege plan" />
+          <StepBadge n={3} done={planChosen} active={activeStep === 3} label="Alege plan" />
           <div className="flex-1 h-px bg-border" />
-          <StepBadge n={4} done={false} active={activeStep === 4} label="WhatsApp (opțional)" />
+          <StepBadge n={4} done={false} active={activeStep === 4} label="WhatsApp" />
           <div className="flex-1 h-px bg-border" />
           <StepBadge n={5} done={false} active={activeStep === 4} label="Obiectivul tău" />
         </div>
@@ -275,9 +292,9 @@ function OnboardingPage() {
         {/* Step 2: Ad account + card gate */}
         {step1Done && <AdAccountGate connected={step1Done} onReady={() => setAdReady(true)} />}
 
-        {/* Step 3: Plan — deblocat doar după ce contul de reclame + cardul sunt gata */}
+        {/* Step 3: Plan — deblocat după conectarea Facebook. Alegerea planului deblochează activarea WhatsApp. */}
         <section
-          className={`mt-5 card-floating p-7 transition-opacity ${!step1Done || !adReady ? "opacity-40 pointer-events-none" : ""}`}
+          className={`mt-5 card-floating p-7 transition-opacity ${!step1Done ? "opacity-40 pointer-events-none" : ""}`}
         >
           <div className="flex items-start gap-4">
             <div className="w-11 h-11 rounded-xl bg-primary/15 text-primary flex items-center justify-center shrink-0">
@@ -286,18 +303,32 @@ function OnboardingPage() {
             <div className="flex-1">
               <h2 className="font-semibold text-lg">Alege planul tău</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                3 zile gratuit pe orice plan. La activare verificăm cardul cu 1 leu (returnat
-                imediat); prima plată abia în ziua a 4-a.
+                Începe cu <b className="text-foreground">Starter gratuit</b> — 3 zile în fiecare
+                lună, fără card, cu asistent WhatsApp inclus. Sau treci direct pe Pro/Premium cu{" "}
+                <b className="text-foreground">-50% în prima lună</b>.
               </p>
             </div>
           </div>
+
+          {planChosen && (
+            <div className="mt-4 inline-flex items-center gap-2 text-sm text-emerald-500">
+              <Check className="w-4 h-4" />
+              {freeState === "active"
+                ? "Planul Starter gratuit e activ — acum poți activa WhatsApp."
+                : "Plan activ — acum poți activa WhatsApp."}
+            </div>
+          )}
 
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             {PLANS.map((p) => (
               <div
                 key={p.id}
                 className={`relative rounded-2xl border p-5 flex flex-col ${
-                  p.featured ? "border-primary bg-primary/5" : "border-border bg-background/50"
+                  p.featured
+                    ? "border-primary bg-primary/5"
+                    : p.free
+                      ? "border-success/40 bg-success/5"
+                      : "border-border bg-background/50"
                 }`}
               >
                 {p.featured && (
@@ -305,19 +336,36 @@ function OnboardingPage() {
                     Popular
                   </span>
                 )}
+                {p.free && (
+                  <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[10px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-success text-white">
+                    Gratuit
+                  </span>
+                )}
                 <h3 className="font-semibold">{p.name}</h3>
                 <p className="mt-1 text-xs text-muted-foreground">{p.desc}</p>
-                <span className="mt-3 inline-block w-fit text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-success/15 text-success">
-                  🎉 {FIRST_MONTH_BADGE}
-                </span>
-                <p className="mt-2 font-serif text-3xl">
-                  {firstMonthPrice(p.price).first}
-                  <span className="text-xs text-muted-foreground font-sans"> prima lună</span>
-                </p>
-                <p className="text-[11px] text-muted-foreground">
-                  apoi <span className="text-foreground font-medium">{p.price}</span>/lună
-                </p>
-                <p className="mt-1 text-[11px] text-success font-medium">✨ 3 zile gratuit</p>
+                {p.free ? (
+                  <>
+                    <span className="mt-3 inline-block w-fit text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-success/15 text-success">
+                      ✅ {FREE_STARTER_LABEL}
+                    </span>
+                    <p className="mt-2 font-serif text-3xl">Gratuit</p>
+                    <p className="text-[11px] text-muted-foreground">{FREE_STARTER_SUBLABEL}</p>
+                  </>
+                ) : (
+                  <>
+                    <span className="mt-3 inline-block w-fit text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-success/15 text-success">
+                      🎉 {FIRST_MONTH_BADGE}
+                    </span>
+                    <p className="mt-2 font-serif text-3xl">
+                      {firstMonthPrice(p.price).first}
+                      <span className="text-xs text-muted-foreground font-sans"> prima lună</span>
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      apoi <span className="text-foreground font-medium">{p.price}</span>/lună
+                    </p>
+                    <p className="mt-1 text-[11px] text-success font-medium">✨ 3 zile gratuit</p>
+                  </>
+                )}
                 <ul className="mt-4 space-y-1.5 text-xs flex-1">
                   {p.items.map((it) => (
                     <li key={it} className="flex items-start gap-2">
@@ -326,61 +374,46 @@ function OnboardingPage() {
                   ))}
                 </ul>
                 <button
-                  onClick={() => selectPlan(p.id)}
+                  onClick={() => selectPlan(p)}
                   className={`press mt-5 w-full py-2.5 rounded-xl text-sm font-medium ${
                     p.featured
                       ? "bg-primary text-primary-foreground"
-                      : "bg-foreground text-background"
+                      : p.free
+                        ? "bg-success text-white"
+                        : "bg-foreground text-background"
                   }`}
                 >
-                  Începe 3 zile gratuit
+                  {p.free ? "Începe gratuit" : "Începe 3 zile gratuit"}
                 </button>
               </div>
             ))}
           </div>
         </section>
 
-        {/* Step 3: WhatsApp (optional) */}
+        {/* Step 4: WhatsApp — salvarea numărului merge după Facebook; activarea e blocată până alegi un plan. */}
         <section
-          className={`mt-5 card-floating p-7 transition-opacity ${!step2Done ? "opacity-40 pointer-events-none" : ""}`}
+          className={`mt-5 card-floating p-7 transition-opacity ${!step1Done ? "opacity-40 pointer-events-none" : ""}`}
         >
           <div className="flex items-start gap-4">
             <div className="w-11 h-11 rounded-xl bg-[#25D366]/15 text-[#25D366] flex items-center justify-center shrink-0">
               <MessageCircle className="w-5 h-5" />
             </div>
             <div className="flex-1">
-              <h2 className="font-semibold text-lg">
-                Conectează WhatsApp{" "}
-                <span className="text-xs font-normal text-muted-foreground">
-                  {whatsappAllowed ? "(opțional)" : "(Pro / Premium)"}
-                </span>
-              </h2>
+              <h2 className="font-semibold text-lg">Conectează WhatsApp</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                {whatsappAllowed
-                  ? "Primește lead-uri, rapoarte și controlează campaniile direct din WhatsApp. Poți face asta și mai târziu din Dashboard."
-                  : "Asistentul WhatsApp AI e disponibil în planurile Pro și Premium. Fă upgrade ca să conectezi numărul și să controlezi campaniile din conversație."}
+                Adaugă numărul tău, apoi apasă „Activează" ca să pornești asistentul AdPilot pe
+                WhatsApp. {planChosen ? "" : "Butonul de activare se deblochează după ce alegi un plan mai sus."}
               </p>
             </div>
           </div>
-          {whatsappAllowed ? (
-            <div className="mt-5">
-              <WhatsAppConnectionCard />
-            </div>
-          ) : (
-            <div className="mt-5">
-              <button
-                onClick={() => navigate({ to: "/settings" })}
-                className="press inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium"
-              >
-                Fă upgrade la Pro <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          )}
+          <div className="mt-5">
+            <WhatsAppConnectionCard onboarding planChosen={planChosen} />
+          </div>
         </section>
 
-        {/* Step 4: obiectiv */}
+        {/* Step 5: obiectiv */}
         <section
-          className={`mt-5 card-floating p-7 transition-opacity ${!step2Done ? "opacity-40 pointer-events-none" : ""}`}
+          className={`mt-5 card-floating p-7 transition-opacity ${!planChosen ? "opacity-40 pointer-events-none" : ""}`}
         >
           <div className="flex items-start gap-4">
             <div className="w-11 h-11 rounded-xl bg-primary/15 text-primary flex items-center justify-center shrink-0">

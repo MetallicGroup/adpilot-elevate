@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "@tanstack/react-router";
 import { tkViewContent, tkClickButton } from "@/lib/tiktok-pixel";
-import { firstMonthPrice, FIRST_MONTH_BADGE } from "@/lib/promo";
+import { firstMonthPrice, FIRST_MONTH_BADGE, FREE_STARTER_LABEL, FREE_STARTER_SUBLABEL } from "@/lib/promo";
 
 export const Route = createFileRoute("/pricing")({
   validateSearch: (s: Record<string, unknown>): { plan?: string; redirect?: string } => ({
@@ -41,14 +41,16 @@ export const Route = createFileRoute("/pricing")({
 const plans = [
   {
     name: "Starter",
-    priceId: "starter_monthly",
-    price: "249 lei",
-    desc: "Pentru afaceri mici care încep cu reclamele online.",
+    priceId: "starter_free",
+    free: true,
+    price: "Gratuit",
+    desc: "Testează AdPilot complet — 3 zile gratuit în fiecare lună, fără card.",
     items: [
-      "3 campanii pe lună pe Facebook",
-      "Suport pe email",
+      "Asistent WhatsApp AI inclus",
+      "Pornești campanii pe Facebook & Instagram",
+      "3 zile gratuit în fiecare lună",
     ],
-    notIncluded: ["Asistent WhatsApp AI", "Generare AI de poze"],
+    notIncluded: ["Campanii nelimitate", "Generare AI de poze"],
   },
   {
     name: "Pro",
@@ -112,8 +114,18 @@ function PricingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleSelect = (priceId: string) => {
+  const handleSelect = (priceId: string, free?: boolean) => {
     tkClickButton(`pricing-select-${priceId}`);
+    if (free) {
+      // Starter gratuit: fără Stripe. Neautentificat → cont; autentificat → onboarding
+      // (unde conectează Facebook + număr și pornește gratuitul).
+      navigate(
+        authed
+          ? ({ to: "/onboarding" } as any)
+          : ({ to: "/auth", search: { mode: "signup" } } as any),
+      );
+      return;
+    }
     if (!authed) {
       navigate({ to: "/auth", search: { redirect: `/pricing?plan=${priceId}` } as any });
       return;
@@ -140,19 +152,35 @@ function PricingPage() {
             )}
             <h3 className="font-semibold text-xl">{p.name}</h3>
             <p className="mt-2 text-sm text-muted-foreground">{p.desc}</p>
-            <div className="mt-6">
-              <span className="inline-block text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-success/15 text-success">
-                🎉 {FIRST_MONTH_BADGE}
-              </span>
-            </div>
-            <p className="mt-3 font-serif text-5xl">
-              {firstMonthPrice(p.price).first}
-              <span className="text-base text-muted-foreground font-sans"> prima lună</span>
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              apoi <span className="text-foreground font-medium">{p.price}</span>/lună
-            </p>
-            <p className="mt-2 text-xs text-success font-medium">✨ 3 zile gratuit</p>
+            {p.free ? (
+              <>
+                <div className="mt-6">
+                  <span className="inline-block text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-success/15 text-success">
+                    ✅ {FREE_STARTER_LABEL}
+                  </span>
+                </div>
+                <p className="mt-3 font-serif text-5xl">Gratuit</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {FREE_STARTER_SUBLABEL} · fără card
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="mt-6">
+                  <span className="inline-block text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-success/15 text-success">
+                    🎉 {FIRST_MONTH_BADGE}
+                  </span>
+                </div>
+                <p className="mt-3 font-serif text-5xl">
+                  {firstMonthPrice(p.price).first}
+                  <span className="text-base text-muted-foreground font-sans"> prima lună</span>
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  apoi <span className="text-foreground font-medium">{p.price}</span>/lună
+                </p>
+                <p className="mt-2 text-xs text-success font-medium">✨ 3 zile gratuit</p>
+              </>
+            )}
             <ul className="mt-6 space-y-2">
               {p.items.map((it) => (
                 <li key={it} className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-success" />{it}</li>
@@ -162,12 +190,12 @@ function PricingPage() {
               ))}
             </ul>
             <button
-              onClick={() => handleSelect(p.priceId)}
+              onClick={() => handleSelect(p.priceId, p.free)}
               className={`press mt-8 inline-flex w-full items-center justify-center px-4 py-3 rounded-lg font-medium ${
                 p.featured ? "bg-primary text-primary-foreground" : "bg-foreground text-background"
               }`}
             >
-              Începe cele 3 zile gratuit
+              {p.free ? "Începe gratuit" : "Începe cele 3 zile gratuit"}
             </button>
           </div>
         ))}

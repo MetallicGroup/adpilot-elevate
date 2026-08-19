@@ -13,7 +13,7 @@ import { CountUp } from "@/components/wow/CountUp";
 import { Reveal } from "@/components/wow/Reveal";
 import { GoalPicker } from "@/components/marketing/GoalPicker";
 import { tkViewContent, tkClickButton } from "@/lib/tiktok-pixel";
-import { firstMonthPrice, FIRST_MONTH_BADGE } from "@/lib/promo";
+import { firstMonthPrice, FIRST_MONTH_BADGE, FREE_STARTER_LABEL, FREE_STARTER_SUBLABEL } from "@/lib/promo";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -398,18 +398,32 @@ function Index() {
               )}
               <h3 className="font-semibold text-lg">{p.name}</h3>
               <p className="mt-1 text-sm text-muted-foreground">{p.tagline}</p>
-              <div className="mt-6">
-                <span className="inline-block text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-primary/15 text-primary">
-                  🎉 {FIRST_MONTH_BADGE}
-                </span>
-              </div>
-              <p className="mt-3 font-bold text-5xl">
-                {firstMonthPrice(p.price).first}
-                <span className="text-base text-muted-foreground font-normal"> prima lună</span>
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                apoi <span className="text-foreground font-medium">{p.price}</span>/lună
-              </p>
+              {p.free ? (
+                <>
+                  <div className="mt-6">
+                    <span className="inline-block text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-success/15 text-success">
+                      ✅ {FREE_STARTER_LABEL}
+                    </span>
+                  </div>
+                  <p className="mt-3 font-bold text-5xl">Gratuit</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{FREE_STARTER_SUBLABEL} · fără card</p>
+                </>
+              ) : (
+                <>
+                  <div className="mt-6">
+                    <span className="inline-block text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-primary/15 text-primary">
+                      🎉 {FIRST_MONTH_BADGE}
+                    </span>
+                  </div>
+                  <p className="mt-3 font-bold text-5xl">
+                    {firstMonthPrice(p.price).first}
+                    <span className="text-base text-muted-foreground font-normal"> prima lună</span>
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    apoi <span className="text-foreground font-medium">{p.price}</span>/lună
+                  </p>
+                </>
+              )}
               <ul className="mt-6 space-y-3">
                 {p.items.map((it) => (
                   <li key={it} className="flex items-start gap-2 text-sm">
@@ -529,7 +543,7 @@ const steps = [
 ];
 
 const plans = [
-  { name: "Starter", tagline: "Pentru afaceri mici care încep.", price: "249 lei", items: ["3 campanii pe lună pe Facebook", "Fără asistent WhatsApp AI", "Suport pe email"] },
+  { name: "Starter", tagline: "Testează gratuit, fără card.", price: "Gratuit", free: true, items: ["Asistent WhatsApp AI inclus", "Campanii pe Facebook & Instagram", "3 zile gratuit în fiecare lună"] },
   { name: "Pro", tagline: "Pentru afacerile care cresc rapid.", price: "495 lei", featured: true, items: ["Campanii nelimitate pe Facebook", "10 poze AI pe lună", "Asistent WhatsApp AI", "Suport prioritar"] },
   { name: "Premium", tagline: "Pentru branduri și agenții care scalează.", price: "995 lei", items: ["Campanii nelimitate pe Facebook", "Poze AI nelimitate", "Asistent WhatsApp AI", "Manager dedicat"] },
 ];

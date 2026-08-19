@@ -56,15 +56,9 @@ export const saveMyWhatsAppPhone = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { resolveAccess } = await import("@/lib/access.server");
-    const access = await resolveAccess(supabaseAdmin, userId);
-    if (!access.whatsappAllowed) {
-      throw new Error(
-        access.freeStarter.state === "consumed"
-          ? "Planul gratuit s-a consumat luna aceasta. Alege Pro sau Premium ca să folosești în continuare asistentul WhatsApp."
-          : "Alege mai întâi un plan (Starter gratuit, Pro sau Premium) ca să activezi asistentul WhatsApp.",
-      );
-    }
+    // Salvarea numărului e permisă oricând (e inofensivă — doar stochează numărul +
+    // codul de activare). Accesul la bot rămâne gated în webhook; iar butonul de
+    // activare din UI e blocat până userul alege un plan (`planChosen`).
     const { normalizePhone, generateActivationCode, getCentralWhatsApp, buildWaMeLink } =
       await import("./whatsapp.server");
     const phone = normalizePhone(data.phone);
