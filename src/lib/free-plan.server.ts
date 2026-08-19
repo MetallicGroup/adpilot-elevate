@@ -44,7 +44,7 @@ async function sendConsumedMessage(userId: string): Promise<{ sent: boolean; via
   const { getCentralWhatsApp, sendWhatsAppMessage, sendWhatsAppTemplate } = await import(
     "@/lib/whatsapp.server"
   );
-  const { FREE_STARTER_CONSUMED_MESSAGE, PRICING_URL } = await import("@/lib/access.server");
+  const { FREE_STARTER_CONSUMED_MESSAGE } = await import("@/lib/access.server");
   const central = getCentralWhatsApp();
   if (!central) return { sent: false, via: "none" };
 
@@ -70,6 +70,7 @@ async function sendConsumedMessage(userId: string): Promise<{ sent: boolean; via
   };
 
   // 1) Template aprobat (merge oricând, chiar în afara ferestrei de 24h).
+  //    Template STATIC (fără variabile) + buton URL „Vezi planurile" → /pricing.
   try {
     const { id } = await sendWhatsAppTemplate(
       central.phoneNumberId,
@@ -77,7 +78,7 @@ async function sendConsumedMessage(userId: string): Promise<{ sent: boolean; via
       phone,
       "plan_gratuit_consumat",
       "ro",
-      [PRICING_URL],
+      [],
     );
     await log(id, FREE_STARTER_CONSUMED_MESSAGE);
     return { sent: true, via: "template" };
