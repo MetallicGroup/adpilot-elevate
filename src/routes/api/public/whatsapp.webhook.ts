@@ -293,18 +293,20 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
               }
 
               // Load history
-              // Plan gate: Starter has no WhatsApp assistant.
+              // Access gate: paid (Pro/Premium) SAU Starter gratuit activ.
               {
-                const { getUserPlanTier, whatsappAllowedForTier, WHATSAPP_UPGRADE_MESSAGE } =
-                  await import("@/lib/plan.server");
-                const tier = await getUserPlanTier(supabaseAdmin, conn.user_id);
-                if (!whatsappAllowedForTier(tier)) {
+                const { resolveAccess, FREE_STARTER_CONSUMED_MESSAGE, CHOOSE_PLAN_MESSAGE } =
+                  await import("@/lib/access.server");
+                const access = await resolveAccess(supabaseAdmin, conn.user_id);
+                if (!access.botAllowed) {
+                  const consumed = access.freeStarter.state === "consumed";
+                  const msg = consumed ? FREE_STARTER_CONSUMED_MESSAGE : CHOOSE_PLAN_MESSAGE;
                   try {
                     const { id } = await sendWhatsAppMessage(
                       central.phoneNumberId,
                       central.accessToken,
                       fromPhone,
-                      { type: "text", text: WHATSAPP_UPGRADE_MESSAGE },
+                      { type: "text", text: msg },
                     );
                     await supabaseAdmin.from("whatsapp_messages").insert({
                       user_id: conn.user_id,
@@ -312,11 +314,11 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
                       wa_message_id: id,
                       direction: "out",
                       msg_type: "text",
-                      text: WHATSAPP_UPGRADE_MESSAGE,
-                      meta: { kind: "plan_gate" },
+                      text: msg,
+                      meta: { kind: consumed ? "free_consumed" : "plan_gate" },
                     });
                   } catch (e) {
-                    console.error("[wa] plan gate notice failed", e);
+                    console.error("[wa] access gate notice failed", e);
                   }
                   continue;
                 }

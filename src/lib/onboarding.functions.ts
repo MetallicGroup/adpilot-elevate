@@ -6,10 +6,16 @@ export type OnboardingStatus = {
   hasPhone: boolean;
   hasMetaConnection: boolean;
   hasActiveSubscription: boolean;
+  /** A ales un plan? = abonament plătit ACTIV SAU Starter gratuit activ luna asta. */
+  planChosen: boolean;
   subscriptionStatus: string | null;
   trialEnd: string | null;
   planTier: "none" | "starter" | "pro" | "premium";
   whatsappAllowed: boolean;
+  freeStarter: {
+    state: "none" | "eligible" | "active" | "consumed";
+    endsAt: string | null;
+  };
 };
 
 export const getOnboardingStatus = createServerFn({ method: "POST" })
@@ -58,18 +64,55 @@ export const getOnboardingStatus = createServerFn({ method: "POST" })
         : priceId.includes("starter")
           ? "starter"
           : "none";
-    // Asistentul WhatsApp e disponibil doar în Pro și Premium.
-    const whatsappAllowed = isActive && (planTier === "pro" || planTier === "premium");
+    // Access central: factorează și Starter gratuit (nu doar abonamentul plătit).
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { resolveAccess } = await import("@/lib/access.server");
+    const access = await resolveAccess(supabaseAdmin, userId);
+    const planChosen = isActive || access.freeStarter.state === "active";
 
     return {
       hasPhone: !!(profile?.phone && String(profile.phone).trim()),
       hasMetaConnection: !!meta,
       hasActiveSubscription: isActive,
+      planChosen,
       subscriptionStatus: sub?.status ?? null,
       trialEnd: sub?.trial_end ?? null,
       planTier,
-      whatsappAllowed,
+      whatsappAllowed: access.whatsappAllowed,
+      freeStarter: { state: access.freeStarter.state, endsAt: access.freeStarter.endsAt },
     };
+  });
+
+/**
+ * Pornește planul „Starter gratuit" pentru luna curentă (fără card).
+ * Ceasul de 3 zile NU pornește aici — pornește când prima reclamă devine activă
+ * (setat de job-ul de insights). Idempotent; blocat dacă deja consumat luna asta.
+ */
+export const startFreeStarter = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { resolveAccess, currentPlanMonth } = await import("@/lib/access.server");
+    const access = await resolveAccess(supabaseAdmin, userId);
+    if (access.paid) return { ok: true as const, note: "already_paid" };
+    if (access.freeStarter.state === "active") return { ok: true as const, note: "already_active" };
+    if (access.freeStarter.state === "consumed") {
+      throw new Error(
+        "Ai folosit deja cele 3 zile gratuite luna aceasta. Revino luna viitoare sau alege Pro/Premium.",
+      );
+    }
+    const { error } = await (supabaseAdmin as any)
+      .from("profiles")
+      .update({
+        free_plan_month: currentPlanMonth(),
+        free_plan_started_at: null,
+        free_plan_notified_at: null,
+        plan: "starter",
+      })
+      .eq("id", userId);
+    if (error) throw new Error(error.message);
+    return { ok: true as const, note: "started" };
   });
 
 /** Salvează numărul de telefon în profil (folosit de gate-ul din onboarding, ex.

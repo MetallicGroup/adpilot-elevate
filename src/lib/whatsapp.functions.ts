@@ -16,9 +16,10 @@ export const getMyWhatsApp = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { getUserPlanTier, whatsappAllowedForTier } = await import("./plan.server");
-    const tier = await getUserPlanTier(supabaseAdmin, userId);
-    const allowed = whatsappAllowedForTier(tier);
+    const { resolveAccess } = await import("@/lib/access.server");
+    const access = await resolveAccess(supabaseAdmin, userId);
+    const allowed = access.whatsappAllowed;
+    const tier = access.tier;
     const { data } = await supabase
       .from("whatsapp_connections")
       .select("id, user_phone, status, activation_code, activated_at, last_message_at")
@@ -55,11 +56,13 @@ export const saveMyWhatsAppPhone = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { getUserPlanTier, whatsappAllowedForTier } = await import("./plan.server");
-    const tier = await getUserPlanTier(supabaseAdmin, userId);
-    if (!whatsappAllowedForTier(tier)) {
+    const { resolveAccess } = await import("@/lib/access.server");
+    const access = await resolveAccess(supabaseAdmin, userId);
+    if (!access.whatsappAllowed) {
       throw new Error(
-        "Asistentul WhatsApp este disponibil doar în planurile Pro și Premium. Fă upgrade ca să îl activezi.",
+        access.freeStarter.state === "consumed"
+          ? "Planul gratuit s-a consumat luna aceasta. Alege Pro sau Premium ca să folosești în continuare asistentul WhatsApp."
+          : "Alege mai întâi un plan (Starter gratuit, Pro sau Premium) ca să activezi asistentul WhatsApp.",
       );
     }
     const { normalizePhone, generateActivationCode, getCentralWhatsApp, buildWaMeLink } =
@@ -128,11 +131,12 @@ export const getMyWhatsAppInbox = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const { getUserPlanTier, whatsappAllowedForTier } = await import("./plan.server");
+    const { resolveAccess } = await import("@/lib/access.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { getCentralWhatsApp } = await import("./whatsapp.server");
 
-    const tier = await getUserPlanTier(supabaseAdmin, userId);
+    const access = await resolveAccess(supabaseAdmin, userId);
+    const tier = access.tier;
 
     const { data: connection } = await supabase
       .from("whatsapp_connections")
@@ -159,7 +163,7 @@ export const getMyWhatsAppInbox = createServerFn({ method: "GET" })
     return {
       connection: connection ?? null,
       central_number: getCentralWhatsApp()?.displayNumber ?? null,
-      allowed: whatsappAllowedForTier(tier),
+      allowed: access.whatsappAllowed,
       plan: tier,
       messages,
     };

@@ -59,6 +59,7 @@ import { Route as ApiPublicHooksSyncMetaLeadsRouteImport } from './routes/api/pu
 import { Route as ApiPublicHooksRefreshInsightsRouteImport } from './routes/api/public/hooks/refresh-insights'
 import { Route as ApiPublicHooksPeriodicUpdateRouteImport } from './routes/api/public/hooks/periodic-update'
 import { Route as ApiPublicHooksNewSignupRouteImport } from './routes/api/public/hooks/new-signup'
+import { Route as ApiPublicHooksFreePlanExpiryRouteImport } from './routes/api/public/hooks/free-plan-expiry'
 import { Route as ApiPublicHooksDailyReportRouteImport } from './routes/api/public/hooks/daily-report'
 import { Route as ApiPublicHooksAnomalyScanRouteImport } from './routes/api/public/hooks/anomaly-scan'
 import { Route as ApiMetaAuthCallbackRouteImport } from './routes/api/meta.auth.callback'
@@ -322,6 +323,12 @@ const ApiPublicHooksNewSignupRoute = ApiPublicHooksNewSignupRouteImport.update({
   path: '/api/public/hooks/new-signup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksFreePlanExpiryRoute =
+  ApiPublicHooksFreePlanExpiryRouteImport.update({
+    id: '/api/public/hooks/free-plan-expiry',
+    path: '/api/public/hooks/free-plan-expiry',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksDailyReportRoute =
   ApiPublicHooksDailyReportRouteImport.update({
     id: '/api/public/hooks/daily-report',
@@ -398,6 +405,7 @@ export interface FileRoutesByFullPath {
   '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
   '/api/public/hooks/anomaly-scan': typeof ApiPublicHooksAnomalyScanRoute
   '/api/public/hooks/daily-report': typeof ApiPublicHooksDailyReportRoute
+  '/api/public/hooks/free-plan-expiry': typeof ApiPublicHooksFreePlanExpiryRoute
   '/api/public/hooks/new-signup': typeof ApiPublicHooksNewSignupRoute
   '/api/public/hooks/periodic-update': typeof ApiPublicHooksPeriodicUpdateRoute
   '/api/public/hooks/refresh-insights': typeof ApiPublicHooksRefreshInsightsRoute
@@ -454,6 +462,7 @@ export interface FileRoutesByTo {
   '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
   '/api/public/hooks/anomaly-scan': typeof ApiPublicHooksAnomalyScanRoute
   '/api/public/hooks/daily-report': typeof ApiPublicHooksDailyReportRoute
+  '/api/public/hooks/free-plan-expiry': typeof ApiPublicHooksFreePlanExpiryRoute
   '/api/public/hooks/new-signup': typeof ApiPublicHooksNewSignupRoute
   '/api/public/hooks/periodic-update': typeof ApiPublicHooksPeriodicUpdateRoute
   '/api/public/hooks/refresh-insights': typeof ApiPublicHooksRefreshInsightsRoute
@@ -512,6 +521,7 @@ export interface FileRoutesById {
   '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
   '/api/public/hooks/anomaly-scan': typeof ApiPublicHooksAnomalyScanRoute
   '/api/public/hooks/daily-report': typeof ApiPublicHooksDailyReportRoute
+  '/api/public/hooks/free-plan-expiry': typeof ApiPublicHooksFreePlanExpiryRoute
   '/api/public/hooks/new-signup': typeof ApiPublicHooksNewSignupRoute
   '/api/public/hooks/periodic-update': typeof ApiPublicHooksPeriodicUpdateRoute
   '/api/public/hooks/refresh-insights': typeof ApiPublicHooksRefreshInsightsRoute
@@ -570,6 +580,7 @@ export interface FileRouteTypes {
     | '/api/meta/auth/callback'
     | '/api/public/hooks/anomaly-scan'
     | '/api/public/hooks/daily-report'
+    | '/api/public/hooks/free-plan-expiry'
     | '/api/public/hooks/new-signup'
     | '/api/public/hooks/periodic-update'
     | '/api/public/hooks/refresh-insights'
@@ -626,6 +637,7 @@ export interface FileRouteTypes {
     | '/api/meta/auth/callback'
     | '/api/public/hooks/anomaly-scan'
     | '/api/public/hooks/daily-report'
+    | '/api/public/hooks/free-plan-expiry'
     | '/api/public/hooks/new-signup'
     | '/api/public/hooks/periodic-update'
     | '/api/public/hooks/refresh-insights'
@@ -683,6 +695,7 @@ export interface FileRouteTypes {
     | '/api/meta/auth/callback'
     | '/api/public/hooks/anomaly-scan'
     | '/api/public/hooks/daily-report'
+    | '/api/public/hooks/free-plan-expiry'
     | '/api/public/hooks/new-signup'
     | '/api/public/hooks/periodic-update'
     | '/api/public/hooks/refresh-insights'
@@ -721,6 +734,7 @@ export interface RootRouteChildren {
   ApiMetaAuthCallbackRoute: typeof ApiMetaAuthCallbackRoute
   ApiPublicHooksAnomalyScanRoute: typeof ApiPublicHooksAnomalyScanRoute
   ApiPublicHooksDailyReportRoute: typeof ApiPublicHooksDailyReportRoute
+  ApiPublicHooksFreePlanExpiryRoute: typeof ApiPublicHooksFreePlanExpiryRoute
   ApiPublicHooksNewSignupRoute: typeof ApiPublicHooksNewSignupRoute
   ApiPublicHooksPeriodicUpdateRoute: typeof ApiPublicHooksPeriodicUpdateRoute
   ApiPublicHooksRefreshInsightsRoute: typeof ApiPublicHooksRefreshInsightsRoute
@@ -1084,6 +1098,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksNewSignupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/free-plan-expiry': {
+      id: '/api/public/hooks/free-plan-expiry'
+      path: '/api/public/hooks/free-plan-expiry'
+      fullPath: '/api/public/hooks/free-plan-expiry'
+      preLoaderRoute: typeof ApiPublicHooksFreePlanExpiryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/daily-report': {
       id: '/api/public/hooks/daily-report'
       path: '/api/public/hooks/daily-report'
@@ -1215,6 +1236,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMetaAuthCallbackRoute: ApiMetaAuthCallbackRoute,
   ApiPublicHooksAnomalyScanRoute: ApiPublicHooksAnomalyScanRoute,
   ApiPublicHooksDailyReportRoute: ApiPublicHooksDailyReportRoute,
+  ApiPublicHooksFreePlanExpiryRoute: ApiPublicHooksFreePlanExpiryRoute,
   ApiPublicHooksNewSignupRoute: ApiPublicHooksNewSignupRoute,
   ApiPublicHooksPeriodicUpdateRoute: ApiPublicHooksPeriodicUpdateRoute,
   ApiPublicHooksRefreshInsightsRoute: ApiPublicHooksRefreshInsightsRoute,
