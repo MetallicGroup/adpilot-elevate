@@ -27,6 +27,7 @@ import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as DocumentationRouteImport } from './routes/documentation'
 import { Route as CookiePolicyRouteImport } from './routes/cookie-policy'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as BeautyRouteImport } from './routes/beauty'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -155,6 +156,11 @@ const CookiePolicyRoute = CookiePolicyRouteImport.update({
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BeautyRoute = BeautyRouteImport.update({
+  id: '/beauty',
+  path: '/beauty',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -369,6 +375,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auth': typeof AuthRouteWithChildren
+  '/beauty': typeof BeautyRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
   '/documentation': typeof DocumentationRoute
@@ -427,6 +434,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auth': typeof AuthRouteWithChildren
+  '/beauty': typeof BeautyRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
   '/documentation': typeof DocumentationRoute
@@ -487,6 +495,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/auth': typeof AuthRouteWithChildren
+  '/beauty': typeof BeautyRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
   '/documentation': typeof DocumentationRoute
@@ -547,6 +556,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/auth'
+    | '/beauty'
     | '/contact'
     | '/cookie-policy'
     | '/documentation'
@@ -605,6 +615,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/auth'
+    | '/beauty'
     | '/contact'
     | '/cookie-policy'
     | '/documentation'
@@ -664,6 +675,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/about'
     | '/auth'
+    | '/beauty'
     | '/contact'
     | '/cookie-policy'
     | '/documentation'
@@ -724,6 +736,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRouteWithChildren
+  BeautyRoute: typeof BeautyRoute
   ContactRoute: typeof ContactRoute
   CookiePolicyRoute: typeof CookiePolicyRoute
   DocumentationRoute: typeof DocumentationRoute
@@ -885,6 +898,13 @@ declare module '@tanstack/react-router' {
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/beauty': {
+      id: '/beauty'
+      path: '/beauty'
+      fullPath: '/beauty'
+      preLoaderRoute: typeof BeautyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -1234,6 +1254,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
   AuthRoute: AuthRouteWithChildren,
+  BeautyRoute: BeautyRoute,
   ContactRoute: ContactRoute,
   CookiePolicyRoute: CookiePolicyRoute,
   DocumentationRoute: DocumentationRoute,
