@@ -23,8 +23,10 @@ import { Route as HelpCenterRouteImport } from './routes/help-center'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as GdprRouteImport } from './routes/gdpr'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as FitnessRouteImport } from './routes/fitness'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as DocumentationRouteImport } from './routes/documentation'
+import { Route as DentistRouteImport } from './routes/dentist'
 import { Route as CookiePolicyRouteImport } from './routes/cookie-policy'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as BeautyRouteImport } from './routes/beauty'
@@ -138,6 +140,11 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FitnessRoute = FitnessRouteImport.update({
+  id: '/fitness',
+  path: '/fitness',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FeaturesRoute = FeaturesRouteImport.update({
   id: '/features',
   path: '/features',
@@ -146,6 +153,11 @@ const FeaturesRoute = FeaturesRouteImport.update({
 const DocumentationRoute = DocumentationRouteImport.update({
   id: '/documentation',
   path: '/documentation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DentistRoute = DentistRouteImport.update({
+  id: '/dentist',
+  path: '/dentist',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CookiePolicyRoute = CookiePolicyRouteImport.update({
@@ -378,8 +390,10 @@ export interface FileRoutesByFullPath {
   '/beauty': typeof BeautyRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
+  '/dentist': typeof DentistRoute
   '/documentation': typeof DocumentationRoute
   '/features': typeof FeaturesRoute
+  '/fitness': typeof FitnessRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/gdpr': typeof GdprRoute
   '/help': typeof HelpRoute
@@ -437,8 +451,10 @@ export interface FileRoutesByTo {
   '/beauty': typeof BeautyRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
+  '/dentist': typeof DentistRoute
   '/documentation': typeof DocumentationRoute
   '/features': typeof FeaturesRoute
+  '/fitness': typeof FitnessRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/gdpr': typeof GdprRoute
   '/help': typeof HelpRoute
@@ -498,8 +514,10 @@ export interface FileRoutesById {
   '/beauty': typeof BeautyRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
+  '/dentist': typeof DentistRoute
   '/documentation': typeof DocumentationRoute
   '/features': typeof FeaturesRoute
+  '/fitness': typeof FitnessRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/gdpr': typeof GdprRoute
   '/help': typeof HelpRoute
@@ -559,8 +577,10 @@ export interface FileRouteTypes {
     | '/beauty'
     | '/contact'
     | '/cookie-policy'
+    | '/dentist'
     | '/documentation'
     | '/features'
+    | '/fitness'
     | '/forgot-password'
     | '/gdpr'
     | '/help'
@@ -618,8 +638,10 @@ export interface FileRouteTypes {
     | '/beauty'
     | '/contact'
     | '/cookie-policy'
+    | '/dentist'
     | '/documentation'
     | '/features'
+    | '/fitness'
     | '/forgot-password'
     | '/gdpr'
     | '/help'
@@ -678,8 +700,10 @@ export interface FileRouteTypes {
     | '/beauty'
     | '/contact'
     | '/cookie-policy'
+    | '/dentist'
     | '/documentation'
     | '/features'
+    | '/fitness'
     | '/forgot-password'
     | '/gdpr'
     | '/help'
@@ -739,8 +763,10 @@ export interface RootRouteChildren {
   BeautyRoute: typeof BeautyRoute
   ContactRoute: typeof ContactRoute
   CookiePolicyRoute: typeof CookiePolicyRoute
+  DentistRoute: typeof DentistRoute
   DocumentationRoute: typeof DocumentationRoute
   FeaturesRoute: typeof FeaturesRoute
+  FitnessRoute: typeof FitnessRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   GdprRoute: typeof GdprRoute
   HelpRoute: typeof HelpRoute
@@ -872,6 +898,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/fitness': {
+      id: '/fitness'
+      path: '/fitness'
+      fullPath: '/fitness'
+      preLoaderRoute: typeof FitnessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/features': {
       id: '/features'
       path: '/features'
@@ -884,6 +917,13 @@ declare module '@tanstack/react-router' {
       path: '/documentation'
       fullPath: '/documentation'
       preLoaderRoute: typeof DocumentationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dentist': {
+      id: '/dentist'
+      path: '/dentist'
+      fullPath: '/dentist'
+      preLoaderRoute: typeof DentistRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cookie-policy': {
@@ -1257,8 +1297,10 @@ const rootRouteChildren: RootRouteChildren = {
   BeautyRoute: BeautyRoute,
   ContactRoute: ContactRoute,
   CookiePolicyRoute: CookiePolicyRoute,
+  DentistRoute: DentistRoute,
   DocumentationRoute: DocumentationRoute,
   FeaturesRoute: FeaturesRoute,
+  FitnessRoute: FitnessRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   GdprRoute: GdprRoute,
   HelpRoute: HelpRoute,
