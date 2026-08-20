@@ -176,4 +176,204 @@ export const NICHES: Record<string, NicheConfig> = {
       { q: "Pot opri oricând?", a: "Da, pornești și oprești reclama din WhatsApp, fără contracte." },
     ],
   },
+
+  restaurant: {
+    slug: "restaurant",
+    contentId: "oferta-restaurant",
+    meta: {
+      title: "Restaurant plin în fiecare weekend — AdPilot",
+      description:
+        "AdPilot aduce rezervări și clienți noi la restaurantul tău — reclame locale Facebook și Instagram automate, cu fiecare persoană interesată direct pe WhatsApp. Începe gratuit.",
+    },
+    hero: {
+      badge: "Pentru restaurante · cafenele · baruri",
+      titlePre: "Restaurant ",
+      titleHighlight: "plin în fiecare weekend",
+      titlePost: ".",
+      subtitle:
+        "Reclame locale automate care aduc rezervări și clienți noi — direct pe WhatsApp. Fără agenție, fără experiență.",
+      ctaLabel: "Vreau mai multe rezervări",
+    },
+    socialProof: "Alătură-te restaurantelor din România care se umplu cu AdPilot 🇷🇴",
+    problem: {
+      title: "Ai un restaurant sau o cafenea și…",
+      items: [
+        "Ai seri și weekenduri cu mese goale.",
+        "Postezi pe Instagram, dar nu se transformă în rezervări.",
+        "N-ai timp de marketing și nici buget de agenție.",
+      ],
+    },
+    demo: {
+      title: "Așa umpli mesele — dintr-o conversație pe WhatsApp",
+      lines: [
+        { from: "me", text: "Vreau mai multe rezervări la restaurant" },
+        { from: "bot", text: "Perfect! Pornesc o reclamă locală pe Facebook și Instagram. Ce vrei să promovezi — meniul, o ofertă, weekendul?" },
+        { from: "me", text: "Ofertă de weekend, buget 60 lei/zi" },
+        { from: "bot", text: "Gata, reclama e live! 🎉 Îți trimit aici fiecare persoană interesată." },
+        { from: "bot", text: "📩 Client nou: Ioana, 0755… — vrea o rezervare pentru 4 persoane sâmbătă seara" },
+      ],
+    },
+    steps: [
+      { title: "Conectezi Facebook", desc: "Legi pagina localului în câteva secunde." },
+      { title: "Spui ce promovezi", desc: "Meniul, o ofertă sau weekendul — în română." },
+      { title: "Primești rezervări", desc: "Fiecare persoană interesată îți vine direct pe WhatsApp." },
+    ],
+    faq: [
+      { q: "Reclamele apar în zona mea?", a: "Da. Targetăm exact orașul și zona din jurul localului tău, ca să vină clienți care chiar pot ajunge." },
+      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 40–100 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 3 zile, apoi de la un plan lunar." },
+      { q: "Cum primesc rezervările?", a: "Fiecare persoană interesată îți vine ca lead pe WhatsApp, cu nume și telefon." },
+      { q: "Funcționează și pentru cafenele sau baruri?", a: "Da — pentru orice local. Adaptăm mesajul la ce oferi tu." },
+      { q: "Pot opri oricând?", a: "Da, pornești și oprești reclama din WhatsApp, fără contracte." },
+    ],
+  },
+
+  imobiliare: {
+    slug: "imobiliare",
+    contentId: "oferta-imobiliare",
+    meta: {
+      title: "Mai mulți clienți calificați pentru imobiliare — AdPilot",
+      description:
+        "AdPilot generează lead-uri calificate pentru proprietățile tale și le livrează instant pe WhatsApp — reclame Facebook și Instagram automate. Începe gratuit.",
+    },
+    hero: {
+      badge: "Pentru agenți și agenții imobiliare",
+      titlePre: "Mai mulți ",
+      titleHighlight: "clienți calificați",
+      titlePost: ". Mai puține ore pierdute.",
+      subtitle:
+        "AdPilot generează lead-uri calificate pentru proprietățile tale și le livrează instant pe WhatsApp. Fără agenție, fără experiență.",
+      ctaLabel: "Vreau lead-uri calificate",
+    },
+    socialProof: "Alătură-te agenților din România care aduc clienți cu AdPilot 🇷🇴",
+    problem: {
+      title: "Ești agent imobiliar și…",
+      items: [
+        "Pierzi ore cu lead-uri care nu cumpără niciodată.",
+        "Depinzi de portaluri scumpe și de recomandări.",
+        "Vrei un flux constant de clienți serioși, fără să devii marketer.",
+      ],
+    },
+    demo: {
+      title: "Așa aduci clienți — dintr-o conversație pe WhatsApp",
+      lines: [
+        { from: "me", text: "Vreau clienți pentru un apartament de vânzare" },
+        { from: "bot", text: "Perfect! Pornesc o reclamă pe Facebook și Instagram. Ce proprietate promovezi?" },
+        { from: "me", text: "Apartament 3 camere, 85.000 €, buget 80 lei/zi" },
+        { from: "bot", text: "Gata, reclama e live! 🎉 Îți trimit aici fiecare persoană interesată." },
+        { from: "bot", text: "📩 Lead nou: Radu, 0766… — vrea o vizionare pentru apartamentul cu 3 camere" },
+      ],
+    },
+    steps: [
+      { title: "Conectezi Facebook", desc: "Legi pagina de agent în câteva secunde." },
+      { title: "Adaugi proprietatea", desc: "Îi spui ce vinzi sau închiriezi — în română." },
+      { title: "Primești clienți", desc: "Fiecare persoană interesată îți vine direct pe WhatsApp." },
+    ],
+    faq: [
+      { q: "Lead-urile sunt calificate?", a: "Da. Targetăm oameni cu intenție reală pentru zona și tipul proprietății, ca să pierzi mai puțin timp." },
+      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 50–150 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 3 zile, apoi de la un plan lunar." },
+      { q: "Funcționează pentru vânzare și închiriere?", a: "Da — pentru orice tip de proprietate, rezidențial sau comercial." },
+      { q: "Cum primesc clienții?", a: "Fiecare persoană interesată îți vine ca lead pe WhatsApp, cu nume și telefon." },
+      { q: "Pot opri oricând?", a: "Da, pornești și oprești reclama din WhatsApp, fără contracte." },
+    ],
+  },
+
+  cursuri: {
+    slug: "cursuri",
+    contentId: "oferta-cursuri",
+    meta: {
+      title: "Mai mulți cursanți la cursurile tale — AdPilot",
+      description:
+        "AdPilot aduce înscrieri la cursurile și programele tale — reclame Facebook și Instagram automate, cu fiecare persoană interesată direct pe WhatsApp. Începe gratuit.",
+    },
+    hero: {
+      badge: "Pentru cursuri online · coaching · training",
+      titlePre: "Mai mulți ",
+      titleHighlight: "cursanți înscriși",
+      titlePost: ".",
+      subtitle:
+        "Reclame automate care aduc înscrieri la cursurile și programele tale — direct pe WhatsApp. Fără agenție, fără experiență.",
+      ctaLabel: "Vreau mai mulți cursanți",
+    },
+    socialProof: "Alătură-te trainerilor din România care își umplu grupele cu AdPilot 🇷🇴",
+    problem: {
+      title: "Ai un curs sau un program de coaching și…",
+      items: [
+        "Ai grupe care nu se umplu la timp.",
+        "Postezi conținut, dar nu se transformă în înscrieri.",
+        "Vrei un flux constant de cursanți, fără să devii marketer.",
+      ],
+    },
+    demo: {
+      title: "Așa aduci înscrieri — dintr-o conversație pe WhatsApp",
+      lines: [
+        { from: "me", text: "Vreau înscrieri la cursul meu online" },
+        { from: "bot", text: "Perfect! Pornesc o reclamă pe Facebook și Instagram. Ce curs promovezi?" },
+        { from: "me", text: "Curs de engleză online, buget 50 lei/zi" },
+        { from: "bot", text: "Gata, reclama e live! 🎉 Îți trimit aici fiecare persoană interesată." },
+        { from: "bot", text: "📩 Lead nou: Elena, 0777… — vrea detalii despre cursul de engleză" },
+      ],
+    },
+    steps: [
+      { title: "Conectezi Facebook", desc: "Legi pagina în câteva secunde." },
+      { title: "Spui ce curs oferi", desc: "Subiectul, prețul, data de start — în română." },
+      { title: "Primești înscrieri", desc: "Fiecare persoană interesată îți vine direct pe WhatsApp." },
+    ],
+    faq: [
+      { q: "Trebuie să știu ceva despre reclame?", a: "Nu. Îi spui pe WhatsApp ce curs oferi, iar AdPilot creează, lansează și optimizează reclama singur." },
+      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 40–120 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 3 zile, apoi de la un plan lunar." },
+      { q: "Funcționează pentru orice tip de curs?", a: "Da — cursuri online, ateliere, coaching, mentorat. Targetăm exact publicul potrivit." },
+      { q: "Cum primesc înscrierile?", a: "Fiecare persoană interesată îți vine ca lead pe WhatsApp, cu nume și telefon." },
+      { q: "Pot opri oricând?", a: "Da, pornești și oprești reclama din WhatsApp, fără contracte." },
+    ],
+  },
+
+  "service-auto": {
+    slug: "service-auto",
+    contentId: "oferta-service-auto",
+    meta: {
+      title: "Mai multe mașini în service — AdPilot",
+      description:
+        "AdPilot aduce clienți noi la service-ul tău auto — reclame locale Facebook și Instagram automate, cu fiecare persoană interesată direct pe WhatsApp. Începe gratuit.",
+    },
+    hero: {
+      badge: "Pentru service-uri auto · vulcanizări · detailing",
+      titlePre: "Mai multe ",
+      titleHighlight: "mașini în service",
+      titlePost: ". Constant.",
+      subtitle:
+        "Reclame locale care aduc clienți noi la service-ul tău — direct pe WhatsApp. Fără agenție, fără experiență.",
+      ctaLabel: "Vreau mai mulți clienți",
+    },
+    socialProof: "Alătură-te service-urilor din România care aduc clienți cu AdPilot 🇷🇴",
+    problem: {
+      title: "Ai un service auto și…",
+      items: [
+        "Ai zile cu rampe goale și mecanici fără treabă.",
+        "Depinzi doar de clienții din zonă și de recomandări.",
+        "N-ai timp de marketing și nici buget de agenție.",
+      ],
+    },
+    demo: {
+      title: "Așa aduci clienți — dintr-o conversație pe WhatsApp",
+      lines: [
+        { from: "me", text: "Vreau mai mulți clienți la service" },
+        { from: "bot", text: "Perfect! Pornesc o reclamă locală pe Facebook și Instagram. Ce servicii promovezi?" },
+        { from: "me", text: "Schimb ulei și ITP, buget 50 lei/zi" },
+        { from: "bot", text: "Gata, reclama e live! 🎉 Îți trimit aici fiecare persoană interesată." },
+        { from: "bot", text: "📩 Client nou: George, 0788… — vrea o programare pentru schimb de ulei" },
+      ],
+    },
+    steps: [
+      { title: "Conectezi Facebook", desc: "Legi pagina service-ului în câteva secunde." },
+      { title: "Spui ce servicii oferi", desc: "Schimb ulei, ITP, detailing — în română." },
+      { title: "Primești clienți", desc: "Fiecare persoană interesată îți vine direct pe WhatsApp." },
+    ],
+    faq: [
+      { q: "Reclamele apar în zona mea?", a: "Da. Targetăm exact orașul și zona din jurul service-ului, ca să vină clienți care pot ajunge la tine." },
+      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 40–100 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 3 zile, apoi de la un plan lunar." },
+      { q: "Funcționează pentru vulcanizări sau detailing?", a: "Da — pentru orice service auto. Adaptăm mesajul la serviciile tale." },
+      { q: "Cum primesc clienții?", a: "Fiecare persoană interesată îți vine ca lead pe WhatsApp, cu nume și telefon." },
+      { q: "Pot opri oricând?", a: "Da, pornești și oprești reclama din WhatsApp, fără contracte." },
+    ],
+  },
 };

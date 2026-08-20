@@ -11,14 +11,17 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ServiceAutoRouteImport } from './routes/service-auto'
 import { Route as SecurityRouteImport } from './routes/security'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as RestaurantRouteImport } from './routes/restaurant'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RefundPolicyRouteImport } from './routes/refund-policy'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as OfertaRouteImport } from './routes/oferta'
 import { Route as IntegrationsRouteImport } from './routes/integrations'
+import { Route as ImobiliareRouteImport } from './routes/imobiliare'
 import { Route as HelpCenterRouteImport } from './routes/help-center'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as GdprRouteImport } from './routes/gdpr'
@@ -27,6 +30,7 @@ import { Route as FitnessRouteImport } from './routes/fitness'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as DocumentationRouteImport } from './routes/documentation'
 import { Route as DentistRouteImport } from './routes/dentist'
+import { Route as CursuriRouteImport } from './routes/cursuri'
 import { Route as CookiePolicyRouteImport } from './routes/cookie-policy'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as BeautyRouteImport } from './routes/beauty'
@@ -80,6 +84,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ServiceAutoRoute = ServiceAutoRouteImport.update({
+  id: '/service-auto',
+  path: '/service-auto',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SecurityRoute = SecurityRouteImport.update({
   id: '/security',
   path: '/security',
@@ -88,6 +97,11 @@ const SecurityRoute = SecurityRouteImport.update({
 const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
   id: '/robots.txt',
   path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RestaurantRoute = RestaurantRouteImport.update({
+  id: '/restaurant',
+  path: '/restaurant',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -118,6 +132,11 @@ const OfertaRoute = OfertaRouteImport.update({
 const IntegrationsRoute = IntegrationsRouteImport.update({
   id: '/integrations',
   path: '/integrations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ImobiliareRoute = ImobiliareRouteImport.update({
+  id: '/imobiliare',
+  path: '/imobiliare',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HelpCenterRoute = HelpCenterRouteImport.update({
@@ -158,6 +177,11 @@ const DocumentationRoute = DocumentationRouteImport.update({
 const DentistRoute = DentistRouteImport.update({
   id: '/dentist',
   path: '/dentist',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CursuriRoute = CursuriRouteImport.update({
+  id: '/cursuri',
+  path: '/cursuri',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CookiePolicyRoute = CookiePolicyRouteImport.update({
@@ -390,6 +414,7 @@ export interface FileRoutesByFullPath {
   '/beauty': typeof BeautyRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
+  '/cursuri': typeof CursuriRoute
   '/dentist': typeof DentistRoute
   '/documentation': typeof DocumentationRoute
   '/features': typeof FeaturesRoute
@@ -398,14 +423,17 @@ export interface FileRoutesByFullPath {
   '/gdpr': typeof GdprRoute
   '/help': typeof HelpRoute
   '/help-center': typeof HelpCenterRoute
+  '/imobiliare': typeof ImobiliareRoute
   '/integrations': typeof IntegrationsRoute
   '/oferta': typeof OfertaRoute
   '/pricing': typeof PricingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/refund-policy': typeof RefundPolicyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/restaurant': typeof RestaurantRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/security': typeof SecurityRoute
+  '/service-auto': typeof ServiceAutoRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
@@ -451,6 +479,7 @@ export interface FileRoutesByTo {
   '/beauty': typeof BeautyRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
+  '/cursuri': typeof CursuriRoute
   '/dentist': typeof DentistRoute
   '/documentation': typeof DocumentationRoute
   '/features': typeof FeaturesRoute
@@ -459,14 +488,17 @@ export interface FileRoutesByTo {
   '/gdpr': typeof GdprRoute
   '/help': typeof HelpRoute
   '/help-center': typeof HelpCenterRoute
+  '/imobiliare': typeof ImobiliareRoute
   '/integrations': typeof IntegrationsRoute
   '/oferta': typeof OfertaRoute
   '/pricing': typeof PricingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/refund-policy': typeof RefundPolicyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/restaurant': typeof RestaurantRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/security': typeof SecurityRoute
+  '/service-auto': typeof ServiceAutoRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
@@ -514,6 +546,7 @@ export interface FileRoutesById {
   '/beauty': typeof BeautyRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
+  '/cursuri': typeof CursuriRoute
   '/dentist': typeof DentistRoute
   '/documentation': typeof DocumentationRoute
   '/features': typeof FeaturesRoute
@@ -522,14 +555,17 @@ export interface FileRoutesById {
   '/gdpr': typeof GdprRoute
   '/help': typeof HelpRoute
   '/help-center': typeof HelpCenterRoute
+  '/imobiliare': typeof ImobiliareRoute
   '/integrations': typeof IntegrationsRoute
   '/oferta': typeof OfertaRoute
   '/pricing': typeof PricingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/refund-policy': typeof RefundPolicyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/restaurant': typeof RestaurantRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/security': typeof SecurityRoute
+  '/service-auto': typeof ServiceAutoRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
@@ -577,6 +613,7 @@ export interface FileRouteTypes {
     | '/beauty'
     | '/contact'
     | '/cookie-policy'
+    | '/cursuri'
     | '/dentist'
     | '/documentation'
     | '/features'
@@ -585,14 +622,17 @@ export interface FileRouteTypes {
     | '/gdpr'
     | '/help'
     | '/help-center'
+    | '/imobiliare'
     | '/integrations'
     | '/oferta'
     | '/pricing'
     | '/privacy-policy'
     | '/refund-policy'
     | '/reset-password'
+    | '/restaurant'
     | '/robots.txt'
     | '/security'
+    | '/service-auto'
     | '/sitemap.xml'
     | '/terms-of-service'
     | '/admin'
@@ -638,6 +678,7 @@ export interface FileRouteTypes {
     | '/beauty'
     | '/contact'
     | '/cookie-policy'
+    | '/cursuri'
     | '/dentist'
     | '/documentation'
     | '/features'
@@ -646,14 +687,17 @@ export interface FileRouteTypes {
     | '/gdpr'
     | '/help'
     | '/help-center'
+    | '/imobiliare'
     | '/integrations'
     | '/oferta'
     | '/pricing'
     | '/privacy-policy'
     | '/refund-policy'
     | '/reset-password'
+    | '/restaurant'
     | '/robots.txt'
     | '/security'
+    | '/service-auto'
     | '/sitemap.xml'
     | '/terms-of-service'
     | '/admin'
@@ -700,6 +744,7 @@ export interface FileRouteTypes {
     | '/beauty'
     | '/contact'
     | '/cookie-policy'
+    | '/cursuri'
     | '/dentist'
     | '/documentation'
     | '/features'
@@ -708,14 +753,17 @@ export interface FileRouteTypes {
     | '/gdpr'
     | '/help'
     | '/help-center'
+    | '/imobiliare'
     | '/integrations'
     | '/oferta'
     | '/pricing'
     | '/privacy-policy'
     | '/refund-policy'
     | '/reset-password'
+    | '/restaurant'
     | '/robots.txt'
     | '/security'
+    | '/service-auto'
     | '/sitemap.xml'
     | '/terms-of-service'
     | '/_authenticated/admin'
@@ -763,6 +811,7 @@ export interface RootRouteChildren {
   BeautyRoute: typeof BeautyRoute
   ContactRoute: typeof ContactRoute
   CookiePolicyRoute: typeof CookiePolicyRoute
+  CursuriRoute: typeof CursuriRoute
   DentistRoute: typeof DentistRoute
   DocumentationRoute: typeof DocumentationRoute
   FeaturesRoute: typeof FeaturesRoute
@@ -771,14 +820,17 @@ export interface RootRouteChildren {
   GdprRoute: typeof GdprRoute
   HelpRoute: typeof HelpRoute
   HelpCenterRoute: typeof HelpCenterRoute
+  ImobiliareRoute: typeof ImobiliareRoute
   IntegrationsRoute: typeof IntegrationsRoute
   OfertaRoute: typeof OfertaRoute
   PricingRoute: typeof PricingRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   RefundPolicyRoute: typeof RefundPolicyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  RestaurantRoute: typeof RestaurantRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SecurityRoute: typeof SecurityRoute
+  ServiceAutoRoute: typeof ServiceAutoRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
   BSlugRoute: typeof BSlugRoute
@@ -814,6 +866,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/service-auto': {
+      id: '/service-auto'
+      path: '/service-auto'
+      fullPath: '/service-auto'
+      preLoaderRoute: typeof ServiceAutoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/security': {
       id: '/security'
       path: '/security'
@@ -826,6 +885,13 @@ declare module '@tanstack/react-router' {
       path: '/robots.txt'
       fullPath: '/robots.txt'
       preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/restaurant': {
+      id: '/restaurant'
+      path: '/restaurant'
+      fullPath: '/restaurant'
+      preLoaderRoute: typeof RestaurantRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -868,6 +934,13 @@ declare module '@tanstack/react-router' {
       path: '/integrations'
       fullPath: '/integrations'
       preLoaderRoute: typeof IntegrationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/imobiliare': {
+      id: '/imobiliare'
+      path: '/imobiliare'
+      fullPath: '/imobiliare'
+      preLoaderRoute: typeof ImobiliareRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/help-center': {
@@ -924,6 +997,13 @@ declare module '@tanstack/react-router' {
       path: '/dentist'
       fullPath: '/dentist'
       preLoaderRoute: typeof DentistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cursuri': {
+      id: '/cursuri'
+      path: '/cursuri'
+      fullPath: '/cursuri'
+      preLoaderRoute: typeof CursuriRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cookie-policy': {
@@ -1297,6 +1377,7 @@ const rootRouteChildren: RootRouteChildren = {
   BeautyRoute: BeautyRoute,
   ContactRoute: ContactRoute,
   CookiePolicyRoute: CookiePolicyRoute,
+  CursuriRoute: CursuriRoute,
   DentistRoute: DentistRoute,
   DocumentationRoute: DocumentationRoute,
   FeaturesRoute: FeaturesRoute,
@@ -1305,14 +1386,17 @@ const rootRouteChildren: RootRouteChildren = {
   GdprRoute: GdprRoute,
   HelpRoute: HelpRoute,
   HelpCenterRoute: HelpCenterRoute,
+  ImobiliareRoute: ImobiliareRoute,
   IntegrationsRoute: IntegrationsRoute,
   OfertaRoute: OfertaRoute,
   PricingRoute: PricingRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   RefundPolicyRoute: RefundPolicyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  RestaurantRoute: RestaurantRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SecurityRoute: SecurityRoute,
+  ServiceAutoRoute: ServiceAutoRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
   BSlugRoute: BSlugRoute,
