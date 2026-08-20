@@ -28,6 +28,10 @@ export const publishMetaCampaign = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+    // Gate acces + cotă: Pro/Premium = nelimitat; Starter gratuit = 1 campanie.
+    const { assertCanPublishCampaign } = await import("@/lib/access.server");
+    await assertCanPublishCampaign(supabaseAdmin, userId, { excludeCampaignId: data.campaign_id });
+
     // 2. Resolve Meta connection (active) + token
     const { data: conn } = await supabaseAdmin
       .from("meta_connections")

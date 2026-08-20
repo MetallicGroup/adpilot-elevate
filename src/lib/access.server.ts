@@ -17,11 +17,13 @@ export const PRICING_URL = "https://adpilot.ro/pricing";
 
 /** Mesaj (text liber, în fereastra de 24h) când planul gratuit s-a consumat. */
 export const FREE_STARTER_CONSUMED_MESSAGE =
-  "🎉 Cele 3 zile gratuite din planul Starter s-au consumat — planul gratuit revine luna viitoare.\n\n" +
-  "Ca să continui ACUM cu campanii NELIMITATE:\n" +
-  "• Pro — campanii nelimitate + asistent WhatsApp + 10 poze AI/lună\n" +
+  "⏸️ Ți-am oprit reclamele — cele 3 zile gratuite din planul Starter s-au consumat.\n\n" +
+  "Reclamele funcționează doar dacă rulează NON-STOP: pornit-oprit le omoară rezultatele. " +
+  "Pe Pro și Premium campaniile tale merg continuu, fără pauze, și aduc clienți zilnic:\n" +
+  "• Pro — campanii NELIMITATE, non-stop + asistent WhatsApp + 10 poze AI/lună\n" +
   "• Premium — tot din Pro + poze AI nelimitate + manager dedicat\n\n" +
-  `Alege un plan: ${PRICING_URL}`;
+  `Pornește un plan acum: ${PRICING_URL}\n` +
+  "(Planul gratuit revine oricum luna viitoare.)";
 
 /** Mesaj când userul n-a ales încă un plan. */
 export const CHOOSE_PLAN_MESSAGE =
@@ -89,4 +91,43 @@ export async function resolveAccess(
     whatsappAllowed: paid || freeActive,
     botAllowed: paid || freeActive,
   };
+}
+
+/**
+ * Gate la publicarea unei campanii: Pro/Premium = nelimitat; Starter gratuit = O
+ * SINGURĂ campanie (motivul de upgrade e „campanii nelimitate, non-stop"). Aruncă
+ * un mesaj clar dacă nu e permis. Se apelează pe ambele căi (bot + web).
+ */
+export async function assertCanPublishCampaign(
+  supabaseAdmin: any,
+  userId: string,
+  opts: { excludeCampaignId?: string } = {},
+): Promise<void> {
+  const access = await resolveAccess(supabaseAdmin, userId);
+  if (access.paid) return; // nelimitat
+
+  if (access.freeStarter.state === "consumed") {
+    throw new Error(
+      `Planul gratuit s-a consumat luna aceasta. Treci pe Pro sau Premium ca să lansezi campanii non-stop: ${PRICING_URL}`,
+    );
+  }
+  if (access.freeStarter.state !== "active") {
+    throw new Error(`Alege mai întâi un plan ca să lansezi o campanie: ${PRICING_URL}`);
+  }
+
+  // Starter gratuit activ → cel mult 1 campanie publicată pe Meta (excludem
+  // campania curentă, ca o re-publicare a aceleiași campanii să nu fie blocată).
+  let q = supabaseAdmin
+    .from("campaigns")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("platform", "meta")
+    .not("meta_campaign_id", "is", null);
+  if (opts.excludeCampaignId) q = q.neq("id", opts.excludeCampaignId);
+  const { count } = await q;
+  if ((count ?? 0) >= 1) {
+    throw new Error(
+      `Planul Starter gratuit include o singură campanie. Treci pe Pro sau Premium pentru campanii NELIMITATE, care rulează non-stop: ${PRICING_URL}`,
+    );
+  }
 }

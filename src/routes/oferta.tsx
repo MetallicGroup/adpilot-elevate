@@ -197,8 +197,8 @@ function OfertaPage() {
         <div className="grid gap-5 md:grid-cols-3 max-w-4xl mx-auto">
           {[
             { name: "Starter", free: true, price: "Gratuit", items: ["Asistent WhatsApp AI inclus", "Campanii pe Facebook & Instagram", "3 zile gratuit în fiecare lună"] },
-            { name: "Pro", price: "495 lei", featured: true, items: ["Campanii nelimitate", "10 poze AI / lună", "Asistent WhatsApp AI", "Suport prioritar"] },
-            { name: "Premium", price: "995 lei", items: ["Campanii nelimitate", "Poze AI nelimitate", "Asistent WhatsApp AI", "Manager dedicat"] },
+            { name: "Pro", price: "495 lei", featured: true, items: ["Campanii nelimitate, non-stop", "10 poze AI / lună", "Asistent WhatsApp AI", "Suport prioritar"] },
+            { name: "Premium", price: "995 lei", items: ["Campanii nelimitate, non-stop", "Poze AI nelimitate", "Asistent WhatsApp AI", "Manager dedicat"] },
           ].map((p, i) => (
             <Reveal
               key={p.name}

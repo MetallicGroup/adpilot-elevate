@@ -45,7 +45,7 @@ const PLANS = [
     featured: true,
     desc: "Pentru afacerile care vor să crească rapid.",
     items: [
-      "Campanii nelimitate pe Facebook",
+      "Campanii nelimitate, non-stop",
       "10 poze AI pe lună",
       "Asistent WhatsApp AI",
       "Suport prioritar",
@@ -57,7 +57,7 @@ const PLANS = [
     price: "995 lei",
     desc: "Pentru branduri și agenții care scalează agresiv.",
     items: [
-      "Campanii nelimitate pe Facebook",
+      "Campanii nelimitate, non-stop",
       "Poze AI nelimitate",
       "Asistent WhatsApp AI",
       "Manager dedicat",

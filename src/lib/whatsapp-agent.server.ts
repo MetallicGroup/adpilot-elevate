@@ -1300,6 +1300,11 @@ async function createMetaCampaignFromAgent(
   // 'calls' e o campanie de trafic către tel:<număr> (transformată deja în tool).
   const objective: "leads" | "traffic" | "sales" =
     args.objective === "calls" ? "traffic" : (args.objective ?? "leads");
+
+  // Gate acces + cotă: Pro/Premium = nelimitat; Starter gratuit = 1 campanie.
+  const { assertCanPublishCampaign } = await import("@/lib/access.server");
+  await assertCanPublishCampaign(supabaseAdmin, ctx.userId);
+
   // Resolve connection / ad account / page
   const { data: conn } = await supabaseAdmin
     .from("meta_connections")
