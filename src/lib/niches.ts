@@ -376,4 +376,154 @@ export const NICHES: Record<string, NicheConfig> = {
       { q: "Pot opri oricând?", a: "Da, pornești și oprești reclama din WhatsApp, fără contracte." },
     ],
   },
+
+  constructii: {
+    slug: "constructii",
+    contentId: "oferta-constructii",
+    meta: {
+      title: "Mai multe proiecte de construcții și renovări — AdPilot",
+      description:
+        "AdPilot îți aduce clienți pentru proiecte de construcții și renovări — reclame Facebook și Instagram automate, cu fiecare cerere direct pe WhatsApp. Începe gratuit.",
+    },
+    hero: {
+      badge: "Pentru firme de construcții · renovări · amenajări",
+      titlePre: "Mai multe ",
+      titleHighlight: "proiecte de construcții",
+      titlePost: ".",
+      subtitle:
+        "AdPilot îți aduce clienți pentru proiectele tale de construcții și renovări — direct pe WhatsApp. Fără agenție, fără experiență.",
+      ctaLabel: "Vreau mai multe proiecte",
+    },
+    socialProof: "Alătură-te firmelor din România care aduc proiecte cu AdPilot 🇷🇴",
+    problem: {
+      title: "Ai o firmă de construcții sau renovări și…",
+      items: [
+        "Ai perioade cu echipele fără lucrări.",
+        "Depinzi de recomandări și de noroc, nu de un flux constant.",
+        "N-ai timp de marketing și nici buget de agenție.",
+      ],
+    },
+    demo: {
+      title: "Așa aduci proiecte — dintr-o conversație pe WhatsApp",
+      lines: [
+        { from: "me", text: "Vreau clienți pentru renovări apartamente" },
+        { from: "bot", text: "Perfect! Pornesc o reclamă locală pe Facebook și Instagram. Ce servicii promovezi?" },
+        { from: "me", text: "Renovări la cheie, buget 100 lei/zi" },
+        { from: "bot", text: "Gata, reclama e live! 🎉 Îți trimit aici fiecare cerere." },
+        { from: "bot", text: "📩 Cerere nouă: Vlad, 0799… — vrea o ofertă pentru renovare apartament 2 camere" },
+      ],
+    },
+    steps: [
+      { title: "Conectezi Facebook", desc: "Legi pagina firmei în câteva secunde." },
+      { title: "Spui ce oferi", desc: "Construcții, renovări, amenajări — în română." },
+      { title: "Primești cereri", desc: "Fiecare client interesat îți vine direct pe WhatsApp." },
+    ],
+    faq: [
+      { q: "Reclamele apar în zona mea?", a: "Da. Targetăm exact orașul și zonele unde vrei să lucrezi." },
+      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 80–250 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 3 zile, apoi de la un plan lunar." },
+      { q: "Ce fel de proiecte pot promova?", a: "Orice — renovări, construcții la roșu sau la cheie, amenajări interioare și exterioare." },
+      { q: "Cum primesc cererile?", a: "Fiecare persoană interesată îți vine ca lead pe WhatsApp, cu nume și telefon." },
+      { q: "Pot opri oricând?", a: "Da, pornești și oprești reclama din WhatsApp, fără contracte." },
+    ],
+  },
+
+  clinici: {
+    slug: "clinici",
+    contentId: "oferta-clinici",
+    meta: {
+      title: "Mai mulți pacienți la clinica ta medicală — AdPilot",
+      description:
+        "AdPilot aduce pacienți noi la clinica ta medicală — reclame Facebook și Instagram automate, cu fiecare pacient interesat direct pe WhatsApp. Începe gratuit.",
+    },
+    hero: {
+      badge: "Pentru clinici medicale · cabinete · recuperare",
+      titlePre: "Mai mulți ",
+      titleHighlight: "pacienți la clinică",
+      titlePost: ".",
+      subtitle:
+        "Reclame Facebook și Instagram gestionate cu AI. Fiecare pacient interesat vine direct pe WhatsApp — fără agenție, fără bătăi de cap.",
+      ctaLabel: "Vreau mai mulți pacienți",
+    },
+    socialProof: "Alătură-te clinicilor din România care aduc pacienți cu AdPilot 🇷🇴",
+    problem: {
+      title: "Ai o clinică sau un cabinet medical și…",
+      items: [
+        "Pacienții noi vin greu, mai ales pe servicii specifice.",
+        "Depinzi de recomandări, dar vrei un flux constant.",
+        "N-ai timp de marketing și nici buget de agenție.",
+      ],
+    },
+    demo: {
+      title: "Așa aduci pacienți — dintr-o conversație pe WhatsApp",
+      lines: [
+        { from: "me", text: "Vreau mai mulți pacienți la clinică" },
+        { from: "bot", text: "Perfect! Pornesc o reclamă pe Facebook și Instagram. Ce serviciu promovezi?" },
+        { from: "me", text: "Consultații dermatologie, buget 120 lei/zi" },
+        { from: "bot", text: "Gata, reclama e live! 🎉 Îți trimit aici fiecare pacient interesat." },
+        { from: "bot", text: "📩 Pacient nou: Ana, 0733… — vrea o programare la dermatolog" },
+      ],
+    },
+    steps: [
+      { title: "Conectezi Facebook", desc: "Legi pagina clinicii în câteva secunde." },
+      { title: "Spui ce promovezi", desc: "Specialitatea, un pachet sau o consultație — în română." },
+      { title: "Primești pacienți", desc: "Fiecare pacient interesat îți vine direct pe WhatsApp." },
+    ],
+    faq: [
+      { q: "E permis să faci reclame la servicii medicale?", a: "Da, cu mesaje corecte. AdPilot construiește reclame conforme cu regulile Meta pentru domeniul medical." },
+      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 100–300 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 3 zile, apoi de la un plan lunar." },
+      { q: "Funcționează pentru orice specialitate?", a: "Da — dermatologie, recuperare, ORL, cardiologie, clinici generale. Targetăm publicul potrivit." },
+      { q: "Cum primesc pacienții?", a: "Fiecare persoană interesată îți vine ca lead pe WhatsApp, cu nume și telefon." },
+      { q: "Pot opri oricând?", a: "Da, pornești și oprești reclama din WhatsApp, fără contracte." },
+    ],
+  },
+
+  scoli: {
+    slug: "scoli",
+    contentId: "oferta-scoli",
+    meta: {
+      title: "Mai mulți elevi înscriși la școala ta — AdPilot",
+      description:
+        "AdPilot aduce înscrieri la școala sau grădinița ta privată — reclame Facebook și Instagram automate, cu fiecare părinte interesat direct pe WhatsApp. Începe gratuit.",
+    },
+    hero: {
+      badge: "Pentru școli · grădinițe · afterschool private",
+      titlePre: "Mai mulți ",
+      titleHighlight: "elevi înscriși",
+      titlePost: ".",
+      subtitle:
+        "Reclame automate care aduc înscrieri pentru școala sau grădinița ta — direct pe WhatsApp. Fără agenție, fără experiență.",
+      ctaLabel: "Vreau mai multe înscrieri",
+    },
+    socialProof: "Alătură-te școlilor din România care își umplu locurile cu AdPilot 🇷🇴",
+    problem: {
+      title: "Ai o școală sau grădiniță privată și…",
+      items: [
+        "Ai locuri libere pe care vrei să le umpli înainte de an.",
+        "Postezi pe Facebook, dar nu se transformă în înscrieri.",
+        "Vrei un flux constant de părinți interesați, fără să devii marketer.",
+      ],
+    },
+    demo: {
+      title: "Așa aduci înscrieri — dintr-o conversație pe WhatsApp",
+      lines: [
+        { from: "me", text: "Vreau înscrieri la grădinița mea" },
+        { from: "bot", text: "Perfect! Pornesc o reclamă locală pe Facebook și Instagram. Ce promovezi — înscrieri, ziua porților deschise?" },
+        { from: "me", text: "Înscrieri pentru anul viitor, buget 60 lei/zi" },
+        { from: "bot", text: "Gata, reclama e live! 🎉 Îți trimit aici fiecare părinte interesat." },
+        { from: "bot", text: "📩 Lead nou: Diana, 0755… — vrea detalii despre înscrierea la grădiniță" },
+      ],
+    },
+    steps: [
+      { title: "Conectezi Facebook", desc: "Legi pagina școlii în câteva secunde." },
+      { title: "Spui ce promovezi", desc: "Înscrieri, program sau ziua porților deschise — în română." },
+      { title: "Primești părinți", desc: "Fiecare părinte interesat îți vine direct pe WhatsApp." },
+    ],
+    faq: [
+      { q: "Reclamele apar în zona mea?", a: "Da. Targetăm exact orașul și zona din jurul școlii, unde sunt părinții." },
+      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 40–120 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 3 zile, apoi de la un plan lunar." },
+      { q: "Funcționează pentru grădinițe și afterschool?", a: "Da — pentru orice unitate privată de învățământ. Adaptăm mesajul." },
+      { q: "Cum primesc înscrierile?", a: "Fiecare părinte interesat îți vine ca lead pe WhatsApp, cu nume și telefon." },
+      { q: "Pot opri oricând?", a: "Da, pornești și oprești reclama din WhatsApp, fără contracte." },
+    ],
+  },
 };

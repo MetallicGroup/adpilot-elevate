@@ -13,6 +13,7 @@ import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ServiceAutoRouteImport } from './routes/service-auto'
 import { Route as SecurityRouteImport } from './routes/security'
+import { Route as ScoliRouteImport } from './routes/scoli'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as RestaurantRouteImport } from './routes/restaurant'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -33,6 +34,8 @@ import { Route as DentistRouteImport } from './routes/dentist'
 import { Route as CursuriRouteImport } from './routes/cursuri'
 import { Route as CookiePolicyRouteImport } from './routes/cookie-policy'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as ConstructiiRouteImport } from './routes/constructii'
+import { Route as CliniciRouteImport } from './routes/clinici'
 import { Route as BeautyRouteImport } from './routes/beauty'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
@@ -92,6 +95,11 @@ const ServiceAutoRoute = ServiceAutoRouteImport.update({
 const SecurityRoute = SecurityRouteImport.update({
   id: '/security',
   path: '/security',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ScoliRoute = ScoliRouteImport.update({
+  id: '/scoli',
+  path: '/scoli',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
@@ -192,6 +200,16 @@ const CookiePolicyRoute = CookiePolicyRouteImport.update({
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConstructiiRoute = ConstructiiRouteImport.update({
+  id: '/constructii',
+  path: '/constructii',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CliniciRoute = CliniciRouteImport.update({
+  id: '/clinici',
+  path: '/clinici',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BeautyRoute = BeautyRouteImport.update({
@@ -412,6 +430,8 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRouteWithChildren
   '/beauty': typeof BeautyRoute
+  '/clinici': typeof CliniciRoute
+  '/constructii': typeof ConstructiiRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
   '/cursuri': typeof CursuriRoute
@@ -432,6 +452,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/restaurant': typeof RestaurantRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/scoli': typeof ScoliRoute
   '/security': typeof SecurityRoute
   '/service-auto': typeof ServiceAutoRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -477,6 +498,8 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRouteWithChildren
   '/beauty': typeof BeautyRoute
+  '/clinici': typeof CliniciRoute
+  '/constructii': typeof ConstructiiRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
   '/cursuri': typeof CursuriRoute
@@ -497,6 +520,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/restaurant': typeof RestaurantRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/scoli': typeof ScoliRoute
   '/security': typeof SecurityRoute
   '/service-auto': typeof ServiceAutoRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -544,6 +568,8 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRouteWithChildren
   '/beauty': typeof BeautyRoute
+  '/clinici': typeof CliniciRoute
+  '/constructii': typeof ConstructiiRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
   '/cursuri': typeof CursuriRoute
@@ -564,6 +590,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/restaurant': typeof RestaurantRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/scoli': typeof ScoliRoute
   '/security': typeof SecurityRoute
   '/service-auto': typeof ServiceAutoRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -611,6 +638,8 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/beauty'
+    | '/clinici'
+    | '/constructii'
     | '/contact'
     | '/cookie-policy'
     | '/cursuri'
@@ -631,6 +660,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/restaurant'
     | '/robots.txt'
+    | '/scoli'
     | '/security'
     | '/service-auto'
     | '/sitemap.xml'
@@ -676,6 +706,8 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/beauty'
+    | '/clinici'
+    | '/constructii'
     | '/contact'
     | '/cookie-policy'
     | '/cursuri'
@@ -696,6 +728,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/restaurant'
     | '/robots.txt'
+    | '/scoli'
     | '/security'
     | '/service-auto'
     | '/sitemap.xml'
@@ -742,6 +775,8 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/beauty'
+    | '/clinici'
+    | '/constructii'
     | '/contact'
     | '/cookie-policy'
     | '/cursuri'
@@ -762,6 +797,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/restaurant'
     | '/robots.txt'
+    | '/scoli'
     | '/security'
     | '/service-auto'
     | '/sitemap.xml'
@@ -809,6 +845,8 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRouteWithChildren
   BeautyRoute: typeof BeautyRoute
+  CliniciRoute: typeof CliniciRoute
+  ConstructiiRoute: typeof ConstructiiRoute
   ContactRoute: typeof ContactRoute
   CookiePolicyRoute: typeof CookiePolicyRoute
   CursuriRoute: typeof CursuriRoute
@@ -829,6 +867,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   RestaurantRoute: typeof RestaurantRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
+  ScoliRoute: typeof ScoliRoute
   SecurityRoute: typeof SecurityRoute
   ServiceAutoRoute: typeof ServiceAutoRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -878,6 +917,13 @@ declare module '@tanstack/react-router' {
       path: '/security'
       fullPath: '/security'
       preLoaderRoute: typeof SecurityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/scoli': {
+      id: '/scoli'
+      path: '/scoli'
+      fullPath: '/scoli'
+      preLoaderRoute: typeof ScoliRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/robots.txt': {
@@ -1018,6 +1064,20 @@ declare module '@tanstack/react-router' {
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/constructii': {
+      id: '/constructii'
+      path: '/constructii'
+      fullPath: '/constructii'
+      preLoaderRoute: typeof ConstructiiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/clinici': {
+      id: '/clinici'
+      path: '/clinici'
+      fullPath: '/clinici'
+      preLoaderRoute: typeof CliniciRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/beauty': {
@@ -1375,6 +1435,8 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AuthRoute: AuthRouteWithChildren,
   BeautyRoute: BeautyRoute,
+  CliniciRoute: CliniciRoute,
+  ConstructiiRoute: ConstructiiRoute,
   ContactRoute: ContactRoute,
   CookiePolicyRoute: CookiePolicyRoute,
   CursuriRoute: CursuriRoute,
@@ -1395,6 +1457,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   RestaurantRoute: RestaurantRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
+  ScoliRoute: ScoliRoute,
   SecurityRoute: SecurityRoute,
   ServiceAutoRoute: ServiceAutoRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
