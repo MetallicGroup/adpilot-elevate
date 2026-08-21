@@ -119,6 +119,7 @@ export async function runFreePlanExpiry(): Promise<{ notified: number; errors: n
 
   let notified = 0;
   let errors = 0;
+  const capi = { ok: 0, fail: 0, lastError: undefined as string | undefined };
   for (const p of profiles as { id: string }[]) {
     try {
       // Pune pe pauză campaniile active pe Meta (altfel ar rula reclame gratis).
@@ -143,11 +144,18 @@ export async function runFreePlanExpiry(): Promise<{ notified: number; errors: n
       try {
         const { data: u } = await supabaseAdmin.auth.admin.getUserById(p.id);
         const { sendMetaCapiEvent } = await import("@/lib/meta-capi.server");
-        await sendMetaCapiEvent("TrialExpired", {
+        const r = await sendMetaCapiEvent("TrialExpired", {
           email: u?.user?.email ?? null,
           eventId: `trialexp_${p.id}_${month}`,
         });
+        if (r.sent) capi.ok++;
+        else {
+          capi.fail++;
+          capi.lastError = r.error;
+        }
       } catch (e) {
+        capi.fail++;
+        capi.lastError = e instanceof Error ? e.message : String(e);
         console.error("[free-plan] CAPI TrialExpired", e);
       }
 
@@ -161,5 +169,5 @@ export async function runFreePlanExpiry(): Promise<{ notified: number; errors: n
       errors++;
     }
   }
-  return { notified, errors };
+  return { notified, errors, capi };
 }
