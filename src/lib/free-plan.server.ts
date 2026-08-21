@@ -138,6 +138,19 @@ export async function runFreePlanExpiry(): Promise<{ notified: number; errors: n
 
       await sendConsumedMessage(p.id);
 
+      // Meta CAPI: eveniment „TrialExpired" (server-side) pentru audiența de
+      // retargeting „trial expirat". No-op dacă META_CAPI_TOKEN nu e setat.
+      try {
+        const { data: u } = await supabaseAdmin.auth.admin.getUserById(p.id);
+        const { sendMetaCapiEvent } = await import("@/lib/meta-capi.server");
+        await sendMetaCapiEvent("TrialExpired", {
+          email: u?.user?.email ?? null,
+          eventId: `trialexp_${p.id}_${month}`,
+        });
+      } catch (e) {
+        console.error("[free-plan] CAPI TrialExpired", e);
+      }
+
       await (supabaseAdmin as any)
         .from("profiles")
         .update({ free_plan_notified_at: new Date().toISOString() })

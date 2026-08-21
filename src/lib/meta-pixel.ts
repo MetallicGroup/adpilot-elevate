@@ -31,3 +31,19 @@ export function fbLead(name?: string): void {
 export function fbCompleteRegistration(): void {
   fbTrack("CompleteRegistration");
 }
+
+/** Eveniment custom (nume liber) — pentru audiențe custom de retargeting. */
+export function fbTrackCustom(event: string, params?: Record<string, unknown>): void {
+  const f = fbq();
+  if (!f) return;
+  try {
+    f("trackCustom", event, params ?? {});
+  } catch {
+    /* no-op */
+  }
+}
+
+/** Userul și-a conectat contul de Facebook/Meta (pentru audiența „înscris dar neconectat"). */
+export function fbConnectedFacebook(): void {
+  fbTrackCustom("ConnectedFacebook");
+}

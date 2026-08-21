@@ -166,6 +166,7 @@ function OnboardingPage() {
   useEffect(() => {
     if (search.meta === "connected") {
       toast.success("Cont Meta conectat ✅");
+      void import("@/lib/meta-pixel").then((m) => m.fbConnectedFacebook());
       navigate({ to: "/onboarding", replace: true, search: {} as OnboardingSearch });
     } else if (search.meta === "error") {
       const reason =
