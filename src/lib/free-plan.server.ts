@@ -100,7 +100,11 @@ async function sendConsumedMessage(userId: string): Promise<{ sent: boolean; via
 }
 
 /** Consumul planului gratuit: pune campaniile pe pauză + notifică pe WhatsApp. */
-export async function runFreePlanExpiry(): Promise<{ notified: number; errors: number }> {
+export async function runFreePlanExpiry(): Promise<{
+  notified: number;
+  errors: number;
+  capi?: { ok: number; fail: number; lastError?: string };
+}> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { currentPlanMonth, FREE_STARTER_DAYS } = await import("@/lib/access.server");
   const { setMetaCampaignStatus } = await import("@/lib/campaign-control.server");
