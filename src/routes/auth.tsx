@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { signInWithProvider, translateAuthError, waitForClientSession } from "@/lib/auth";
 import { resolvePostAuthPath } from "@/lib/post-auth";
 import { tkClickButton, tkCompleteRegistration } from "@/lib/tiktok-pixel";
+import { fbLead, fbCompleteRegistration } from "@/lib/meta-pixel";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2, MessageCircle, Sparkles } from "lucide-react";
 
@@ -87,6 +88,7 @@ function AuthPage() {
           return;
         }
         tkClickButton("signup-submit");
+        fbLead("signup");
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -109,6 +111,7 @@ function AuthPage() {
         // NU la confirmarea emailului. event_id = reg_<userId> → dedup cu server-side.
         if (data.user) {
           void tkCompleteRegistration({ userId: data.user.id, email: data.user.email ?? email });
+          fbCompleteRegistration();
         }
 
         if (!data.session) {

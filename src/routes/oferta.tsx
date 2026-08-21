@@ -21,6 +21,7 @@ import {
   FREE_STARTER_SUBLABEL,
 } from "@/lib/promo";
 import { tkViewContent, tkClickButton } from "@/lib/tiktok-pixel";
+import { fbViewContent } from "@/lib/meta-pixel";
 
 export const Route = createFileRoute("/oferta")({
   head: () => ({
@@ -79,6 +80,7 @@ function Section({ eyebrow, title, children }: { eyebrow?: string; title: string
 function OfertaPage() {
   useEffect(() => {
     tkViewContent({ contentId: "oferta", contentName: "Oferta" });
+    fbViewContent("oferta");
   }, []);
 
   return (

@@ -10,6 +10,7 @@ import {
   FREE_STARTER_SUBLABEL,
 } from "@/lib/promo";
 import { tkViewContent, tkClickButton } from "@/lib/tiktok-pixel";
+import { fbViewContent } from "@/lib/meta-pixel";
 import type { NicheConfig } from "@/lib/niches";
 
 function SignupCTA({
@@ -42,6 +43,7 @@ const PLANS = [
 export function NicheLanding({ niche }: { niche: NicheConfig }) {
   useEffect(() => {
     tkViewContent({ contentId: niche.contentId, contentName: niche.slug });
+    fbViewContent(niche.slug);
   }, [niche.contentId, niche.slug]);
 
   const cta = niche.hero.ctaLabel;
