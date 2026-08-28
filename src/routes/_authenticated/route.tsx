@@ -4,12 +4,30 @@ import { Home, Plus, BarChart3, Settings, Users, Sparkles, CalendarCheck } from 
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
-  beforeLoad: async () => {
+  beforeLoad: async ({ location }) => {
     const {
       data: { session },
       error,
     } = await supabase.auth.getSession();
     if (error || !session?.user) throw redirect({ to: "/auth" });
+
+    // Gate onboarding: nu lăsăm userul în aplicație până nu a conectat Facebook
+    // ȘI a ales un plan. Excludem /onboarding (ar face buclă) și /checkout (revenire
+    // de la plată). Fail-open: dacă verificarea pică, NU blocăm userul.
+    const p = location.pathname;
+    if (!p.startsWith("/onboarding") && !p.startsWith("/checkout")) {
+      let complete = true;
+      try {
+        const { getOnboardingStatus } = await import("@/lib/onboarding.functions");
+        const { getStripeEnvironment } = await import("@/lib/stripe");
+        const status = await getOnboardingStatus({ data: { environment: getStripeEnvironment() } });
+        complete = !!(status.hasMetaConnection && status.planChosen);
+      } catch {
+        complete = true; // eroare de verificare → lăsăm userul să treacă
+      }
+      if (!complete) throw redirect({ to: "/onboarding" });
+    }
+
     return { user: session.user };
   },
   component: AuthLayout,

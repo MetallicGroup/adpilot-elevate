@@ -414,7 +414,7 @@ function StepBadge({
         {done ? <Check className="w-3.5 h-3.5" /> : n}
       </div>
       <span
-        className={`truncate ${active || done ? "text-foreground font-medium" : "text-muted-foreground"}`}
+        className={`hidden sm:inline truncate ${active || done ? "text-foreground font-medium" : "text-muted-foreground"}`}
       >
         {label}
       </span>
