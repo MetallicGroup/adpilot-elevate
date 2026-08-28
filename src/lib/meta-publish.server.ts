@@ -327,7 +327,7 @@ export async function createAdSet(
       cities?: Array<{ key: string; radius?: number; distance_unit?: "kilometer" | "mile" }>;
     };
     status: "ACTIVE" | "PAUSED";
-    objective?: "leads" | "traffic" | "bookings" | "landing_lead" | "sales";
+    objective?: "leads" | "traffic" | "bookings" | "landing_lead" | "sales" | "signups";
     pixel_id?: string;
     dsa_beneficiary?: string;
     dsa_payor?: string;
@@ -356,7 +356,10 @@ export async function createAdSet(
   }
   // Conversii pe site/landing (evenimente trimise prin Pixel + CAPI).
   const isConversion =
-    args.objective === "bookings" || args.objective === "landing_lead" || args.objective === "sales";
+    args.objective === "bookings" ||
+    args.objective === "landing_lead" ||
+    args.objective === "sales" ||
+    args.objective === "signups";
   const optimization_goal =
     args.objective === "traffic" ? "LINK_CLICKS" : isConversion ? "OFFSITE_CONVERSIONS" : "LEAD_GENERATION";
   const body: Record<string, unknown> = {
@@ -375,7 +378,13 @@ export async function createAdSet(
     body.promoted_object = {
       pixel_id: args.pixel_id,
       custom_event_type:
-        args.objective === "bookings" ? "SCHEDULE" : args.objective === "sales" ? "PURCHASE" : "LEAD",
+        args.objective === "bookings"
+          ? "SCHEDULE"
+          : args.objective === "sales"
+            ? "PURCHASE"
+            : args.objective === "signups"
+              ? "COMPLETE_REGISTRATION"
+              : "LEAD",
     };
   } else if (args.objective !== "traffic") {
     body.promoted_object = { page_id: args.page_id };

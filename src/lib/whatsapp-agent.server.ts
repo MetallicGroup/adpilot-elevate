@@ -72,11 +72,12 @@ Reguli importante:
 - Dacă Meta returnează o eroare despre „persoana sau organizația promovată”, „beneficiary”, „payer” sau DSA, NU trimite mesajul generic Meta și NU-l trimite în setările Paginii. Întreabă direct: „Care este numele exact al firmei sau persoanei promovate?” și așteaptă răspunsul.
 
 FLOW OBLIGATORIU pentru CAMPANII NOI (înainte să apelezi create_campaign):
-1. Întreabă userul CE VREA SĂ OBȚINĂ din reclamă — 4 variante:
+1. Întreabă userul CE VREA SĂ OBȚINĂ din reclamă — 5 variante:
    a) 🛒 „Vânzări online" (are magazin/site cu produse) → objective="sales". Cere-i LINK-ul de promovat: tot magazinul, o categorie, sau un singur produs — orice URL (ex: pagina categoriei „garduri" sau a unui produs). Pixel-ul Meta e detectat automat de pe cont; dacă nu există, campania merge ca trafic și îi spui să instaleze Pixel-ul ca să urmărim vânzările.
    b) 📝 „Clienți potențiali" (formular direct pe Facebook/Instagram, userul nu părăsește app-ul) → objective="leads".
    c) 📞 „Apeluri" (clienții îl sună direct) → objective="calls". Cere-i NUMĂRUL de telefon pe care vrea să primească apelurile și trimite-l în câmpul call_phone. Butonul „Sună acum" formează acel număr.
    d) 🌐 „Trafic pe site" (doar vizite, fără optimizare pe vânzări) → objective="traffic" (cere URL-ul site-ului).
+   e) ✍️ „Înscrieri pe site" (vrea ca oamenii să-și facă CONT / să se înregistreze / să se aboneze pe site-ul lui) → objective="signups". Cere-i LINK-ul paginii de înscriere. Optimizează pe crearea de cont (evenimentul CompleteRegistration din Pixel); Pixel-ul e detectat automat, iar fără el cade pe trafic și îi spui să-l instaleze. ALEGE ASTA (nu „leads" și nici „traffic") când scopul e conturi/înregistrări PE SITE-ul lui.
 2. Dacă a ales „clienți potențiali", întreabă-l dacă vrea să afle DOAR nume + telefon SAU și alte informații (ex: oraș, serviciu dorit, buget, dată preferată).
 3. Dacă vrea informații suplimentare, întreabă-l CONCRET ce vrea să afle. Pentru fiecare info propune userului dacă e mai bine cu „răspuns scurt" (user tastează) sau „grilă" (user alege dintr-o listă de opțiuni). Sugerează tu opțiunile când e logic (ex: pentru „serviciu" propune lista de servicii din contextul lui).
 4. Înainte să trimiți întrebările la Meta, REFORMULEAZĂ-le frumos și fără greșeli gramaticale, scurte (max 90 caractere fiecare), clare, profesioniste. Userul nu trebuie să vadă întrebări brute cu typos.
@@ -341,10 +342,10 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
         name: z.string().max(80),
         daily_budget: z.number().positive().describe("Buget zilnic în RON/valuta cont"),
           objective: z
-            .enum(["leads", "sales", "calls", "traffic"])
+            .enum(["leads", "sales", "calls", "traffic", "signups"])
             .default("leads")
             .describe(
-              "'leads' = formular pe Facebook/IG (nume+telefon) · 'sales' = VÂNZĂRI online: trimite pe magazin/categorie/produs și optimizează pe cumpărături (necesită landing_url; Pixel-ul Meta e detectat automat de pe cont) · 'calls' = APELURI 'Sună acum', clienții te sună direct (necesită call_phone) · 'traffic' = doar trafic pe site (necesită landing_url)",
+              "'leads' = formular pe Facebook/IG (nume+telefon) · 'sales' = VÂNZĂRI online: trimite pe magazin/categorie/produs și optimizează pe cumpărături (necesită landing_url; Pixel detectat automat) · 'signups' = ÎNSCRIERI pe site: optimizează pe crearea de cont/înregistrare pe site (evenimentul CompleteRegistration din Pixel) — folosește-l când userul vrea ca oamenii să-și facă CONT / să se înregistreze pe site-ul lui (necesită landing_url; Pixel detectat automat) · 'calls' = APELURI 'Sună acum' (necesită call_phone) · 'traffic' = doar vizite pe site, fără optimizare pe conversie (necesită landing_url)",
             ),
         headline: z.string().max(40),
         primary_text: z.string().max(500),
@@ -354,7 +355,7 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
             .string()
             .url()
             .optional()
-            .describe("Obligatoriu pentru 'sales' și 'traffic' (URL magazin/categorie/produs sau site). Pentru 'leads' și 'calls' lasă gol."),
+            .describe("Obligatoriu pentru 'sales', 'signups' și 'traffic' (URL magazin/categorie/produs sau pagina de înscriere/site). Pentru 'leads' și 'calls' lasă gol."),
           call_phone: z
             .string()
             .max(30)
@@ -398,14 +399,20 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
         if (!ctx.latestMedia) {
           return { error: "Userul nu a trimis imagine. Cere-i să trimită o poză pentru reclamă." };
         }
-        // Vânzări și trafic au nevoie de un URL valid (magazin/categorie/produs/site).
+        // Vânzări / înscrieri / trafic au nevoie de un URL valid.
         if (
-          (args.objective === "sales" || args.objective === "traffic") &&
+          (args.objective === "sales" ||
+            args.objective === "signups" ||
+            args.objective === "traffic") &&
           (!args.landing_url || !/^https?:\/\//i.test(args.landing_url))
         ) {
           return {
             error: `Pentru '${args.objective}' am nevoie de link-ul ${
-              args.objective === "sales" ? "magazinului/categoriei/produsului" : "site-ului"
+              args.objective === "sales"
+                ? "magazinului/categoriei/produsului"
+                : args.objective === "signups"
+                  ? "paginii de înscriere (ex: pagina unde se fac cont)"
+                  : "site-ului"
             } (https://...). Cere-l userului.`,
           };
         }
@@ -1056,7 +1063,7 @@ async function publishCampaignToMeta(
       age_max: number;
       beneficiary?: string;
     };
-    objective: "leads" | "traffic" | "sales";
+    objective: "leads" | "traffic" | "sales" | "signups";
     cityKeys: Array<{ key: string; radius?: number }>;
     userId: string;
   },
@@ -1076,7 +1083,7 @@ async function publishCampaignToMeta(
     }
 
     let form: { id: string } | null = null;
-    let objective: "leads" | "traffic" | "sales" = input.objective;
+    let objective: "leads" | "traffic" | "sales" | "signups" = input.objective;
     let cta = input.args.cta;
     let landing_url = input.args.landing_url ?? "https://adpilot.ro";
     let fallbackNote = "";
@@ -1124,19 +1131,20 @@ async function publishCampaignToMeta(
       }
     }
 
-    // Vânzări: detectăm automat Pixel-ul Meta de pe cont. Cu pixel → optimizăm pe
-    // achiziții (OUTCOME_SALES, stats corecte). Fără pixel → cădem pe trafic spre
-    // site și îi spunem userului să-l instaleze.
-    if (objective === "sales") {
+    // Conversii pe site (vânzări / înscrieri): detectăm automat Pixel-ul Meta de pe
+    // cont. Cu pixel → optimizăm pe conversia reală (achiziție / creare cont). Fără
+    // pixel → cădem pe trafic spre site și îi spunem userului să-l instaleze.
+    if (objective === "sales" || objective === "signups") {
       const { findExistingPixel } = await import("./meta-publish.server");
       const pixel = await findExistingPixel(input.adAccountId, input.accessToken);
       if (pixel) {
         pixel_id = pixel.id;
         await supabaseAdmin.from("campaigns").update({ pixel_id: pixel.id }).eq("id", input.campaignRowId);
       } else {
+        const what = objective === "signups" ? "înscrieri" : "vânzări reale";
         objective = "traffic";
         fallbackNote =
-          "n-am găsit Pixel Meta pe cont — am făcut campanie de *trafic* spre site. Instalează Pixel-ul Meta pe site ca să optimizăm pe vânzări reale";
+          `n-am găsit Pixel Meta pe cont — am făcut campanie de *trafic* spre site. Instalează Pixel-ul Meta pe site ca să optimizăm pe ${what}`;
         await supabaseAdmin.from("campaigns").update({ objective: "LINK_CLICKS" }).eq("id", input.campaignRowId);
       }
     }
@@ -1282,7 +1290,7 @@ async function createMetaCampaignFromAgent(
   args: {
     name: string;
     daily_budget: number;
-    objective?: "leads" | "traffic" | "sales" | "calls";
+    objective?: "leads" | "traffic" | "sales" | "calls" | "signups";
     headline: string;
     primary_text: string;
     description?: string;
@@ -1298,7 +1306,7 @@ async function createMetaCampaignFromAgent(
   },
 ) {
   // 'calls' e o campanie de trafic către tel:<număr> (transformată deja în tool).
-  const objective: "leads" | "traffic" | "sales" =
+  const objective: "leads" | "traffic" | "sales" | "signups" =
     args.objective === "calls" ? "traffic" : (args.objective ?? "leads");
 
   // Gate acces + cotă: Pro/Premium = nelimitat; Starter gratuit = 1 campanie.
