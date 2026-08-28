@@ -121,6 +121,56 @@ export async function sendActivationTest(
   return { sent, failed };
 }
 
+function apologyEmail(name?: string | null): { subject: string; text: string; html: string } {
+  const hi = `Salut${firstName(name)}`;
+  return {
+    subject: "Ne pare rău — a fost o eroare de-a noastră 🙏",
+    text:
+      `${hi},\n\n` +
+      "Ne pare sincer rău — ai încercat să-ți pornești contul pe AdPilot și te-a blocat o eroare tehnică de-a noastră. Am reparat-o complet.\n\n" +
+      "Acum durează doar 2 minute: conectează-ți pagina de Facebook și AdPilot lansează reclamele automat pentru afacerea ta — iar clienții îți vin direct pe WhatsApp, gestionate cu AI.\n\n" +
+      `👉 Continuă aici: ${ONBOARDING_URL}\n\n` +
+      `Dacă ai nevoie de ajutor, sună-mă sau scrie-mi direct: ${SUPPORT_PHONE}. Te ajut personal să pornești.\n\n` +
+      "— Daniel, AdPilot",
+    html: emailShell(
+      `${hi}, ne pare rău — a fost o eroare de-a noastră 🙏`,
+      [
+        "Ai încercat să-ți pornești contul pe AdPilot și te-a blocat o eroare tehnică de-a noastră. <b>Am reparat-o complet.</b>",
+        "Acum durează doar 2 minute: conectează-ți pagina de Facebook și AdPilot lansează reclamele automat pentru afacerea ta — iar clienții îți vin direct pe WhatsApp, gestionate cu AI.",
+      ],
+      "Conectează Facebook și pornește",
+    ),
+  };
+}
+
+/** Trimite emailul de scuze către TOȚI userii cu email confirmat (broadcast one-off). */
+export async function runApologyBroadcast(): Promise<{ sent: number; failed: number }> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { sendUserEmail } = await import("@/lib/user-email.server");
+  const seen = new Set<string>();
+  let sent = 0;
+  let failed = 0;
+  for (let page = 1; page <= 6; page++) {
+    const { data } = await (supabaseAdmin as any).auth.admin.listUsers({ page, perPage: 200 });
+    const users = data?.users ?? [];
+    if (!users.length) break;
+    for (const u of users) {
+      const email: string | undefined = u.email;
+      if (!email || !u.email_confirmed_at) continue; // doar reali (confirmați)
+      if (email.endsWith("@adpilot.ro")) continue; // sărim adresele proprii
+      if (seen.has(email)) continue;
+      seen.add(email);
+      const name = (u.user_metadata?.full_name as string) ?? null;
+      const mail = apologyEmail(name);
+      const r = await sendUserEmail(email, mail.subject, mail.text, mail.html);
+      if (r.sent) sent++;
+      else failed++;
+    }
+    if (users.length < 200) break;
+  }
+  return { sent, failed };
+}
+
 export async function runActivationReminders(): Promise<{
   emails: number;
   whatsapp: number;

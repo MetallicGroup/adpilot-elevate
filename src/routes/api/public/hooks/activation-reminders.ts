@@ -12,6 +12,10 @@ export const Route = createFileRoute("/api/public/hooks/activation-reminders")({
           const { sendActivationTest } = await import("@/lib/activation.server");
           return Response.json({ ok: true, test: await sendActivationTest(body.test_emails) });
         }
+        if (body?.broadcast === "apology") {
+          const { runApologyBroadcast } = await import("@/lib/activation.server");
+          return Response.json({ ok: true, apology: await runApologyBroadcast() });
+        }
         const { runActivationReminders } = await import("@/lib/activation.server");
         const result = await runActivationReminders();
         return Response.json({ ok: true, ...result });
