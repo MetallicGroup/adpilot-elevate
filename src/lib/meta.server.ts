@@ -38,12 +38,13 @@ export const META_SCOPES = [
   "pages_manage_metadata",
 ];
 
-export function buildAuthorizeUrl(state: string) {
+export function buildAuthorizeUrl(state: string, extraScopes: string[] = []) {
   const url = new URL(`https://www.facebook.com/${metaApiVersion()}/dialog/oauth`);
+  const scopes = Array.from(new Set([...META_SCOPES, ...extraScopes]));
   url.searchParams.set("client_id", metaAppId());
   url.searchParams.set("redirect_uri", metaRedirectUri());
   url.searchParams.set("state", state);
-  url.searchParams.set("scope", META_SCOPES.join(","));
+  url.searchParams.set("scope", scopes.join(","));
   url.searchParams.set("response_type", "code");
   url.searchParams.set("auth_type", "rerequest");
   return url.toString();
@@ -85,6 +86,13 @@ export async function metaGet(path: string, accessToken: string) {
 
 export async function fetchMetaUser(accessToken: string) {
   return metaGet("/me?fields=id,name", accessToken);
+}
+
+/** La signup avem nevoie și de email (cerut prin scope-ul `email`) ca să creăm/legăm contul. */
+export async function fetchMetaUserProfile(
+  accessToken: string,
+): Promise<{ id: string; name?: string; email?: string }> {
+  return metaGet("/me?fields=id,name,email", accessToken);
 }
 
 export async function fetchMetaPermissions(accessToken: string) {

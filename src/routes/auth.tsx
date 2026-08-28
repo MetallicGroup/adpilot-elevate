@@ -9,7 +9,23 @@ import { fbLead, fbCompleteRegistration } from "@/lib/meta-pixel";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2, MessageCircle, Sparkles } from "lucide-react";
 
-type AuthSearch = { email?: string; mode?: "signin" | "signup"; goal?: string; redirect?: string };
+type AuthSearch = {
+  email?: string;
+  mode?: "signin" | "signup";
+  goal?: string;
+  redirect?: string;
+  fb?: string;
+};
+
+const FB_NOTICE: Record<string, string> = {
+  noemail:
+    "Nu am primit adresa de email de la Facebook. Bifează „email” în fereastra Facebook sau creează cont cu email/Google mai jos.",
+  denied: "Ai anulat conectarea cu Facebook. Poți încerca din nou sau folosi email/Google.",
+  create_failed: "Nu am putut crea contul din Facebook. Încearcă din nou sau folosește email/Google.",
+  session_failed: "Contul e creat, dar n-am putut porni sesiunea. Loghează-te mai jos.",
+  bad_state: "Sesiunea de conectare a expirat. Încearcă din nou.",
+  failed: "Ceva n-a mers la conectarea cu Facebook. Încearcă din nou.",
+};
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -23,6 +39,7 @@ export const Route = createFileRoute("/auth")({
     if (typeof s.redirect === "string" && s.redirect.startsWith("/") && !s.redirect.startsWith("//")) {
       out.redirect = s.redirect;
     }
+    if (typeof s.fb === "string") out.fb = s.fb;
     return out;
   },
   head: () => ({ meta: [{ title: "Autentificare — AdPilot" }] }),
@@ -50,6 +67,12 @@ function AuthPage() {
     if (!search.goal) return;
     try { window.localStorage.setItem("adpilot:goal", search.goal); } catch { /* ignore */ }
   }, [search.goal]);
+
+  // Feedback după o revenire din signup-ul cu Facebook care nu a reușit.
+  useEffect(() => {
+    if (!search.fb) return;
+    toast.error(FB_NOTICE[search.fb] ?? FB_NOTICE.failed);
+  }, [search.fb]);
 
   useEffect(() => {
     let cancelled = false;
@@ -142,6 +165,13 @@ function AuthPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function facebookSignup() {
+    setLoading(true);
+    try { tkClickButton("auth-facebook"); } catch { /* ignore */ }
+    // Redirect complet către ruta server care pornește OAuth-ul Meta (ads + email).
+    window.location.href = "/api/meta/signup/start";
   }
 
   async function oauth(provider: "google") {
@@ -258,9 +288,33 @@ function AuthPage() {
 
           <button
             type="button"
+            onClick={facebookSignup}
+            disabled={loading}
+            className="press mt-7 flex h-[52px] w-full items-center justify-center gap-2.5 rounded-[14px] text-[15px] font-semibold text-white shadow-lg transition-opacity hover:opacity-95 disabled:opacity-50"
+            style={{ background: "#1877F2" }}
+          >
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                <path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z" />
+              </svg>
+            )}
+            Continuă cu Facebook
+          </button>
+          <p className="mt-2 text-center text-[11px] text-muted-foreground">
+            Recomandat — conectezi pagina și pornești reclamele în 2 minute.
+          </p>
+
+          <div className="my-5 flex items-center gap-3 text-[10px] uppercase tracking-widest text-muted-foreground">
+            <div className="h-px flex-1 bg-border" /> sau <div className="h-px flex-1 bg-border" />
+          </div>
+
+          <button
+            type="button"
             onClick={() => oauth("google")}
             disabled={loading}
-            className="press mt-7 flex h-12 w-full items-center justify-center gap-2 rounded-[13px] border border-white/[0.08] bg-secondary/50 text-sm font-medium transition-colors hover:bg-secondary disabled:opacity-50"
+            className="press flex h-12 w-full items-center justify-center gap-2 rounded-[13px] border border-white/[0.08] bg-secondary/50 text-sm font-medium transition-colors hover:bg-secondary disabled:opacity-50"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden>
               <path

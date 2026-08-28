@@ -6,9 +6,10 @@ export async function resolvePostAuthPath(): Promise<"/dashboard" | "/onboarding
     const status = await getOnboardingStatus({
       data: { environment: getStripeEnvironment() },
     });
-    return status.hasMetaConnection && status.hasActiveSubscription
-      ? "/dashboard"
-      : "/onboarding";
+    const complete =
+      status.isAdmin ||
+      (status.hasMetaConnection && status.planChosen && status.whatsappConnected);
+    return complete ? "/dashboard" : "/onboarding";
   } catch {
     return "/onboarding";
   }

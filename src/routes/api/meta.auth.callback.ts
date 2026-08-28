@@ -18,28 +18,38 @@ export const Route = createFileRoute("/api/meta/auth/callback")({
             status: 302,
             headers: { Location: `${safeReturn}?${q}` },
           });
+        // Erorile de signup nu au sesiune → le trimitem la pagina de auth, nu în app.
+        const toAuth = (q: string) =>
+          new Response(null, { status: 302, headers: { Location: `/auth?mode=signup&${q}` } });
 
-        if (error) return back(`meta=error&reason=${encodeURIComponent(error)}`);
+        if (error) {
+          const reason = encodeURIComponent(error);
+          return state?.startsWith("signup.")
+            ? toAuth(`fb=denied`)
+            : back(`meta=error&reason=${reason}`);
+        }
         if (!code || !state) return back("meta=error&reason=missing_params");
 
         const cookieState = getCookie("meta_oauth_state");
-        if (!cookieState || cookieState !== state) return back("meta=error&reason=bad_state");
+        if (!cookieState || cookieState !== state) {
+          return state.startsWith("signup.") ? toAuth("fb=bad_state") : back("meta=error&reason=bad_state");
+        }
         deleteCookie("meta_oauth_state", { path: "/" });
 
-        const userId = state.split(".")[0];
-        if (!userId) return back("meta=error&reason=bad_state");
+        const isSignup = state.startsWith("signup.");
+        const userIdFromState = isSignup ? null : state.split(".")[0];
+        if (!isSignup && !userIdFromState) return back("meta=error&reason=bad_state");
 
         try {
           const {
             exchangeCodeForToken,
             exchangeForLongLivedToken,
             fetchMetaUser,
+            fetchMetaUserProfile,
             fetchMetaPermissions,
-            fetchAdAccounts,
-            fetchPages,
-            META_SCOPES,
           } = await import("@/lib/meta.server");
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const { persistMetaConnection } = await import("@/lib/meta/persist.server");
 
           const short = await exchangeCodeForToken(code);
           let accessToken = short.access_token;
@@ -52,119 +62,78 @@ export const Route = createFileRoute("/api/meta/auth/callback")({
             // Long-lived exchange is optional; keep short-lived token.
           }
 
-          const me = await fetchMetaUser(accessToken);
           const permissions = await fetchMetaPermissions(accessToken);
-          const granted = new Set(
+          const granted = new Set<string>(
             (permissions?.data ?? [])
               .filter((p: any) => p.status === "granted")
               .map((p: any) => p.permission),
           );
-          // `pages_manage_ads` face parte din Marketing API aprobat.
-          // `pages_manage_metadata` nu mai e cerut: lead-urile vin prin sincronizare periodică (`leads_retrieval`).
-          const expiresAt = expiresIn ? new Date(Date.now() + expiresIn * 1000).toISOString() : null;
+          const hasAds = granted.has("ads_management");
 
-          const { data: conn, error: connErr } = await supabaseAdmin
-            .from("meta_connections")
-            .upsert(
-              {
-                user_id: userId,
-                meta_user_id: me.id,
-                meta_user_name: me.name ?? null,
-                access_token: accessToken,
-                token_expires_at: expiresAt,
-                scopes: Array.from(granted).join(",") || META_SCOPES.join(","),
-                is_active: true,
-              },
-              { onConflict: "user_id,meta_user_id" },
-            )
-            .select("id")
-            .single();
-          if (connErr || !conn) throw new Error(connErr?.message ?? "Failed to save connection");
+          // ── FLUX SIGNUP: creează/leagă contul, apoi pornește sesiunea ──
+          if (isSignup) {
+            const profile = await fetchMetaUserProfile(accessToken);
+            const email = (profile.email ?? "").trim().toLowerCase();
+            if (!email) return toAuth("fb=noemail");
 
-          // Sync ad accounts (best-effort)
-          try {
-            const ads = await fetchAdAccounts(accessToken);
-            const adData = ads?.data ?? [];
-            const fallbackAdAccountId =
-              adData.find((a: any) => a.account_status === 1)?.account_id ?? adData[0]?.account_id;
-            const rows = adData.map((a: any) => ({
-              user_id: userId,
-              connection_id: conn.id,
-              ad_account_id: a.account_id,
-              account_name: a.name ?? null,
-              currency: a.currency ?? null,
-              // Coloana din DB e `timezone` (nu `timezone_name`) și `status` e text NOT NULL.
-              timezone: a.timezone_name ?? null,
-              status: String(a.account_status ?? ""),
-              is_active: fallbackAdAccountId === a.account_id,
-            }));
-            if (rows.length) {
-              await supabaseAdmin
-                .from("meta_ad_accounts")
-                // Constrângerea unică reală e (user_id, ad_account_id) — folosirea
-                // unei chei inexistente (connection_id,ad_account_id) arunca eroare
-                // prinsă silențios în catch → 0 conturi salvate pentru fiecare user.
-                .upsert(rows, { onConflict: "user_id,ad_account_id" });
+            // Găsește userul existent după email (leagă conturile) sau creează-l.
+            const { data: existing } = await (supabaseAdmin as any).rpc("get_user_id_by_email", {
+              p_email: email,
+            });
+            let uid = (existing as string | null) ?? null;
+            if (!uid) {
+              const { data: created, error: cErr } = await supabaseAdmin.auth.admin.createUser({
+                email,
+                email_confirm: true,
+                user_metadata: { full_name: profile.name ?? null, signup_source: "facebook" },
+              });
+              if (cErr || !created?.user) {
+                console.error("[fb-signup] createUser failed", cErr);
+                return toAuth("fb=create_failed");
+              }
+              uid = created.user.id;
             }
-          } catch (e) {
-            console.warn("Meta ad accounts sync failed", e);
+
+            // Conexiunea de ads o salvăm doar dacă chiar a acordat `ads_management`.
+            // Altfel lăsăm gate-ul de onboarding să-i ceară să conecteze Facebook.
+            if (hasAds) {
+              await persistMetaConnection({
+                userId: uid,
+                accessToken,
+                expiresIn,
+                granted,
+                metaUser: { id: profile.id, name: profile.name },
+              });
+            }
+
+            // Pornește sesiunea client-side printr-un magic link (email verificat de FB).
+            const origin = new URL(request.url).origin;
+            const { data: link, error: lErr } = await supabaseAdmin.auth.admin.generateLink({
+              type: "magiclink",
+              email,
+              options: { redirectTo: `${origin}/auth/callback` },
+            });
+            const actionLink = (link as any)?.properties?.action_link as string | undefined;
+            if (lErr || !actionLink) {
+              console.error("[fb-signup] generateLink failed", lErr);
+              return toAuth("fb=session_failed");
+            }
+            return new Response(null, { status: 302, headers: { Location: actionLink } });
           }
 
-          // Sync pages (best-effort)
-          try {
-            const pages = await fetchPages(accessToken);
-            const pageData = pages?.data ?? [];
-            const fallbackPageId = pageData[0]?.id;
-            const rows = pageData.map((p: any) => ({
-              user_id: userId,
-              connection_id: conn.id,
-              page_id: p.id,
-              page_name: p.name ?? null,
-              category: p.category ?? null,
-              page_access_token: p.access_token ?? null,
-              is_active: fallbackPageId === p.id,
-            }));
-            if (rows.length) {
-              await supabaseAdmin
-                .from("meta_pages")
-                .upsert(rows, { onConflict: "connection_id,page_id" });
-            }
-
-            // `pages_manage_metadata` e aprobat: abonăm mereu paginile la `leadgen`
-            // pentru lead-uri instant (sync-ul periodic rămâne ca plasă de siguranță).
-            {
-              const { metaApiVersion } = await import("@/lib/meta.server");
-              const version = metaApiVersion();
-              await Promise.all(
-                pageData
-                  .filter((p: any) => p.id && p.access_token)
-                  .map(async (p: any) => {
-                    try {
-                      const subUrl = new URL(
-                        `https://graph.facebook.com/${version}/${p.id}/subscribed_apps`,
-                      );
-                      subUrl.searchParams.set("subscribed_fields", "leadgen");
-                      subUrl.searchParams.set("access_token", p.access_token);
-                      const res = await fetch(subUrl.toString(), { method: "POST" });
-                      if (!res.ok) {
-                        console.warn(
-                          `[meta] subscribed_apps failed for page ${p.id}: ${res.status} ${await res.text()}`,
-                        );
-                      }
-                    } catch (err) {
-                      console.warn(`[meta] subscribed_apps error for page ${p.id}`, err);
-                    }
-                  }),
-              );
-            }
-          } catch (e) {
-            console.warn("Meta pages sync failed", e);
-          }
-
+          // ── FLUX CONECTARE (user deja logat) ──
+          const me = await fetchMetaUser(accessToken);
+          await persistMetaConnection({
+            userId: userIdFromState as string,
+            accessToken,
+            expiresIn,
+            granted,
+            metaUser: { id: me.id, name: me.name },
+          });
           return back("meta=connected");
         } catch (e) {
           console.error("Meta OAuth callback error", e);
-          return back("meta=error&reason=callback_failed");
+          return isSignup ? toAuth("fb=failed") : back("meta=error&reason=callback_failed");
         }
       },
     },

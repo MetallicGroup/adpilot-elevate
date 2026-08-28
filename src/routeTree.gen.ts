@@ -74,6 +74,7 @@ import { Route as ApiPublicHooksFreePlanExpiryRouteImport } from './routes/api/p
 import { Route as ApiPublicHooksDailyReportRouteImport } from './routes/api/public/hooks/daily-report'
 import { Route as ApiPublicHooksAnomalyScanRouteImport } from './routes/api/public/hooks/anomaly-scan'
 import { Route as ApiPublicHooksActivationRemindersRouteImport } from './routes/api/public/hooks/activation-reminders'
+import { Route as ApiMetaSignupStartRouteImport } from './routes/api/meta.signup.start'
 import { Route as ApiMetaAuthCallbackRouteImport } from './routes/api/meta.auth.callback'
 import { Route as AuthenticatedAdminUsersIdRouteImport } from './routes/_authenticated/admin.users.$id'
 import { Route as AuthenticatedAdminTicketsIdRouteImport } from './routes/_authenticated/admin.tickets.$id'
@@ -414,6 +415,11 @@ const ApiPublicHooksActivationRemindersRoute =
     path: '/api/public/hooks/activation-reminders',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiMetaSignupStartRoute = ApiMetaSignupStartRouteImport.update({
+  id: '/api/meta/signup/start',
+  path: '/api/meta/signup/start',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiMetaAuthCallbackRoute = ApiMetaAuthCallbackRouteImport.update({
   id: '/api/meta/auth/callback',
   path: '/api/meta/auth/callback',
@@ -487,6 +493,7 @@ export interface FileRoutesByFullPath {
   '/admin/tickets/$id': typeof AuthenticatedAdminTicketsIdRoute
   '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
   '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
+  '/api/meta/signup/start': typeof ApiMetaSignupStartRoute
   '/api/public/hooks/activation-reminders': typeof ApiPublicHooksActivationRemindersRoute
   '/api/public/hooks/anomaly-scan': typeof ApiPublicHooksAnomalyScanRoute
   '/api/public/hooks/daily-report': typeof ApiPublicHooksDailyReportRoute
@@ -556,6 +563,7 @@ export interface FileRoutesByTo {
   '/admin/tickets/$id': typeof AuthenticatedAdminTicketsIdRoute
   '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
   '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
+  '/api/meta/signup/start': typeof ApiMetaSignupStartRoute
   '/api/public/hooks/activation-reminders': typeof ApiPublicHooksActivationRemindersRoute
   '/api/public/hooks/anomaly-scan': typeof ApiPublicHooksAnomalyScanRoute
   '/api/public/hooks/daily-report': typeof ApiPublicHooksDailyReportRoute
@@ -627,6 +635,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/tickets/$id': typeof AuthenticatedAdminTicketsIdRoute
   '/_authenticated/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
   '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
+  '/api/meta/signup/start': typeof ApiMetaSignupStartRoute
   '/api/public/hooks/activation-reminders': typeof ApiPublicHooksActivationRemindersRoute
   '/api/public/hooks/anomaly-scan': typeof ApiPublicHooksAnomalyScanRoute
   '/api/public/hooks/daily-report': typeof ApiPublicHooksDailyReportRoute
@@ -698,6 +707,7 @@ export interface FileRouteTypes {
     | '/admin/tickets/$id'
     | '/admin/users/$id'
     | '/api/meta/auth/callback'
+    | '/api/meta/signup/start'
     | '/api/public/hooks/activation-reminders'
     | '/api/public/hooks/anomaly-scan'
     | '/api/public/hooks/daily-report'
@@ -767,6 +777,7 @@ export interface FileRouteTypes {
     | '/admin/tickets/$id'
     | '/admin/users/$id'
     | '/api/meta/auth/callback'
+    | '/api/meta/signup/start'
     | '/api/public/hooks/activation-reminders'
     | '/api/public/hooks/anomaly-scan'
     | '/api/public/hooks/daily-report'
@@ -837,6 +848,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/tickets/$id'
     | '/_authenticated/admin/users/$id'
     | '/api/meta/auth/callback'
+    | '/api/meta/signup/start'
     | '/api/public/hooks/activation-reminders'
     | '/api/public/hooks/anomaly-scan'
     | '/api/public/hooks/daily-report'
@@ -888,6 +900,7 @@ export interface RootRouteChildren {
   BSlugRoute: typeof BSlugRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   ApiMetaAuthCallbackRoute: typeof ApiMetaAuthCallbackRoute
+  ApiMetaSignupStartRoute: typeof ApiMetaSignupStartRoute
   ApiPublicHooksActivationRemindersRoute: typeof ApiPublicHooksActivationRemindersRoute
   ApiPublicHooksAnomalyScanRoute: typeof ApiPublicHooksAnomalyScanRoute
   ApiPublicHooksDailyReportRoute: typeof ApiPublicHooksDailyReportRoute
@@ -1360,6 +1373,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksActivationRemindersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/meta/signup/start': {
+      id: '/api/meta/signup/start'
+      path: '/api/meta/signup/start'
+      fullPath: '/api/meta/signup/start'
+      preLoaderRoute: typeof ApiMetaSignupStartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/meta/auth/callback': {
       id: '/api/meta/auth/callback'
       path: '/api/meta/auth/callback'
@@ -1486,6 +1506,7 @@ const rootRouteChildren: RootRouteChildren = {
   BSlugRoute: BSlugRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   ApiMetaAuthCallbackRoute: ApiMetaAuthCallbackRoute,
+  ApiMetaSignupStartRoute: ApiMetaSignupStartRoute,
   ApiPublicHooksActivationRemindersRoute:
     ApiPublicHooksActivationRemindersRoute,
   ApiPublicHooksAnomalyScanRoute: ApiPublicHooksAnomalyScanRoute,
