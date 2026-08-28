@@ -78,6 +78,12 @@ FLOW OBLIGATORIU pentru CAMPANII NOI (înainte să apelezi create_campaign):
    c) 📞 „Apeluri" (clienții îl sună direct) → objective="calls". Cere-i NUMĂRUL de telefon pe care vrea să primească apelurile și trimite-l în câmpul call_phone. Butonul „Sună acum" formează acel număr.
    d) 🌐 „Trafic pe site" (doar vizite, fără optimizare pe vânzări) → objective="traffic" (cere URL-ul site-ului).
    e) ✍️ „Înscrieri pe site" (vrea ca oamenii să-și facă CONT / să se înregistreze / să se aboneze pe site-ul lui) → objective="signups". Cere-i LINK-ul paginii de înscriere. Optimizează pe crearea de cont (evenimentul CompleteRegistration din Pixel); Pixel-ul e detectat automat, iar fără el cade pe trafic și îi spui să-l instaleze. ALEGE ASTA (nu „leads" și nici „traffic") când scopul e conturi/înregistrări PE SITE-ul lui.
+1b. TARGETARE PE INTERESE (câmpul interests) — pentru rezultate bune: alege interese/comportamente potrivite publicului (nume în ENGLEZĂ, le caut automat în Meta).
+   • Dacă userul ÎȚI SPUNE ce public/interese vrea → folosește exact alea (mod MANUAL).
+   • Dacă NU → alege TU automat, pe baza a ce promovează:
+     – B2C (vinde către clienți): interese de consum. Ex salon→cliente: ['Beauty','Makeup','Cosmetics']; sală→membri: ['Fitness and wellness','Gym'].
+     – B2B (se adresează unor AFACERI/patroni): comportamente + business. Ex „promovează o platformă către saloane": ['Small business owners','Beauty salon','Cosmetics industry'].
+   • Lasă GOL doar dacă userul cere explicit „public larg / toată lumea".
 2. Dacă a ales „clienți potențiali", întreabă-l dacă vrea să afle DOAR nume + telefon SAU și alte informații (ex: oraș, serviciu dorit, buget, dată preferată).
 3. Dacă vrea informații suplimentare, întreabă-l CONCRET ce vrea să afle. Pentru fiecare info propune userului dacă e mai bine cu „răspuns scurt" (user tastează) sau „grilă" (user alege dintr-o listă de opțiuni). Sugerează tu opțiunile când e logic (ex: pentru „serviciu" propune lista de servicii din contextul lui).
 4. Înainte să trimiți întrebările la Meta, REFORMULEAZĂ-le frumos și fără greșeli gramaticale, scurte (max 90 caractere fiecare), clare, profesioniste. Userul nu trebuie să vadă întrebări brute cu typos.
@@ -382,6 +388,13 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
           city_radius_km: z.number().int().min(10).max(80).default(25).describe("Raza în km în jurul orașelor"),
         age_min: z.number().int().min(13).max(65).default(18),
         age_max: z.number().int().min(13).max(65).default(65),
+        interests: z
+          .array(z.string().max(60))
+          .max(10)
+          .optional()
+          .describe(
+            "Targetare detaliată pe INTERESE și COMPORTAMENTE (nume în engleză, le caut automat în Meta). Poți alege TU automat, pe baza publicului descris, SAU folosi exact ce cere userul. B2C (clienți): interese de consum (ex: 'Beauty','Makeup','Skincare','Fitness'). B2B (patroni/afaceri): comportamente + interese de business (ex: 'Small business owners','Beauty salon','Restaurants'). Lasă GOL doar dacă userul vrea explicit public larg.",
+          ),
         beneficiary: z
           .string()
           .max(100)
@@ -1062,13 +1075,14 @@ async function publishCampaignToMeta(
       age_min: number;
       age_max: number;
       beneficiary?: string;
+      interests?: string[];
     };
     objective: "leads" | "traffic" | "sales" | "signups";
     cityKeys: Array<{ key: string; radius?: number }>;
     userId: string;
   },
 ) {
-  const { createLeadForm, uploadAdImageFromBytes, createCampaign, createAdSet, createAdCreative, createAd, fetchPageName, fetchPageInstagramId } =
+  const { createLeadForm, uploadAdImageFromBytes, createCampaign, createAdSet, createAdCreative, createAd, fetchPageName, fetchPageInstagramId, resolveAdTargeting } =
     await import("./meta-publish.server");
 
   try {
@@ -1163,6 +1177,18 @@ async function publishCampaignToMeta(
       (await fetchPageName(input.pageId, input.pageAccessToken)) ||
       (await fetchPageName(input.pageId, input.accessToken)) ||
       "AdPilot";
+    // Targetare detaliată: rezolvăm numele de interese/comportamente în ID-uri Meta.
+    const detailed = input.args.interests?.length
+      ? await resolveAdTargeting(input.accessToken, input.args.interests)
+      : null;
+    if (detailed) {
+      if (detailed.missed.length) {
+        fallbackNote =
+          (fallbackNote ? fallbackNote + " · " : "") +
+          `n-am găsit în Meta interesele: ${detailed.missed.join(", ")}`;
+      }
+    }
+
     const buildAdSet = (beneficiary: string) =>
       createAdSet(input.adAccountId, input.accessToken, {
         name: `${input.args.name} — AdSet`,
@@ -1176,6 +1202,8 @@ async function publishCampaignToMeta(
           age_min: input.args.age_min,
           age_max: input.args.age_max,
           cities: input.cityKeys.length ? input.cityKeys : undefined,
+          interests: detailed?.interests,
+          behaviors: detailed?.behaviors,
         },
         status: "ACTIVE",
         objective,
@@ -1303,6 +1331,7 @@ async function createMetaCampaignFromAgent(
     age_min: number;
     age_max: number;
     beneficiary?: string;
+    interests?: string[];
   },
 ) {
   // 'calls' e o campanie de trafic către tel:<număr> (transformată deja în tool).

@@ -309,6 +309,57 @@ export async function findExistingPixel(
   return p?.id ? { id: String(p.id), name: String(p.name ?? "Pixel") } : null;
 }
 
+/** Caută în Meta un interes/comportament după nume; întoarce primul rezultat. */
+export async function searchAdTargeting(
+  accessToken: string,
+  query: string,
+): Promise<{ id: string; name: string; kind: "interests" | "behaviors" } | null> {
+  const attempts = [
+    { type: "adinterest", extra: "", kind: "interests" as const },
+    { type: "adTargetingCategory", extra: "&class=behaviors", kind: "behaviors" as const },
+  ];
+  for (const a of attempts) {
+    try {
+      const url = `${GRAPH}/${metaApiVersion()}/search?type=${a.type}${a.extra}&q=${encodeURIComponent(query)}&limit=1&access_token=${encodeURIComponent(accessToken)}`;
+      const r = await fetch(url);
+      const j = await r.json();
+      if (r.ok && Array.isArray(j?.data) && j.data.length) {
+        return { id: String(j.data[0].id), name: String(j.data[0].name), kind: a.kind };
+      }
+    } catch {
+      /* încearcă următorul tip */
+    }
+  }
+  return null;
+}
+
+/** Rezolvă o listă de nume (interese/comportamente) în ID-uri Meta, grupate. */
+export async function resolveAdTargeting(
+  accessToken: string,
+  names: string[],
+): Promise<{
+  interests: Array<{ id: string; name: string }>;
+  behaviors: Array<{ id: string; name: string }>;
+  matched: string[];
+  missed: string[];
+}> {
+  const interests: Array<{ id: string; name: string }> = [];
+  const behaviors: Array<{ id: string; name: string }> = [];
+  const matched: string[] = [];
+  const missed: string[] = [];
+  for (const name of names.slice(0, 12)) {
+    const m = await searchAdTargeting(accessToken, name);
+    if (!m) {
+      missed.push(name);
+      continue;
+    }
+    if (m.kind === "behaviors") behaviors.push({ id: m.id, name: m.name });
+    else interests.push({ id: m.id, name: m.name });
+    matched.push(m.name);
+  }
+  return { interests, behaviors, matched, missed };
+}
+
 export async function createAdSet(
   adAccountId: string,
   accessToken: string,
@@ -325,6 +376,8 @@ export async function createAdSet(
       age_max: number;
       genders?: number[];
       cities?: Array<{ key: string; radius?: number; distance_unit?: "kilometer" | "mile" }>;
+      interests?: Array<{ id: string; name: string }>;
+      behaviors?: Array<{ id: string; name: string }>;
     };
     status: "ACTIVE" | "PAUSED";
     objective?: "leads" | "traffic" | "bookings" | "landing_lead" | "sales" | "signups";
@@ -354,6 +407,16 @@ export async function createAdSet(
   if (args.targeting.genders && args.targeting.genders.length) {
     targeting.genders = args.targeting.genders;
   }
+  // Interese + comportamente (targetare detaliată) — OR în cadrul unui grup
+  // flexible_spec. Ex B2B: „Small business owners" + „Beauty salon"; B2C: „Makeup".
+  const flex: Record<string, unknown> = {};
+  if (args.targeting.interests && args.targeting.interests.length) {
+    flex.interests = args.targeting.interests.map((i) => ({ id: i.id, name: i.name }));
+  }
+  if (args.targeting.behaviors && args.targeting.behaviors.length) {
+    flex.behaviors = args.targeting.behaviors.map((b) => ({ id: b.id, name: b.name }));
+  }
+  if (Object.keys(flex).length) targeting.flexible_spec = [flex];
   // Conversii pe site/landing (evenimente trimise prin Pixel + CAPI).
   const isConversion =
     args.objective === "bookings" ||
