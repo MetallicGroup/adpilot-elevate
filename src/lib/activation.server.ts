@@ -5,7 +5,7 @@
  * Rulează dintr-un cron orar; candidații vin din get_activation_candidates().
  */
 
-const SUPPORT_PHONE = "0733342513";
+const SUPPORT_PHONE = "0740274969";
 const ONBOARDING_URL = "https://www.adpilot.ro/onboarding";
 
 function firstName(name?: string | null): string {
@@ -48,6 +48,22 @@ function reminderEmail(step: number, name?: string | null): { subject: string; t
       `👉 ${ONBOARDING_URL}\n\n` +
       "— Daniel, AdPilot",
   };
+}
+
+/** Trimite emailul de reminder „ziua 1" către adrese de test (gated de cron). */
+export async function sendActivationTest(
+  emails: string[],
+): Promise<{ sent: string[]; failed: Array<{ email: string; error?: string }> }> {
+  const { sendUserEmail } = await import("@/lib/user-email.server");
+  const mail = reminderEmail(1, "");
+  const sent: string[] = [];
+  const failed: Array<{ email: string; error?: string }> = [];
+  for (const e of emails.slice(0, 10)) {
+    const r = await sendUserEmail(e, "[TEST] " + mail.subject, mail.text);
+    if (r.sent) sent.push(e);
+    else failed.push({ email: e, error: r.error });
+  }
+  return { sent, failed };
 }
 
 export async function runActivationReminders(): Promise<{
