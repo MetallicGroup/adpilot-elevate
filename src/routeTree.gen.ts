@@ -73,6 +73,7 @@ import { Route as ApiPublicHooksNewSignupRouteImport } from './routes/api/public
 import { Route as ApiPublicHooksFreePlanExpiryRouteImport } from './routes/api/public/hooks/free-plan-expiry'
 import { Route as ApiPublicHooksDailyReportRouteImport } from './routes/api/public/hooks/daily-report'
 import { Route as ApiPublicHooksAnomalyScanRouteImport } from './routes/api/public/hooks/anomaly-scan'
+import { Route as ApiPublicHooksActivationRemindersRouteImport } from './routes/api/public/hooks/activation-reminders'
 import { Route as ApiMetaAuthCallbackRouteImport } from './routes/api/meta.auth.callback'
 import { Route as AuthenticatedAdminUsersIdRouteImport } from './routes/_authenticated/admin.users.$id'
 import { Route as AuthenticatedAdminTicketsIdRouteImport } from './routes/_authenticated/admin.tickets.$id'
@@ -407,6 +408,12 @@ const ApiPublicHooksAnomalyScanRoute =
     path: '/api/public/hooks/anomaly-scan',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksActivationRemindersRoute =
+  ApiPublicHooksActivationRemindersRouteImport.update({
+    id: '/api/public/hooks/activation-reminders',
+    path: '/api/public/hooks/activation-reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiMetaAuthCallbackRoute = ApiMetaAuthCallbackRouteImport.update({
   id: '/api/meta/auth/callback',
   path: '/api/meta/auth/callback',
@@ -480,6 +487,7 @@ export interface FileRoutesByFullPath {
   '/admin/tickets/$id': typeof AuthenticatedAdminTicketsIdRoute
   '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
   '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
+  '/api/public/hooks/activation-reminders': typeof ApiPublicHooksActivationRemindersRoute
   '/api/public/hooks/anomaly-scan': typeof ApiPublicHooksAnomalyScanRoute
   '/api/public/hooks/daily-report': typeof ApiPublicHooksDailyReportRoute
   '/api/public/hooks/free-plan-expiry': typeof ApiPublicHooksFreePlanExpiryRoute
@@ -548,6 +556,7 @@ export interface FileRoutesByTo {
   '/admin/tickets/$id': typeof AuthenticatedAdminTicketsIdRoute
   '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
   '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
+  '/api/public/hooks/activation-reminders': typeof ApiPublicHooksActivationRemindersRoute
   '/api/public/hooks/anomaly-scan': typeof ApiPublicHooksAnomalyScanRoute
   '/api/public/hooks/daily-report': typeof ApiPublicHooksDailyReportRoute
   '/api/public/hooks/free-plan-expiry': typeof ApiPublicHooksFreePlanExpiryRoute
@@ -618,6 +627,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/tickets/$id': typeof AuthenticatedAdminTicketsIdRoute
   '/_authenticated/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
   '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
+  '/api/public/hooks/activation-reminders': typeof ApiPublicHooksActivationRemindersRoute
   '/api/public/hooks/anomaly-scan': typeof ApiPublicHooksAnomalyScanRoute
   '/api/public/hooks/daily-report': typeof ApiPublicHooksDailyReportRoute
   '/api/public/hooks/free-plan-expiry': typeof ApiPublicHooksFreePlanExpiryRoute
@@ -688,6 +698,7 @@ export interface FileRouteTypes {
     | '/admin/tickets/$id'
     | '/admin/users/$id'
     | '/api/meta/auth/callback'
+    | '/api/public/hooks/activation-reminders'
     | '/api/public/hooks/anomaly-scan'
     | '/api/public/hooks/daily-report'
     | '/api/public/hooks/free-plan-expiry'
@@ -756,6 +767,7 @@ export interface FileRouteTypes {
     | '/admin/tickets/$id'
     | '/admin/users/$id'
     | '/api/meta/auth/callback'
+    | '/api/public/hooks/activation-reminders'
     | '/api/public/hooks/anomaly-scan'
     | '/api/public/hooks/daily-report'
     | '/api/public/hooks/free-plan-expiry'
@@ -825,6 +837,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/tickets/$id'
     | '/_authenticated/admin/users/$id'
     | '/api/meta/auth/callback'
+    | '/api/public/hooks/activation-reminders'
     | '/api/public/hooks/anomaly-scan'
     | '/api/public/hooks/daily-report'
     | '/api/public/hooks/free-plan-expiry'
@@ -875,6 +888,7 @@ export interface RootRouteChildren {
   BSlugRoute: typeof BSlugRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   ApiMetaAuthCallbackRoute: typeof ApiMetaAuthCallbackRoute
+  ApiPublicHooksActivationRemindersRoute: typeof ApiPublicHooksActivationRemindersRoute
   ApiPublicHooksAnomalyScanRoute: typeof ApiPublicHooksAnomalyScanRoute
   ApiPublicHooksDailyReportRoute: typeof ApiPublicHooksDailyReportRoute
   ApiPublicHooksFreePlanExpiryRoute: typeof ApiPublicHooksFreePlanExpiryRoute
@@ -1339,6 +1353,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksAnomalyScanRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/activation-reminders': {
+      id: '/api/public/hooks/activation-reminders'
+      path: '/api/public/hooks/activation-reminders'
+      fullPath: '/api/public/hooks/activation-reminders'
+      preLoaderRoute: typeof ApiPublicHooksActivationRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/meta/auth/callback': {
       id: '/api/meta/auth/callback'
       path: '/api/meta/auth/callback'
@@ -1465,6 +1486,8 @@ const rootRouteChildren: RootRouteChildren = {
   BSlugRoute: BSlugRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   ApiMetaAuthCallbackRoute: ApiMetaAuthCallbackRoute,
+  ApiPublicHooksActivationRemindersRoute:
+    ApiPublicHooksActivationRemindersRoute,
   ApiPublicHooksAnomalyScanRoute: ApiPublicHooksAnomalyScanRoute,
   ApiPublicHooksDailyReportRoute: ApiPublicHooksDailyReportRoute,
   ApiPublicHooksFreePlanExpiryRoute: ApiPublicHooksFreePlanExpiryRoute,
