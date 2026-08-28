@@ -8,6 +8,10 @@ export type OnboardingStatus = {
   hasActiveSubscription: boolean;
   /** A ales un plan? = abonament plătit ACTIV SAU Starter gratuit activ luna asta. */
   planChosen: boolean;
+  /** WhatsApp conectat + activat (a trimis mesajul de activare). */
+  whatsappConnected: boolean;
+  /** Admin — exceptat de la gate-ul de onboarding. */
+  isAdmin: boolean;
   subscriptionStatus: string | null;
   trialEnd: string | null;
   planTier: "none" | "starter" | "pro" | "premium";
@@ -29,7 +33,7 @@ export const getOnboardingStatus = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<OnboardingStatus> => {
     const { supabase, userId } = context;
 
-    const [{ data: meta }, { data: sub }, { data: profile }] = await Promise.all([
+    const [{ data: meta }, { data: sub }, { data: profile }, { data: wa }] = await Promise.all([
       supabase
         .from("meta_connections")
         .select("id")
@@ -46,6 +50,11 @@ export const getOnboardingStatus = createServerFn({ method: "POST" })
         .limit(1)
         .maybeSingle(),
       (supabase as any).from("profiles").select("phone").eq("id", userId).maybeSingle(),
+      supabase
+        .from("whatsapp_connections")
+        .select("status")
+        .eq("user_id", userId)
+        .maybeSingle(),
     ]);
 
     const now = Date.now();
@@ -70,11 +79,21 @@ export const getOnboardingStatus = createServerFn({ method: "POST" })
     const access = await resolveAccess(supabaseAdmin, userId);
     const planChosen = isActive || access.freeStarter.state === "active";
 
+    // Admin: exceptat de la gate-ul de onboarding (nu se poate bloca singur).
+    const { data: adminRole } = await (supabaseAdmin as any)
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+
     return {
       hasPhone: !!(profile?.phone && String(profile.phone).trim()),
       hasMetaConnection: !!meta,
       hasActiveSubscription: isActive,
       planChosen,
+      whatsappConnected: (wa as any)?.status === "active",
+      isAdmin: !!adminRole,
       subscriptionStatus: sub?.status ?? null,
       trialEnd: sub?.trial_end ?? null,
       planTier,

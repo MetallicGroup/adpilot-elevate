@@ -271,7 +271,16 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
               if (justActivated) {
                 try {
                   const welcome =
-                    "Salut 👋 Sunt asistentul tău AdPilot. De aici poți primi lead-uri, rapoarte și poți controla campaniile tale direct pe WhatsApp.\n\nScrie-mi: *„arată-mi campaniile”* sau *„vreau o campanie nouă”* 🚀";
+                    "🎉 *Gata! Ești conectat la asistentul AdPilot.*\n\n" +
+                    "Eu sunt asistentul tău de reclame. De aici, direct din WhatsApp, îți lansez și gestionez campaniile pe Facebook și Instagram — fără să intri în vreo aplicație. Îmi scrii normal, ca unui om. 🙂\n\n" +
+                    "*Iată ce pot face pentru tine:*\n\n" +
+                    "🚀 *Pornește o reclamă*\n_Scrie:_ „pornește o reclamă” sau „vreau clienți noi”\nÎți pun câteva întrebări scurte (ce vinzi, buget, poză) și o lansez.\n\n" +
+                    "⏸️ *Oprește / pune pe pauză o reclamă*\n_Scrie:_ „oprește reclama” sau „pune pe pauză campania”\n\n" +
+                    "📊 *Vezi rezultatele*\n_Scrie:_ „cum merg reclamele?” sau „arată-mi raportul”\n\n" +
+                    "👥 *Vezi clienții / lead-urile*\n_Scrie:_ „arată-mi clienții noi”\n\n" +
+                    "❓ *Ai o întrebare sau te-ai blocat?*\n_Scrie:_ „ajutor” — sau pur și simplu întreabă-mă orice.\n\n" +
+                    "💡 *Sfat:* nu trebuie să ții minte comenzi exacte. Spune-mi cu vorbele tale ce vrei să obții (mai multe vânzări, programări, clienți) și mă ocup eu de rest.\n\n" +
+                    "Hai să începem — scrie-mi *„pornește o reclamă”* și pornim prima ta campanie 🚀";
                   const { id } = await sendWhatsAppMessage(
                     central.phoneNumberId,
                     central.accessToken,

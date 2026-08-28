@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated")({
         const { getOnboardingStatus } = await import("@/lib/onboarding.functions");
         const { getStripeEnvironment } = await import("@/lib/stripe");
         const status = await getOnboardingStatus({ data: { environment: getStripeEnvironment() } });
-        complete = !!(status.hasMetaConnection && status.planChosen);
+        complete = status.isAdmin || !!(status.hasMetaConnection && status.planChosen && status.whatsappConnected);
       } catch {
         complete = true; // eroare de verificare → lăsăm userul să treacă
       }
