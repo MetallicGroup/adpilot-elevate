@@ -309,31 +309,29 @@ export async function findExistingPixel(
   return p?.id ? { id: String(p.id), name: String(p.name ?? "Pixel") } : null;
 }
 
-/** Caută în Meta un interes/comportament după nume; întoarce primul rezultat. */
+/**
+ * Caută în Meta un INTERES după nume; întoarce primul rezultat.
+ * (Doar `adinterest` — căutarea de `behaviors` ignoră query-ul și întoarce mereu
+ * primul comportament, deci ar atașa targetare greșită.)
+ */
 export async function searchAdTargeting(
   accessToken: string,
   query: string,
-): Promise<{ id: string; name: string; kind: "interests" | "behaviors" } | null> {
-  const attempts = [
-    { type: "adinterest", extra: "", kind: "interests" as const },
-    { type: "adTargetingCategory", extra: "&class=behaviors", kind: "behaviors" as const },
-  ];
-  for (const a of attempts) {
-    try {
-      const url = `${GRAPH}/${metaApiVersion()}/search?type=${a.type}${a.extra}&q=${encodeURIComponent(query)}&limit=1&access_token=${encodeURIComponent(accessToken)}`;
-      const r = await fetch(url);
-      const j = await r.json();
-      if (r.ok && Array.isArray(j?.data) && j.data.length) {
-        return { id: String(j.data[0].id), name: String(j.data[0].name), kind: a.kind };
-      }
-    } catch {
-      /* încearcă următorul tip */
+): Promise<{ id: string; name: string } | null> {
+  try {
+    const url = `${GRAPH}/${metaApiVersion()}/search?type=adinterest&q=${encodeURIComponent(query)}&limit=1&access_token=${encodeURIComponent(accessToken)}`;
+    const r = await fetch(url);
+    const j = await r.json();
+    if (r.ok && Array.isArray(j?.data) && j.data.length) {
+      return { id: String(j.data[0].id), name: String(j.data[0].name) };
     }
+  } catch {
+    /* ignore */
   }
   return null;
 }
 
-/** Rezolvă o listă de nume (interese/comportamente) în ID-uri Meta, grupate. */
+/** Rezolvă o listă de nume de interese în ID-uri Meta. */
 export async function resolveAdTargeting(
   accessToken: string,
   names: string[],
@@ -344,7 +342,6 @@ export async function resolveAdTargeting(
   missed: string[];
 }> {
   const interests: Array<{ id: string; name: string }> = [];
-  const behaviors: Array<{ id: string; name: string }> = [];
   const matched: string[] = [];
   const missed: string[] = [];
   for (const name of names.slice(0, 12)) {
@@ -353,11 +350,10 @@ export async function resolveAdTargeting(
       missed.push(name);
       continue;
     }
-    if (m.kind === "behaviors") behaviors.push({ id: m.id, name: m.name });
-    else interests.push({ id: m.id, name: m.name });
+    interests.push({ id: m.id, name: m.name });
     matched.push(m.name);
   }
-  return { interests, behaviors, matched, missed };
+  return { interests, behaviors: [], matched, missed };
 }
 
 export async function createAdSet(

@@ -78,11 +78,12 @@ FLOW OBLIGATORIU pentru CAMPANII NOI (înainte să apelezi create_campaign):
    c) 📞 „Apeluri" (clienții îl sună direct) → objective="calls". Cere-i NUMĂRUL de telefon pe care vrea să primească apelurile și trimite-l în câmpul call_phone. Butonul „Sună acum" formează acel număr.
    d) 🌐 „Trafic pe site" (doar vizite, fără optimizare pe vânzări) → objective="traffic" (cere URL-ul site-ului).
    e) ✍️ „Înscrieri pe site" (vrea ca oamenii să-și facă CONT / să se înregistreze / să se aboneze pe site-ul lui) → objective="signups". Cere-i LINK-ul paginii de înscriere. Optimizează pe crearea de cont (evenimentul CompleteRegistration din Pixel); Pixel-ul e detectat automat, iar fără el cade pe trafic și îi spui să-l instaleze. ALEGE ASTA (nu „leads" și nici „traffic") când scopul e conturi/înregistrări PE SITE-ul lui.
-1b. TARGETARE PE INTERESE (câmpul interests) — pentru rezultate bune: alege interese/comportamente potrivite publicului (nume în ENGLEZĂ, le caut automat în Meta).
+1b. TARGETARE PE INTERESE (câmpul interests) — pentru rezultate bune: alege INTERESE reale din Meta (nume în ENGLEZĂ, le caut automat). Folosește nume care EXISTĂ ca interese (industrie/nișă/pasiune), NU descrieri (ex NU 'Small business owners' — nu e interes).
    • Dacă userul ÎȚI SPUNE ce public/interese vrea → folosește exact alea (mod MANUAL).
    • Dacă NU → alege TU automat, pe baza a ce promovează:
-     – B2C (vinde către clienți): interese de consum. Ex salon→cliente: ['Beauty','Makeup','Cosmetics']; sală→membri: ['Fitness and wellness','Gym'].
-     – B2B (se adresează unor AFACERI/patroni): comportamente + business. Ex „promovează o platformă către saloane": ['Small business owners','Beauty salon','Cosmetics industry'].
+     – B2C (vinde către clienți): interese de consum. Ex salon→cliente: ['Beauty','Makeup','Cosmetics']; sală→membri: ['Fitness and wellness','Physical fitness'].
+     – B2B (se adresează unor AFACERI/patroni): folosește interesul de INDUSTRIE al nișei + antreprenoriat. Ex „platformă către saloane": ['Beauty salon','Cosmetics','Entrepreneurship']; „către restaurante": ['Restaurants','Entrepreneurship','Small business'].
+   • După lansare îți spun pe ce interese am targetat efectiv — dacă vreunul e greșit, userul poate cere altul.
    • Lasă GOL doar dacă userul cere explicit „public larg / toată lumea".
 2. Dacă a ales „clienți potențiali", întreabă-l dacă vrea să afle DOAR nume + telefon SAU și alte informații (ex: oraș, serviciu dorit, buget, dată preferată).
 3. Dacă vrea informații suplimentare, întreabă-l CONCRET ce vrea să afle. Pentru fiecare info propune userului dacă e mai bine cu „răspuns scurt" (user tastează) sau „grilă" (user alege dintr-o listă de opțiuni). Sugerează tu opțiunile când e logic (ex: pentru „serviciu" propune lista de servicii din contextul lui).
@@ -1182,10 +1183,15 @@ async function publishCampaignToMeta(
       ? await resolveAdTargeting(input.accessToken, input.args.interests)
       : null;
     if (detailed) {
+      if (detailed.matched.length) {
+        fallbackNote =
+          (fallbackNote ? fallbackNote + " · " : "") +
+          `am targetat pe interesele: ${detailed.matched.join(", ")}`;
+      }
       if (detailed.missed.length) {
         fallbackNote =
           (fallbackNote ? fallbackNote + " · " : "") +
-          `n-am găsit în Meta interesele: ${detailed.missed.join(", ")}`;
+          `n-am găsit în Meta: ${detailed.missed.join(", ")}`;
       }
     }
 
