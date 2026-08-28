@@ -85,6 +85,11 @@ FLOW OBLIGATORIU pentru CAMPANII NOI (înainte să apelezi create_campaign):
      – B2B (se adresează unor AFACERI/patroni): folosește interesul de INDUSTRIE al nișei + antreprenoriat. Ex „platformă către saloane": ['Beauty salon','Cosmetics','Entrepreneurship']; „către restaurante": ['Restaurants','Entrepreneurship','Small business'].
    • După lansare îți spun pe ce interese am targetat efectiv — dacă vreunul e greșit, userul poate cere altul.
    • Lasă GOL doar dacă userul cere explicit „public larg / toată lumea".
+1c. PIXEL (doar pentru 'sales' și 'signups'): înainte să lansezi, apelează tool-ul list_pixels ca să VEZI pixelii de pe cont.
+   • Dacă e UN singur pixel → spune-i userului care e (numele) și folosește-l automat.
+   • Dacă sunt MAI MULȚI pixeli → arată-i userului lista (nume) și ÎNTREABĂ-L pe care să-l folosească; trimite pixel_id-ul ales în create_campaign.
+   • Dacă userul te întreabă „ce pixel vezi?" → apelează list_pixels și răspunde-i concret.
+   • Dacă NU e niciun pixel → spune-i să instaleze pixelul (până atunci campania va merge ca trafic simplu).
 2. Dacă a ales „clienți potențiali", întreabă-l dacă vrea să afle DOAR nume + telefon SAU și alte informații (ex: oraș, serviciu dorit, buget, dată preferată).
 3. Dacă vrea informații suplimentare, întreabă-l CONCRET ce vrea să afle. Pentru fiecare info propune userului dacă e mai bine cu „răspuns scurt" (user tastează) sau „grilă" (user alege dintr-o listă de opțiuni). Sugerează tu opțiunile când e logic (ex: pentru „serviciu" propune lista de servicii din contextul lui).
 4. Înainte să trimiți întrebările la Meta, REFORMULEAZĂ-le frumos și fără greșeli gramaticale, scurte (max 90 caractere fiecare), clare, profesioniste. Userul nu trebuie să vadă întrebări brute cu typos.
@@ -396,6 +401,13 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
           .describe(
             "Targetare detaliată pe INTERESE și COMPORTAMENTE (nume în engleză, le caut automat în Meta). Poți alege TU automat, pe baza publicului descris, SAU folosi exact ce cere userul. B2C (clienți): interese de consum (ex: 'Beauty','Makeup','Skincare','Fitness'). B2B (patroni/afaceri): comportamente + interese de business (ex: 'Small business owners','Beauty salon','Restaurants'). Lasă GOL doar dacă userul vrea explicit public larg.",
           ),
+        pixel_id: z
+          .string()
+          .max(40)
+          .optional()
+          .describe(
+            "Doar pentru 'sales'/'signups': ID-ul pixelului ALES de user când sunt MAI MULȚI pixeli pe cont (îl iei din tool-ul list_pixels). Dacă e un singur pixel, lasă gol — se folosește automat.",
+          ),
         beneficiary: z
           .string()
           .max(100)
@@ -706,6 +718,23 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
         } catch (e: any) {
           return { error: e?.message ?? "Nu am putut citi facturile" };
         }
+      },
+    }),
+
+    list_pixels: tool({
+      description:
+        "Listează pixelii Meta de pe contul de reclame. Folosește-l când userul întreabă ce pixel vezi, SAU înainte de o campanie 'sales'/'signups'. Dacă sunt MAI MULȚI pixeli, arată-i userului lista (nume + id) și ÎNTREABĂ-L pe care să-l folosești, apoi trimite pixel_id-ul ales în create_campaign. Dacă e unul singur, spune-i care e și folosește-l automat.",
+      inputSchema: z.object({}),
+      execute: async () => {
+        const token = await getMetaToken(supabaseAdmin, ctx.userId);
+        if (!token) return { error: "Conectează Meta din Settings înainte." };
+        const { data: adAcc } = await supabaseAdmin
+          .from("meta_ad_accounts").select("ad_account_id")
+          .eq("user_id", ctx.userId).eq("is_active", true).limit(1).maybeSingle();
+        if (!adAcc?.ad_account_id) return { error: "Selectează un ad account din Settings." };
+        const { listAdPixels } = await import("./meta-publish.server");
+        const pixels = await listAdPixels(adAcc.ad_account_id, token);
+        return { count: pixels.length, pixels };
       },
     }),
 
@@ -1077,6 +1106,7 @@ async function publishCampaignToMeta(
       age_max: number;
       beneficiary?: string;
       interests?: string[];
+      pixel_id?: string;
     };
     objective: "leads" | "traffic" | "sales" | "signups";
     cityKeys: Array<{ key: string; radius?: number }>;
@@ -1150,15 +1180,26 @@ async function publishCampaignToMeta(
     // cont. Cu pixel → optimizăm pe conversia reală (achiziție / creare cont). Fără
     // pixel → cădem pe trafic spre site și îi spunem userului să-l instaleze.
     if (objective === "sales" || objective === "signups") {
-      const { findExistingPixel } = await import("./meta-publish.server");
-      const pixel = await findExistingPixel(input.adAccountId, input.accessToken);
-      if (pixel) {
-        pixel_id = pixel.id;
-        await supabaseAdmin.from("campaigns").update({ pixel_id: pixel.id }).eq("id", input.campaignRowId);
+      const { listAdPixels } = await import("./meta-publish.server");
+      const pixels = await listAdPixels(input.adAccountId, input.accessToken);
+      let chosen: { id: string; name: string } | null = null;
+      if (input.args.pixel_id) chosen = pixels.find((p) => p.id === input.args.pixel_id) ?? null;
+      if (!chosen && pixels.length === 1) chosen = pixels[0];
+      if (!chosen && pixels.length > 1) {
+        // Mai mulți pixeli, niciunul ales explicit → folosim primul + îi spunem userului.
+        chosen = pixels[0];
+        fallbackNote =
+          (fallbackNote ? fallbackNote + " · " : "") +
+          `ai ${pixels.length} pixeli pe cont — am folosit '${pixels[0].name}'. Dacă vrei altul, spune-mi`;
+      }
+      if (chosen) {
+        pixel_id = chosen.id;
+        await supabaseAdmin.from("campaigns").update({ pixel_id: chosen.id }).eq("id", input.campaignRowId);
       } else {
         const what = objective === "signups" ? "înscrieri" : "vânzări reale";
         objective = "traffic";
         fallbackNote =
+          (fallbackNote ? fallbackNote + " · " : "") +
           `n-am găsit Pixel Meta pe cont — am făcut campanie de *trafic* spre site. Instalează Pixel-ul Meta pe site ca să optimizăm pe ${what}`;
         await supabaseAdmin.from("campaigns").update({ objective: "LINK_CLICKS" }).eq("id", input.campaignRowId);
       }
@@ -1338,6 +1379,7 @@ async function createMetaCampaignFromAgent(
     age_max: number;
     beneficiary?: string;
     interests?: string[];
+    pixel_id?: string;
   },
 ) {
   // 'calls' e o campanie de trafic către tel:<număr> (transformată deja în tool).

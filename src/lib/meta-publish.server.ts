@@ -309,6 +309,25 @@ export async function findExistingPixel(
   return p?.id ? { id: String(p.id), name: String(p.name ?? "Pixel") } : null;
 }
 
+/** Listează TOȚI pixelii Meta de pe contul de reclame (nume + id). */
+export async function listAdPixels(
+  adAccountId: string,
+  accessToken: string,
+): Promise<Array<{ id: string; name: string }>> {
+  try {
+    const res = await fetch(
+      `${GRAPH}/${metaApiVersion()}/act_${adAccountId}/adspixels?fields=id,name&limit=50&access_token=${encodeURIComponent(accessToken)}`,
+    );
+    const json: any = await res.json();
+    if (!res.ok || !Array.isArray(json?.data)) return [];
+    return json.data
+      .filter((p: any) => p?.id)
+      .map((p: any) => ({ id: String(p.id), name: String(p.name ?? "Pixel") }));
+  } catch {
+    return [];
+  }
+}
+
 /**
  * Caută în Meta un INTERES după nume; întoarce primul rezultat.
  * (Doar `adinterest` — căutarea de `behaviors` ignoră query-ul și întoarce mereu
