@@ -11,6 +11,7 @@ import {
   listAuditLog,
   createBroadcast,
   adminSetCampaignStatus,
+  getAiStatus,
   type AdminUserRow,
 } from "@/lib/admin.functions";
 import {
@@ -27,6 +28,11 @@ import {
   AlertTriangle,
   Pause,
   Play,
+  Facebook,
+  Cpu,
+  RefreshCw,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -43,6 +49,7 @@ function AdminPage() {
   const loadCampaigns = useServerFn(listAllCampaigns);
   const loadBroadcasts = useServerFn(listBroadcasts);
   const loadAudit = useServerFn(listAuditLog);
+  const loadAi = useServerFn(getAiStatus);
 
   const [allowed, setAllowed] = useState<null | boolean>(null);
   const [tab, setTab] = useState<Tab>("dashboard");
@@ -54,6 +61,19 @@ function AdminPage() {
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [broadcasts, setBroadcasts] = useState<any[]>([]);
   const [audit, setAudit] = useState<any[]>([]);
+  const [ai, setAi] = useState<any>(null);
+  const [aiLoading, setAiLoading] = useState(true);
+
+  async function refreshAi() {
+    setAiLoading(true);
+    try {
+      setAi(await loadAi());
+    } catch {
+      setAi(null);
+    } finally {
+      setAiLoading(false);
+    }
+  }
 
   useEffect(() => {
     (async () => {
@@ -78,6 +98,8 @@ function AdminPage() {
       } finally {
         setLoading(false);
       }
+      // Probele AI lovesc API-uri externe → separat, ca să nu întârzie panoul.
+      refreshAi();
     })();
   }, []);
 
@@ -117,7 +139,7 @@ function AdminPage() {
         <TabBtn active={tab === "audit"} onClick={() => setTab("audit")} icon={<Activity className="w-4 h-4" />} label="Audit" />
       </div>
 
-      {tab === "dashboard" && <DashboardView dash={dash} />}
+      {tab === "dashboard" && <DashboardView dash={dash} ai={ai} aiLoading={aiLoading} onRefreshAi={refreshAi} />}
       {tab === "users" && <UsersTable users={users} />}
       {tab === "tickets" && <TicketsTable tickets={tickets} />}
       {tab === "campaigns" && <CampaignsTable campaigns={campaigns} onChange={async () => { const c = await loadCampaigns(); setCampaigns(c.campaigns); }} />}
@@ -127,7 +149,17 @@ function AdminPage() {
   );
 }
 
-function DashboardView({ dash }: { dash: any }) {
+function DashboardView({
+  dash,
+  ai,
+  aiLoading,
+  onRefreshAi,
+}: {
+  dash: any;
+  ai: any;
+  aiLoading: boolean;
+  onRefreshAi: () => void;
+}) {
   if (!dash) return null;
   const k = dash.kpis;
   return (
@@ -143,12 +175,114 @@ function DashboardView({ dash }: { dash: any }) {
         <Kpi label="Conversion" value={k.total_users > 0 ? `${((k.active_subs / k.total_users) * 100).toFixed(1)}%` : "—"} sub="trial → paid" icon={<TrendingUp className="w-4 h-4" />} />
       </div>
 
+      <div className="grid md:grid-cols-2 gap-4">
+        {dash.facebook && <FacebookView fb={dash.facebook} />}
+        <AiStatusView ai={ai} loading={aiLoading} onRefresh={onRefreshAi} />
+      </div>
+
       {dash.finance && <FinanceView f={dash.finance} />}
 
       <div className="grid md:grid-cols-2 gap-4">
         <Sparkline title="Înregistrări (30 zile)" data={dash.signups_30d} valueKey="count" />
         <Sparkline title="Spend zilnic (30 zile)" data={dash.spend_30d} valueKey="spend" suffix=" lei" />
       </div>
+    </div>
+  );
+}
+
+function FacebookView({ fb }: { fb: any }) {
+  const src = fb.by_source ?? { facebook: 0, google: 0, email: 0 };
+  const fmt = (iso: string) => {
+    try {
+      return new Date(iso).toLocaleString("ro-RO", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+    } catch {
+      return "";
+    }
+  };
+  return (
+    <div className="rounded-xl border border-border bg-card p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <Facebook className="w-4 h-4" style={{ color: "#1877F2" }} />
+        <h3 className="text-sm font-semibold">Conectări Facebook</h3>
+      </div>
+      <div className="flex items-end gap-2 mb-1">
+        <p className="text-3xl font-bold" style={{ color: "#1877F2" }}>{fb.connected}</p>
+        <p className="text-sm text-muted-foreground mb-1">/ {fb.total} conturi au Facebook conectat</p>
+      </div>
+      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 mb-3 text-xs text-muted-foreground">
+        <span>Înscriere prin: </span>
+        <span>🔵 <b className="text-foreground">{src.facebook}</b> Facebook</span>
+        <span>🔴 <b className="text-foreground">{src.google}</b> Google</span>
+        <span>✉️ <b className="text-foreground">{src.email}</b> Email</span>
+      </div>
+      <p className="text-[11px] font-medium text-muted-foreground mb-1.5">Conectări recente</p>
+      <div className="space-y-1">
+        {(fb.recent ?? []).length === 0 && <p className="text-xs text-muted-foreground">Nicio conectare încă.</p>}
+        {(fb.recent ?? []).map((r: any, i: number) => (
+          <div key={i} className="flex items-center justify-between gap-2 text-xs border-b border-border/50 py-1 last:border-0">
+            <div className="min-w-0">
+              <span className="font-medium">{r.name ?? r.email ?? "—"}</span>
+              <span className="text-muted-foreground"> · {r.email ?? ""}</span>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="rounded px-1.5 py-0.5 text-[10px]" style={{ background: r.source === "facebook" ? "#1877F220" : "var(--secondary)", color: r.source === "facebook" ? "#1877F2" : undefined }}>
+                {r.source === "facebook" ? "🔵 FB signup" : r.source === "google" ? "Google" : "Email"}
+              </span>
+              <span className="text-muted-foreground">{fmt(r.at)}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AiStatusView({ ai, loading, onRefresh }: { ai: any; loading: boolean; onRefresh: () => void }) {
+  const Row = ({ name, probe, console_url }: { name: string; probe: any; console_url: string }) => {
+    const st = probe?.status;
+    const color =
+      st === "ok" ? "text-emerald-500" : st === "no_credit" ? "text-amber-500" : st === "missing" ? "text-muted-foreground" : "text-destructive";
+    const Icon = st === "ok" ? CheckCircle2 : st === "no_credit" ? AlertTriangle : XCircle;
+    return (
+      <div className="flex items-center justify-between gap-2 py-2 border-b border-border/50 last:border-0">
+        <div className="flex items-center gap-2">
+          <Cpu className="w-4 h-4 text-muted-foreground" />
+          <div>
+            <p className="text-sm font-medium">{name}</p>
+            <a href={console_url} target="_blank" rel="noreferrer" className="text-[11px] text-muted-foreground underline underline-offset-2 hover:text-foreground">
+              Vezi soldul în consolă
+            </a>
+          </div>
+        </div>
+        <div className={`flex items-center gap-1.5 text-sm font-medium ${color}`}>
+          {probe ? (
+            <>
+              <Icon className="w-4 h-4" />
+              <span>{probe.label}</span>
+            </>
+          ) : (
+            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+          )}
+        </div>
+      </div>
+    );
+  };
+  return (
+    <div className="rounded-xl border border-border bg-card p-4">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <Cpu className="w-4 h-4 text-primary" />
+          <h3 className="text-sm font-semibold">Status AI (generare)</h3>
+        </div>
+        <button onClick={onRefresh} disabled={loading} className="press flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50">
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} /> Reîmprospătează
+        </button>
+      </div>
+      <Row name="Anthropic (text · agent WhatsApp)" probe={ai?.anthropic} console_url="https://console.anthropic.com/settings/billing" />
+      <Row name="OpenAI (imagini · transcriere)" probe={ai?.openai} console_url="https://platform.openai.com/settings/organization/billing/overview" />
+      <p className="text-[11px] text-muted-foreground mt-2">
+        Verificare live: „Operațional" = mai putem genera. Soldul exact în lei/$ nu e expus prin API — vezi-l în consolă.
+      </p>
     </div>
   );
 }

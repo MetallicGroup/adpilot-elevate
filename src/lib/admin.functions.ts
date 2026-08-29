@@ -165,7 +165,7 @@ export const getAdminUserDetail = createServerFn({ method: "POST" })
 
     const { data: campaigns } = await supabaseAdmin
       .from("campaigns")
-      .select("id, name, platform, status, budget, budget_mode, objective, created_at, meta_campaign_id")
+      .select("id, name, platform, status, budget, budget_mode, objective, created_at, meta_campaign_id, creative")
       .eq("user_id", data.user_id)
       .order("created_at", { ascending: false });
 
@@ -485,6 +485,38 @@ export const getAdminDashboard = createServerFn({ method: "GET" })
       byPlan[n] = (byPlan[n] ?? 0) + 1;
     }
 
+    // ====== Conectări Facebook + sursa înscrierii ======
+    const [metaConnsRes, authListRes] = await Promise.all([
+      supabaseAdmin
+        .from("meta_connections")
+        .select("user_id, created_at, is_active, meta_user_name")
+        .order("created_at", { ascending: false }),
+      supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 200 }),
+    ]);
+    const activeConns = (metaConnsRes.data ?? []).filter((c: any) => c.is_active);
+    const authUsers = authListRes.data?.users ?? [];
+    const authById = new Map<string, any>();
+    for (const u of authUsers) authById.set(u.id, u);
+    const classifySource = (u: any): "facebook" | "google" | "email" =>
+      u?.user_metadata?.signup_source === "facebook"
+        ? "facebook"
+        : u?.app_metadata?.provider === "google"
+          ? "google"
+          : "email";
+    const bySource = { facebook: 0, google: 0, email: 0 };
+    for (const u of authUsers) bySource[classifySource(u)]++;
+    const fbUserIds = new Set(activeConns.map((c: any) => c.user_id));
+    const recentFb = activeConns.slice(0, 10).map((c: any) => {
+      const u = authById.get(c.user_id);
+      return {
+        user_id: c.user_id,
+        name: (u?.user_metadata?.full_name as string) ?? c.meta_user_name ?? null,
+        email: u?.email ?? null,
+        source: u ? classifySource(u) : "email",
+        at: c.created_at,
+      };
+    });
+
     return {
       kpis: {
         total_users: profiles.length,
@@ -505,6 +537,12 @@ export const getAdminDashboard = createServerFn({ method: "GET" })
       },
       signups_30d: signupsSeries,
       spend_30d: spendSeries,
+      facebook: {
+        connected: fbUserIds.size,
+        total: profiles.length,
+        by_source: bySource,
+        recent: recentFb,
+      },
       finance: {
         mrr,
         arr: mrr * 12,
@@ -767,6 +805,79 @@ export const listAuditLog = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(200);
     return { entries: data ?? [] };
+  });
+
+// ====== STATUS AI (Anthropic + OpenAI) ======
+// Notă: niciun provider nu expune soldul exact prin API cu o cheie normală.
+// Facem un probe minim (aproape 0 tokeni) ca să știm dacă mai putem genera:
+// cheie validă, fără credit, sau nefuncțional. Soldul exact = consola providerului.
+type AiProbe = {
+  configured: boolean;
+  status: "ok" | "no_credit" | "invalid_key" | "error" | "missing";
+  label: string;
+  detail?: string;
+};
+
+async function probeAnthropic(): Promise<AiProbe> {
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (!key) return { configured: false, status: "missing", label: "Cheie lipsă" };
+  try {
+    const { LLM } = await import("@/lib/llm.server");
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: LLM.chat,
+        max_tokens: 1,
+        messages: [{ role: "user", content: "hi" }],
+      }),
+    });
+    if (res.ok) return { configured: true, status: "ok", label: "Operațional" };
+    const body = (await res.text()).toLowerCase();
+    if (res.status === 401) return { configured: true, status: "invalid_key", label: "Cheie invalidă" };
+    if (body.includes("credit balance") || body.includes("billing"))
+      return { configured: true, status: "no_credit", label: "Fără credit", detail: "Reîncarcă în consolă" };
+    return { configured: true, status: "error", label: `Eroare ${res.status}` };
+  } catch (e: any) {
+    return { configured: true, status: "error", label: "Nu răspunde", detail: e?.message };
+  }
+}
+
+async function probeOpenAi(): Promise<AiProbe> {
+  const key = process.env.OPENAI_API_KEY;
+  if (!key) return { configured: false, status: "missing", label: "Cheie lipsă" };
+  try {
+    // Chat mini, 1 token: revelează și lipsa de credit (429 insufficient_quota).
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "content-type": "application/json" },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        max_tokens: 1,
+        messages: [{ role: "user", content: "hi" }],
+      }),
+    });
+    if (res.ok) return { configured: true, status: "ok", label: "Operațional" };
+    const body = (await res.text()).toLowerCase();
+    if (res.status === 401) return { configured: true, status: "invalid_key", label: "Cheie invalidă" };
+    if (body.includes("insufficient_quota") || body.includes("billing") || body.includes("quota"))
+      return { configured: true, status: "no_credit", label: "Fără credit", detail: "Reîncarcă în consolă" };
+    return { configured: true, status: "error", label: `Eroare ${res.status}` };
+  } catch (e: any) {
+    return { configured: true, status: "error", label: "Nu răspunde", detail: e?.message };
+  }
+}
+
+export const getAiStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const [anthropic, openai] = await Promise.all([probeAnthropic(), probeOpenAi()]);
+    return { anthropic, openai, checked_at: new Date().toISOString() };
   });
 
 // ====== TICKET PRIORITY ======

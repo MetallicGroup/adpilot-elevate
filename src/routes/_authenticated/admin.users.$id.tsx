@@ -189,26 +189,13 @@ function UserDetailPage() {
       {/* Campaigns */}
       <section>
         <h2 className="text-lg font-semibold mb-3">Campanii ({campaigns.length})</h2>
-        <div className="rounded-xl border border-border overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-secondary/40"><tr className="text-left">
-              <th className="px-3 py-2">Nume</th><th className="px-3 py-2">Platf.</th><th className="px-3 py-2">Status</th><th className="px-3 py-2">Buget</th><th className="px-3 py-2">Cheltuit</th><th className="px-3 py-2">Clicks</th><th className="px-3 py-2">Lead-uri</th>
-            </tr></thead>
-            <tbody>
-              {campaigns.map((c: any) => (
-                <tr key={c.id} className="border-t border-border">
-                  <td className="px-3 py-2 font-medium">{c.name}</td>
-                  <td className="px-3 py-2 capitalize">{c.platform}</td>
-                  <td className="px-3 py-2">{c.status}</td>
-                  <td className="px-3 py-2">{Number(c.budget).toFixed(2)} lei</td>
-                  <td className="px-3 py-2">{c.spend.toFixed(2)} lei</td>
-                  <td className="px-3 py-2">{c.clicks}</td>
-                  <td className="px-3 py-2">{c.leads}</td>
-                </tr>
-              ))}
-              {campaigns.length === 0 && <tr><td colSpan={7} className="px-3 py-6 text-center text-muted-foreground">Nicio campanie.</td></tr>}
-            </tbody>
-          </table>
+        {campaigns.length === 0 && (
+          <div className="rounded-xl border border-border p-6 text-center text-muted-foreground text-sm">Nicio campanie.</div>
+        )}
+        <div className="grid gap-3 lg:grid-cols-2">
+          {campaigns.map((c: any) => (
+            <CampaignCard key={c.id} c={c} />
+          ))}
         </div>
       </section>
 
@@ -262,4 +249,84 @@ function Stat({ label, value }: { label: string; value: number | string }) {
       <div className="text-lg font-semibold mt-1">{value}</div>
     </div>
   );
+}
+
+const OBJECTIVE_LABELS: Record<string, string> = {
+  leads: "Lead-uri", OUTCOME_LEADS: "Lead-uri",
+  sales: "Vânzări", OUTCOME_SALES: "Vânzări",
+  traffic: "Trafic", OUTCOME_TRAFFIC: "Trafic",
+  calls: "Apeluri", signups: "Înregistrări",
+  awareness: "Notorietate", OUTCOME_AWARENESS: "Notorietate",
+  engagement: "Interacțiune", OUTCOME_ENGAGEMENT: "Interacțiune",
+};
+
+function CampaignCard({ c }: { c: any }) {
+  const cr = c.creative && typeof c.creative === "object" ? c.creative : null;
+  const objLabel = OBJECTIVE_LABELS[c.objective] ?? c.objective ?? "—";
+  const statusColor =
+    c.status === "active" ? "bg-emerald-500/15 text-emerald-500"
+    : c.status === "paused" ? "bg-amber-500/15 text-amber-500"
+    : "bg-secondary text-muted-foreground";
+  const isVideo = typeof cr?.media_url === "string" && /\.(mp4|mov|webm)(\?|$)/i.test(cr.media_url);
+  return (
+    <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="p-3 border-b border-border">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="font-semibold truncate">{c.name}</p>
+            <p className="text-xs text-muted-foreground mt-0.5 capitalize">
+              {c.platform} · Obiectiv: <span className="text-foreground font-medium">{objLabel}</span>
+            </p>
+          </div>
+          <span className={`shrink-0 px-2 py-0.5 rounded-full text-xs ${statusColor}`}>{c.status}</span>
+        </div>
+        <div className="grid grid-cols-4 gap-2 mt-3 text-center">
+          <div><p className="text-[10px] text-muted-foreground">Cheltuit</p><p className="text-sm font-semibold">{Number(c.spend ?? 0).toFixed(2)} lei</p></div>
+          <div><p className="text-[10px] text-muted-foreground">Afișări</p><p className="text-sm font-semibold">{Number(c.impressions ?? 0).toLocaleString("ro-RO")}</p></div>
+          <div><p className="text-[10px] text-muted-foreground">Click-uri</p><p className="text-sm font-semibold">{c.clicks ?? 0}</p></div>
+          <div><p className="text-[10px] text-muted-foreground">Lead-uri</p><p className="text-sm font-semibold text-primary">{c.leads ?? 0}</p></div>
+        </div>
+        <p className="text-[11px] text-muted-foreground mt-2">
+          Buget: {Number(c.budget ?? 0).toFixed(2)} lei{c.budget_mode ? ` (${c.budget_mode})` : ""}
+          {c.meta_campaign_id ? " · publicată pe Meta" : ""}
+        </p>
+      </div>
+
+      {/* Preview reclamă (creative) */}
+      {cr ? (
+        <div className="p-3">
+          <p className="text-[11px] font-medium text-muted-foreground mb-2">Reclama (preview)</p>
+          <div className="rounded-lg border border-border overflow-hidden max-w-[340px]">
+            {cr.primary_text && <p className="px-3 pt-3 pb-2 text-sm whitespace-pre-wrap">{cr.primary_text}</p>}
+            {cr.media_url && (
+              isVideo ? (
+                <video src={cr.media_url} controls className="w-full max-h-[260px] object-cover bg-black" />
+              ) : (
+                <img src={cr.media_url} alt="" className="w-full max-h-[260px] object-cover" loading="lazy" />
+              )
+            )}
+            {(cr.headline || cr.description || cr.cta) && (
+              <div className="flex items-center justify-between gap-2 bg-secondary/40 px-3 py-2">
+                <div className="min-w-0">
+                  {cr.landing_url && <p className="text-[10px] uppercase text-muted-foreground truncate">{safeHost(cr.landing_url)}</p>}
+                  {cr.headline && <p className="text-sm font-semibold truncate">{cr.headline}</p>}
+                  {cr.description && <p className="text-xs text-muted-foreground truncate">{cr.description}</p>}
+                </div>
+                {cr.cta && <span className="shrink-0 rounded-md bg-secondary px-2.5 py-1 text-xs font-medium">{prettyCta(cr.cta)}</span>}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <p className="p-3 text-xs text-muted-foreground">Fără creative salvat pentru această campanie.</p>
+      )}
+    </div>
+  );
+}
+
+function safeHost(url: string): string {
+  try { return new URL(url).host.replace(/^www\./, ""); } catch { return url; }
+}
+function prettyCta(cta: string): string {
+  return String(cta).replace(/_/g, " ").toLowerCase().replace(/^\w/, (m) => m.toUpperCase());
 }
