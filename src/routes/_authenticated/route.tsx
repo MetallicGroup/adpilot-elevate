@@ -21,7 +21,13 @@ export const Route = createFileRoute("/_authenticated")({
         const { getOnboardingStatus } = await import("@/lib/onboarding.functions");
         const { getStripeEnvironment } = await import("@/lib/stripe");
         const status = await getOnboardingStatus({ data: { environment: getStripeEnvironment() } });
-        complete = status.isAdmin || !!(status.hasMetaConnection && status.planChosen && status.whatsappConnected);
+        // Clienții cu abonament activ (și adminii) NU mai trec prin onboarding —
+        // sunt deja instalați. Gate-ul complet (FB + plan + WhatsApp) rămâne DOAR
+        // pentru conturile fără abonament plătit.
+        complete =
+          status.isAdmin ||
+          status.hasActiveSubscription ||
+          !!(status.hasMetaConnection && status.planChosen && status.whatsappConnected);
       } catch {
         complete = true; // eroare de verificare → lăsăm userul să treacă
       }
