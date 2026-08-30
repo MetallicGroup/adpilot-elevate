@@ -262,6 +262,8 @@ const OBJECTIVE_LABELS: Record<string, string> = {
 
 function CampaignCard({ c }: { c: any }) {
   const cr = c.creative && typeof c.creative === "object" ? c.creative : null;
+  const tg = c.targeting && typeof c.targeting === "object" ? c.targeting : null;
+  const lf = c.lead_form && typeof c.lead_form === "object" ? c.lead_form : null;
   const objLabel = OBJECTIVE_LABELS[c.objective] ?? c.objective ?? "—";
   const statusColor =
     c.status === "active" ? "bg-emerald-500/15 text-emerald-500"
@@ -319,6 +321,49 @@ function CampaignCard({ c }: { c: any }) {
         </div>
       ) : (
         <p className="p-3 text-xs text-muted-foreground">Fără creative salvat pentru această campanie.</p>
+      )}
+
+      {/* Targetare + formular de lead */}
+      {(tg || lf) && (
+        <div className="grid gap-3 border-t border-border p-3 sm:grid-cols-2">
+          {tg && (
+            <div>
+              <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">🎯 Targetare</p>
+              <ul className="space-y-1 text-xs">
+                {tg.locations?.length ? (
+                  <li><span className="text-muted-foreground">Locații:</span> {tg.locations.join(", ")}</li>
+                ) : null}
+                {tg.age_groups?.length ? (
+                  <li><span className="text-muted-foreground">Vârstă:</span> {tg.age_groups.join(", ")}</li>
+                ) : null}
+                {tg.genders?.length ? (
+                  <li><span className="text-muted-foreground">Gen:</span> {tg.genders.join(", ")}</li>
+                ) : null}
+                {tg.interests?.length ? (
+                  <li><span className="text-muted-foreground">Interese:</span> {tg.interests.join(", ")}</li>
+                ) : null}
+              </ul>
+            </div>
+          )}
+          {lf && (
+            <div>
+              <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">📝 Formular lead</p>
+              <ul className="space-y-1 text-xs">
+                {lf.fields?.length ? (
+                  <li><span className="text-muted-foreground">Câmpuri:</span> {lf.fields.join(", ")}</li>
+                ) : null}
+                {(lf.custom_questions ?? []).map((q: any, i: number) => (
+                  <li key={i}>
+                    <span className="text-muted-foreground">Q:</span> {q.label}
+                    {q.options?.length ? (
+                      <span className="text-muted-foreground"> ({q.options.join(" / ")})</span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

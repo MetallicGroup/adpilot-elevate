@@ -165,7 +165,7 @@ export const getAdminUserDetail = createServerFn({ method: "POST" })
 
     const { data: campaigns } = await supabaseAdmin
       .from("campaigns")
-      .select("id, name, platform, status, budget, budget_mode, objective, created_at, meta_campaign_id, creative")
+      .select("id, name, platform, status, budget, budget_mode, objective, created_at, meta_campaign_id, creative, targeting, lead_form")
       .eq("user_id", data.user_id)
       .order("created_at", { ascending: false });
 
