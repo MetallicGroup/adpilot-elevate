@@ -54,6 +54,8 @@ export const getMetaPublicConfig = createServerFn({ method: "GET" }).handler(asy
     appId: metaAppId(),
     apiVersion: metaApiVersion(),
     scopes: [...META_SCOPES, "email", "public_profile"].join(","),
+    // Facebook Login for Business → SDK-ul cere un Configuration ID (code flow).
+    configId: process.env.META_LOGIN_CONFIG_ID || null,
   };
 });
 
@@ -65,19 +67,39 @@ export const getMetaPublicConfig = createServerFn({ method: "GET" }).handler(asy
  */
 export const completeFacebookSignup = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) => {
-    const d = (raw ?? {}) as { accessToken?: string };
-    const t = typeof d.accessToken === "string" ? d.accessToken.trim() : "";
-    if (t.length < 20 || t.length > 1000) throw new Error("Invalid token");
-    return { accessToken: t };
+    const d = (raw ?? {}) as { accessToken?: string; code?: string };
+    const token = typeof d.accessToken === "string" ? d.accessToken.trim() : "";
+    const code = typeof d.code === "string" ? d.code.trim() : "";
+    if (code) {
+      if (code.length < 10 || code.length > 4000) throw new Error("Invalid code");
+      return { code } as { code: string };
+    }
+    if (token.length < 20 || token.length > 1000) throw new Error("Invalid token");
+    return { accessToken: token } as { accessToken: string };
   })
   .handler(async ({ data }) => {
-    const { metaAppId, metaAppSecret, exchangeForLongLivedToken } = await import("@/lib/meta.server");
+    const { metaAppId, metaAppSecret, exchangeForLongLivedToken, exchangeSdkCodeForToken } =
+      await import("@/lib/meta.server");
     const { finishFacebookSignup } = await import("@/lib/facebook-signup.server");
+
+    // 0) Business login (config_id) întoarce un `code`; îl schimbăm pentru token.
+    let baseToken: string;
+    if ("code" in data && data.code) {
+      try {
+        const ex = await exchangeSdkCodeForToken(data.code);
+        baseToken = ex.access_token;
+      } catch (e) {
+        console.error("[fb-signup] sdk code exchange failed", e);
+        return { ok: false as const, reason: "bad_token" as const };
+      }
+    } else {
+      baseToken = (data as { accessToken: string }).accessToken;
+    }
 
     // 1) Verifică faptul că tokenul aparține app-ului nostru (nu unui alt app).
     const appToken = `${metaAppId()}|${metaAppSecret()}`;
     const dbg = await fetch(
-      `https://graph.facebook.com/debug_token?input_token=${encodeURIComponent(data.accessToken)}&access_token=${encodeURIComponent(appToken)}`,
+      `https://graph.facebook.com/debug_token?input_token=${encodeURIComponent(baseToken)}&access_token=${encodeURIComponent(appToken)}`,
     )
       .then((r) => r.json())
       .catch(() => null);
@@ -87,7 +109,7 @@ export const completeFacebookSignup = createServerFn({ method: "POST" })
     }
 
     // 2) Long-lived exchange (best-effort).
-    let token = data.accessToken;
+    let token = baseToken;
     let expiresIn: number | null = null;
     try {
       const long = await exchangeForLongLivedToken(token);

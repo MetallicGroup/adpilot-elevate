@@ -65,6 +65,25 @@ export async function exchangeCodeForToken(code: string): Promise<{
   return res.json();
 }
 
+/**
+ * Schimbă `code`-ul întors de JS SDK (Facebook Login for Business) pentru un
+ * token. Spre deosebire de fluxul web, aici `redirect_uri` trebuie să fie GOL.
+ */
+export async function exchangeSdkCodeForToken(code: string): Promise<{
+  access_token: string;
+  token_type?: string;
+  expires_in?: number;
+}> {
+  const url = new URL(`${GRAPH_BASE}/${metaApiVersion()}/oauth/access_token`);
+  url.searchParams.set("client_id", metaAppId());
+  url.searchParams.set("client_secret", metaAppSecret());
+  url.searchParams.set("redirect_uri", "");
+  url.searchParams.set("code", code);
+  const res = await fetch(url.toString());
+  if (!res.ok) throw new Error(`Meta SDK code exchange failed: ${res.status} ${await res.text()}`);
+  return res.json();
+}
+
 export async function exchangeForLongLivedToken(shortToken: string) {
   const url = new URL(`${GRAPH_BASE}/${metaApiVersion()}/oauth/access_token`);
   url.searchParams.set("grant_type", "fb_exchange_token");

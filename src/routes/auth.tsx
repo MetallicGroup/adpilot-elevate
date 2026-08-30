@@ -57,7 +57,12 @@ function AuthPage() {
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [fbReady, setFbReady] = useState(false);
-  const [fbCfg, setFbCfg] = useState<{ appId: string; apiVersion: string; scopes: string } | null>(null);
+  const [fbCfg, setFbCfg] = useState<{
+    appId: string;
+    apiVersion: string;
+    scopes: string;
+    configId: string | null;
+  } | null>(null);
   const getFbCfg = useServerFn(getMetaPublicConfig);
   const completeFb = useServerFn(completeFacebookSignup);
 
@@ -220,29 +225,36 @@ function AuthPage() {
     const w = window as any;
     // Cale rapidă: SDK-ul JS → pe mobil poate deschide aplicația Facebook.
     if (fbReady && w.FB && fbCfg) {
-      w.FB.login(
-        (response: any) => {
-          const token = response?.authResponse?.accessToken;
-          if (!token) {
-            setLoading(false); // userul a anulat dialogul
-            return;
-          }
-          completeFb({ data: { accessToken: token } })
-            .then((res: any) => {
-              if (res?.ok && res.redirect) {
-                window.location.href = res.redirect; // magic link → sesiune → onboarding
-              } else {
-                setLoading(false);
-                toast.error(FB_NOTICE[res?.reason] ?? FB_NOTICE.failed);
-              }
-            })
-            .catch(() => {
-              // Orice eroare de rețea → cădem pe fluxul clasic prin redirect.
-              window.location.href = "/api/meta/signup/start";
-            });
-        },
-        { scope: fbCfg.scopes, return_scopes: true, auth_type: "rerequest" },
-      );
+      // Facebook Login for Business (config_id) întoarce un `code`; login clasic
+      // (scope) întoarce un `accessToken`. Suportăm ambele.
+      const opts = fbCfg.configId
+        ? { config_id: fbCfg.configId, response_type: "code", override_default_response_type: true }
+        : { scope: fbCfg.scopes, return_scopes: true, auth_type: "rerequest" };
+      w.FB.login((response: any) => {
+        const auth = response?.authResponse;
+        const payload = auth?.code
+          ? { code: auth.code as string }
+          : auth?.accessToken
+            ? { accessToken: auth.accessToken as string }
+            : null;
+        if (!payload) {
+          setLoading(false); // userul a anulat dialogul
+          return;
+        }
+        completeFb({ data: payload })
+          .then((res: any) => {
+            if (res?.ok && res.redirect) {
+              window.location.href = res.redirect; // magic link → sesiune → onboarding
+            } else {
+              setLoading(false);
+              toast.error(FB_NOTICE[res?.reason] ?? FB_NOTICE.failed);
+            }
+          })
+          .catch(() => {
+            // Orice eroare de rețea → cădem pe fluxul clasic prin redirect.
+            window.location.href = "/api/meta/signup/start";
+          });
+      }, opts);
       return;
     }
     // Fallback: redirect server clasic (browser).
