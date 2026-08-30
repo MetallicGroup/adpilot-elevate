@@ -239,7 +239,9 @@ function AuthPage() {
             ? { accessToken: auth.accessToken as string }
             : null;
         if (!payload) {
-          setLoading(false); // userul a anulat dialogul
+          // Fără răspuns (anulare SAU JSSDK dezactivat în app) → NU lăsăm butonul
+          // mort: cădem pe redirect-ul server (config_id web), care merge oricum.
+          window.location.href = "/api/meta/signup/start";
           return;
         }
         completeFb({ data: payload })
