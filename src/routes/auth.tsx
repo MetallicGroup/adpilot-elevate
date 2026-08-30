@@ -1,8 +1,10 @@
 import { createFileRoute, Link, useNavigate, Outlet, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { signInWithProvider, translateAuthError, waitForClientSession } from "@/lib/auth";
+import { getMetaPublicConfig, completeFacebookSignup } from "@/lib/meta-oauth.functions";
 import { resolvePostAuthPath } from "@/lib/post-auth";
 import { tkClickButton, tkCompleteRegistration } from "@/lib/tiktok-pixel";
 import { fbLead, fbCompleteRegistration } from "@/lib/meta-pixel";
@@ -54,6 +56,10 @@ function AuthPage() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
+  const [fbReady, setFbReady] = useState(false);
+  const [fbCfg, setFbCfg] = useState<{ appId: string; apiVersion: string; scopes: string } | null>(null);
+  const getFbCfg = useServerFn(getMetaPublicConfig);
+  const completeFb = useServerFn(completeFacebookSignup);
 
   // `auth.tsx` e ruta părinte pentru /auth/confirm-email, /auth/callback etc.
   // Fără Outlet, paginile copil nu se randau (se vedea form-ul de signup la URL-ul
@@ -73,6 +79,47 @@ function AuthPage() {
     if (!search.fb) return;
     toast.error(FB_NOTICE[search.fb] ?? FB_NOTICE.failed);
   }, [search.fb]);
+
+  // Încarcă SDK-ul JS de Facebook. Pe mobil, dialogul poate sări în aplicația
+  // Facebook (userul e deja logat acolo) → mult mai puțină frecare. Dacă SDK-ul
+  // nu se încarcă, butonul cade automat pe redirect-ul server clasic.
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const cfg = await getFbCfg();
+        if (!mounted) return;
+        setFbCfg(cfg);
+        const w = window as any;
+        if (w.FB) {
+          setFbReady(true);
+          return;
+        }
+        w.fbAsyncInit = function () {
+          try {
+            w.FB.init({ appId: cfg.appId, cookie: true, xfbml: false, version: cfg.apiVersion });
+            if (mounted) setFbReady(true);
+          } catch {
+            /* rămâne fallback pe redirect */
+          }
+        };
+        if (!document.getElementById("facebook-jssdk")) {
+          const s = document.createElement("script");
+          s.id = "facebook-jssdk";
+          s.src = "https://connect.facebook.net/en_US/sdk.js";
+          s.async = true;
+          s.defer = true;
+          s.crossOrigin = "anonymous";
+          document.body.appendChild(s);
+        }
+      } catch {
+        /* fără config → fallback pe redirect */
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -170,7 +217,35 @@ function AuthPage() {
   function facebookSignup() {
     setLoading(true);
     try { tkClickButton("auth-facebook"); } catch { /* ignore */ }
-    // Redirect complet către ruta server care pornește OAuth-ul Meta (ads + email).
+    const w = window as any;
+    // Cale rapidă: SDK-ul JS → pe mobil poate deschide aplicația Facebook.
+    if (fbReady && w.FB && fbCfg) {
+      w.FB.login(
+        (response: any) => {
+          const token = response?.authResponse?.accessToken;
+          if (!token) {
+            setLoading(false); // userul a anulat dialogul
+            return;
+          }
+          completeFb({ data: { accessToken: token } })
+            .then((res: any) => {
+              if (res?.ok && res.redirect) {
+                window.location.href = res.redirect; // magic link → sesiune → onboarding
+              } else {
+                setLoading(false);
+                toast.error(FB_NOTICE[res?.reason] ?? FB_NOTICE.failed);
+              }
+            })
+            .catch(() => {
+              // Orice eroare de rețea → cădem pe fluxul clasic prin redirect.
+              window.location.href = "/api/meta/signup/start";
+            });
+        },
+        { scope: fbCfg.scopes, return_scopes: true, auth_type: "rerequest" },
+      );
+      return;
+    }
+    // Fallback: redirect server clasic (browser).
     window.location.href = "/api/meta/signup/start";
   }
 
