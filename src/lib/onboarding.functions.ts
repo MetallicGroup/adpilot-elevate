@@ -12,6 +12,8 @@ export type OnboardingStatus = {
   whatsappConnected: boolean;
   /** Admin — exceptat de la gate-ul de onboarding. */
   isAdmin: boolean;
+  /** Cont creat prin Facebook (system-user) fără email → trebuie completat. */
+  needsEmail: boolean;
   subscriptionStatus: string | null;
   trialEnd: string | null;
   planTier: "none" | "starter" | "pro" | "premium";
@@ -87,7 +89,17 @@ export const getOnboardingStatus = createServerFn({ method: "POST" })
       .eq("role", "admin")
       .maybeSingle();
 
+    // Email lipsă: conturile create prin Facebook (system-user) au un email
+    // temporar → trebuie completat cu unul real în onboarding.
+    const { isPendingEmail } = await import("@/lib/facebook-signup.server");
+    const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
+    const authEmail = authUser?.user?.email ?? null;
+    const needsEmail =
+      isPendingEmail(authEmail) ||
+      (authUser?.user?.user_metadata as any)?.pending_email === true;
+
     return {
+      needsEmail,
       hasPhone: !!(profile?.phone && String(profile.phone).trim()),
       hasMetaConnection: !!meta,
       hasActiveSubscription: isActive,
@@ -132,6 +144,46 @@ export const startFreeStarter = createServerFn({ method: "POST" })
       .eq("id", userId);
     if (error) throw new Error(error.message);
     return { ok: true as const, note: "started" };
+  });
+
+/**
+ * Setează emailul real pentru conturile create prin Facebook (system-user), care
+ * pornesc cu un email temporar. Verifică să nu fie deja folosit de alt cont.
+ */
+export const setMyEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => {
+    const d = (raw ?? {}) as { email?: string };
+    const email = (d.email ?? "").trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      throw new Error("Introdu o adresă de email validă.");
+    }
+    if (email.endsWith("@pending.adpilot.ro")) {
+      throw new Error("Introdu adresa ta reală de email.");
+    }
+    return { email };
+  })
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Emailul nu poate aparține deja altui cont.
+    const { data: existing } = await (supabaseAdmin as any).rpc("get_user_id_by_email", {
+      p_email: data.email,
+    });
+    if (existing && existing !== userId) {
+      throw new Error("Acest email este deja folosit de alt cont. Alege altul sau loghează-te cu el.");
+    }
+
+    const { data: cur } = await supabaseAdmin.auth.admin.getUserById(userId);
+    const meta = { ...((cur?.user?.user_metadata as any) ?? {}), pending_email: false };
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+      email: data.email,
+      email_confirm: true,
+      user_metadata: meta,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
   });
 
 /** Salvează numărul de telefon în profil (folosit de gate-ul din onboarding, ex.

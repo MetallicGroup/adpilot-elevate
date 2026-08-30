@@ -2,9 +2,9 @@ import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router"
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Check, Facebook, Loader2, Sparkles, ArrowRight, MessageCircle, Target } from "lucide-react";
+import { Check, Facebook, Loader2, Sparkles, ArrowRight, MessageCircle, Target, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getOnboardingStatus, startFreeStarter, type OnboardingStatus } from "@/lib/onboarding.functions";
+import { getOnboardingStatus, startFreeStarter, setMyEmail, type OnboardingStatus } from "@/lib/onboarding.functions";
 import { firstMonthPrice, FIRST_MONTH_BADGE, FREE_STARTER_LABEL, FREE_STARTER_SUBLABEL } from "@/lib/promo";
 import { startMetaOAuth } from "@/lib/meta-oauth.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
@@ -157,6 +157,11 @@ function OnboardingPage() {
         <Loader2 className="w-5 h-5 animate-spin" />
       </div>
     );
+  }
+
+  // Conturile create prin Facebook (system-user) n-au email → îl cerem întâi.
+  if (status?.needsEmail) {
+    return <EmailGate onDone={reload} />;
   }
 
   return (
@@ -385,6 +390,68 @@ function OnboardingPage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/** Pas de completare email pentru conturile create prin Facebook (system-user). */
+function EmailGate({ onDone }: { onDone: () => Promise<void> | void }) {
+  const save = useServerFn(setMyEmail);
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      await save({ data: { email: email.trim() } });
+      toast.success("Email salvat. Continuăm configurarea 🎉");
+      await onDone();
+    } catch (err: any) {
+      toast.error(err?.message ?? "Nu am putut salva emailul.");
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="min-h-screen">
+      <div className="max-w-md mx-auto px-5 pt-16 pb-32">
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+          <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/12 text-primary">
+            <Mail className="h-6 w-6" />
+          </div>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground">Aproape gata</p>
+          <h1 className="mt-2 font-serif text-3xl md:text-4xl font-semibold tracking-tight">
+            Care e adresa ta de email?
+          </h1>
+          <p className="mt-3 text-muted-foreground">
+            Facebook conectat cu succes ✅ Adaugă un email ca să primești facturi, notificări despre
+            lead-uri și să-ți poți recupera contul.
+          </p>
+
+          <form onSubmit={submit} className="mt-7 grid gap-3">
+            <input
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              placeholder="nume@firma.ro"
+              value={email}
+              onChange={(ev) => setEmail(ev.target.value)}
+              required
+              autoFocus
+              className="h-[52px] w-full rounded-[13px] border border-white/[0.08] bg-black/25 px-3.5 text-sm outline-none transition focus:border-primary/55 focus:ring-4 focus:ring-primary/10"
+            />
+            <button
+              type="submit"
+              disabled={busy}
+              className="press btn-primary shine flex h-[52px] w-full items-center justify-center gap-2 rounded-[14px] text-sm font-semibold disabled:opacity-50"
+            >
+              {busy && <Loader2 className="h-4 w-4 animate-spin" />}
+              Continuă
+            </button>
+          </form>
+        </motion.div>
+      </div>
     </div>
   );
 }

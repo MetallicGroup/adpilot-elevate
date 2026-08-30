@@ -25,6 +25,7 @@ const FB_NOTICE: Record<string, string> = {
   denied: "Ai anulat conectarea cu Facebook. Poți încerca din nou sau folosi email/Google.",
   create_failed: "Nu am putut crea contul din Facebook. Încearcă din nou sau folosește email/Google.",
   session_failed: "Contul e creat, dar n-am putut porni sesiunea. Loghează-te mai jos.",
+  bad_token: "Conectarea cu Facebook n-a putut fi validată. Încearcă din nou.",
   bad_state: "Sesiunea de conectare a expirat. Încearcă din nou.",
   failed: "Ceva n-a mers la conectarea cu Facebook. Încearcă din nou.",
 };

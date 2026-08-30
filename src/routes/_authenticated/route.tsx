@@ -27,7 +27,12 @@ export const Route = createFileRoute("/_authenticated")({
         complete =
           status.isAdmin ||
           status.hasActiveSubscription ||
-          !!(status.hasMetaConnection && status.planChosen && status.whatsappConnected);
+          !!(
+            !status.needsEmail &&
+            status.hasMetaConnection &&
+            status.planChosen &&
+            status.whatsappConnected
+          );
       } catch {
         complete = true; // eroare de verificare → lăsăm userul să treacă
       }

@@ -9,7 +9,10 @@ export async function resolvePostAuthPath(): Promise<"/dashboard" | "/onboarding
     const complete =
       status.isAdmin ||
       status.hasActiveSubscription ||
-      (status.hasMetaConnection && status.planChosen && status.whatsappConnected);
+      (!status.needsEmail &&
+        status.hasMetaConnection &&
+        status.planChosen &&
+        status.whatsappConnected);
     return complete ? "/dashboard" : "/onboarding";
   } catch {
     return "/onboarding";

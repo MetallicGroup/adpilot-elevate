@@ -33,7 +33,7 @@ export const Route = createFileRoute("/api/meta/signup/start")({
           maxAge: 60 * 10,
         });
 
-        const url = buildAuthorizeUrl(state, ["email", "public_profile"]);
+        const url = buildAuthorizeUrl(state);
         return new Response(null, { status: 302, headers: { Location: url } });
       },
     },

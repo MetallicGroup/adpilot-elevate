@@ -38,15 +38,26 @@ export const META_SCOPES = [
   "pages_manage_metadata",
 ];
 
-export function buildAuthorizeUrl(state: string, extraScopes: string[] = []) {
+export function metaLoginConfigId(): string | null {
+  return process.env.META_LOGIN_CONFIG_ID || null;
+}
+
+export function buildAuthorizeUrl(state: string) {
   const url = new URL(`https://www.facebook.com/${metaApiVersion()}/dialog/oauth`);
-  const scopes = Array.from(new Set([...META_SCOPES, ...extraScopes]));
   url.searchParams.set("client_id", metaAppId());
   url.searchParams.set("redirect_uri", metaRedirectUri());
   url.searchParams.set("state", state);
-  url.searchParams.set("scope", scopes.join(","));
   url.searchParams.set("response_type", "code");
-  url.searchParams.set("auth_type", "rerequest");
+  const configId = metaLoginConfigId();
+  if (configId) {
+    // Facebook Login for Business: permisiunile + asset-urile vin din configurație
+    // → token system-user (nu expiră). Nu se trimite `scope`.
+    url.searchParams.set("config_id", configId);
+  } else {
+    // Fallback clasic (token de user) dacă nu e setat config_id.
+    url.searchParams.set("scope", META_SCOPES.join(","));
+    url.searchParams.set("auth_type", "rerequest");
+  }
   return url.toString();
 }
 
