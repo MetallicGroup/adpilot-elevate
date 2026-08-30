@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -359,7 +359,6 @@ function Sparkline({ title, data, valueKey, suffix = "" }: { title: string; data
 }
 
 function UsersTable({ users }: { users: AdminUserRow[] }) {
-  const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [planFilter, setPlanFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -412,11 +411,17 @@ function UsersTable({ users }: { users: AdminUserRow[] }) {
           </thead>
           <tbody>
             {filtered.map((u) => (
-              <tr key={u.id} className="border-t border-border hover:bg-secondary/30 cursor-pointer" onClick={() => navigate({ to: "/admin/users/$id", params: { id: u.id } })}>
+              <tr key={u.id} className="border-t border-border hover:bg-secondary/30">
                 <td className="px-3 py-2">
-                  <div className="font-medium">{u.full_name || "—"}</div>
-                  <div className="text-xs text-muted-foreground">{u.email}</div>
-                  {u.phone && <div className="text-xs text-muted-foreground">📱 {u.phone}</div>}
+                  <Link
+                    to="/admin/users/$id"
+                    params={{ id: u.id }}
+                    className="block"
+                  >
+                    <div className="font-medium text-primary hover:underline">{u.full_name || u.email || "—"}</div>
+                    <div className="text-xs text-muted-foreground">{u.email}</div>
+                    {u.phone && <div className="text-xs text-muted-foreground">📱 {u.phone}</div>}
+                  </Link>
                 </td>
                 <td className="px-3 py-2 capitalize">{u.plan}</td>
                 <td className="px-3 py-2"><StatusBadge status={u.subscription_status} /></td>

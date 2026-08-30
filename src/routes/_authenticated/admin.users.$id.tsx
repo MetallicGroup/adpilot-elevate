@@ -44,19 +44,32 @@ function UserDetailPage() {
     }
   };
 
+  const [loadError, setLoadError] = useState<string | null>(null);
+
   useEffect(() => {
     (async () => {
       try {
         const a = await checkAdmin();
         if (!a.admin) { setData({ forbidden: true }); return; }
         await refresh();
+      } catch (e: any) {
+        setLoadError(e?.message ?? "Nu am putut încărca datele utilizatorului.");
       } finally { setLoading(false); }
     })();
   }, [id]);
 
   if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="w-6 h-6 animate-spin" /></div>;
   if (data?.forbidden) return <div className="p-8 text-center">Acces interzis.</div>;
-  if (!data) return null;
+  if (loadError || !data) {
+    return (
+      <div className="max-w-lg mx-auto mt-20 p-8 text-center">
+        <p className="text-sm text-muted-foreground mb-4">{loadError ?? "Nu am putut încărca utilizatorul."}</p>
+        <Link to="/admin" className="text-primary hover:underline text-sm inline-flex items-center gap-1">
+          <ArrowLeft className="w-4 h-4" /> Înapoi la admin
+        </Link>
+      </div>
+    );
+  }
 
   const { profile, campaigns, leads, tickets, whatsapp } = data;
 
