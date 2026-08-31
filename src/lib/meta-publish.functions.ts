@@ -172,7 +172,8 @@ export const publishMetaCampaign = createServerFn({ method: "POST" })
         page.page_name ||
         campaign.name;
 
-      const salesBudgetCents = Math.round(Number(campaign.budget) * 100);
+      const { ronBudgetToAccountCents: _rbc1 } = await import("@/lib/currency.server");
+      const salesBudgetCents = (await _rbc1(Number(campaign.budget), adAcc.ad_account_id, conn.access_token)).cents;
       const salesCamp = await createCampaign(
         adAcc.ad_account_id,
         conn.access_token,
@@ -249,7 +250,8 @@ export const publishMetaCampaign = createServerFn({ method: "POST" })
     const metaCamp = await createCampaign(adAcc.ad_account_id, conn.access_token, campaign.name, STATUS);
 
     // 7. Create AdSet
-    const budgetCents = Math.round(Number(campaign.budget) * 100);
+    const { ronBudgetToAccountCents: _rbc2 } = await import("@/lib/currency.server");
+    const budgetCents = (await _rbc2(Number(campaign.budget), adAcc.ad_account_id, conn.access_token)).cents;
     const adset = await createAdSet(adAcc.ad_account_id, conn.access_token, {
       name: `${campaign.name} — AdSet`,
       campaign_id: metaCamp.id,

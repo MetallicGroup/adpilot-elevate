@@ -288,16 +288,19 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
         if (!camp.meta_adset_id) return { error: "AdSet Meta lipsă" };
         const token = await getMetaToken(supabaseAdmin, ctx.userId);
         if (!token) return { error: "Fără conexiune Meta" };
-        const cents = Math.round(new_daily_budget * 100);
+        // Buget în lei → valuta contului (ex. USD/EUR), altfel Meta interpretează
+        // cifra în valuta contului (50 lei ar deveni $50).
+        const { ronBudgetToAccountCents } = await import("@/lib/currency.server");
+        const conv = await ronBudgetToAccountCents(new_daily_budget, (camp as any).ad_account_id, token);
         const r = await fetch(`${GRAPH}/${metaApiVersion()}/${camp.meta_adset_id}`, {
           method: "POST",
           headers: { "content-type": "application/x-www-form-urlencoded" },
-          body: `daily_budget=${cents}&access_token=${encodeURIComponent(token)}`,
+          body: `daily_budget=${conv.cents}&access_token=${encodeURIComponent(token)}`,
         });
         const j = await r.json();
         if (!r.ok) return { error: j?.error?.message || `Meta ${r.status}` };
         await supabaseAdmin.from("campaigns").update({ budget: new_daily_budget }).eq("id", campaign_id);
-        return { ok: true, new_daily_budget };
+        return { ok: true, new_daily_budget, ...(conv.note ? { note: conv.note } : {}) };
       },
     }),
 
@@ -1236,11 +1239,24 @@ async function publishCampaignToMeta(
       }
     }
 
+    // Buget: userul vorbește în LEI, dar Meta îl vrea în valuta contului.
+    // Dacă contul e pe altă valută (ex. USD/EUR), convertim — altfel s-ar seta
+    // ex. $50/zi în loc de 50 lei/zi.
+    const { ronBudgetToAccountCents } = await import("@/lib/currency.server");
+    const budgetConv = await ronBudgetToAccountCents(
+      input.args.daily_budget,
+      input.adAccountId,
+      input.accessToken,
+    );
+    if (budgetConv.note) {
+      fallbackNote = (fallbackNote ? fallbackNote + " · " : "") + budgetConv.note;
+    }
+
     const buildAdSet = (beneficiary: string) =>
       createAdSet(input.adAccountId, input.accessToken, {
         name: `${input.args.name} — AdSet`,
         campaign_id: metaCamp.id,
-        daily_budget_cents: Math.round(input.args.daily_budget * 100),
+        daily_budget_cents: budgetConv.cents,
         page_id: input.pageId,
         dsa_beneficiary: beneficiary,
         dsa_payor: beneficiary,
