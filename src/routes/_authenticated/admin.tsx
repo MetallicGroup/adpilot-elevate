@@ -11,6 +11,7 @@ import {
   listAuditLog,
   createBroadcast,
   sendEmailBroadcast,
+  sendWhatsAppTemplateBroadcast,
   adminSetCampaignStatus,
   getAiStatus,
   type AdminUserRow,
@@ -642,6 +643,63 @@ function EmailBroadcastCard({ onSent }: { onSent: () => void }) {
   );
 }
 
+function WaTemplateBroadcastCard({ onSent }: { onSent: () => void }) {
+  const send = useServerFn(sendWhatsAppTemplateBroadcast);
+  const [templateName, setTemplateName] = useState("reactivare_prima_reclama");
+  const [lang, setLang] = useState("ro");
+  const [segment, setSegment] = useState<"phone_all" | "phone_no_fb">("phone_all");
+  const [personalize, setPersonalize] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+
+  const submit = async () => {
+    if (!templateName.trim()) return;
+    if (!confirm(`Trimit template-ul „${templateName}" pe WhatsApp la userii cu telefon? (necesită template APROBAT de Meta)`)) return;
+    setSending(true);
+    setResult(null);
+    try {
+      const r = await send({ data: { template_name: templateName.trim(), lang_code: lang.trim(), segment, personalize } });
+      setResult(`Trimis la ${r.sent}/${r.total} (${r.failed} eșuate).`);
+      await onSent();
+    } catch (e: any) {
+      setResult(`Eroare: ${e.message}`);
+    } finally { setSending(false); }
+  };
+
+  return (
+    <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/[0.04] p-5 space-y-3">
+      <div className="flex items-center gap-2">
+        <MessageSquare className="w-4 h-4 text-emerald-500" />
+        <h3 className="font-semibold">WhatsApp template (către userii cu telefon, chiar neconectați)</h3>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        Necesită un <b>template aprobat de Meta</b> (free-form nu se livrează celor din afara ferestrei de 24h).
+        Trimite la userii cu telefon în profil. {"{{1}}"} = prenumele.
+      </p>
+      <div className="flex flex-wrap items-center gap-3">
+        <input value={templateName} onChange={(e) => setTemplateName(e.target.value)} placeholder="nume_template" className="h-8 rounded-md border border-border bg-secondary/40 text-sm px-2 font-mono" />
+        <input value={lang} onChange={(e) => setLang(e.target.value)} placeholder="ro" className="h-8 w-16 rounded-md border border-border bg-secondary/40 text-sm px-2" />
+        <select value={segment} onChange={(e) => setSegment(e.target.value as any)} className="h-8 rounded-md border border-border bg-secondary/40 text-sm px-2">
+          <option value="phone_all">Toți cu telefon</option>
+          <option value="phone_no_fb">Cu telefon, fără Facebook</option>
+        </select>
+        <label className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <input type="checkbox" checked={personalize} onChange={(e) => setPersonalize(e.target.checked)} />
+          Template are {"{{1}}"} = prenume
+        </label>
+      </div>
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-amber-500">Trimite doar dacă template-ul e APROBAT în WhatsApp Manager.</span>
+        <button onClick={submit} disabled={sending || !templateName.trim()} className="px-4 py-2 rounded-lg text-white disabled:opacity-50 inline-flex items-center gap-2" style={{ background: "var(--gradient-primary)" }}>
+          {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageSquare className="w-4 h-4" />}
+          Trimite template
+        </button>
+      </div>
+      {result && <p className="text-sm">{result}</p>}
+    </div>
+  );
+}
+
 function BroadcastView({ broadcasts, onSent }: { broadcasts: any[]; onSent: () => void }) {
   const send = useServerFn(createBroadcast);
   const [body, setBody] = useState("");
@@ -666,11 +724,12 @@ function BroadcastView({ broadcasts, onSent }: { broadcasts: any[]; onSent: () =
 
   return (
     <div className="space-y-5">
+      <WaTemplateBroadcastCard onSent={onSent} />
       <EmailBroadcastCard onSent={onSent} />
 
       <div className="rounded-xl border border-border bg-card p-5 space-y-3">
-        <h3 className="font-semibold">Mesaj nou WhatsApp în masă</h3>
-        <p className="text-xs text-amber-500">Ajunge doar la userii cu WhatsApp conectat (puțini). Pentru cei fără Facebook/WhatsApp, folosește emailul de sus.</p>
+        <h3 className="font-semibold">Mesaj WhatsApp free-form (doar cei activi în ultimele 24h)</h3>
+        <p className="text-xs text-amber-500">Ajunge doar la userii cu WhatsApp conectat și activ în fereastra de 24h. Pentru restul, folosește template-ul WhatsApp sau emailul de sus.</p>
         <div className="flex gap-2">
           <label className="text-sm">Segment:</label>
           <select value={segment} onChange={(e) => setSegment(e.target.value as any)} className="h-8 rounded-md border border-border bg-secondary/40 text-sm px-2">

@@ -839,6 +839,96 @@ export const sendEmailBroadcast = createServerFn({ method: "POST" })
     return res;
   });
 
+// ====== WHATSAPP TEMPLATE BROADCAST (către useri cu telefon, chiar neconectați) ======
+const WaTemplateBroadcastInput = z.object({
+  template_name: z.string().trim().min(1).max(100),
+  lang_code: z.string().trim().min(2).max(10).default("ro"),
+  segment: z.enum(["phone_all", "phone_no_fb"]).default("phone_all"),
+  personalize: z.boolean().default(true), // template cu {{1}} = prenume
+});
+
+export const sendWhatsAppTemplateBroadcast = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => WaTemplateBroadcastInput.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin: _sa } = await import("@/integrations/supabase/client.server"); const supabaseAdmin = _sa as any;
+    const { getCentralWhatsApp, sendWhatsAppTemplate } = await import("@/lib/whatsapp.server");
+    const wa = getCentralWhatsApp();
+    if (!wa) throw new Error("WhatsApp central neconfigurat");
+
+    const [{ data: profs }, { data: conns }] = await Promise.all([
+      supabaseAdmin.from("profiles").select("id, full_name, phone").not("phone", "is", null),
+      supabaseAdmin.from("meta_connections").select("user_id").eq("is_active", true),
+    ]);
+    const fbUsers = new Set((conns ?? []).map((c: any) => c.user_id));
+    const recipients = (profs ?? []).filter((p: any) => {
+      const digits = String(p.phone ?? "").replace(/\D/g, "");
+      if (digits.length < 10) return false;
+      if (data.segment === "phone_no_fb" && fbUsers.has(p.id)) return false;
+      return true;
+    });
+
+    const { data: broadcast } = await supabaseAdmin
+      .from("broadcasts")
+      .insert({
+        created_by: context.userId,
+        channel: "whatsapp_template",
+        segment: data.segment,
+        body: `template: ${data.template_name} (${data.lang_code})`,
+        total_recipients: recipients.length,
+        status: "sending",
+      })
+      .select()
+      .single();
+
+    let sent = 0;
+    let failed = 0;
+    const failures: any[] = [];
+    for (const p of recipients) {
+      try {
+        const first = String(p.full_name ?? "").trim().split(/\s+/)[0] || "acolo";
+        const params = data.personalize ? [first] : [];
+        const { id } = await sendWhatsAppTemplate(
+          wa.phoneNumberId,
+          wa.accessToken,
+          String(p.phone),
+          data.template_name,
+          data.lang_code,
+          params,
+        );
+        await supabaseAdmin.from("whatsapp_messages").insert({
+          user_id: p.id,
+          direction: "out",
+          msg_type: "template",
+          text: `[template: ${data.template_name}]`,
+          wa_message_id: id,
+          meta: { broadcast_id: broadcast?.id, template: data.template_name },
+        });
+        sent++;
+        await new Promise((res) => setTimeout(res, 200));
+      } catch (e: any) {
+        failed++;
+        failures.push({ user_id: p.id, error: e?.message ?? String(e) });
+      }
+    }
+
+    if (broadcast?.id) {
+      await supabaseAdmin
+        .from("broadcasts")
+        .update({ total_sent: sent, total_failed: failed, status: "done", details: { failures: failures.slice(0, 50) } })
+        .eq("id", broadcast.id);
+    }
+    await logAudit(context.userId, "wa_template_broadcast.sent", "broadcast", broadcast?.id ?? null, {
+      template: data.template_name,
+      segment: data.segment,
+      total: recipients.length,
+      sent,
+      failed,
+    });
+    return { total: recipients.length, sent, failed };
+  });
+
 export const listBroadcasts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
