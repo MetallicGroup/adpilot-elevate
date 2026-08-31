@@ -54,8 +54,9 @@ export const getMetaPublicConfig = createServerFn({ method: "GET" }).handler(asy
     appId: metaAppId(),
     apiVersion: metaApiVersion(),
     scopes: [...META_SCOPES, "email", "public_profile"].join(","),
-    // Facebook Login for Business → SDK-ul cere un Configuration ID (code flow).
-    configId: process.env.META_LOGIN_CONFIG_ID || null,
+    // Login clasic (ca Madgicx) → SDK-ul folosește `scope` + token, fără config_id.
+    // (config_id = Business Login = ecranele grele de asset-uri, pe care le-am scos.)
+    configId: null as string | null,
   };
 });
 

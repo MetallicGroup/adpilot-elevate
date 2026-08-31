@@ -43,21 +43,18 @@ export function metaLoginConfigId(): string | null {
 }
 
 export function buildAuthorizeUrl(state: string) {
+  // Facebook Login CLASIC (ca Madgicx): cerem permisiunile ca `scope` → Facebook
+  // acordă acces la TOATE paginile/conturile deodată, fără ecran de selectare
+  // („grant-all"), în 2 pași. Token de user (se reînnoiește la re-login la ~60 zile).
+  // NU folosim config_id (Business Login) — acela forța ecranele grele de asset-uri.
   const url = new URL(`https://www.facebook.com/${metaApiVersion()}/dialog/oauth`);
+  const scopes = [...META_SCOPES, "email", "public_profile"];
   url.searchParams.set("client_id", metaAppId());
   url.searchParams.set("redirect_uri", metaRedirectUri());
   url.searchParams.set("state", state);
   url.searchParams.set("response_type", "code");
-  const configId = metaLoginConfigId();
-  if (configId) {
-    // Facebook Login for Business: permisiunile + asset-urile vin din configurație
-    // → token system-user (nu expiră). Nu se trimite `scope`.
-    url.searchParams.set("config_id", configId);
-  } else {
-    // Fallback clasic (token de user) dacă nu e setat config_id.
-    url.searchParams.set("scope", META_SCOPES.join(","));
-    url.searchParams.set("auth_type", "rerequest");
-  }
+  url.searchParams.set("scope", scopes.join(","));
+  url.searchParams.set("auth_type", "rerequest");
   return url.toString();
 }
 
