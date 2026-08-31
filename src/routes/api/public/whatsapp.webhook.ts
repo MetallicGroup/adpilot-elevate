@@ -86,7 +86,13 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
 
               // Arată „citit" + „typing…" imediat, ca răspunsul să pară instant
               // chiar dacă agentul lucrează câteva secunde. Best-effort, non-blocant.
-              if (type === "text" || type === "image" || type === "audio" || type === "video") {
+              if (
+                type === "text" ||
+                type === "image" ||
+                type === "audio" ||
+                type === "video" ||
+                type === "document"
+              ) {
                 void markReadAndTyping(central.phoneNumberId, central.accessToken, waMsgId);
               }
 
@@ -95,9 +101,21 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
               let mediaMime: string | null = null;
               let signedUrl: string | null = null;
 
+              // Documentele care sunt de fapt poze/clipuri (trimise ca „fișier") le
+              // tratăm ca media. Documentele non-media (PDF etc.) le ignorăm ca creative.
+              const declaredDocMime =
+                type === "document" ? (m.document?.mime_type as string | undefined) : undefined;
+              const documentIsMedia =
+                type === "document" && !!declaredDocMime && /^(image|video)\//i.test(declaredDocMime);
+
               if (type === "text") {
                 text = m.text?.body ?? "";
-              } else if (type === "image" || type === "video" || type === "audio") {
+              } else if (
+                type === "image" ||
+                type === "video" ||
+                type === "audio" ||
+                documentIsMedia
+              ) {
                 const mediaId = m[type]?.id as string | undefined;
                 if (mediaId) {
                   try {
