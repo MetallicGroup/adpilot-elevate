@@ -7,6 +7,7 @@ export async function sendUserEmail(
   subject: string,
   text: string,
   html?: string,
+  opts?: { replyTo?: string },
 ): Promise<{ sent: boolean; error?: string }> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) return { sent: false, error: "resend_not_configured" };
@@ -16,7 +17,14 @@ export async function sendUserEmail(
     const r = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from, to, subject, text, ...(html ? { html } : {}) }),
+      body: JSON.stringify({
+        from,
+        to,
+        subject,
+        text,
+        ...(html ? { html } : {}),
+        ...(opts?.replyTo ? { reply_to: opts.replyTo } : {}),
+      }),
     });
     if (!r.ok) {
       let message = `Resend error (${r.status})`;

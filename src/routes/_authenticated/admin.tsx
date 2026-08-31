@@ -10,6 +10,7 @@ import {
   listBroadcasts,
   listAuditLog,
   createBroadcast,
+  sendEmailBroadcast,
   adminSetCampaignStatus,
   getAiStatus,
   type AdminUserRow,
@@ -569,6 +570,78 @@ function CampaignsTable({ campaigns, onChange }: { campaigns: any[]; onChange: (
   );
 }
 
+const EMAIL_TEMPLATE = `Salut! Ai făcut cont pe AdPilot, dar n-ai pornit încă prima reclamă — și mă întreb ce te oprește. E ceva neclar? Te blochezi la conectarea Facebook? Spune-mi, chiar vreau să te ajut.
+
+Durează 2 minute: conectezi pagina de Facebook, alegi ce vrei să obții (clienți, programări, vânzări), iar AdPilot lansează și optimizează reclamele automat. Lead-urile îți vin direct pe WhatsApp.
+
+Uite un exemplu real de la un client cu școală de șoferi 👇`;
+
+function EmailBroadcastCard({ onSent }: { onSent: () => void }) {
+  const send = useServerFn(sendEmailBroadcast);
+  const [subject, setSubject] = useState("Ce te oprește să pornești prima reclamă? 🚀");
+  const [message, setMessage] = useState(EMAIL_TEMPLATE);
+  const [segment, setSegment] = useState<"no_fb" | "all" | "no_campaign">("no_fb");
+  const [proof, setProof] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+
+  const segLabel: Record<string, string> = {
+    no_fb: "cei fără Facebook conectat",
+    no_campaign: "cei fără nicio campanie",
+    all: "toți userii",
+  };
+
+  const submit = async () => {
+    if (!subject.trim() || !message.trim()) return;
+    if (!confirm(`Trimit acest email către ${segLabel[segment]}? (răspunsurile vin pe emailul tău)`)) return;
+    setSending(true);
+    setResult(null);
+    try {
+      const r = await send({ data: { segment, subject: subject.trim(), message: message.trim(), include_proof: proof } });
+      setResult(`Trimis la ${r.sent}/${r.total} (${r.failed} eșuate).`);
+      await onSent();
+    } catch (e: any) {
+      setResult(`Eroare: ${e.message}`);
+    } finally { setSending(false); }
+  };
+
+  return (
+    <div className="rounded-xl border border-primary/25 bg-primary/[0.04] p-5 space-y-3">
+      <div className="flex items-center gap-2">
+        <Megaphone className="w-4 h-4 text-primary" />
+        <h3 className="font-semibold">Email în masă (ajunge la TOȚI, inclusiv cei fără WhatsApp)</h3>
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="text-sm text-muted-foreground">Către:</label>
+        <select value={segment} onChange={(e) => setSegment(e.target.value as any)} className="h-8 rounded-md border border-border bg-secondary/40 text-sm px-2">
+          <option value="no_fb">Fără Facebook conectat</option>
+          <option value="no_campaign">Fără nicio campanie</option>
+          <option value="all">Toți userii</option>
+        </select>
+        <label className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <input type="checkbox" checked={proof} onChange={(e) => setProof(e.target.checked)} />
+          Include rezultatele (72 lead-uri · &lt;2,5 lei · 126 lei)
+        </label>
+      </div>
+      <input
+        value={subject}
+        onChange={(e) => setSubject(e.target.value)}
+        placeholder="Subiect"
+        className="w-full rounded-lg border border-border bg-secondary/40 px-3 py-2 text-sm"
+      />
+      <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={8} placeholder="Mesajul tău…" className="w-full rounded-lg border border-border bg-secondary/40 px-3 py-2 text-sm resize-none" />
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-foreground">Butonul „Conectează Facebook" + reply-to (pe emailul tău) se adaugă automat.</span>
+        <button onClick={submit} disabled={sending || !subject.trim() || !message.trim()} className="px-4 py-2 rounded-lg text-white disabled:opacity-50 inline-flex items-center gap-2" style={{ background: "var(--gradient-primary)" }}>
+          {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Megaphone className="w-4 h-4" />}
+          Trimite email
+        </button>
+      </div>
+      {result && <p className="text-sm">{result}</p>}
+    </div>
+  );
+}
+
 function BroadcastView({ broadcasts, onSent }: { broadcasts: any[]; onSent: () => void }) {
   const send = useServerFn(createBroadcast);
   const [body, setBody] = useState("");
@@ -593,8 +666,11 @@ function BroadcastView({ broadcasts, onSent }: { broadcasts: any[]; onSent: () =
 
   return (
     <div className="space-y-5">
+      <EmailBroadcastCard onSent={onSent} />
+
       <div className="rounded-xl border border-border bg-card p-5 space-y-3">
         <h3 className="font-semibold">Mesaj nou WhatsApp în masă</h3>
+        <p className="text-xs text-amber-500">Ajunge doar la userii cu WhatsApp conectat (puțini). Pentru cei fără Facebook/WhatsApp, folosește emailul de sus.</p>
         <div className="flex gap-2">
           <label className="text-sm">Segment:</label>
           <select value={segment} onChange={(e) => setSegment(e.target.value as any)} className="h-8 rounded-md border border-border bg-secondary/40 text-sm px-2">

@@ -780,6 +780,65 @@ export const createBroadcast = createServerFn({ method: "POST" })
     return { broadcast_id: broadcast.id, total: recipients.length, sent, failed };
   });
 
+// ====== EMAIL BROADCAST ======
+const EmailBroadcastInput = z.object({
+  segment: z.enum(["all", "no_fb", "no_campaign"]).default("no_fb"),
+  subject: z.string().trim().min(3).max(160),
+  message: z.string().trim().min(1).max(6000),
+  include_proof: z.boolean().default(true),
+});
+
+export const sendEmailBroadcast = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => EmailBroadcastInput.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin: _sa } = await import("@/integrations/supabase/client.server"); const supabaseAdmin = _sa as any;
+    const { runEmailBroadcast } = await import("@/lib/email-broadcast.server");
+
+    // Reply-to = emailul adminului, ca răspunsurile userilor să ajungă la el.
+    const { data: au } = await supabaseAdmin.auth.admin.getUserById(context.userId);
+    const replyTo = au?.user?.email ?? undefined;
+
+    const { data: broadcast } = await supabaseAdmin
+      .from("broadcasts")
+      .insert({
+        created_by: context.userId,
+        channel: "email",
+        segment: data.segment,
+        body: `[${data.subject}] ${data.message}`,
+        total_recipients: 0,
+        status: "sending",
+      })
+      .select()
+      .single();
+
+    const res = await runEmailBroadcast({
+      segment: data.segment,
+      subject: data.subject,
+      message: data.message,
+      includeProof: data.include_proof,
+      replyTo,
+    });
+
+    if (broadcast?.id) {
+      await supabaseAdmin
+        .from("broadcasts")
+        .update({
+          total_recipients: res.total,
+          total_sent: res.sent,
+          total_failed: res.failed,
+          status: "done",
+        })
+        .eq("id", broadcast.id);
+    }
+    await logAudit(context.userId, "email_broadcast.sent", "broadcast", broadcast?.id ?? null, {
+      segment: data.segment,
+      ...res,
+    });
+    return res;
+  });
+
 export const listBroadcasts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
