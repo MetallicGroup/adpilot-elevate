@@ -17,30 +17,37 @@ const FALLBACK_RON_RATES: Record<string, number> = {
   PLN: 0.85,
 };
 
-/** Valuta contului de reclame (din DB, cu fallback live de la Meta). */
+/**
+ * Valuta contului de reclame. `adAccountId` poate fi:
+ *  - id-ul Meta text (ex. „123456" sau „act_123456") — folosit la publicare, SAU
+ *  - UUID-ul intern (campaigns.ad_account_id → meta_ad_accounts.id).
+ * Caută în DB (cu fallback live de la Meta pentru id-ul text).
+ */
 export async function getAdAccountCurrency(
   adAccountId: string,
   accessToken: string,
 ): Promise<string> {
-  const plain = adAccountId.replace(/^act_/, "");
+  const raw = String(adAccountId ?? "");
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(raw);
   try {
-    const { data } = await (supabaseAdmin as any)
-      .from("meta_ad_accounts")
-      .select("currency")
-      .eq("ad_account_id", plain)
-      .maybeSingle();
+    const base = (supabaseAdmin as any).from("meta_ad_accounts").select("currency, ad_account_id");
+    const { data } = isUuid
+      ? await base.eq("id", raw).maybeSingle()
+      : await base.eq("ad_account_id", raw.replace(/^act_/, "")).maybeSingle();
     if (data?.currency) return String(data.currency).toUpperCase();
   } catch {
     /* fallback live */
   }
-  try {
-    const { metaApiVersion } = await import("@/lib/meta.server");
-    const id = adAccountId.startsWith("act_") ? adAccountId : `act_${adAccountId}`;
-    const url = `https://graph.facebook.com/${metaApiVersion()}/${id}?fields=currency&access_token=${encodeURIComponent(accessToken)}`;
-    const r = await fetch(url).then((res) => res.json());
-    if (r?.currency) return String(r.currency).toUpperCase();
-  } catch {
-    /* fallback RON */
+  if (!isUuid) {
+    try {
+      const { metaApiVersion } = await import("@/lib/meta.server");
+      const id = raw.startsWith("act_") ? raw : `act_${raw}`;
+      const url = `https://graph.facebook.com/${metaApiVersion()}/${id}?fields=currency&access_token=${encodeURIComponent(accessToken)}`;
+      const r = await fetch(url).then((res) => res.json());
+      if (r?.currency) return String(r.currency).toUpperCase();
+    } catch {
+      /* fallback RON */
+    }
   }
   return "RON";
 }
