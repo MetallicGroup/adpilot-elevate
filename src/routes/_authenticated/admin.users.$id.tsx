@@ -98,6 +98,12 @@ function UserDetailPage() {
     finally { setBusy(false); }
   };
 
+  const toggleTest = async () => {
+    setBusy(true);
+    try { await updateAdmin({ data: { user_id: id, is_test: !profile.is_test } }); await refresh(); }
+    finally { setBusy(false); }
+  };
+
   const sendMessage = async () => {
     if (!waBody.trim()) return;
     setWaBusy(true);
@@ -122,6 +128,7 @@ function UserDetailPage() {
             <div className="flex items-center gap-2">
               <h1 className="text-xl font-bold">{profile.full_name || "—"}</h1>
               {profile.suspended && <span className="px-2 py-0.5 rounded-full text-xs bg-red-500/15 text-red-500">SUSPENDAT</span>}
+              {profile.is_test && <span className="px-2 py-0.5 rounded-full text-xs bg-amber-500/15 text-amber-500">TEST</span>}
             </div>
             <p className="text-sm text-muted-foreground">{profile.email}</p>
             <p className="text-xs text-muted-foreground mt-1">
@@ -138,6 +145,9 @@ function UserDetailPage() {
             </select>
             <button onClick={toggleSuspend} disabled={busy} className={`h-9 px-3 rounded-md text-sm inline-flex items-center gap-1 ${profile.suspended ? "bg-emerald-500/15 text-emerald-500 hover:bg-emerald-500/25" : "bg-red-500/15 text-red-500 hover:bg-red-500/25"}`}>
               {profile.suspended ? <><UserCheck className="w-4 h-4" />Reactivează</> : <><Ban className="w-4 h-4" />Suspendă</>}
+            </button>
+            <button onClick={toggleTest} disabled={busy} className={`h-9 px-3 rounded-md text-sm inline-flex items-center gap-1 ${profile.is_test ? "bg-amber-500/15 text-amber-500 hover:bg-amber-500/25" : "bg-secondary/60 text-muted-foreground hover:bg-secondary"}`}>
+              {profile.is_test ? "★ E test (scoate)" : "☆ Marchează test"}
             </button>
           </div>
         </div>

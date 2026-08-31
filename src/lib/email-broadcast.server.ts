@@ -87,13 +87,15 @@ export async function runEmailBroadcast(params: {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { sendUserEmail } = await import("@/lib/user-email.server");
 
-  // Useri cu Facebook conectat / cu campanie (pentru filtrare pe segment).
-  const [{ data: conns }, { data: camps }] = await Promise.all([
+  // Useri cu Facebook conectat / cu campanie (pentru filtrare pe segment) + conturi de test.
+  const [{ data: conns }, { data: camps }, { data: testRows }] = await Promise.all([
     supabaseAdmin.from("meta_connections").select("user_id").eq("is_active", true),
     supabaseAdmin.from("campaigns").select("user_id"),
+    (supabaseAdmin as any).from("profiles").select("id").eq("is_test", true),
   ]);
   const fbUsers = new Set((conns ?? []).map((c: any) => c.user_id));
   const campUsers = new Set((camps ?? []).map((c: any) => c.user_id));
+  const testUsers = new Set((testRows ?? []).map((r: any) => r.id));
 
   const { html, text } = brandedBroadcastEmail(params.subject, params.message, params.includeProof);
 
@@ -110,6 +112,7 @@ export async function runEmailBroadcast(params: {
       const email: string | undefined = u.email;
       if (!email || !u.email_confirmed_at) continue; // doar reali (confirmați)
       if (email.endsWith("@adpilot.ro") || email.endsWith("@pending.adpilot.ro")) continue;
+      if (testUsers.has(u.id)) continue; // sărim conturile de test
       if (seen.has(email)) continue;
       // Segment
       if (params.segment === "no_fb" && fbUsers.has(u.id)) continue;

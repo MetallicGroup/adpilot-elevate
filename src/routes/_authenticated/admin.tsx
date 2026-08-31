@@ -420,7 +420,10 @@ function UsersTable({ users }: { users: AdminUserRow[] }) {
                     params={{ id: u.id }}
                     className="block"
                   >
-                    <div className="font-medium text-primary hover:underline">{u.full_name || u.email || "—"}</div>
+                    <div className="font-medium text-primary hover:underline">
+                      {u.full_name || u.email || "—"}
+                      {u.is_test && <span className="ml-2 rounded px-1.5 py-0.5 text-[10px] bg-amber-500/15 text-amber-500 align-middle">TEST</span>}
+                    </div>
                     <div className="text-xs text-muted-foreground">{u.email}</div>
                     {u.phone && <div className="text-xs text-muted-foreground">📱 {u.phone}</div>}
                   </Link>

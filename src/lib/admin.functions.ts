@@ -53,6 +53,7 @@ export type AdminUserRow = {
   total_leads: number;
   wa_connected: boolean;
   open_tickets: number;
+  is_test: boolean;
 };
 
 export const listAdminUsers = createServerFn({ method: "GET" })
@@ -63,7 +64,7 @@ export const listAdminUsers = createServerFn({ method: "GET" })
 
     const { data: profiles } = await supabaseAdmin
       .from("profiles")
-      .select("id, full_name, phone, plan, subscription_status, trial_ends_at, created_at")
+      .select("id, full_name, phone, plan, subscription_status, trial_ends_at, created_at, is_test")
       .order("created_at", { ascending: false })
       .limit(500);
 
@@ -139,6 +140,7 @@ export const listAdminUsers = createServerFn({ method: "GET" })
         total_leads: s.leads,
         wa_connected: waByUser.get(p.id) ?? false,
         open_tickets: tixByUser.get(p.id) ?? 0,
+        is_test: (p as any).is_test ?? false,
       };
     });
 
@@ -562,6 +564,7 @@ const UpdateUserAdminInput = z.object({
   user_id: z.string().uuid(),
   admin_notes: z.string().max(5000).optional(),
   suspended: z.boolean().optional(),
+  is_test: z.boolean().optional(),
   extend_trial_days: z.number().int().min(0).max(365).optional(),
 });
 
@@ -574,6 +577,7 @@ export const updateUserAdmin = createServerFn({ method: "POST" })
     const patch: any = {};
     if (data.admin_notes !== undefined) patch.admin_notes = data.admin_notes;
     if (data.suspended !== undefined) patch.suspended = data.suspended;
+    if (data.is_test !== undefined) patch.is_test = data.is_test;
     if (data.extend_trial_days && data.extend_trial_days > 0) {
       const { data: prof } = await supabaseAdmin
         .from("profiles")
@@ -704,7 +708,7 @@ export const createBroadcast = createServerFn({ method: "POST" })
     if (!wa) throw new Error("WhatsApp central neconfigurat");
 
     // Find target users
-    let query = supabaseAdmin.from("profiles").select("id, plan, subscription_status, suspended");
+    let query = supabaseAdmin.from("profiles").select("id, plan, subscription_status, suspended, is_test").eq("is_test", false);
     if (data.segment === "trial") query = query.eq("subscription_status", "trial");
     else if (data.segment === "active") query = query.eq("subscription_status", "active");
     else if (data.segment === "premium") query = query.eq("plan", "premium");
@@ -858,7 +862,11 @@ export const sendWhatsAppTemplateBroadcast = createServerFn({ method: "POST" })
     if (!wa) throw new Error("WhatsApp central neconfigurat");
 
     const [{ data: profs }, { data: conns }] = await Promise.all([
-      supabaseAdmin.from("profiles").select("id, full_name, phone").not("phone", "is", null),
+      supabaseAdmin
+        .from("profiles")
+        .select("id, full_name, phone")
+        .not("phone", "is", null)
+        .eq("is_test", false),
       supabaseAdmin.from("meta_connections").select("user_id").eq("is_active", true),
     ]);
     const fbUsers = new Set((conns ?? []).map((c: any) => c.user_id));
