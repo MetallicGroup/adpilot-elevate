@@ -184,6 +184,8 @@ function DashboardView({
 
       {dash.finance && <FinanceView f={dash.finance} />}
 
+      {dash.recent_subs && <ActivationsView subs={dash.recent_subs} />}
+
       <div className="grid md:grid-cols-2 gap-4">
         <Sparkline title="Înregistrări (30 zile)" data={dash.signups_30d} valueKey="count" />
         <Sparkline title="Spend zilnic (30 zile)" data={dash.spend_30d} valueKey="spend" suffix=" lei" />
@@ -285,6 +287,48 @@ function AiStatusView({ ai, loading, onRefresh }: { ai: any; loading: boolean; o
       <p className="text-[11px] text-muted-foreground mt-2">
         Verificare live: „Operațional" = mai putem genera. Soldul exact în lei/$ nu e expus prin API — vezi-l în consolă.
       </p>
+    </div>
+  );
+}
+
+function ActivationsView({ subs }: { subs: any[] }) {
+  const fmt = (iso?: string | null) => {
+    if (!iso) return "";
+    try {
+      return new Date(iso).toLocaleString("ro-RO", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+    } catch {
+      return "";
+    }
+  };
+  const statusColor: Record<string, string> = {
+    active: "bg-emerald-500/15 text-emerald-500",
+    trialing: "bg-blue-500/15 text-blue-500",
+    past_due: "bg-amber-500/15 text-amber-500",
+    canceled: "bg-red-500/15 text-red-500",
+  };
+  return (
+    <div className="rounded-xl border border-border bg-card p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <TrendingUp className="w-4 h-4 text-emerald-500" />
+        <h3 className="text-sm font-semibold">Activări recente (abonamente)</h3>
+      </div>
+      {subs.length === 0 && <p className="text-xs text-muted-foreground">Nicio activare încă.</p>}
+      <div className="space-y-1">
+        {subs.map((s, i) => (
+          <div key={i} className="flex items-center justify-between gap-2 text-xs border-b border-border/50 py-1.5 last:border-0">
+            <div className="min-w-0">
+              <span className="font-medium">{s.name || s.email || "—"}</span>
+              <span className="text-muted-foreground"> · {s.email ?? ""}</span>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="font-medium">{s.plan}</span>
+              <span className={`rounded px-1.5 py-0.5 text-[10px] ${statusColor[s.status] ?? "bg-secondary"}`}>{s.status}</span>
+              {s.environment && s.environment !== "live" && <span className="text-[10px] text-muted-foreground">{s.environment}</span>}
+              <span className="text-muted-foreground">{fmt(s.created_at)}</span>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

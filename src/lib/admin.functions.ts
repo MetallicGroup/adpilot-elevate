@@ -507,6 +507,24 @@ export const getAdminDashboard = createServerFn({ method: "GET" })
           : "email";
     const bySource = { facebook: 0, google: 0, email: 0 };
     for (const u of authUsers) bySource[classifySource(u)]++;
+    // Activări recente (abonamente) — cine, ce plan, status, când.
+    const recentSubs = (subsRes.data ?? [])
+      .slice()
+      .sort((a: any, b: any) => String(b.created_at ?? "").localeCompare(String(a.created_at ?? "")))
+      .slice(0, 12)
+      .map((s: any) => {
+        const u = authById.get(s.user_id);
+        return {
+          name: (u?.user_metadata?.full_name as string) ?? null,
+          email: u?.email ?? null,
+          plan: planName(s.price_id),
+          status: s.status,
+          trial_end: s.trial_end,
+          environment: s.environment,
+          created_at: s.created_at,
+        };
+      });
+
     const fbUserIds = new Set(activeConns.map((c: any) => c.user_id));
     const recentFb = activeConns.slice(0, 10).map((c: any) => {
       const u = authById.get(c.user_id);
@@ -545,6 +563,7 @@ export const getAdminDashboard = createServerFn({ method: "GET" })
         by_source: bySource,
         recent: recentFb,
       },
+      recent_subs: recentSubs,
       finance: {
         mrr,
         arr: mrr * 12,

@@ -120,8 +120,7 @@ export async function notifyAdminNewSubscription(p: {
   phone?: string | null;
   environment?: string | null;
 }) {
-  const fallback =
-    `💳 *Abonament nou* (cha-ching!)\n\n` +
+  const details =
     line("Client", p.name) +
     line("Email", p.email) +
     line("Telefon", p.phone) +
@@ -134,12 +133,18 @@ export async function notifyAdminNewSubscription(p: {
     line("Website", p.website) +
     line("Mediu", p.environment) +
     `\nData: ${new Date().toLocaleString("ro-RO", { timeZone: "Europe/Bucharest" })}`;
+  const fallback = `💳 *Abonament nou* (cha-ching!)\n\n` + details;
+  const statusLabel =
+    (p.status ?? "").toLowerCase() === "trialing" ? " (trial)" : "";
+  // WhatsApp (template) + email în paralel — emailul e plasa de siguranță.
   // template abonament_nou: {{1}} client, {{2}} email, {{3}} plan, {{4}} sumă
-  await sendAdminTemplate(
-    "abonament_nou",
-    [v(p.name), v(p.email), v(p.plan), v(p.amount)],
-    fallback,
-  );
+  await Promise.all([
+    sendAdminTemplate("abonament_nou", [v(p.name), v(p.email), v(p.plan), v(p.amount)], fallback),
+    sendAdminEmail(
+      `💳 Activare${statusLabel} AdPilot — ${v(p.name)} · ${v(p.plan)}`,
+      "Activare abonament AdPilot\n\n" + details,
+    ),
+  ]);
 }
 
 export async function notifyAdminSupportRequest(p: {
