@@ -238,13 +238,18 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
         const token = await getMetaToken(supabaseAdmin, ctx.userId);
         if (!token) return { error: "Nu există conexiune Meta activă" };
         const datePreset = days <= 1 ? "today" : days <= 7 ? "last_7d" : days <= 30 ? "last_30d" : "last_90d";
-        const url = `${GRAPH}/${metaApiVersion()}/${camp.meta_campaign_id}/insights?fields=spend,impressions,clicks,actions&date_preset=${datePreset}&access_token=${encodeURIComponent(token)}`;
+        const url = `${GRAPH}/${metaApiVersion()}/${camp.meta_campaign_id}/insights?fields=spend,impressions,clicks,actions,account_currency&date_preset=${datePreset}&access_token=${encodeURIComponent(token)}`;
         const r = await fetch(url);
         const j = await r.json();
         if (!r.ok) return { error: j?.error?.message || `Meta ${r.status}` };
         const row = j?.data?.[0] ?? {};
         const leads = Number((row.actions ?? []).find((a: any) => a.action_type === "lead")?.value ?? 0);
-        const spend = Number(row.spend ?? 0);
+        let spend = Number(row.spend ?? 0);
+        const curr = String(row.account_currency ?? "RON").toUpperCase();
+        if (curr !== "RON" && spend > 0) {
+          const { currencyToRon } = await import("@/lib/currency.server");
+          spend = await currencyToRon(spend, curr);
+        }
         return {
           campaign: camp.name,
           period_days: days,

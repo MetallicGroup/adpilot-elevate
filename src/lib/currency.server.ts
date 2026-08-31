@@ -78,6 +78,14 @@ export async function convertRon(
   return { amount: ronAmount * rate, rate, converted: true, currency: cur };
 }
 
+/** Convertește o sumă din `currency` ÎN lei (pentru afișarea cheltuielilor). */
+export async function currencyToRon(amount: number, currency: string): Promise<number> {
+  const cur = (currency || "RON").toUpperCase();
+  if (!amount || cur === "RON") return amount;
+  const conv = await convertRon(1, cur); // conv.rate = RON → cur
+  return conv.converted && conv.rate ? amount / conv.rate : amount;
+}
+
 /** Helper compus: buget în lei → cents în valuta contului, + notă pentru user. */
 export async function ronBudgetToAccountCents(
   ronAmount: number,

@@ -109,7 +109,7 @@ export async function runDailyReports(): Promise<{ sent: number; errors: number 
         try {
           if (!(await isMetaCampaignActive(c.meta_campaign_id!, token))) continue;
           const url = new URL(`${GRAPH}/v23.0/${c.meta_campaign_id}/insights`);
-          url.searchParams.set("fields", "spend,clicks,actions");
+          url.searchParams.set("fields", "spend,clicks,actions,account_currency");
           url.searchParams.set("date_preset", "yesterday");
           url.searchParams.set("access_token", token);
           const r = await fetch(url.toString());
@@ -117,7 +117,12 @@ export async function runDailyReports(): Promise<{ sent: number; errors: number 
           if (!r.ok) continue;
           const row = j?.data?.[0];
           if (!row) continue;
-          const spend = Number(row.spend ?? 0);
+          let spend = Number(row.spend ?? 0);
+          const curr = String(row.account_currency ?? "RON").toUpperCase();
+          if (curr !== "RON" && spend > 0) {
+            const { currencyToRon } = await import("./currency.server");
+            spend = await currencyToRon(spend, curr);
+          }
           const clicks = Number(row.clicks ?? 0);
           const leads = Number(
             (row.actions ?? []).find((a: any) => a.action_type === "lead")?.value ?? 0,
