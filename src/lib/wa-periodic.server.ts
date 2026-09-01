@@ -4,7 +4,7 @@
  * pe Meta (isMetaCampaignActive verifică effective_status === "ACTIVE") și se oprește
  * automat când reclama e pusă pe pauză / respinsă / cu probleme.
  */
-import { fetchCampaignInsights } from "./meta-insights.server";
+import { fetchCampaignInsights, fetchCampaignDailyInsights } from "./meta-insights.server";
 import { getCentralWhatsApp, sendWhatsAppMessage } from "./whatsapp.server";
 import { syncMetaCampaignStatuses, isMetaCampaignActive } from "./campaign-control.server";
 
@@ -66,21 +66,25 @@ export async function refreshAllInsights(): Promise<{ refreshed: number; errors:
     if (!conn?.access_token) continue;
     for (const c of list) {
       try {
-        const snap = await fetchCampaignInsights(c.meta_campaign_id!, conn.access_token);
-        await supabaseAdmin.from("performance_data").upsert(
-          {
-            user_id: userId,
-            campaign_id: c.id,
-            date: today,
-            spend: snap.spend,
-            impressions: snap.impressions,
-            clicks: snap.clicks,
-            ctr: snap.ctr,
-            leads: snap.leads,
-            cpl: snap.cpl,
-          },
-          { onConflict: "campaign_id,date" },
-        );
+        // Valori PE ZI (nu cumulat) → înlocuim complet istoricul campaniei ca să
+        // nu rămână rânduri cumulate vechi care s-ar aduna greșit.
+        const days = await fetchCampaignDailyInsights(c.meta_campaign_id!, conn.access_token);
+        if (days.length) {
+          await supabaseAdmin.from("performance_data").delete().eq("campaign_id", c.id);
+          await supabaseAdmin.from("performance_data").insert(
+            days.map((d) => ({
+              user_id: userId,
+              campaign_id: c.id,
+              date: d.date,
+              spend: d.spend,
+              impressions: d.impressions,
+              clicks: d.clicks,
+              ctr: d.ctr,
+              leads: d.leads,
+              cpl: d.cpl,
+            })),
+          );
+        }
         refreshed++;
       } catch (e) {
         console.error("[refresh-insights]", c.id, e);

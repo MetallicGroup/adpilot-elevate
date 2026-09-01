@@ -34,24 +34,27 @@ export const refreshCampaignInsights = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!conn?.access_token) throw new Error("No active Meta connection");
 
-    const { fetchCampaignInsights } = await import("./meta-insights.server");
-    const snap = await fetchCampaignInsights(campaign.meta_campaign_id, conn.access_token);
+    const { fetchCampaignInsights, fetchCampaignDailyInsights } = await import("./meta-insights.server");
+    const snap = await fetchCampaignInsights(campaign.meta_campaign_id, conn.access_token); // total (pt. afișare)
 
-    const today = new Date().toISOString().slice(0, 10);
-    await supabaseAdmin.from("performance_data").upsert(
-      {
-        user_id: userId,
-        campaign_id: campaign.id,
-        date: today,
-        spend: snap.spend,
-        impressions: snap.impressions,
-        clicks: snap.clicks,
-        ctr: snap.ctr,
-        leads: snap.leads,
-        cpl: snap.cpl,
-      },
-      { onConflict: "campaign_id,date" },
-    );
+    // Stocăm valori PE ZI (nu cumulat) → adunarea zilelor dă corect totalul.
+    const days = await fetchCampaignDailyInsights(campaign.meta_campaign_id, conn.access_token);
+    if (days.length) {
+      await supabaseAdmin.from("performance_data").delete().eq("campaign_id", campaign.id);
+      await supabaseAdmin.from("performance_data").insert(
+        days.map((d) => ({
+          user_id: userId,
+          campaign_id: campaign.id,
+          date: d.date,
+          spend: d.spend,
+          impressions: d.impressions,
+          clicks: d.clicks,
+          ctr: d.ctr,
+          leads: d.leads,
+          cpl: d.cpl,
+        })),
+      );
+    }
     return { skipped: false as const, snapshot: snap };
   });
 
@@ -80,27 +83,28 @@ export const refreshAllLiveCampaignInsights = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!conn?.access_token) return { refreshed: 0 };
 
-    const { fetchCampaignInsights } = await import("./meta-insights.server");
-    const today = new Date().toISOString().slice(0, 10);
+    const { fetchCampaignDailyInsights } = await import("./meta-insights.server");
     let ok = 0;
     await Promise.all(
       campaigns.map(async (c) => {
         try {
-          const snap = await fetchCampaignInsights(c.meta_campaign_id!, conn.access_token!);
-          await supabaseAdmin.from("performance_data").upsert(
-            {
-              user_id: userId,
-              campaign_id: c.id,
-              date: today,
-              spend: snap.spend,
-              impressions: snap.impressions,
-              clicks: snap.clicks,
-              ctr: snap.ctr,
-              leads: snap.leads,
-              cpl: snap.cpl,
-            },
-            { onConflict: "campaign_id,date" },
-          );
+          const days = await fetchCampaignDailyInsights(c.meta_campaign_id!, conn.access_token!);
+          if (days.length) {
+            await supabaseAdmin.from("performance_data").delete().eq("campaign_id", c.id);
+            await supabaseAdmin.from("performance_data").insert(
+              days.map((d) => ({
+                user_id: userId,
+                campaign_id: c.id,
+                date: d.date,
+                spend: d.spend,
+                impressions: d.impressions,
+                clicks: d.clicks,
+                ctr: d.ctr,
+                leads: d.leads,
+                cpl: d.cpl,
+              })),
+            );
+          }
           ok++;
         } catch {
           // ignore per-campaign failures
