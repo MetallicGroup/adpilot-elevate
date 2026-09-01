@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { MarketingLayout } from "@/components/marketing/MarketingLayout";
 import { CommandStage } from "@/components/marketing/CommandStage";
+import { HeroVideo } from "@/components/marketing/HeroVideo";
 import { CountUp } from "@/components/wow/CountUp";
 import { Reveal } from "@/components/wow/Reveal";
 import { GoalPicker } from "@/components/marketing/GoalPicker";
@@ -124,6 +125,8 @@ function Index() {
                   <PlayCircle className="w-4 h-4" /> Vezi cum funcționează
                 </Link>
               </div>
+
+              <HeroVideo />
 
               <p className="mt-5 text-[13px] text-muted-foreground">
                 3 zile gratuit · Fără experiență necesară · Configurare în câteva minute
