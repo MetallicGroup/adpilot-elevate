@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { signInWithProvider, translateAuthError, waitForClientSession } from "@/lib/auth";
 import { getMetaPublicConfig, completeFacebookSignup } from "@/lib/meta-oauth.functions";
-import { postAuthDest } from "@/lib/post-auth";
+import { postAuthDest, markAgencyIntent } from "@/lib/post-auth";
 import { tkClickButton, tkCompleteRegistration } from "@/lib/tiktok-pixel";
 import { fbLead, fbCompleteRegistration } from "@/lib/meta-pixel";
 import { toast } from "sonner";
@@ -17,6 +17,7 @@ type AuthSearch = {
   goal?: string;
   redirect?: string;
   fb?: string;
+  type?: "business" | "agency";
 };
 
 const FB_NOTICE: Record<string, string> = {
@@ -43,6 +44,7 @@ export const Route = createFileRoute("/auth")({
       out.redirect = s.redirect;
     }
     if (typeof s.fb === "string") out.fb = s.fb;
+    if (s.type === "agency" || s.type === "business") out.type = s.type;
     return out;
   },
   head: () => ({ meta: [{ title: "Autentificare — AdPilot" }] }),
@@ -56,6 +58,9 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [accountType, setAccountType] = useState<"business" | "agency">(
+    search.type === "agency" ? "agency" : "business",
+  );
   const [loading, setLoading] = useState(false);
   const [fbReady, setFbReady] = useState(false);
   const [fbCfg, setFbCfg] = useState<{
@@ -165,6 +170,9 @@ function AuthPage() {
         }
         tkClickButton("signup-submit");
         fbLead("signup");
+        // Alegere Afacere/Agenție → agenția merge pe fluxul de agenție (persistă și
+        // prin confirmarea pe email).
+        if (accountType === "agency") markAgencyIntent();
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -434,6 +442,31 @@ function AuthPage() {
           <form onSubmit={submit} className="grid gap-3.5">
             {isSignup && (
               <div>
+                <label className="mb-2 block text-[11px] text-muted-foreground">Ce fel de cont?</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    { v: "business", t: "Afacere", d: "Reclame pentru afacerea mea" },
+                    { v: "agency", t: "Agenție", d: "Gestionez clienții mei" },
+                  ] as const).map((o) => (
+                    <button
+                      key={o.v}
+                      type="button"
+                      onClick={() => setAccountType(o.v)}
+                      className={`rounded-[13px] border px-3 py-3 text-left transition ${
+                        accountType === o.v
+                          ? "border-primary bg-primary/10"
+                          : "border-white/[0.08] bg-black/25 hover:border-white/20"
+                      }`}
+                    >
+                      <div className="text-sm font-semibold">{o.t}</div>
+                      <div className="text-[11px] text-muted-foreground">{o.d}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {isSignup && (
+              <div>
                 <label className="mb-2 block text-[11px] text-muted-foreground" htmlFor="auth-name">
                   Nume complet
                 </label>
@@ -501,7 +534,11 @@ function AuthPage() {
               className="press btn-primary shine mt-1 flex h-[52px] w-full items-center justify-center gap-2 rounded-[14px] text-sm font-semibold disabled:opacity-50"
             >
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              {isSignup ? "Începe cele 3 zile gratuit" : "Intră în cont"}
+              {isSignup
+                ? accountType === "agency"
+                  ? "Creează cont de agenție"
+                  : "Începe cele 3 zile gratuit"
+                : "Intră în cont"}
             </button>
           </form>
 

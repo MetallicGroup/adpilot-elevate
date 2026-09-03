@@ -458,6 +458,32 @@ function Index() {
         </div>
       </Section>
 
+      {/* AGENȚII */}
+      <section className="px-6 pb-4">
+        <Reveal className="max-w-4xl mx-auto">
+          <div className="glass rounded-2xl border border-border p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+            <div>
+              <p className="text-xs uppercase tracking-[0.18em] gradient-text font-semibold mb-2">
+                Pentru agenții
+              </p>
+              <h3 className="text-xl sm:text-2xl font-bold tracking-tight">
+                Ești agenție de marketing?
+              </h3>
+              <p className="mt-1.5 text-sm text-muted-foreground max-w-lg">
+                Gestionează reclamele tuturor clienților tăi dintr-un singur loc. Clienții se
+                conectează singuri printr-un link.
+              </p>
+            </div>
+            <Link
+              to="/agentie"
+              className="press inline-flex items-center gap-2 px-6 py-3.5 rounded-xl border border-primary/40 font-semibold hover:bg-primary/10 transition-colors whitespace-nowrap"
+            >
+              AdPilot pentru agenții <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </Reveal>
+      </section>
+
       {/* FINAL CTA */}
       <section className="relative px-6 py-32 overflow-hidden">
         <div className="absolute inset-0 grid-bg opacity-30 pointer-events-none" />
