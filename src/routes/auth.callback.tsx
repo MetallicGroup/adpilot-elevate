@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { resolvePostAuthPath } from "@/lib/post-auth";
+import { postAuthDest } from "@/lib/post-auth";
 import { translateAuthError } from "@/lib/auth";
 
 export const Route = createFileRoute("/auth/callback")({
@@ -97,7 +97,7 @@ function AuthCallbackPage() {
           return;
         }
 
-        const dest = await resolvePostAuthPath();
+        const dest = await postAuthDest();
         if (!cancelled) navigate({ to: dest, replace: true });
         return;
       }

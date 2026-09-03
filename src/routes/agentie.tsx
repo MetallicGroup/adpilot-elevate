@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { MarketingLayout } from "@/components/marketing/MarketingLayout";
 import { Reveal } from "@/components/wow/Reveal";
 import { Check, Link2, Users, LayoutGrid, ArrowRight, Building2 } from "lucide-react";
+import { markAgencyIntent } from "@/lib/post-auth";
 
 export const Route = createFileRoute("/agentie")({
   head: () => ({
@@ -85,6 +86,7 @@ function AgencyLanding() {
             <Link
               to="/auth"
               search={{ mode: "signup", redirect: "/agency/setup" }}
+              onClick={markAgencyIntent}
               className="press btn-primary inline-flex items-center gap-2 px-7 py-4 rounded-xl font-semibold"
             >
               Creează cont de agenție <ArrowRight className="w-4 h-4" />
@@ -139,6 +141,7 @@ function AgencyLanding() {
               <Link
                 to="/auth"
                 search={{ mode: "signup", redirect: "/agency/setup" }}
+              onClick={markAgencyIntent}
                 className="press btn-primary inline-flex items-center justify-center gap-2 px-7 py-4 rounded-xl font-semibold"
               >
                 Creează cont de agenție
@@ -191,6 +194,7 @@ function AgencyLanding() {
           <Link
             to="/auth"
             search={{ mode: "signup", redirect: "/agency/setup" }}
+              onClick={markAgencyIntent}
             className="press btn-primary inline-flex items-center gap-2 px-7 py-4 rounded-xl font-semibold"
           >
             Creează cont de agenție <ArrowRight className="w-4 h-4" />

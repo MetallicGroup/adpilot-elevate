@@ -64,6 +64,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedQaTrialRouteImport } from './routes/_authenticated/qa.trial'
 import { Route as AuthenticatedCampaignsIdRouteImport } from './routes/_authenticated/campaigns.$id'
 import { Route as AuthenticatedAgencySetupRouteImport } from './routes/_authenticated/agency.setup'
+import { Route as AuthenticatedAgencySettingsRouteImport } from './routes/_authenticated/agency.settings'
 import { Route as AuthenticatedAgencyDashboardRouteImport } from './routes/_authenticated/agency.dashboard'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicWhatsappWebhookRouteImport } from './routes/api/public/whatsapp.webhook'
@@ -361,6 +362,12 @@ const AuthenticatedAgencySetupRoute =
     path: '/agency/setup',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAgencySettingsRoute =
+  AuthenticatedAgencySettingsRouteImport.update({
+    id: '/agency/settings',
+    path: '/agency/settings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAgencyDashboardRoute =
   AuthenticatedAgencyDashboardRouteImport.update({
     id: '/agency/dashboard',
@@ -530,6 +537,7 @@ export interface FileRoutesByFullPath {
   '/checkout/return': typeof CheckoutReturnRoute
   '/connect/$slug': typeof ConnectSlugRoute
   '/agency/dashboard': typeof AuthenticatedAgencyDashboardRoute
+  '/agency/settings': typeof AuthenticatedAgencySettingsRoute
   '/agency/setup': typeof AuthenticatedAgencySetupRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/qa/trial': typeof AuthenticatedQaTrialRoute
@@ -606,6 +614,7 @@ export interface FileRoutesByTo {
   '/checkout/return': typeof CheckoutReturnRoute
   '/connect/$slug': typeof ConnectSlugRoute
   '/agency/dashboard': typeof AuthenticatedAgencyDashboardRoute
+  '/agency/settings': typeof AuthenticatedAgencySettingsRoute
   '/agency/setup': typeof AuthenticatedAgencySetupRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/qa/trial': typeof AuthenticatedQaTrialRoute
@@ -684,6 +693,7 @@ export interface FileRoutesById {
   '/checkout/return': typeof CheckoutReturnRoute
   '/connect/$slug': typeof ConnectSlugRoute
   '/_authenticated/agency/dashboard': typeof AuthenticatedAgencyDashboardRoute
+  '/_authenticated/agency/settings': typeof AuthenticatedAgencySettingsRoute
   '/_authenticated/agency/setup': typeof AuthenticatedAgencySetupRoute
   '/_authenticated/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/_authenticated/qa/trial': typeof AuthenticatedQaTrialRoute
@@ -762,6 +772,7 @@ export interface FileRouteTypes {
     | '/checkout/return'
     | '/connect/$slug'
     | '/agency/dashboard'
+    | '/agency/settings'
     | '/agency/setup'
     | '/campaigns/$id'
     | '/qa/trial'
@@ -838,6 +849,7 @@ export interface FileRouteTypes {
     | '/checkout/return'
     | '/connect/$slug'
     | '/agency/dashboard'
+    | '/agency/settings'
     | '/agency/setup'
     | '/campaigns/$id'
     | '/qa/trial'
@@ -915,6 +927,7 @@ export interface FileRouteTypes {
     | '/checkout/return'
     | '/connect/$slug'
     | '/_authenticated/agency/dashboard'
+    | '/_authenticated/agency/settings'
     | '/_authenticated/agency/setup'
     | '/_authenticated/campaigns/$id'
     | '/_authenticated/qa/trial'
@@ -1381,6 +1394,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAgencySetupRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/agency/settings': {
+      id: '/_authenticated/agency/settings'
+      path: '/agency/settings'
+      fullPath: '/agency/settings'
+      preLoaderRoute: typeof AuthenticatedAgencySettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/agency/dashboard': {
       id: '/_authenticated/agency/dashboard'
       path: '/agency/dashboard'
@@ -1551,6 +1571,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
   AuthenticatedWhatsappRoute: typeof AuthenticatedWhatsappRoute
   AuthenticatedAgencyDashboardRoute: typeof AuthenticatedAgencyDashboardRoute
+  AuthenticatedAgencySettingsRoute: typeof AuthenticatedAgencySettingsRoute
   AuthenticatedAgencySetupRoute: typeof AuthenticatedAgencySetupRoute
   AuthenticatedCampaignsIdRoute: typeof AuthenticatedCampaignsIdRoute
   AuthenticatedQaTrialRoute: typeof AuthenticatedQaTrialRoute
@@ -1571,6 +1592,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSupportRoute: AuthenticatedSupportRoute,
   AuthenticatedWhatsappRoute: AuthenticatedWhatsappRoute,
   AuthenticatedAgencyDashboardRoute: AuthenticatedAgencyDashboardRoute,
+  AuthenticatedAgencySettingsRoute: AuthenticatedAgencySettingsRoute,
   AuthenticatedAgencySetupRoute: AuthenticatedAgencySetupRoute,
   AuthenticatedCampaignsIdRoute: AuthenticatedCampaignsIdRoute,
   AuthenticatedQaTrialRoute: AuthenticatedQaTrialRoute,

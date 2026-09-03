@@ -70,6 +70,17 @@ async function verifyCardWithOneLeu(subscription: any, env: StripeEnv) {
   }
 }
 
+/** Activează/dezactivează white-label pe agenția deținută de user, în funcție de
+ *  add-on-ul plătit (lookup_key conține „whitelabel"). Nu atinge alte planuri. */
+async function applyAgencyWhitelabel(sb: any, userId: string | null, priceId: string, active: boolean) {
+  if (!userId || !/whitelabel|white_label/i.test(priceId || "")) return;
+  try {
+    await sb.from("agencies").update({ white_label_enabled: !!active }).eq("owner_user_id", userId);
+  } catch (e) {
+    console.error("[webhook] agency whitelabel sync failed", e);
+  }
+}
+
 async function handleSubscriptionCreated(subscription: any, env: StripeEnv) {
   const userId = subscription.metadata?.userId;
   if (!userId) {
@@ -102,6 +113,12 @@ async function handleSubscriptionCreated(subscription: any, env: StripeEnv) {
     { onConflict: "stripe_subscription_id" },
   );
 
+  await applyAgencyWhitelabel(
+    sb,
+    userId,
+    priceId,
+    ["active", "trialing", "past_due"].includes(subscription.status),
+  );
   await verifyCardWithOneLeu(subscription, env);
   await notifyOwnerOfSubscription(subscription, env, userId, priceId, item);
 
@@ -201,15 +218,28 @@ async function handleSubscriptionUpdated(subscription: any, env: StripeEnv) {
     })
     .eq("stripe_subscription_id", subscription.id)
     .eq("environment", env);
+
+  await applyAgencyWhitelabel(
+    sb,
+    subscription.metadata?.userId ?? null,
+    priceId,
+    ["active", "trialing", "past_due"].includes(subscription.status),
+  );
 }
 
 async function handleSubscriptionDeleted(subscription: any, env: StripeEnv) {
   const sb = await getSupabase();
+  const { data: row } = await sb
+    .from("subscriptions")
+    .select("user_id, price_id")
+    .eq("stripe_subscription_id", subscription.id)
+    .maybeSingle();
   await sb
     .from("subscriptions")
     .update({ status: "canceled", updated_at: new Date().toISOString() })
     .eq("stripe_subscription_id", subscription.id)
     .eq("environment", env);
+  if (row) await applyAgencyWhitelabel(sb, (row as any).user_id, (row as any).price_id, false);
 }
 
 async function handleWebhook(req: Request, env: StripeEnv) {

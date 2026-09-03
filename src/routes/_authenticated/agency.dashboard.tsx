@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
-import { Loader2, Copy, Check, Users, Building2, ExternalLink } from "lucide-react";
+import { Loader2, Copy, Check, Users, Building2, ExternalLink, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { getAgencyClients } from "@/lib/agency.functions";
 
@@ -91,11 +91,14 @@ function AgencyDashboard() {
           </div>
           <h1 className="mt-1 text-2xl font-bold tracking-tight">{data.agency.name}</h1>
         </div>
-        <div className="flex items-center gap-2 text-sm">
-          <Users className="w-4 h-4 text-muted-foreground" />
-          <span className="text-muted-foreground">
+        <div className="flex items-center gap-4 text-sm">
+          <span className="text-muted-foreground inline-flex items-center gap-2">
+            <Users className="w-4 h-4" />
             Sloturi client: <b className="text-foreground">{data.slots.used}/{data.slots.total}</b>
           </span>
+          <Link to="/agency/settings" className="inline-flex items-center gap-1.5 px-3 h-9 rounded-lg border border-border hover:bg-secondary">
+            <Settings className="w-4 h-4" /> Setări
+          </Link>
         </div>
       </div>
 

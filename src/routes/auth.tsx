@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { signInWithProvider, translateAuthError, waitForClientSession } from "@/lib/auth";
 import { getMetaPublicConfig, completeFacebookSignup } from "@/lib/meta-oauth.functions";
-import { resolvePostAuthPath } from "@/lib/post-auth";
+import { postAuthDest } from "@/lib/post-auth";
 import { tkClickButton, tkCompleteRegistration } from "@/lib/tiktok-pixel";
 import { fbLead, fbCompleteRegistration } from "@/lib/meta-pixel";
 import { toast } from "sonner";
@@ -149,7 +149,7 @@ function AuthPage() {
       navigate({ to: url.pathname, search: sp as never, replace: true });
       return;
     }
-    const dest = await resolvePostAuthPath();
+    const dest = await postAuthDest();
     navigate({ to: dest, replace: true });
   }
 

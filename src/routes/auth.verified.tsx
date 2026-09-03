@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
-import { resolvePostAuthPath } from "@/lib/post-auth";
+import { postAuthDest } from "@/lib/post-auth";
 
 export const Route = createFileRoute("/auth/verified")({
   ssr: false,
@@ -12,11 +12,13 @@ export const Route = createFileRoute("/auth/verified")({
 
 function VerifiedPage() {
   const navigate = useNavigate();
-  const [dest, setDest] = useState<"/dashboard" | "/onboarding" | "/agency/dashboard">("/onboarding");
+  const [dest, setDest] = useState<
+    "/dashboard" | "/onboarding" | "/agency/dashboard" | "/agency/setup"
+  >("/onboarding");
 
   useEffect(() => {
     let cancelled = false;
-    resolvePostAuthPath().then((d) => {
+    postAuthDest().then((d) => {
       if (!cancelled) setDest(d);
     });
     const t = setTimeout(() => {

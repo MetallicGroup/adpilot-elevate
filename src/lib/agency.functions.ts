@@ -188,6 +188,113 @@ export const getClientDashboard = createServerFn({ method: "POST" })
     };
   });
 
+/** Setări curente ale agenției (pentru pagina /agency/settings). */
+export const getAgencySettings = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { getOwnerAgency } = await import("@/lib/agency.server");
+    const ag = await getOwnerAgency(context.userId);
+    if (!ag) return { agency: null };
+    return {
+      agency: {
+        name: ag.name,
+        slug: ag.slug,
+        logo_url: ag.logo_url,
+        white_label_enabled: ag.white_label_enabled,
+      },
+    };
+  });
+
+/** Editează numele și/sau slug-ul (cu verificare de unicitate). */
+export const updateAgency = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => {
+    const d = (raw ?? {}) as { name?: string; slug?: string };
+    const name = d.name !== undefined ? String(d.name).trim() : undefined;
+    const slug = d.slug !== undefined ? String(d.slug).trim().toLowerCase() : undefined;
+    if (name !== undefined && (name.length < 2 || name.length > 80))
+      throw new Error("Numele trebuie să aibă 2–80 caractere.");
+    if (slug !== undefined && !/^[a-z0-9-]{2,40}$/.test(slug))
+      throw new Error("Slug invalid: doar litere mici, cifre și cratime (2–40).");
+    return { name, slug };
+  })
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin: __sa } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin: any = __sa;
+    const { data: ag } = await supabaseAdmin
+      .from("agencies")
+      .select("id")
+      .eq("owner_user_id", context.userId)
+      .maybeSingle();
+    if (!ag) throw new Error("Nu ai o agenție.");
+    if (data.slug !== undefined) {
+      const { data: taken } = await supabaseAdmin
+        .from("agencies")
+        .select("id")
+        .eq("slug", data.slug)
+        .neq("id", ag.id)
+        .maybeSingle();
+      if (taken) throw new Error("Acest slug este deja folosit. Alege altul.");
+    }
+    const patch: any = {};
+    if (data.name !== undefined) patch.name = data.name;
+    if (data.slug !== undefined) patch.slug = data.slug;
+    if (Object.keys(patch).length) {
+      const { error } = await supabaseAdmin.from("agencies").update(patch).eq("id", ag.id);
+      if (error) throw new Error(error.message);
+    }
+    return { ok: true as const };
+  });
+
+/** Upload logo agenție (doar cu white-label activat). Imagine ca data URL base64. */
+export const uploadAgencyLogo = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => {
+    const dataUrl = String((raw as any)?.dataUrl ?? "");
+    if (!dataUrl.startsWith("data:image/")) throw new Error("Trimite o imagine.");
+    if (dataUrl.length > 2_500_000) throw new Error("Imagine prea mare (max ~1.8MB).");
+    return { dataUrl };
+  })
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin: __sa } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin: any = __sa;
+    const { data: ag } = await supabaseAdmin
+      .from("agencies")
+      .select("id, white_label_enabled")
+      .eq("owner_user_id", context.userId)
+      .maybeSingle();
+    if (!ag) throw new Error("Nu ai o agenție.");
+    if (!ag.white_label_enabled)
+      throw new Error("Logo-ul e disponibil doar cu white-label activat.");
+    const m = data.dataUrl.match(/^data:(image\/[a-z0-9.+-]+);base64,(.*)$/i);
+    if (!m) throw new Error("Format de imagine invalid.");
+    const mime = m[1];
+    const ext = mime.split("/")[1].split("+")[0];
+    const bytes = Buffer.from(m[2], "base64");
+    const path = `agency/${ag.id}/logo_${Date.now()}.${ext}`;
+    const { error: upErr } = await supabaseAdmin.storage
+      .from("profile-photos")
+      .upload(path, bytes, { contentType: mime, upsert: true });
+    if (upErr) throw new Error(upErr.message);
+    const { data: pub } = supabaseAdmin.storage.from("profile-photos").getPublicUrl(path);
+    await supabaseAdmin.from("agencies").update({ logo_url: pub.publicUrl }).eq("id", ag.id);
+    return { ok: true as const, url: pub.publicUrl as string };
+  });
+
+/** Dezactivează white-label (activarea se face doar prin plata add-on-ului). */
+export const disableWhiteLabel = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin: __sa } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin: any = __sa;
+    const { error } = await supabaseAdmin
+      .from("agencies")
+      .update({ white_label_enabled: false })
+      .eq("owner_user_id", context.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });
+
 /** Deconectează un client: șterge tokenul, status=disconnected. */
 export const disconnectAgencyClient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
