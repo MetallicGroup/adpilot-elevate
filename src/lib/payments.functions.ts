@@ -124,7 +124,9 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       const isRecurring = stripePrice.type === "recurring";
 
       const customerId = await resolveOrCreateCustomer(stripe, { email, userId });
-      const firstMonthCoupon = await getOrCreateFirstMonthCoupon(stripe);
+      // Planurile de agenție se plătesc curat: FĂRĂ trial și FĂRĂ -50% prima lună.
+      const isAgency = /^agency/.test(data.priceId);
+      const firstMonthCoupon = isAgency ? null : await getOrCreateFirstMonthCoupon(stripe);
 
       const session = await stripe.checkout.sessions.create({
         line_items: [{ price: stripePrice.id, quantity: 1 }],
@@ -145,10 +147,13 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
           payment_method_collection: "always",
           subscription_data: {
             metadata: { userId },
-            trial_period_days: TRIAL_DAYS,
-            trial_settings: {
-              end_behavior: { missing_payment_method: "cancel" },
-            },
+            // Agenție → fără trial (plată imediată). Business → trial ca înainte.
+            ...(isAgency
+              ? {}
+              : {
+                  trial_period_days: TRIAL_DAYS,
+                  trial_settings: { end_behavior: { missing_payment_method: "cancel" } },
+                }),
           },
         }),
         automatic_tax: { enabled: true },
