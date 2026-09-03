@@ -177,7 +177,7 @@ function AgencySettings() {
       <div className="rounded-2xl border border-border bg-card p-5">
         <h2 className="font-semibold mb-1">Abonament agenție</h2>
         <p className="text-sm text-muted-foreground mb-4">
-          Planul de agenție (995 lei/lună, 5 conturi client incluse). Adaugi conturi suplimentare cu +149 lei/lună.
+          Planul de agenție (995 lei/lună, 2 afaceri incluse). Fiecare afacere peste 2 se facturează automat cu +249 lei/lună.
         </p>
         <button
           onClick={() => openCheckout({ priceId: "agency_monthly" })}

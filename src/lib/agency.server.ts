@@ -66,7 +66,7 @@ export async function finishAgencyConnect(params: {
     .select("id, client_slots, extra_slots")
     .eq("slug", slug)
     .maybeSingle();
-  if (!ag) return { ok: false, reason: "noagency" };
+  if (!ag) return { ok: false, reason: "noagency" as const };
 
   const { fetchMetaUser, fetchAdAccounts, fetchPages } = await import("@/lib/meta.server");
   const me = await fetchMetaUser(accessToken).catch(() => null);
@@ -87,17 +87,7 @@ export async function finishAgencyConnect(params: {
     .eq("meta_user_id", me.id)
     .maybeSingle();
 
-  // Sloturi: blocăm doar clienți NOI peste limită (un client existent se poate reconecta).
-  if (!existing) {
-    const { count } = await supabaseAdmin
-      .from("agency_clients")
-      .select("id", { count: "exact", head: true })
-      .eq("agency_id", ag.id)
-      .eq("status", "connected");
-    const total = (ag.client_slots ?? 5) + (ag.extra_slots ?? 0);
-    if ((count ?? 0) >= total) return { ok: false, reason: "full" };
-  }
-
+  // Varianta B: fără plafon — clienții peste cei incluși se facturează automat (+249/lună).
   const expiresAt = expiresIn ? new Date(Date.now() + expiresIn * 1000).toISOString() : null;
   const row = {
     agency_id: ag.id,
@@ -116,6 +106,13 @@ export async function finishAgencyConnect(params: {
     await (supabaseAdmin as any).from("agency_clients").update(row).eq("id", existing.id);
   } else {
     await (supabaseAdmin as any).from("agency_clients").insert(row);
+  }
+  // Sincronizează cantitatea facturată (client nou peste cei incluși = +249/lună).
+  try {
+    const { syncAgencyBilling } = await import("@/lib/agency-billing.server");
+    await syncAgencyBilling(ag.id);
+  } catch {
+    /* best-effort */
   }
   return { ok: true, slug };
 }

@@ -94,7 +94,12 @@ function AgencyDashboard() {
         <div className="flex items-center gap-4 text-sm">
           <span className="text-muted-foreground inline-flex items-center gap-2">
             <Users className="w-4 h-4" />
-            Sloturi client: <b className="text-foreground">{data.slots.used}/{data.slots.total}</b>
+            <b className="text-foreground">{data.slots.connected}</b> conectați
+            {data.slots.extra > 0 ? (
+              <span className="text-amber-500">· {data.slots.extra} × {data.slots.extraPrice} lei</span>
+            ) : (
+              <span>· {data.slots.included} incluse</span>
+            )}
           </span>
           <Link to="/agency/settings" className="inline-flex items-center gap-1.5 px-3 h-9 rounded-lg border border-border hover:bg-secondary">
             <Settings className="w-4 h-4" /> Setări

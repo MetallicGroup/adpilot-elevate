@@ -136,7 +136,7 @@ function AgencyLanding() {
                   <span className="font-serif text-5xl font-bold tracking-tight">995 lei</span>
                   <span className="text-muted-foreground">/ lună</span>
                 </div>
-                <p className="mt-1 text-muted-foreground">Include 5 conturi de client.</p>
+                <p className="mt-1 text-muted-foreground">Include 2 afaceri (conturi client).</p>
               </div>
               <Link
                 to="/auth"
@@ -150,7 +150,7 @@ function AgencyLanding() {
 
             <div className="mt-8 grid sm:grid-cols-2 gap-3 text-sm">
               {[
-                "5 conturi de client incluse",
+                "2 afaceri incluse",
                 "Link unic de conectare pentru clienți",
                 "Dashboard cu toți clienții",
                 "Lead-uri și statistici live per client",
@@ -163,8 +163,8 @@ function AgencyLanding() {
 
             <div className="mt-8 border-t border-border pt-6 grid sm:grid-cols-2 gap-4">
               <div className="rounded-xl bg-secondary/40 p-4">
-                <div className="font-semibold">+149 lei / lună</div>
-                <div className="text-sm text-muted-foreground">per cont de client suplimentar</div>
+                <div className="font-semibold">+249 lei / lună</div>
+                <div className="text-sm text-muted-foreground">per afacere suplimentară (facturare automată)</div>
               </div>
               <div className="rounded-xl bg-secondary/40 p-4">
                 <div className="font-semibold">+500 lei / lună</div>

@@ -134,11 +134,12 @@ export const getAgencyClients = createServerFn({ method: "GET" })
       }),
     );
 
-    const used = (rows ?? []).filter((c: any) => c.status === "connected").length;
+    const connected = (rows ?? []).filter((c: any) => c.status === "connected").length;
+    const included = ag.client_slots ?? 2;
     return {
       agency: { name: ag.name, slug: ag.slug, white_label_enabled: ag.white_label_enabled },
       clients,
-      slots: { used, total: (ag.client_slots ?? 5) + (ag.extra_slots ?? 0) },
+      slots: { connected, included, extra: Math.max(0, connected - included), extraPrice: 249 },
     };
   });
 
@@ -314,5 +315,12 @@ export const disconnectAgencyClient = createServerFn({ method: "POST" })
       .update({ status: "disconnected", access_token: null })
       .eq("id", data.client_id);
     if (error) throw new Error(error.message);
+    // Scade cantitatea facturată (un client mai puțin).
+    try {
+      const { syncAgencyBilling } = await import("@/lib/agency-billing.server");
+      await syncAgencyBilling(client.agency_id);
+    } catch {
+      /* best-effort */
+    }
     return { ok: true as const };
   });
