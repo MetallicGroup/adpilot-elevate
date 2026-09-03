@@ -12,7 +12,7 @@ export const Route = createFileRoute("/auth/verified")({
 
 function VerifiedPage() {
   const navigate = useNavigate();
-  const [dest, setDest] = useState<"/dashboard" | "/onboarding">("/onboarding");
+  const [dest, setDest] = useState<"/dashboard" | "/onboarding" | "/agency/dashboard">("/onboarding");
 
   useEffect(() => {
     let cancelled = false;

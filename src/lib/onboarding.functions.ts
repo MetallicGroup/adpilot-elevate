@@ -12,6 +12,8 @@ export type OnboardingStatus = {
   whatsappConnected: boolean;
   /** Admin — exceptat de la gate-ul de onboarding. */
   isAdmin: boolean;
+  /** 'business' | 'agency' — agenția are alt flux, e exceptată de la onboarding. */
+  accountType: string;
   /** Cont creat prin Facebook (system-user) fără email → trebuie completat. */
   needsEmail: boolean;
   subscriptionStatus: string | null;
@@ -51,7 +53,7 @@ export const getOnboardingStatus = createServerFn({ method: "POST" })
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle(),
-      (supabase as any).from("profiles").select("phone").eq("id", userId).maybeSingle(),
+      (supabase as any).from("profiles").select("phone, account_type").eq("id", userId).maybeSingle(),
       supabase
         .from("whatsapp_connections")
         .select("status")
@@ -106,6 +108,7 @@ export const getOnboardingStatus = createServerFn({ method: "POST" })
       planChosen,
       whatsappConnected: (wa as any)?.status === "active",
       isAdmin: !!adminRole,
+      accountType: (profile as any)?.account_type ?? "business",
       subscriptionStatus: sub?.status ?? null,
       trialEnd: sub?.trial_end ?? null,
       planTier,

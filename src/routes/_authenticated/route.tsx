@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated")({
     // ȘI a ales un plan. Excludem /onboarding (ar face buclă) și /checkout (revenire
     // de la plată). Fail-open: dacă verificarea pică, NU blocăm userul.
     const p = location.pathname;
-    if (!p.startsWith("/onboarding") && !p.startsWith("/checkout")) {
+    if (!p.startsWith("/onboarding") && !p.startsWith("/checkout") && !p.startsWith("/agency")) {
       let complete = true;
       try {
         const { getOnboardingStatus } = await import("@/lib/onboarding.functions");
@@ -26,6 +26,7 @@ export const Route = createFileRoute("/_authenticated")({
         // pentru conturile fără abonament plătit.
         complete =
           status.isAdmin ||
+          status.accountType === "agency" ||
           status.hasActiveSubscription ||
           !!(
             !status.needsEmail &&

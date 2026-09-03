@@ -38,9 +38,11 @@ import { Route as ConstructiiRouteImport } from './routes/constructii'
 import { Route as CliniciRouteImport } from './routes/clinici'
 import { Route as BeautyRouteImport } from './routes/beauty'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AgentieRouteImport } from './routes/agentie'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ConnectSlugRouteImport } from './routes/connect.$slug'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as BSlugRouteImport } from './routes/b.$slug'
 import { Route as AuthWelcomeRouteImport } from './routes/auth.welcome'
@@ -61,6 +63,8 @@ import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedQaTrialRouteImport } from './routes/_authenticated/qa.trial'
 import { Route as AuthenticatedCampaignsIdRouteImport } from './routes/_authenticated/campaigns.$id'
+import { Route as AuthenticatedAgencySetupRouteImport } from './routes/_authenticated/agency.setup'
+import { Route as AuthenticatedAgencyDashboardRouteImport } from './routes/_authenticated/agency.dashboard'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicWhatsappWebhookRouteImport } from './routes/api/public/whatsapp.webhook'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -76,6 +80,8 @@ import { Route as ApiPublicHooksAnomalyScanRouteImport } from './routes/api/publ
 import { Route as ApiPublicHooksActivationRemindersRouteImport } from './routes/api/public/hooks/activation-reminders'
 import { Route as ApiMetaSignupStartRouteImport } from './routes/api/meta.signup.start'
 import { Route as ApiMetaAuthCallbackRouteImport } from './routes/api/meta.auth.callback'
+import { Route as ApiAgencyConnectStartRouteImport } from './routes/api/agency.connect.start'
+import { Route as AuthenticatedAgencyClientsIdRouteImport } from './routes/_authenticated/agency.clients.$id'
 import { Route as AuthenticatedAdminUsersIdRouteImport } from './routes/_authenticated/admin.users.$id'
 import { Route as AuthenticatedAdminTicketsIdRouteImport } from './routes/_authenticated/admin.tickets.$id'
 
@@ -224,6 +230,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AgentieRoute = AgentieRouteImport.update({
+  id: '/agentie',
+  path: '/agentie',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
@@ -236,6 +247,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConnectSlugRoute = ConnectSlugRouteImport.update({
+  id: '/connect/$slug',
+  path: '/connect/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
@@ -339,6 +355,18 @@ const AuthenticatedCampaignsIdRoute =
     path: '/campaigns/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAgencySetupRoute =
+  AuthenticatedAgencySetupRouteImport.update({
+    id: '/agency/setup',
+    path: '/agency/setup',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAgencyDashboardRoute =
+  AuthenticatedAgencyDashboardRouteImport.update({
+    id: '/agency/dashboard',
+    path: '/agency/dashboard',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const LovableEmailQueueProcessRoute =
   LovableEmailQueueProcessRouteImport.update({
     id: '/lovable/email/queue/process',
@@ -425,6 +453,17 @@ const ApiMetaAuthCallbackRoute = ApiMetaAuthCallbackRouteImport.update({
   path: '/api/meta/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAgencyConnectStartRoute = ApiAgencyConnectStartRouteImport.update({
+  id: '/api/agency/connect/start',
+  path: '/api/agency/connect/start',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAgencyClientsIdRoute =
+  AuthenticatedAgencyClientsIdRouteImport.update({
+    id: '/agency/clients/$id',
+    path: '/agency/clients/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminUsersIdRoute =
   AuthenticatedAdminUsersIdRouteImport.update({
     id: '/users/$id',
@@ -441,6 +480,7 @@ const AuthenticatedAdminTicketsIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/agentie': typeof AgentieRoute
   '/auth': typeof AuthRouteWithChildren
   '/beauty': typeof BeautyRoute
   '/clinici': typeof CliniciRoute
@@ -488,10 +528,15 @@ export interface FileRoutesByFullPath {
   '/auth/welcome': typeof AuthWelcomeRoute
   '/b/$slug': typeof BSlugRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/connect/$slug': typeof ConnectSlugRoute
+  '/agency/dashboard': typeof AuthenticatedAgencyDashboardRoute
+  '/agency/setup': typeof AuthenticatedAgencySetupRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/qa/trial': typeof AuthenticatedQaTrialRoute
   '/admin/tickets/$id': typeof AuthenticatedAdminTicketsIdRoute
   '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
+  '/agency/clients/$id': typeof AuthenticatedAgencyClientsIdRoute
+  '/api/agency/connect/start': typeof ApiAgencyConnectStartRoute
   '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
   '/api/meta/signup/start': typeof ApiMetaSignupStartRoute
   '/api/public/hooks/activation-reminders': typeof ApiPublicHooksActivationRemindersRoute
@@ -511,6 +556,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/agentie': typeof AgentieRoute
   '/auth': typeof AuthRouteWithChildren
   '/beauty': typeof BeautyRoute
   '/clinici': typeof CliniciRoute
@@ -558,10 +604,15 @@ export interface FileRoutesByTo {
   '/auth/welcome': typeof AuthWelcomeRoute
   '/b/$slug': typeof BSlugRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/connect/$slug': typeof ConnectSlugRoute
+  '/agency/dashboard': typeof AuthenticatedAgencyDashboardRoute
+  '/agency/setup': typeof AuthenticatedAgencySetupRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/qa/trial': typeof AuthenticatedQaTrialRoute
   '/admin/tickets/$id': typeof AuthenticatedAdminTicketsIdRoute
   '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
+  '/agency/clients/$id': typeof AuthenticatedAgencyClientsIdRoute
+  '/api/agency/connect/start': typeof ApiAgencyConnectStartRoute
   '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
   '/api/meta/signup/start': typeof ApiMetaSignupStartRoute
   '/api/public/hooks/activation-reminders': typeof ApiPublicHooksActivationRemindersRoute
@@ -583,6 +634,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/about': typeof AboutRoute
+  '/agentie': typeof AgentieRoute
   '/auth': typeof AuthRouteWithChildren
   '/beauty': typeof BeautyRoute
   '/clinici': typeof CliniciRoute
@@ -630,10 +682,15 @@ export interface FileRoutesById {
   '/auth/welcome': typeof AuthWelcomeRoute
   '/b/$slug': typeof BSlugRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/connect/$slug': typeof ConnectSlugRoute
+  '/_authenticated/agency/dashboard': typeof AuthenticatedAgencyDashboardRoute
+  '/_authenticated/agency/setup': typeof AuthenticatedAgencySetupRoute
   '/_authenticated/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/_authenticated/qa/trial': typeof AuthenticatedQaTrialRoute
   '/_authenticated/admin/tickets/$id': typeof AuthenticatedAdminTicketsIdRoute
   '/_authenticated/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
+  '/_authenticated/agency/clients/$id': typeof AuthenticatedAgencyClientsIdRoute
+  '/api/agency/connect/start': typeof ApiAgencyConnectStartRoute
   '/api/meta/auth/callback': typeof ApiMetaAuthCallbackRoute
   '/api/meta/signup/start': typeof ApiMetaSignupStartRoute
   '/api/public/hooks/activation-reminders': typeof ApiPublicHooksActivationRemindersRoute
@@ -655,6 +712,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/agentie'
     | '/auth'
     | '/beauty'
     | '/clinici'
@@ -702,10 +760,15 @@ export interface FileRouteTypes {
     | '/auth/welcome'
     | '/b/$slug'
     | '/checkout/return'
+    | '/connect/$slug'
+    | '/agency/dashboard'
+    | '/agency/setup'
     | '/campaigns/$id'
     | '/qa/trial'
     | '/admin/tickets/$id'
     | '/admin/users/$id'
+    | '/agency/clients/$id'
+    | '/api/agency/connect/start'
     | '/api/meta/auth/callback'
     | '/api/meta/signup/start'
     | '/api/public/hooks/activation-reminders'
@@ -725,6 +788,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/agentie'
     | '/auth'
     | '/beauty'
     | '/clinici'
@@ -772,10 +836,15 @@ export interface FileRouteTypes {
     | '/auth/welcome'
     | '/b/$slug'
     | '/checkout/return'
+    | '/connect/$slug'
+    | '/agency/dashboard'
+    | '/agency/setup'
     | '/campaigns/$id'
     | '/qa/trial'
     | '/admin/tickets/$id'
     | '/admin/users/$id'
+    | '/agency/clients/$id'
+    | '/api/agency/connect/start'
     | '/api/meta/auth/callback'
     | '/api/meta/signup/start'
     | '/api/public/hooks/activation-reminders'
@@ -796,6 +865,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/about'
+    | '/agentie'
     | '/auth'
     | '/beauty'
     | '/clinici'
@@ -843,10 +913,15 @@ export interface FileRouteTypes {
     | '/auth/welcome'
     | '/b/$slug'
     | '/checkout/return'
+    | '/connect/$slug'
+    | '/_authenticated/agency/dashboard'
+    | '/_authenticated/agency/setup'
     | '/_authenticated/campaigns/$id'
     | '/_authenticated/qa/trial'
     | '/_authenticated/admin/tickets/$id'
     | '/_authenticated/admin/users/$id'
+    | '/_authenticated/agency/clients/$id'
+    | '/api/agency/connect/start'
     | '/api/meta/auth/callback'
     | '/api/meta/signup/start'
     | '/api/public/hooks/activation-reminders'
@@ -868,6 +943,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
+  AgentieRoute: typeof AgentieRoute
   AuthRoute: typeof AuthRouteWithChildren
   BeautyRoute: typeof BeautyRoute
   CliniciRoute: typeof CliniciRoute
@@ -899,6 +975,8 @@ export interface RootRouteChildren {
   TermsOfServiceRoute: typeof TermsOfServiceRoute
   BSlugRoute: typeof BSlugRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
+  ConnectSlugRoute: typeof ConnectSlugRoute
+  ApiAgencyConnectStartRoute: typeof ApiAgencyConnectStartRoute
   ApiMetaAuthCallbackRoute: typeof ApiMetaAuthCallbackRoute
   ApiMetaSignupStartRoute: typeof ApiMetaSignupStartRoute
   ApiPublicHooksActivationRemindersRoute: typeof ApiPublicHooksActivationRemindersRoute
@@ -1121,6 +1199,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/agentie': {
+      id: '/agentie'
+      path: '/agentie'
+      fullPath: '/agentie'
+      preLoaderRoute: typeof AgentieRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/about': {
       id: '/about'
       path: '/about'
@@ -1140,6 +1225,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/connect/$slug': {
+      id: '/connect/$slug'
+      path: '/connect/$slug'
+      fullPath: '/connect/$slug'
+      preLoaderRoute: typeof ConnectSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checkout/return': {
@@ -1282,6 +1374,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCampaignsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/agency/setup': {
+      id: '/_authenticated/agency/setup'
+      path: '/agency/setup'
+      fullPath: '/agency/setup'
+      preLoaderRoute: typeof AuthenticatedAgencySetupRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/agency/dashboard': {
+      id: '/_authenticated/agency/dashboard'
+      path: '/agency/dashboard'
+      fullPath: '/agency/dashboard'
+      preLoaderRoute: typeof AuthenticatedAgencyDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/lovable/email/queue/process': {
       id: '/lovable/email/queue/process'
       path: '/lovable/email/queue/process'
@@ -1387,6 +1493,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMetaAuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/agency/connect/start': {
+      id: '/api/agency/connect/start'
+      path: '/api/agency/connect/start'
+      fullPath: '/api/agency/connect/start'
+      preLoaderRoute: typeof ApiAgencyConnectStartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/agency/clients/$id': {
+      id: '/_authenticated/agency/clients/$id'
+      path: '/agency/clients/$id'
+      fullPath: '/agency/clients/$id'
+      preLoaderRoute: typeof AuthenticatedAgencyClientsIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/users/$id': {
       id: '/_authenticated/admin/users/$id'
       path: '/users/$id'
@@ -1430,8 +1550,11 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
   AuthenticatedWhatsappRoute: typeof AuthenticatedWhatsappRoute
+  AuthenticatedAgencyDashboardRoute: typeof AuthenticatedAgencyDashboardRoute
+  AuthenticatedAgencySetupRoute: typeof AuthenticatedAgencySetupRoute
   AuthenticatedCampaignsIdRoute: typeof AuthenticatedCampaignsIdRoute
   AuthenticatedQaTrialRoute: typeof AuthenticatedQaTrialRoute
+  AuthenticatedAgencyClientsIdRoute: typeof AuthenticatedAgencyClientsIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -1447,8 +1570,11 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSupportRoute: AuthenticatedSupportRoute,
   AuthenticatedWhatsappRoute: AuthenticatedWhatsappRoute,
+  AuthenticatedAgencyDashboardRoute: AuthenticatedAgencyDashboardRoute,
+  AuthenticatedAgencySetupRoute: AuthenticatedAgencySetupRoute,
   AuthenticatedCampaignsIdRoute: AuthenticatedCampaignsIdRoute,
   AuthenticatedQaTrialRoute: AuthenticatedQaTrialRoute,
+  AuthenticatedAgencyClientsIdRoute: AuthenticatedAgencyClientsIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -1474,6 +1600,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
+  AgentieRoute: AgentieRoute,
   AuthRoute: AuthRouteWithChildren,
   BeautyRoute: BeautyRoute,
   CliniciRoute: CliniciRoute,
@@ -1505,6 +1632,8 @@ const rootRouteChildren: RootRouteChildren = {
   TermsOfServiceRoute: TermsOfServiceRoute,
   BSlugRoute: BSlugRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
+  ConnectSlugRoute: ConnectSlugRoute,
+  ApiAgencyConnectStartRoute: ApiAgencyConnectStartRoute,
   ApiMetaAuthCallbackRoute: ApiMetaAuthCallbackRoute,
   ApiMetaSignupStartRoute: ApiMetaSignupStartRoute,
   ApiPublicHooksActivationRemindersRoute:

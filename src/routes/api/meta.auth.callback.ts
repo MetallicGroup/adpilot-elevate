@@ -21,24 +21,33 @@ export const Route = createFileRoute("/api/meta/auth/callback")({
         // Erorile de signup nu au sesiune → le trimitem la pagina de auth, nu în app.
         const toAuth = (q: string) =>
           new Response(null, { status: 302, headers: { Location: `/auth?mode=signup&${q}` } });
+        // Clienții de agenție revin pe /connect/[slug].
+        const slugOf = (s: string | null) => (s ?? "").split(".")[1] ?? "";
+        const toConnect = (s: string | null, q: string) =>
+          new Response(null, {
+            status: 302,
+            headers: { Location: `/connect/${encodeURIComponent(slugOf(s))}?${q}` },
+          });
 
         if (error) {
-          const reason = encodeURIComponent(error);
-          return state?.startsWith("signup.")
-            ? toAuth(`fb=denied`)
-            : back(`meta=error&reason=${reason}`);
+          if (state?.startsWith("signup.")) return toAuth(`fb=denied`);
+          if (state?.startsWith("agency.")) return toConnect(state, "err=denied");
+          return back(`meta=error&reason=${encodeURIComponent(error)}`);
         }
         if (!code || !state) return back("meta=error&reason=missing_params");
 
         const cookieState = getCookie("meta_oauth_state");
         if (!cookieState || cookieState !== state) {
-          return state.startsWith("signup.") ? toAuth("fb=bad_state") : back("meta=error&reason=bad_state");
+          if (state.startsWith("signup.")) return toAuth("fb=bad_state");
+          if (state.startsWith("agency.")) return toConnect(state, "err=bad_state");
+          return back("meta=error&reason=bad_state");
         }
         deleteCookie("meta_oauth_state", { path: "/" });
 
         const isSignup = state.startsWith("signup.");
-        const userIdFromState = isSignup ? null : state.split(".")[0];
-        if (!isSignup && !userIdFromState) return back("meta=error&reason=bad_state");
+        const isAgency = state.startsWith("agency.");
+        const userIdFromState = isSignup || isAgency ? null : state.split(".")[0];
+        if (!isSignup && !isAgency && !userIdFromState) return back("meta=error&reason=bad_state");
 
         try {
           const { exchangeCodeForToken, exchangeForLongLivedToken, fetchMetaUser, fetchMetaPermissions } =
@@ -65,6 +74,16 @@ export const Route = createFileRoute("/api/meta/auth/callback")({
               : toAuth(`fb=${res.reason}`);
           }
 
+          // ── FLUX AGENȚIE: clientul se conectează la o agenție (fără user nou) ──
+          if (isAgency) {
+            const slug = slugOf(state);
+            const { finishAgencyConnect } = await import("@/lib/agency.server");
+            const res = await finishAgencyConnect({ accessToken, expiresIn, slug });
+            return res.ok
+              ? toConnect(state, "done=1")
+              : toConnect(state, `err=${res.reason}`);
+          }
+
           // ── FLUX CONECTARE (user deja logat) ──
           const { persistMetaConnection } = await import("@/lib/meta/persist.server");
           const permissions = await fetchMetaPermissions(accessToken);
@@ -84,7 +103,9 @@ export const Route = createFileRoute("/api/meta/auth/callback")({
           return back("meta=connected");
         } catch (e) {
           console.error("Meta OAuth callback error", e);
-          return isSignup ? toAuth("fb=failed") : back("meta=error&reason=callback_failed");
+          if (isSignup) return toAuth("fb=failed");
+          if (isAgency) return toConnect(state, "err=failed");
+          return back("meta=error&reason=callback_failed");
         }
       },
     },
