@@ -956,6 +956,42 @@ export const sendWhatsAppTemplateBroadcast = createServerFn({ method: "POST" })
     return { total: recipients.length, sent, failed };
   });
 
+// ====== WEBINAR — TEST TEMPLATE ======
+const WebinarTestInput = z.object({
+  phone: z.string().trim().min(9).max(20),
+  name: z.string().trim().max(80).optional(),
+  template: z.string().trim().min(1).max(100).default("webinar_adpilot"),
+});
+
+export const sendWebinarTest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => WebinarTestInput.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { getCentralWhatsApp, sendWhatsAppTemplate } = await import("@/lib/whatsapp.server");
+    const wa = getCentralWhatsApp();
+    if (!wa) throw new Error("WhatsApp central neconfigurat");
+    const digits = data.phone.replace(/\D/g, "");
+    const to = digits.startsWith("40")
+      ? digits
+      : digits.startsWith("0")
+        ? "4" + digits
+        : digits.startsWith("7") && digits.length === 9
+          ? "40" + digits
+          : digits;
+    const first = (data.name ?? "").trim().split(/\s+/)[0] || "acolo";
+    const { id } = await sendWhatsAppTemplate(
+      wa.phoneNumberId,
+      wa.accessToken,
+      to,
+      data.template,
+      "ro",
+      [first],
+    );
+    await logAudit(context.userId, "webinar.test_sent", "phone", to, { template: data.template });
+    return { ok: true as const, to, id };
+  });
+
 export const listBroadcasts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {

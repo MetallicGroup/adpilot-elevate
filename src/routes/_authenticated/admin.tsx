@@ -12,6 +12,7 @@ import {
   createBroadcast,
   sendEmailBroadcast,
   sendWhatsAppTemplateBroadcast,
+  sendWebinarTest,
   adminSetCampaignStatus,
   getAiStatus,
   type AdminUserRow,
@@ -747,6 +748,47 @@ function WaTemplateBroadcastCard({ onSent }: { onSent: () => void }) {
   );
 }
 
+function WebinarTestCard() {
+  const send = useServerFn(sendWebinarTest);
+  const [phone, setPhone] = useState("0733342513");
+  const [name, setName] = useState("Daniel");
+  const [tpl, setTpl] = useState("webinar_adpilot");
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+
+  const submit = async () => {
+    setBusy(true);
+    setResult(null);
+    try {
+      const r = await send({ data: { phone: phone.trim(), name: name.trim(), template: tpl.trim() } });
+      setResult(`✅ Trimis către ${r.to} (id: ${r.id})`);
+    } catch (e: any) {
+      setResult(`Eroare: ${e.message}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/[0.04] p-5 space-y-3">
+      <div className="flex items-center gap-2">
+        <MessageSquare className="w-4 h-4 text-emerald-500" />
+        <h3 className="font-semibold">Webinar — test template WhatsApp</h3>
+      </div>
+      <p className="text-xs text-muted-foreground">Trimite template-ul aprobat către un singur număr (test). {"{{1}}"} = prenume.</p>
+      <div className="flex flex-wrap items-center gap-2">
+        <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="07..." className="h-9 w-40 rounded-md border border-border bg-secondary/40 text-sm px-2" />
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nume" className="h-9 w-32 rounded-md border border-border bg-secondary/40 text-sm px-2" />
+        <input value={tpl} onChange={(e) => setTpl(e.target.value)} placeholder="nume_template" className="h-9 w-48 rounded-md border border-border bg-secondary/40 text-sm px-2 font-mono" />
+        <button onClick={submit} disabled={busy || !phone.trim()} className="px-4 h-9 rounded-lg text-white disabled:opacity-50 inline-flex items-center gap-2" style={{ background: "var(--gradient-primary)" }}>
+          {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageSquare className="w-4 h-4" />} Trimite test
+        </button>
+      </div>
+      {result && <p className="text-sm">{result}</p>}
+    </div>
+  );
+}
+
 function BroadcastView({ broadcasts, onSent }: { broadcasts: any[]; onSent: () => void }) {
   const send = useServerFn(createBroadcast);
   const [body, setBody] = useState("");
@@ -771,6 +813,7 @@ function BroadcastView({ broadcasts, onSent }: { broadcasts: any[]; onSent: () =
 
   return (
     <div className="space-y-5">
+      <WebinarTestCard />
       <WaTemplateBroadcastCard onSent={onSent} />
       <EmailBroadcastCard onSent={onSent} />
 
