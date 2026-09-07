@@ -13,6 +13,8 @@ import {
   sendEmailBroadcast,
   sendWhatsAppTemplateBroadcast,
   sendWebinarTest,
+  getWebinarStatus,
+  sendWebinarBlast,
   adminSetCampaignStatus,
   getAiStatus,
   type AdminUserRow,
@@ -789,6 +791,66 @@ function WebinarTestCard() {
   );
 }
 
+function WebinarBlastCard() {
+  const loadStatus = useServerFn(getWebinarStatus);
+  const blast = useServerFn(sendWebinarBlast);
+  const [st, setSt] = useState<any>(null);
+  const [running, setRunning] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  const refresh = () => loadStatus().then(setSt).catch(() => {});
+  useEffect(() => { refresh(); }, []);
+
+  const runAll = async () => {
+    if (!st) return;
+    if (!confirm(`Trimit invitația la webinar către ${st.pending} contacte rămase? Acțiune reală, către oameni reali.`)) return;
+    setRunning(true);
+    setMsg(null);
+    let sent = 0, failed = 0, guard = 0;
+    try {
+      while (guard++ < 60) {
+        const r = await blast({ data: { limit: 100 } });
+        sent += r.sent; failed += r.failed;
+        setMsg(`Trimise: ${sent} · eșuate: ${failed} · rămase: ${r.remaining}`);
+        await refresh();
+        if (r.remaining <= 0 || (r.sent === 0 && r.failed === 0)) break;
+      }
+      setMsg(`✅ Gata. Trimise: ${sent} · eșuate: ${failed}`);
+    } catch (e: any) {
+      setMsg(`Oprit: ${e.message}. Poți apăsa din nou ca să continui.`);
+    } finally {
+      setRunning(false);
+      await refresh();
+    }
+  };
+
+  return (
+    <div className="rounded-xl border border-primary/30 bg-primary/[0.05] p-5 space-y-3">
+      <div className="flex items-center gap-2">
+        <Megaphone className="w-4 h-4 text-primary" />
+        <h3 className="font-semibold">Webinar — trimite la toți (lista importată)</h3>
+      </div>
+      {st && (
+        <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
+          <span>Total: <b>{st.total}</b></span>
+          <span className="text-amber-500">Rămase: <b>{st.pending}</b></span>
+          <span className="text-emerald-500">Trimise: <b>{st.sent}</b></span>
+          {st.failed > 0 && <span className="text-red-500">Eșuate: <b>{st.failed}</b></span>}
+        </div>
+      )}
+      <div className="flex items-center gap-3">
+        <button onClick={runAll} disabled={running || !st || st.pending === 0} className="px-4 h-10 rounded-lg text-white disabled:opacity-50 inline-flex items-center gap-2" style={{ background: "var(--gradient-primary)" }}>
+          {running ? <Loader2 className="w-4 h-4 animate-spin" /> : <Megaphone className="w-4 h-4" />}
+          {st && st.pending === 0 ? "Toate trimise" : "Trimite la toți"}
+        </button>
+        <button onClick={refresh} disabled={running} className="text-xs text-muted-foreground hover:text-foreground">Reîmprospătează</button>
+      </div>
+      <p className="text-xs text-muted-foreground">Rulează în loturi (nu închide pagina până termină). Template: <code className="font-mono">webinar_adpilot</code>.</p>
+      {msg && <p className="text-sm">{msg}</p>}
+    </div>
+  );
+}
+
 function BroadcastView({ broadcasts, onSent }: { broadcasts: any[]; onSent: () => void }) {
   const send = useServerFn(createBroadcast);
   const [body, setBody] = useState("");
@@ -814,6 +876,7 @@ function BroadcastView({ broadcasts, onSent }: { broadcasts: any[]; onSent: () =
   return (
     <div className="space-y-5">
       <WebinarTestCard />
+      <WebinarBlastCard />
       <WaTemplateBroadcastCard onSent={onSent} />
       <EmailBroadcastCard onSent={onSent} />
 

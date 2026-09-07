@@ -992,6 +992,85 @@ export const sendWebinarTest = createServerFn({ method: "POST" })
     return { ok: true as const, to, id };
   });
 
+// ====== WEBINAR — STATUS + BLAST ======
+export const getWebinarStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin: __sa } = await import("@/integrations/supabase/client.server"); const supabaseAdmin: any = __sa;
+    const count = async (status?: string) => {
+      let q = supabaseAdmin.from("webinar_contacts").select("id", { count: "exact", head: true });
+      if (status) q = q.eq("status", status);
+      const { count: c } = await q;
+      return c ?? 0;
+    };
+    const [total, pending, sent, failed] = await Promise.all([
+      count(),
+      count("pending"),
+      count("sent"),
+      count("failed"),
+    ]);
+    return { total, pending, sent, failed };
+  });
+
+const WebinarBlastInput = z.object({
+  template: z.string().trim().min(1).max(100).default("webinar_adpilot"),
+  limit: z.number().int().min(1).max(300).default(100),
+});
+
+export const sendWebinarBlast = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => WebinarBlastInput.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin: __sa } = await import("@/integrations/supabase/client.server"); const supabaseAdmin: any = __sa;
+    const { getCentralWhatsApp, sendWhatsAppTemplate } = await import("@/lib/whatsapp.server");
+    const wa = getCentralWhatsApp();
+    if (!wa) throw new Error("WhatsApp central neconfigurat");
+
+    const { data: batch } = await supabaseAdmin
+      .from("webinar_contacts")
+      .select("id, phone, name")
+      .eq("status", "pending")
+      .limit(data.limit);
+
+    let sent = 0;
+    let failed = 0;
+    for (const c of batch ?? []) {
+      const first = String(c.name ?? "").trim().split(/\s+/)[0] || "acolo";
+      try {
+        const { id } = await sendWhatsAppTemplate(
+          wa.phoneNumberId,
+          wa.accessToken,
+          c.phone,
+          data.template,
+          "ro",
+          [first],
+        );
+        await supabaseAdmin
+          .from("webinar_contacts")
+          .update({ status: "sent", wa_message_id: id, sent_at: new Date().toISOString(), error: null })
+          .eq("id", c.id);
+        sent++;
+        await new Promise((r) => setTimeout(r, 80));
+      } catch (e: any) {
+        failed++;
+        await supabaseAdmin
+          .from("webinar_contacts")
+          .update({ status: "failed", error: String(e?.message ?? e).slice(0, 300) })
+          .eq("id", c.id);
+      }
+    }
+    const { count: remaining } = await supabaseAdmin
+      .from("webinar_contacts")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending");
+    if ((batch ?? []).length) {
+      await logAudit(context.userId, "webinar.blast_batch", null, null, { sent, failed, remaining: remaining ?? 0 });
+    }
+    return { sent, failed, remaining: remaining ?? 0 };
+  });
+
 export const listBroadcasts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
