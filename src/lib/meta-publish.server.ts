@@ -417,7 +417,7 @@ export async function createAdSet(
     age_max: args.targeting.age_max,
     publisher_platforms: ["facebook", "instagram"],
     facebook_positions: ["feed"],
-    targeting_automation: { advantage_audience: 0 },
+    targeting_automation: { advantage_audience: 1 },
   };
   if (args.targeting.genders && args.targeting.genders.length) {
     targeting.genders = args.targeting.genders;
