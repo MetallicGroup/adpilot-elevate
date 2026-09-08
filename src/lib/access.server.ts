@@ -1,40 +1,49 @@
 /**
- * Access central (server-only) — o singură sursă de adevăr pentru ce are voie un
- * user: plan plătit (Pro/Premium/comp) SAU planul „Starter gratuit 3 zile/lună".
+ * Access central (server-only) — o singură sursă de adevăr pentru ce are voie un user.
  *
- * Free Starter (fără card, urmărit pe `profiles`):
- *  - `free_plan_month`      = 'YYYY-MM' al lunii în care a activat gratuitul
- *  - `free_plan_started_at` = când a devenit ACTIVĂ prima reclamă (start ceas 3 zile)
+ * Model nou:
+ *  1) PLĂTIT (Pro/Premium/comp) → acces nelimitat.
+ *  2) TRIAL DE ÎNSCRIERE: 30 de zile gratuite de la CREAREA contului
+ *     (`profiles.signup_trial_ends_at` = created_at + 30 zile). Acces complet,
+ *     indiferent de planul ales, fără card.
+ *  3) După trial: dacă a ales planul GRATUIT (Starter) → 7 zile gratuite/lună
+ *     (reset lunar). Dacă a ales Pro/Premium și n-a plătit → NU are acces (primește
+ *     pe WhatsApp link de plată Stripe pentru planul ales).
+ *
+ * Free Starter lunar (doar pt. chosen_plan='starter', urmărit pe `profiles`):
+ *  - `free_plan_month`      = 'YYYY-MM' al lunii în care a pornit ceasul
+ *  - `free_plan_started_at` = când a devenit ACTIVĂ prima reclamă (start ceas 7 zile)
  *  - `free_plan_notified_at`= când i-am trimis mesajul „consumat" (dedupe/lună)
- *
- * Reset lunar implicit: dacă `free_plan_month != luna curentă` → e din nou eligibil.
  */
 import { getUserPlanTier, type PlanTier } from "@/lib/plan.server";
 
-export const FREE_STARTER_DAYS = 3;
+export const SIGNUP_TRIAL_DAYS = 30;
+export const FREE_STARTER_DAYS = 7;
 
 export const PRICING_URL = "https://adpilot.ro/pricing";
 
-/** Mesaj (text liber, în fereastra de 24h) când planul gratuit s-a consumat. */
+/** Mesaj când planul gratuit (7 zile/lună) s-a consumat luna aceasta. */
 export const FREE_STARTER_CONSUMED_MESSAGE =
-  "⏸️ Ți-am oprit reclamele — cele 3 zile gratuite din planul Starter s-au consumat.\n\n" +
+  "⏸️ Ți-am oprit reclamele — cele 7 zile gratuite din planul Starter s-au consumat luna aceasta.\n\n" +
   "Reclamele funcționează doar dacă rulează NON-STOP: pornit-oprit le omoară rezultatele. " +
-  "Pe Pro și Premium campaniile tale merg continuu, fără pauze, și aduc clienți zilnic:\n" +
+  "Pe Pro și Premium campaniile tale merg continuu și aduc clienți zilnic:\n" +
   "• Pro — campanii NELIMITATE, non-stop + asistent WhatsApp + 10 poze AI/lună\n" +
   "• Premium — tot din Pro + poze AI nelimitate + manager dedicat\n\n" +
   `Pornește un plan acum: ${PRICING_URL}\n` +
-  "(Planul gratuit revine oricum luna viitoare.)";
+  "(Planul gratuit revine oricum luna viitoare, cu alte 7 zile.)";
 
 /** Mesaj când userul n-a ales încă un plan. */
 export const CHOOSE_PLAN_MESSAGE =
   "Ca să folosești asistentul AdPilot pe WhatsApp, alege mai întâi un plan în aplicație " +
-  "(Starter gratuit 3 zile, Pro sau Premium). 👉 https://adpilot.ro/onboarding";
+  "(Starter gratuit, Pro sau Premium). 👉 https://adpilot.ro/onboarding";
 
 export type FreeStarterState = "none" | "eligible" | "active" | "consumed";
 
 export type Access = {
   tier: PlanTier;
   paid: boolean;
+  chosenPlan: string | null;
+  signupTrial: { active: boolean; endsAt: string | null };
   freeStarter: {
     state: FreeStarterState;
     month: string | null;
@@ -54,6 +63,12 @@ export function currentPlanMonth(d: Date = new Date()): string {
   }).format(d); // ex. "2026-08"
 }
 
+/** true dacă planul ales e cel gratuit (Starter) sau încă nu s-a ales nimic clar. */
+export function isFreeChoice(chosen: string | null | undefined): boolean {
+  const v = (chosen ?? "").toLowerCase();
+  return v === "" || v === "starter" || v === "free" || v === "gratuit";
+}
+
 export async function resolveAccess(
   supabaseAdmin: any,
   userId: string,
@@ -63,40 +78,59 @@ export async function resolveAccess(
 
   const { data: profile } = await supabaseAdmin
     .from("profiles")
-    .select("free_plan_month, free_plan_started_at")
+    .select(
+      "chosen_plan, signup_trial_ends_at, free_plan_month, free_plan_started_at",
+    )
     .eq("id", userId)
     .maybeSingle();
 
+  const chosenPlan: string | null = profile?.chosen_plan ?? null;
+
+  // 30 de zile de la crearea contului.
+  const trialEndsAt: string | null = profile?.signup_trial_ends_at ?? null;
+  const signupActive = !paid && !!trialEndsAt && Date.now() < new Date(trialEndsAt).getTime();
+
+  // Free Starter lunar (7 zile), relevant DOAR pentru cei care au ales gratuitul.
   const month = currentPlanMonth();
   const fpMonth: string | null = profile?.free_plan_month ?? null;
   const startedAt: string | null = profile?.free_plan_started_at ?? null;
-
-  let state: FreeStarterState;
-  let endsAt: string | null = null;
+  let fsState: FreeStarterState;
+  let fsEndsAt: string | null = null;
   if (fpMonth !== month) {
-    state = "eligible"; // lună nouă (sau niciodată) → poate porni gratuitul
+    fsState = "eligible"; // lună nouă (sau niciodată) → poate porni gratuitul
   } else if (!startedAt) {
-    state = "active"; // ales luna asta, dar ceasul n-a pornit (nicio reclamă activă încă)
+    fsState = "active"; // ales luna asta, ceasul n-a pornit (nicio reclamă activă încă)
   } else {
     const end = new Date(startedAt).getTime() + FREE_STARTER_DAYS * 86_400_000;
-    endsAt = new Date(end).toISOString();
-    state = Date.now() < end ? "active" : "consumed";
+    fsEndsAt = new Date(end).toISOString();
+    fsState = Date.now() < end ? "active" : "consumed";
   }
 
-  const freeActive = !paid && state === "active";
+  const starterChoice = isFreeChoice(chosenPlan);
+  const freeStarterActive = !paid && starterChoice && (fsState === "active" || fsState === "eligible");
+
+  const allowed = paid || signupActive || freeStarterActive;
   return {
     tier,
     paid,
-    freeStarter: { state: paid ? "none" : state, month: fpMonth, startedAt, endsAt },
-    whatsappAllowed: paid || freeActive,
-    botAllowed: paid || freeActive,
+    chosenPlan,
+    signupTrial: { active: signupActive, endsAt: trialEndsAt },
+    freeStarter: {
+      state: paid ? "none" : starterChoice ? fsState : "none",
+      month: fpMonth,
+      startedAt,
+      endsAt: fsEndsAt,
+    },
+    whatsappAllowed: allowed,
+    botAllowed: allowed,
   };
 }
 
 /**
- * Gate la publicarea unei campanii: Pro/Premium = nelimitat; Starter gratuit = O
- * SINGURĂ campanie (motivul de upgrade e „campanii nelimitate, non-stop"). Aruncă
- * un mesaj clar dacă nu e permis. Se apelează pe ambele căi (bot + web).
+ * Gate la publicarea unei campanii:
+ *  - Plătit sau în trialul de 30 zile → nelimitat.
+ *  - Starter gratuit (7 zile/lună) → O SINGURĂ campanie.
+ *  - Altfel → blocat (alege/plătește un plan).
  */
 export async function assertCanPublishCampaign(
   supabaseAdmin: any,
@@ -104,19 +138,20 @@ export async function assertCanPublishCampaign(
   opts: { excludeCampaignId?: string } = {},
 ): Promise<void> {
   const access = await resolveAccess(supabaseAdmin, userId);
-  if (access.paid) return; // nelimitat
+  if (access.paid || access.signupTrial.active) return; // nelimitat
 
-  if (access.freeStarter.state === "consumed") {
+  if (!access.whatsappAllowed) {
+    if (access.freeStarter.state === "consumed") {
+      throw new Error(
+        `Planul gratuit s-a consumat luna aceasta. Treci pe Pro sau Premium ca să lansezi campanii non-stop: ${PRICING_URL}`,
+      );
+    }
     throw new Error(
-      `Planul gratuit s-a consumat luna aceasta. Treci pe Pro sau Premium ca să lansezi campanii non-stop: ${PRICING_URL}`,
+      `Perioada gratuită s-a încheiat. Alege și plătește un plan ca să lansezi campanii: ${PRICING_URL}`,
     );
   }
-  if (access.freeStarter.state !== "active") {
-    throw new Error(`Alege mai întâi un plan ca să lansezi o campanie: ${PRICING_URL}`);
-  }
 
-  // Starter gratuit activ → cel mult 1 campanie publicată pe Meta (excludem
-  // campania curentă, ca o re-publicare a aceleiași campanii să nu fie blocată).
+  // Starter gratuit activ → cel mult 1 campanie publicată pe Meta.
   let q = supabaseAdmin
     .from("campaigns")
     .select("id", { count: "exact", head: true })

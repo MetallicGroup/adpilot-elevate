@@ -317,7 +317,7 @@ function AuthPage() {
         <div className="relative z-10">
           <span className="eyebrow">
             <span className="pulse-dot inline-block h-1.5 w-1.5 rounded-full bg-success" />
-            3 zile gratuit · anulezi oricând
+            30 de zile gratuite · fără card
           </span>
           <h1 className="mt-6 max-w-[690px] text-[clamp(40px,4.4vw,72px)] font-extrabold leading-[0.98] tracking-[-0.055em]">
             Tu conduci afacerea.{" "}
@@ -380,7 +380,7 @@ function AuthPage() {
           </h2>
           <p className="mt-2 text-[13px] text-muted-foreground">
             {isSignup
-              ? "3 zile gratuit. Lansează prima campanie în 5 minute."
+              ? "30 de zile gratuite. Lansează prima campanie în 5 minute."
               : "Intră în contul tău AdPilot."}
           </p>
 
@@ -537,7 +537,7 @@ function AuthPage() {
               {isSignup
                 ? accountType === "agency"
                   ? "Creează cont de agenție"
-                  : "Începe cele 3 zile gratuit"
+                  : "Începe gratuit 30 de zile"
                 : "Intră în cont"}
             </button>
           </form>

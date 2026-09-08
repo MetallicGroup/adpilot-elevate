@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "@tanstack/react-router";
 import { tkViewContent, tkClickButton } from "@/lib/tiktok-pixel";
-import { firstMonthPrice, FIRST_MONTH_BADGE, FREE_STARTER_LABEL, FREE_STARTER_SUBLABEL } from "@/lib/promo";
+import { SIGNUP_TRIAL_LABEL, FREE_STARTER_LABEL, FREE_STARTER_SUBLABEL } from "@/lib/promo";
 
 export const Route = createFileRoute("/pricing")({
   validateSearch: (s: Record<string, unknown>): { plan?: string; redirect?: string } => ({
@@ -15,9 +15,9 @@ export const Route = createFileRoute("/pricing")({
   }),
   head: () => ({ meta: [
     { title: "Prețuri — AdPilot" },
-    { name: "description", content: "Planuri lunare simple pentru afaceri de orice mărime. 3 zile gratuit. Anulezi oricând." },
+    { name: "description", content: "Planuri lunare simple pentru afaceri de orice mărime. 30 de zile gratuite, fără card. Anulezi oricând." },
     { property: "og:title", content: "Prețuri — AdPilot" },
-    { property: "og:description", content: "3 zile gratuit. Anulezi oricând." },
+    { property: "og:description", content: "30 de zile gratuite, fără card. Anulezi oricând." },
     { property: "og:url", content: "https://adpilot.ro/pricing" },
   ], links: [{ rel: "canonical", href: "https://adpilot.ro/pricing" }],
     scripts: [
@@ -44,11 +44,11 @@ const plans = [
     priceId: "starter_free",
     free: true,
     price: "Gratuit",
-    desc: "Testează AdPilot complet — 3 zile gratuit în fiecare lună, fără card.",
+    desc: "Testează AdPilot complet — 7 zile gratuite în fiecare lună, fără card.",
     items: [
       "Asistent WhatsApp AI inclus",
       "Pornești campanii pe Facebook & Instagram",
-      "3 zile gratuit în fiecare lună",
+      "7 zile gratuite în fiecare lună",
     ],
     notIncluded: ["Campanii nelimitate, non-stop", "Generare AI de poze"],
   },
@@ -82,7 +82,7 @@ const plans = [
 ];
 
 const faqs = [
-  { q: "Există perioadă de probă gratuită?", a: "Da. Fiecare plan include 3 zile gratuit. La activare îți cerem cardul și verificăm că e valid printr-o tranzacție de 1 leu, returnată imediat. Prima plată reală o facem abia în ziua a 4-a, dacă nu anulezi până atunci." },
+  { q: "Există perioadă de probă gratuită?", a: "Da — 30 de zile gratuite pentru orice cont nou, fără card, de la crearea contului. Planul Starter rămâne gratuit apoi 7 zile în fiecare lună. Pentru Pro/Premium primești pe WhatsApp un link de plată când vrei să continui nelimitat." },
   { q: "Pot anula oricând?", a: "Da. Poți anula oricând în timpul perioadei de probă fără să fii taxat, sau ulterior direct din contul tău, fără întrebări." },
   { q: "Prețul include bugetul de reclame?", a: "Nu. Abonamentul AdPilot acoperă doar platforma. Bugetul de reclame este plătit direct către Meta (Facebook & Instagram), din contul tău." },
   { q: "Ce metode de plată acceptați?", a: "Toate cardurile majore: Visa, Mastercard, Maestro. Plățile sunt procesate securizat prin Stripe." },
@@ -138,7 +138,7 @@ function PricingPage() {
       <PageHero
         eyebrow="Prețuri"
         title="Planuri simple care cresc o dată cu tine."
-        subtitle="🎉 Ofertă: -50% în prima lună pe orice plan. 3 zile gratuit — la activare verificăm cardul cu 1 leu (returnat imediat); prima plată abia din ziua a 4-a, cu reducerea de 50% aplicată."
+        subtitle="🎉 30 de zile gratuite pentru orice cont nou, fără card. Starter rămâne gratuit 7 zile/lună; Pro/Premium continuă nelimitat după ce plătești."
       />
       <section className="px-6 pb-20 max-w-6xl mx-auto w-full">
         <h2 className="sr-only">Planuri și prețuri AdPilot</h2>
@@ -168,17 +168,16 @@ function PricingPage() {
               <>
                 <div className="mt-6">
                   <span className="inline-block text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-success/15 text-success">
-                    🎉 {FIRST_MONTH_BADGE}
+                    🎉 {SIGNUP_TRIAL_LABEL}
                   </span>
                 </div>
                 <p className="mt-3 font-serif text-5xl">
-                  {firstMonthPrice(p.price).first}
-                  <span className="text-base text-muted-foreground font-sans"> prima lună</span>
+                  {p.price}
+                  <span className="text-base text-muted-foreground font-sans">/lună</span>
                 </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  apoi <span className="text-foreground font-medium">{p.price}</span>/lună
+                <p className="mt-2 text-xs text-success font-medium">
+                  ✨ Gratuit 30 de zile, fără card
                 </p>
-                <p className="mt-2 text-xs text-success font-medium">✨ 3 zile gratuit</p>
               </>
             )}
             <ul className="mt-6 space-y-2">
@@ -195,7 +194,7 @@ function PricingPage() {
                 p.featured ? "bg-primary text-primary-foreground" : "bg-foreground text-background"
               }`}
             >
-              {p.free ? "Începe gratuit" : "Începe cele 3 zile gratuit"}
+              {p.free ? "Începe gratuit" : "Începe gratuit 30 de zile"}
             </button>
           </div>
         ))}

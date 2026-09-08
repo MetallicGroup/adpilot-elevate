@@ -15,8 +15,7 @@ import {
 import { MarketingLayout } from "@/components/marketing/MarketingLayout";
 import { Reveal } from "@/components/wow/Reveal";
 import {
-  firstMonthPrice,
-  FIRST_MONTH_BADGE,
+  SIGNUP_TRIAL_LABEL,
   FREE_STARTER_LABEL,
   FREE_STARTER_SUBLABEL,
 } from "@/lib/promo";
@@ -30,7 +29,7 @@ export const Route = createFileRoute("/oferta")({
       {
         name: "description",
         content:
-          "Spune-i ce vrei să obții. AdPilot creează, lansează și optimizează reclamele tale pe Facebook și Instagram — fără agenție și fără experiență. Începe gratuit, -50% în prima lună pe planurile plătite.",
+          "Spune-i ce vrei să obții. AdPilot creează, lansează și optimizează reclamele tale pe Facebook și Instagram — fără agenție și fără experiență. 30 de zile gratuite pentru orice cont nou, fără card.",
       },
       { property: "og:title", content: "Începe GRATUIT — AdPilot" },
       {
@@ -114,7 +113,7 @@ function OfertaPage() {
             <SignupCTA id="hero" label="Începe gratuit acum" className="text-lg px-8 py-4" />
           </div>
           <p className="mt-4 text-sm text-muted-foreground">
-            🎉 Iar pe Pro & Premium ai <b className="text-foreground">-50% în prima lună</b> · Asistent
+            🎉 <b className="text-foreground">30 de zile gratuite</b>, fără card · Asistent
             WhatsApp AI inclus
           </p>
         </Reveal>
@@ -198,7 +197,7 @@ function OfertaPage() {
       <Section eyebrow="Planuri" title="Începe gratuit. Crești când ești gata.">
         <div className="grid gap-5 md:grid-cols-3 max-w-4xl mx-auto">
           {[
-            { name: "Starter", free: true, price: "Gratuit", items: ["Asistent WhatsApp AI inclus", "Campanii pe Facebook & Instagram", "3 zile gratuit în fiecare lună"] },
+            { name: "Starter", free: true, price: "Gratuit", items: ["Asistent WhatsApp AI inclus", "Campanii pe Facebook & Instagram", "7 zile gratuite în fiecare lună"] },
             { name: "Pro", price: "495 lei", featured: true, items: ["Campanii nelimitate, non-stop", "10 poze AI / lună", "Asistent WhatsApp AI", "Suport prioritar"] },
             { name: "Premium", price: "995 lei", items: ["Campanii nelimitate, non-stop", "Poze AI nelimitate", "Asistent WhatsApp AI", "Manager dedicat"] },
           ].map((p, i) => (
@@ -217,12 +216,12 @@ function OfertaPage() {
                 </>
               ) : (
                 <>
-                  <span className="mt-4 inline-block text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-success/15 text-success">🎉 {FIRST_MONTH_BADGE}</span>
+                  <span className="mt-4 inline-block text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-success/15 text-success">🎉 {SIGNUP_TRIAL_LABEL}</span>
                   <p className="mt-3 font-serif text-4xl">
-                    {firstMonthPrice(p.price).first}
-                    <span className="text-sm text-muted-foreground font-sans"> prima lună</span>
+                    {p.price}
+                    <span className="text-sm text-muted-foreground font-sans">/lună</span>
                   </p>
-                  <p className="mt-1 text-sm text-muted-foreground">apoi {p.price}/lună</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Gratuit 30 de zile, fără card</p>
                 </>
               )}
               <ul className="mt-5 space-y-2">
@@ -238,7 +237,7 @@ function OfertaPage() {
                 onClick={() => tkClickButton(`oferta-plan-${p.name}`)}
                 className={`press mt-6 inline-flex w-full items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold ${p.featured ? "btn-primary" : p.free ? "bg-success text-white" : "glass hover:bg-card text-foreground"}`}
               >
-                {p.free ? "Începe gratuit" : "Începe cu -50%"}
+                {p.free ? "Începe gratuit" : "Începe gratuit 30 de zile"}
               </Link>
             </Reveal>
           ))}

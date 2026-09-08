@@ -4,8 +4,7 @@ import { Facebook, Instagram, MessageCircle, Check, ArrowRight } from "lucide-re
 import { MarketingLayout } from "@/components/marketing/MarketingLayout";
 import { Reveal } from "@/components/wow/Reveal";
 import {
-  firstMonthPrice,
-  FIRST_MONTH_BADGE,
+  SIGNUP_TRIAL_LABEL,
   FREE_STARTER_LABEL,
   FREE_STARTER_SUBLABEL,
 } from "@/lib/promo";
@@ -35,7 +34,7 @@ function SignupCTA({
 }
 
 const PLANS = [
-  { name: "Starter", free: true, price: "Gratuit", items: ["Asistent WhatsApp AI inclus", "Campanii pe Facebook & Instagram", "3 zile gratuit în fiecare lună"] },
+  { name: "Starter", free: true, price: "Gratuit", items: ["Asistent WhatsApp AI inclus", "Campanii pe Facebook & Instagram", "7 zile gratuite în fiecare lună"] },
   { name: "Pro", price: "495 lei", featured: true, items: ["Campanii nelimitate, non-stop", "10 poze AI / lună", "Asistent WhatsApp AI", "Suport prioritar"] },
   { name: "Premium", price: "995 lei", items: ["Campanii nelimitate, non-stop", "Poze AI nelimitate", "Asistent WhatsApp AI", "Manager dedicat"] },
 ];
@@ -72,7 +71,7 @@ export function NicheLanding({ niche }: { niche: NicheConfig }) {
             <SignupCTA id={`${niche.slug}-hero`} label={cta} className="text-lg px-8 py-4" />
           </div>
           <p className="mt-4 text-sm text-muted-foreground">
-            ✅ {FREE_STARTER_LABEL} · fără card · 🎉 -50% prima lună pe Pro & Premium
+            ✅ {FREE_STARTER_LABEL} · fără card · 🎉 {SIGNUP_TRIAL_LABEL} pe orice cont nou
           </p>
           <p className="mt-6 text-sm text-muted-foreground">{niche.socialProof}</p>
         </Reveal>
@@ -180,12 +179,12 @@ export function NicheLanding({ niche }: { niche: NicheConfig }) {
                 </>
               ) : (
                 <>
-                  <span className="mt-4 inline-block text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-success/15 text-success">🎉 {FIRST_MONTH_BADGE}</span>
+                  <span className="mt-4 inline-block text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-success/15 text-success">🎉 {SIGNUP_TRIAL_LABEL}</span>
                   <p className="mt-3 font-serif text-4xl">
-                    {firstMonthPrice(p.price!).first}
-                    <span className="text-sm text-muted-foreground font-sans"> prima lună</span>
+                    {p.price}
+                    <span className="text-sm text-muted-foreground font-sans">/lună</span>
                   </p>
-                  <p className="mt-1 text-sm text-muted-foreground">apoi {p.price}/lună</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Gratuit 30 de zile, fără card</p>
                 </>
               )}
               <ul className="mt-5 space-y-2">
@@ -201,7 +200,7 @@ export function NicheLanding({ niche }: { niche: NicheConfig }) {
                 onClick={() => tkClickButton(`niche-${niche.slug}-plan-${p.name}`)}
                 className={`press mt-6 inline-flex w-full items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold ${p.featured ? "btn-primary" : p.free ? "bg-success text-white" : "glass hover:bg-card text-foreground"}`}
               >
-                {p.free ? "Începe gratuit" : "Începe cu -50%"}
+                {p.free ? "Începe gratuit" : "Începe gratuit 30 de zile"}
               </Link>
             </Reveal>
           ))}

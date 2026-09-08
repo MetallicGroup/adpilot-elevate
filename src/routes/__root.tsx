@@ -91,7 +91,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "Lansează și optimizează reclame Facebook dintr-o singură aplicație, iar fiecare lead ajunge direct pe WhatsApp. 3 zile gratuit.",
+          "Lansează și optimizează reclame Facebook dintr-o singură aplicație, iar fiecare lead ajunge direct pe WhatsApp. 30 de zile gratuite.",
       },
       { name: "author", content: "AdPilot" },
       { name: "google-site-verification", content: "c5wTyndeBq7gVkBTee-nP_NuFsK769W9Wv0N3GbzHC4" },
@@ -99,7 +99,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         property: "og:description",
         content:
-          "Lansează și optimizează reclame Facebook dintr-o singură aplicație, iar fiecare lead ajunge direct pe WhatsApp. 3 zile gratuit.",
+          "Lansează și optimizează reclame Facebook dintr-o singură aplicație, iar fiecare lead ajunge direct pe WhatsApp. 30 de zile gratuite.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -108,7 +108,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "twitter:description",
         content:
-          "Lansează și optimizează reclame Facebook dintr-o singură aplicație, iar fiecare lead ajunge direct pe WhatsApp. 3 zile gratuit.",
+          "Lansează și optimizează reclame Facebook dintr-o singură aplicație, iar fiecare lead ajunge direct pe WhatsApp. 30 de zile gratuite.",
       },
       { property: "og:image", content: `https://adpilot.ro${ogHeroAsset.url}` },
       { name: "twitter:image", content: `https://adpilot.ro${ogHeroAsset.url}` },

@@ -14,15 +14,15 @@ import { CountUp } from "@/components/wow/CountUp";
 import { Reveal } from "@/components/wow/Reveal";
 import { GoalPicker } from "@/components/marketing/GoalPicker";
 import { tkViewContent, tkClickButton } from "@/lib/tiktok-pixel";
-import { firstMonthPrice, FIRST_MONTH_BADGE, FREE_STARTER_LABEL, FREE_STARTER_SUBLABEL } from "@/lib/promo";
+import { SIGNUP_TRIAL_LABEL, FREE_STARTER_LABEL, FREE_STARTER_SUBLABEL } from "@/lib/promo";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "AdPilot — Tu conduci afacerea. AdPilot conduce reclamele." },
-      { name: "description", content: "Tu conduci afacerea. AdPilot conduce reclamele: creează, lansează și optimizează campanii Facebook și Instagram, iar lead-urile vin pe WhatsApp. 3 zile gratuit." },
+      { name: "description", content: "Tu conduci afacerea. AdPilot conduce reclamele: creează, lansează și optimizează campanii Facebook și Instagram, iar lead-urile vin pe WhatsApp. 30 de zile gratuite, fără card." },
       { property: "og:title", content: "AdPilot — Tu conduci afacerea. AdPilot conduce reclamele." },
-      { property: "og:description", content: "Spune-i ce vrei să obții. AdPilot creează, lansează și optimizează reclamele tale Facebook și Instagram. 3 zile gratuit." },
+      { property: "og:description", content: "Spune-i ce vrei să obții. AdPilot creează, lansează și optimizează reclamele tale Facebook și Instagram. 30 de zile gratuite, fără card." },
       { property: "og:url", content: "https://adpilot.ro/" },
     ],
     links: [{ rel: "canonical", href: "https://adpilot.ro/" }],
@@ -105,7 +105,7 @@ function Index() {
                 className="eyebrow"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-success pulse-dot text-success" />
-                ✨ 3 zile gratuit · prima plată abia din ziua a 4-a
+                ✨ 30 de zile gratuite · fără card
               </motion.div>
 
               <h1 className="mt-7 text-[2.45rem] leading-[1.06] sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight">
@@ -129,7 +129,7 @@ function Index() {
               <HeroVideo />
 
               <p className="mt-5 text-[13px] text-muted-foreground">
-                3 zile gratuit · Fără experiență necesară · Configurare în câteva minute
+                30 de zile gratuite · Fără experiență necesară · Configurare în câteva minute
               </p>
 
               <div className="mt-8 flex items-center justify-center md:justify-start gap-3 text-sm text-muted-foreground">
@@ -386,7 +386,7 @@ function Index() {
       <Section eyebrow="Prețuri" title="Simple. Transparente.">
         <p className="text-center -mt-6 mb-3">
           <span className="inline-block text-sm font-bold px-3 py-1 rounded-full bg-success/15 text-success">
-            🎉 Ofertă: -50% în prima lună pe orice plan
+            🎉 Ofertă: 30 de zile gratuite pe orice plan, fără card
           </span>
         </p>
         <p className="text-center text-muted-foreground mb-12">Începe gratuit. Upgrade când ești gata. 💎</p>
@@ -415,15 +415,15 @@ function Index() {
                 <>
                   <div className="mt-6">
                     <span className="inline-block text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-primary/15 text-primary">
-                      🎉 {FIRST_MONTH_BADGE}
+                      🎉 {SIGNUP_TRIAL_LABEL}
                     </span>
                   </div>
                   <p className="mt-3 font-bold text-5xl">
-                    {firstMonthPrice(p.price).first}
-                    <span className="text-base text-muted-foreground font-normal"> prima lună</span>
+                    {p.price}
+                    <span className="text-base text-muted-foreground font-normal">/lună</span>
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    apoi <span className="text-foreground font-medium">{p.price}</span>/lună
+                    Gratuit 30 de zile, fără card
                   </p>
                 </>
               )}
@@ -437,7 +437,7 @@ function Index() {
               <Link to="/auth" onClick={() => tkClickButton(`home-plan-${p.name}`)} className={`press mt-7 inline-flex w-full items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold ${p.featured ? "btn-primary" : "glass hover:bg-card text-foreground"}`}>
                 Începe gratuit
               </Link>
-              <p className="mt-3 text-xs text-center text-muted-foreground">3 zile gratuit · anulezi oricând</p>
+              <p className="mt-3 text-xs text-center text-muted-foreground">30 de zile gratuite · fără card · anulezi oricând</p>
             </div>
           ))}
         </div>
@@ -500,7 +500,7 @@ function Index() {
             Vreau să încep <ArrowRight className="w-5 h-5" />
           </a>
           <p className="mt-5 text-[13px] text-muted-foreground">
-            3 zile gratuit · anulezi oricând · fără costuri ascunse
+            30 de zile gratuite · fără card · anulezi oricând
           </p>
         </div>
       </section>
@@ -572,7 +572,7 @@ const steps = [
 ];
 
 const plans = [
-  { name: "Starter", tagline: "Testează gratuit, fără card.", price: "Gratuit", free: true, items: ["Asistent WhatsApp AI inclus", "Campanii pe Facebook & Instagram", "3 zile gratuit în fiecare lună"] },
+  { name: "Starter", tagline: "Testează gratuit, fără card.", price: "Gratuit", free: true, items: ["Asistent WhatsApp AI inclus", "Campanii pe Facebook & Instagram", "7 zile gratuite în fiecare lună"] },
   { name: "Pro", tagline: "Pentru afacerile care cresc rapid.", price: "495 lei", featured: true, items: ["Campanii nelimitate, non-stop", "10 poze AI pe lună", "Asistent WhatsApp AI", "Suport prioritar"] },
   { name: "Premium", tagline: "Pentru branduri și agenții care scalează.", price: "995 lei", items: ["Campanii nelimitate, non-stop", "Poze AI nelimitate", "Asistent WhatsApp AI", "Manager dedicat"] },
 ];

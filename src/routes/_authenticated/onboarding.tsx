@@ -4,11 +4,10 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Facebook, Loader2, Sparkles, ArrowRight, MessageCircle, Target, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getOnboardingStatus, startFreeStarter, setMyEmail, type OnboardingStatus } from "@/lib/onboarding.functions";
-import { firstMonthPrice, FIRST_MONTH_BADGE, FREE_STARTER_LABEL, FREE_STARTER_SUBLABEL } from "@/lib/promo";
+import { getOnboardingStatus, chooseSignupPlan, setMyEmail, type OnboardingStatus } from "@/lib/onboarding.functions";
+import { SIGNUP_TRIAL_LABEL, FREE_STARTER_LABEL, FREE_STARTER_SUBLABEL } from "@/lib/promo";
 import { startMetaOAuth } from "@/lib/meta-oauth.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
-import { useStripeCheckout } from "@/hooks/useStripeCheckout";
 import { toast } from "sonner";
 import { WhatsAppConnectionCard } from "@/components/whatsapp/WhatsAppConnectionCard";
 import { AdAccountGate } from "@/components/onboarding/AdAccountGate";
@@ -31,11 +30,11 @@ const PLANS = [
     name: "Starter",
     price: "Gratuit",
     free: true,
-    desc: "Testează complet 3 zile în fiecare lună — fără card.",
+    desc: "Gratuit — 7 zile în fiecare lună, fără card.",
     items: [
       "Asistent WhatsApp AI inclus",
       "Campanii pe Facebook & Instagram",
-      "3 zile gratuit în fiecare lună",
+      "7 zile gratuite în fiecare lună",
     ],
   },
   {
@@ -70,11 +69,10 @@ function OnboardingPage() {
   const search = useSearch({ from: "/_authenticated/onboarding" });
   const fetchStatus = useServerFn(getOnboardingStatus);
   const startOAuth = useServerFn(startMetaOAuth);
-  const startFree = useServerFn(startFreeStarter);
+  const choosePlan = useServerFn(chooseSignupPlan);
   const [status, setStatus] = useState<OnboardingStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [adReady, setAdReady] = useState(false);
-  const { openCheckout, closeCheckout, isOpen, checkoutElement } = useStripeCheckout();
 
   const reload = async () => {
     try {
@@ -135,20 +133,25 @@ function OnboardingPage() {
   }
 
   async function selectPlan(plan: { id: string; free?: boolean }) {
-    if (plan.free) {
-      try {
-        await startFree({});
-        toast.success("Planul gratuit e activ! Ai 3 zile — activează WhatsApp și pornește prima reclamă.");
-        await reload();
-      } catch (e: any) {
-        toast.error(e?.message ?? "Nu am putut activa planul gratuit.");
-      }
-      return;
+    // FĂRĂ card la înscriere: alegerea planului doar se salvează. Toți userii au deja
+    // 30 de zile gratuite de la crearea contului. După, Starter = 7 zile/lună, iar
+    // Pro/Premium primesc pe WhatsApp linkul de plată Stripe.
+    const key = plan.id.startsWith("starter")
+      ? "starter"
+      : plan.id.includes("premium")
+        ? "premium"
+        : "pro";
+    try {
+      await choosePlan({ data: { plan: key } });
+      toast.success(
+        key === "starter"
+          ? "Gata! Ai 30 de zile gratuite acum, apoi 7 zile în fiecare lună. Activează WhatsApp 👇"
+          : `Gata! Ai ales ${key === "premium" ? "Premium" : "Pro"} — 30 de zile gratuite acum. Activează WhatsApp 👇`,
+      );
+      await reload();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Nu am putut salva planul.");
     }
-    openCheckout({
-      priceId: plan.id,
-      returnUrl: `${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
-    });
   }
 
   const step1Done = !!status?.hasMetaConnection;
@@ -186,7 +189,7 @@ function OnboardingPage() {
             Două minute și ești gata să lansezi.
           </h1>
           <p className="mt-3 text-muted-foreground">
-            Conectează pagina ta de Facebook și alege un plan — 3 zile gratuit, anulezi oricând.
+            Conectează pagina ta de Facebook și alege un plan — 30 de zile gratuite, fără card.
           </p>
         </motion.div>
 
@@ -248,9 +251,10 @@ function OnboardingPage() {
             <div className="flex-1">
               <h2 className="font-semibold text-lg">Alege planul tău</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Începe cu <b className="text-foreground">Starter gratuit</b> — 3 zile în fiecare
-                lună, fără card, cu asistent WhatsApp inclus. Sau treci direct pe Pro/Premium cu{" "}
-                <b className="text-foreground">-50% în prima lună</b>.
+                <b className="text-foreground">30 de zile gratuite</b> pentru orice plan, fără card —
+                de la crearea contului. Starter rămâne apoi gratuit{" "}
+                <b className="text-foreground">7 zile în fiecare lună</b>; Pro/Premium continuă
+                nelimitat după ce plătești (link primit pe WhatsApp).
               </p>
             </div>
           </div>
@@ -299,16 +303,15 @@ function OnboardingPage() {
                 ) : (
                   <>
                     <span className="mt-3 inline-block w-fit text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-success/15 text-success">
-                      🎉 {FIRST_MONTH_BADGE}
+                      🎉 {SIGNUP_TRIAL_LABEL}
                     </span>
                     <p className="mt-2 font-serif text-3xl">
-                      {firstMonthPrice(p.price).first}
-                      <span className="text-xs text-muted-foreground font-sans"> prima lună</span>
+                      {p.price}
+                      <span className="text-xs text-muted-foreground font-sans">/lună</span>
                     </p>
-                    <p className="text-[11px] text-muted-foreground">
-                      apoi <span className="text-foreground font-medium">{p.price}</span>/lună
+                    <p className="mt-1 text-[11px] text-success font-medium">
+                      ✨ Gratuit 30 de zile, apoi {p.price}/lună
                     </p>
-                    <p className="mt-1 text-[11px] text-success font-medium">✨ 3 zile gratuit</p>
                   </>
                 )}
                 <ul className="mt-4 space-y-1.5 text-xs flex-1">
@@ -328,7 +331,7 @@ function OnboardingPage() {
                         : "bg-foreground text-background"
                   }`}
                 >
-                  {p.free ? "Începe gratuit" : "Începe 3 zile gratuit"}
+                  {p.free ? "Începe gratuit" : "Începe gratuit 30 zile"}
                 </button>
               </div>
             ))}
@@ -383,20 +386,6 @@ function OnboardingPage() {
           </button>
         </section>
       </div>
-
-      {isOpen && (
-        <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm overflow-y-auto">
-          <div className="max-w-3xl mx-auto p-4 md:p-8">
-            <button
-              onClick={closeCheckout}
-              className="mb-4 text-sm text-muted-foreground hover:text-foreground"
-            >
-              ← Înapoi
-            </button>
-            {checkoutElement}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

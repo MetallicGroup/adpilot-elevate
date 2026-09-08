@@ -20,6 +20,10 @@ export type OnboardingStatus = {
   trialEnd: string | null;
   planTier: "none" | "starter" | "pro" | "premium";
   whatsappAllowed: boolean;
+  /** Planul ales la înscriere (starter/pro/premium) — fără plată la înscriere. */
+  chosenPlan: string | null;
+  /** Trial de 30 zile de la crearea contului. */
+  signupTrial: { active: boolean; endsAt: string | null };
   freeStarter: {
     state: "none" | "eligible" | "active" | "consumed";
     endsAt: string | null;
@@ -81,7 +85,8 @@ export const getOnboardingStatus = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { resolveAccess } = await import("@/lib/access.server");
     const access = await resolveAccess(supabaseAdmin, userId);
-    const planChosen = isActive || access.freeStarter.state === "active";
+    // „Plan ales" = abonament plătit ACTIV SAU a bifat un plan la înscriere (chosen_plan).
+    const planChosen = isActive || !!access.chosenPlan;
 
     // Admin: exceptat de la gate-ul de onboarding (nu se poate bloca singur).
     const { data: adminRole } = await (supabaseAdmin as any)
@@ -113,40 +118,41 @@ export const getOnboardingStatus = createServerFn({ method: "POST" })
       trialEnd: sub?.trial_end ?? null,
       planTier,
       whatsappAllowed: access.whatsappAllowed,
+      chosenPlan: access.chosenPlan,
+      signupTrial: { active: access.signupTrial.active, endsAt: access.signupTrial.endsAt },
       freeStarter: { state: access.freeStarter.state, endsAt: access.freeStarter.endsAt },
     };
   });
 
 /**
- * Pornește planul „Starter gratuit" pentru luna curentă (fără card).
- * Ceasul de 3 zile NU pornește aici — pornește când prima reclamă devine activă
- * (setat de job-ul de insights). Idempotent; blocat dacă deja consumat luna asta.
+ * Alege planul la înscriere (FĂRĂ card, FĂRĂ plată): doar salvează `chosen_plan`.
+ * Toți userii au deja 30 de zile gratuite de la crearea contului (signup_trial).
+ * După cele 30 de zile: Starter → 7 zile/lună; Pro/Premium → link de plată pe WhatsApp.
+ * Nu setăm `plan` = pro/premium (ar acorda acces plătit fără plată).
  */
-export const startFreeStarter = createServerFn({ method: "POST" })
+export const chooseSignupPlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((raw: unknown) => {
+    const d = (raw ?? {}) as { plan?: string };
+    const plan = (d.plan ?? "").toLowerCase();
+    if (!["starter", "pro", "premium"].includes(plan)) {
+      throw new Error("Plan invalid.");
+    }
+    return { plan };
+  })
+  .handler(async ({ data, context }) => {
     const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { resolveAccess, currentPlanMonth } = await import("@/lib/access.server");
-    const access = await resolveAccess(supabaseAdmin, userId);
-    if (access.paid) return { ok: true as const, note: "already_paid" };
-    if (access.freeStarter.state === "active") return { ok: true as const, note: "already_active" };
-    if (access.freeStarter.state === "consumed") {
-      throw new Error(
-        "Ai folosit deja cele 3 zile gratuite luna aceasta. Revino luna viitoare sau alege Pro/Premium.",
-      );
-    }
+    const patch: Record<string, unknown> = { chosen_plan: data.plan };
+    // Starter → marcăm și `plan='starter'` (nu e plătit, dar e util pt. afișaje).
+    // Pro/Premium → NU atingem `plan` (accesul plătit vine doar după plata reală).
+    if (data.plan === "starter") patch.plan = "starter";
     const { error } = await (supabaseAdmin as any)
       .from("profiles")
-      .update({
-        free_plan_month: currentPlanMonth(),
-        free_plan_started_at: null,
-        free_plan_notified_at: null,
-        plan: "starter",
-      })
+      .update(patch)
       .eq("id", userId);
     if (error) throw new Error(error.message);
-    return { ok: true as const, note: "started" };
+    return { ok: true as const, plan: data.plan };
   });
 
 /**

@@ -69,6 +69,7 @@ import { Route as AuthenticatedAgencyDashboardRouteImport } from './routes/_auth
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicWhatsappWebhookRouteImport } from './routes/api/public/whatsapp.webhook'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as ApiPublicPayTokenRouteImport } from './routes/api/public/pay.$token'
 import { Route as ApiPublicMetaWebhookRouteImport } from './routes/api/public/meta.webhook'
 import { Route as ApiPublicHooksWaKeepaliveRouteImport } from './routes/api/public/hooks/wa-keepalive'
 import { Route as ApiPublicHooksSyncMetaLeadsRouteImport } from './routes/api/public/hooks/sync-meta-leads'
@@ -392,6 +393,11 @@ const ApiPublicPaymentsWebhookRoute =
     path: '/api/public/payments/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPayTokenRoute = ApiPublicPayTokenRouteImport.update({
+  id: '/api/public/pay/$token',
+  path: '/api/public/pay/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicMetaWebhookRoute = ApiPublicMetaWebhookRouteImport.update({
   id: '/api/public/meta/webhook',
   path: '/api/public/meta/webhook',
@@ -557,6 +563,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/sync-meta-leads': typeof ApiPublicHooksSyncMetaLeadsRoute
   '/api/public/hooks/wa-keepalive': typeof ApiPublicHooksWaKeepaliveRoute
   '/api/public/meta/webhook': typeof ApiPublicMetaWebhookRoute
+  '/api/public/pay/$token': typeof ApiPublicPayTokenRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -634,6 +641,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/sync-meta-leads': typeof ApiPublicHooksSyncMetaLeadsRoute
   '/api/public/hooks/wa-keepalive': typeof ApiPublicHooksWaKeepaliveRoute
   '/api/public/meta/webhook': typeof ApiPublicMetaWebhookRoute
+  '/api/public/pay/$token': typeof ApiPublicPayTokenRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -713,6 +721,7 @@ export interface FileRoutesById {
   '/api/public/hooks/sync-meta-leads': typeof ApiPublicHooksSyncMetaLeadsRoute
   '/api/public/hooks/wa-keepalive': typeof ApiPublicHooksWaKeepaliveRoute
   '/api/public/meta/webhook': typeof ApiPublicMetaWebhookRoute
+  '/api/public/pay/$token': typeof ApiPublicPayTokenRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -792,6 +801,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/sync-meta-leads'
     | '/api/public/hooks/wa-keepalive'
     | '/api/public/meta/webhook'
+    | '/api/public/pay/$token'
     | '/api/public/payments/webhook'
     | '/api/public/whatsapp/webhook'
     | '/lovable/email/queue/process'
@@ -869,6 +879,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/sync-meta-leads'
     | '/api/public/hooks/wa-keepalive'
     | '/api/public/meta/webhook'
+    | '/api/public/pay/$token'
     | '/api/public/payments/webhook'
     | '/api/public/whatsapp/webhook'
     | '/lovable/email/queue/process'
@@ -947,6 +958,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/sync-meta-leads'
     | '/api/public/hooks/wa-keepalive'
     | '/api/public/meta/webhook'
+    | '/api/public/pay/$token'
     | '/api/public/payments/webhook'
     | '/api/public/whatsapp/webhook'
     | '/lovable/email/queue/process'
@@ -1002,6 +1014,7 @@ export interface RootRouteChildren {
   ApiPublicHooksSyncMetaLeadsRoute: typeof ApiPublicHooksSyncMetaLeadsRoute
   ApiPublicHooksWaKeepaliveRoute: typeof ApiPublicHooksWaKeepaliveRoute
   ApiPublicMetaWebhookRoute: typeof ApiPublicMetaWebhookRoute
+  ApiPublicPayTokenRoute: typeof ApiPublicPayTokenRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicWhatsappWebhookRoute: typeof ApiPublicWhatsappWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -1429,6 +1442,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/pay/$token': {
+      id: '/api/public/pay/$token'
+      path: '/api/public/pay/$token'
+      fullPath: '/api/public/pay/$token'
+      preLoaderRoute: typeof ApiPublicPayTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/meta/webhook': {
       id: '/api/public/meta/webhook'
       path: '/api/public/meta/webhook'
@@ -1669,6 +1689,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksSyncMetaLeadsRoute: ApiPublicHooksSyncMetaLeadsRoute,
   ApiPublicHooksWaKeepaliveRoute: ApiPublicHooksWaKeepaliveRoute,
   ApiPublicMetaWebhookRoute: ApiPublicMetaWebhookRoute,
+  ApiPublicPayTokenRoute: ApiPublicPayTokenRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicWhatsappWebhookRoute: ApiPublicWhatsappWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,

@@ -1,76 +1,83 @@
 /**
- * Planul „Starter gratuit 3 zile" — logica de server (server-only).
- *  - `startFreePlanClocks`: pornește ceasul de 3 zile când userul free-Starter are
- *    prima reclamă ACTIVĂ pe Meta (setează `profiles.free_plan_started_at`).
- *  - `runFreePlanExpiry`: la consum (start + 3 zile), pune campaniile pe pauză și
- *    trimite mesajul „planul gratuit s-a consumat" pe WhatsApp (template + fallback).
+ * Logica de server pentru perioadele gratuite (server-only):
+ *  - `startFreePlanClocks`: pentru cei care au ales Starter (gratuit) și au trecut de
+ *    trialul de 30 zile, pornește ceasul lunar de 7 zile când au prima reclamă activă.
+ *  - `runFreePlanExpiry`: două treceri —
+ *      (1) expirarea trialului de 30 zile (de la crearea contului): pentru Pro/Premium
+ *          neplătiți → pune campaniile pe pauză + trimite pe WhatsApp LINKUL de plată
+ *          Stripe; pentru Starter → mesaj că trece pe 7 zile/lună.
+ *      (2) consumul celor 7 zile/lună (Starter): pune campaniile pe pauză + notifică.
  */
 
-/** Pornește ceasul pentru userii free-Starter care au deja o reclamă activă. */
-export async function startFreePlanClocks(): Promise<{ started: number }> {
+/** Link scurt de plată pentru WhatsApp (creează sesiunea Stripe la click). */
+async function payLinkFor(userId: string): Promise<string | null> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { currentPlanMonth } = await import("@/lib/access.server");
-  const month = currentPlanMonth();
-
-  const { data: profiles } = await (supabaseAdmin as any)
+  const { data } = await (supabaseAdmin as any)
     .from("profiles")
-    .select("id")
-    .eq("free_plan_month", month)
-    .is("free_plan_started_at", null);
-  if (!profiles?.length) return { started: 0 };
-
-  let started = 0;
-  for (const p of profiles as { id: string }[]) {
-    const { count } = await supabaseAdmin
-      .from("campaigns")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", p.id)
-      .eq("platform", "meta")
-      .eq("status", "active");
-    if ((count ?? 0) > 0) {
-      await (supabaseAdmin as any)
-        .from("profiles")
-        .update({ free_plan_started_at: new Date().toISOString() })
-        .eq("id", p.id);
-      started++;
-    }
-  }
-  return { started };
+    .select("pay_token")
+    .eq("id", userId)
+    .maybeSingle();
+  if (!data?.pay_token) return null;
+  return `https://www.adpilot.ro/api/public/pay/${data.pay_token}`;
 }
 
-/** Trimite mesajul de consum: template aprobat, cu fallback pe text liber (24h). */
-async function sendConsumedMessage(userId: string): Promise<{ sent: boolean; via: string }> {
+async function getActiveConn(
+  userId: string,
+): Promise<{ id: string; user_phone: string } | null> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { getCentralWhatsApp, sendWhatsAppMessage, sendWhatsAppTemplate } = await import(
-    "@/lib/whatsapp.server"
-  );
-  const { FREE_STARTER_CONSUMED_MESSAGE } = await import("@/lib/access.server");
-  const central = getCentralWhatsApp();
-  if (!central) return { sent: false, via: "none" };
-
   const { data: conn } = await supabaseAdmin
     .from("whatsapp_connections")
     .select("id, user_phone")
     .eq("user_id", userId)
     .eq("status", "active")
     .maybeSingle();
-  if (!conn?.user_phone) return { sent: false, via: "none" };
+  if (!conn?.user_phone) return null;
+  return { id: conn.id as string, user_phone: conn.user_phone as string };
+}
+
+async function logOut(userId: string, connId: string, id: string, text: string, kind: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  await supabaseAdmin.from("whatsapp_messages").insert({
+    user_id: userId,
+    connection_id: connId,
+    wa_message_id: id,
+    direction: "out",
+    msg_type: "text",
+    text,
+    meta: { kind },
+  });
+}
+
+/** Mesaj de reactivare cu LINK de plată (Pro/Premium care n-au plătit). */
+async function sendReactivationMessage(userId: string, chosenPlan: string | null): Promise<void> {
+  const { getCentralWhatsApp, sendWhatsAppMessage, sendWhatsAppTemplate } = await import(
+    "@/lib/whatsapp.server"
+  );
+  const central = getCentralWhatsApp();
+  if (!central) return;
+  const conn = await getActiveConn(userId);
+  if (!conn) return;
   const phone = conn.user_phone.replace(/\D/g, "");
+  const link = await payLinkFor(userId);
+  const planName = (chosenPlan ?? "").toLowerCase().includes("premium") ? "Premium" : "Pro";
 
-  const log = async (id: string, text: string) => {
-    await supabaseAdmin.from("whatsapp_messages").insert({
-      user_id: userId,
-      connection_id: conn.id,
-      wa_message_id: id,
-      direction: "out",
-      msg_type: "text",
+  const text =
+    `🎉 Cele 30 de zile gratuite s-au încheiat — ai lansat reclame ca un profesionist!\n\n` +
+    `Ca să continui NELIMITAT cu planul *${planName}* (campanii non-stop + asistent WhatsApp), ` +
+    `plătește rapid și sigur cu cardul aici:\n${link}\n\n` +
+    `După plată, contul tău se reactivează automat și pornim din nou. 💳`;
+
+  // Fereastra de 24h deschisă → text liber cu linkul. Altfel → template static (fallback).
+  try {
+    const { id } = await sendWhatsAppMessage(central.phoneNumberId, central.accessToken, phone, {
+      type: "text",
       text,
-      meta: { kind: "free_consumed" },
     });
-  };
-
-  // 1) Template aprobat (merge oricând, chiar în afara ferestrei de 24h).
-  //    Template STATIC (fără variabile) + buton URL „Vezi planurile" → /pricing.
+    await logOut(userId, conn.id, id, text, "signup_trial_ended_pay");
+    return;
+  } catch (e) {
+    console.warn("[free-plan] reactivation free-form failed, fallback template:", e);
+  }
   try {
     const { id } = await sendWhatsAppTemplate(
       central.phoneNumberId,
@@ -80,98 +87,207 @@ async function sendConsumedMessage(userId: string): Promise<{ sent: boolean; via
       "ro",
       [],
     );
-    await log(id, FREE_STARTER_CONSUMED_MESSAGE);
-    return { sent: true, via: "template" };
+    await logOut(userId, conn.id, id, text, "signup_trial_ended_pay_template");
   } catch (e) {
-    console.warn("[free-plan] template plan_gratuit_consumat failed, fallback text:", e);
+    console.error("[free-plan] reactivation template failed:", e);
   }
-  // 2) Fallback text liber (doar dacă fereastra de 24h e deschisă).
+}
+
+/** Mesaj: trialul de 30 zile s-a încheiat, rămâi pe planul gratuit 7 zile/lună. */
+async function sendStarterBonusEndedMessage(userId: string): Promise<void> {
+  const { getCentralWhatsApp, sendWhatsAppMessage } = await import("@/lib/whatsapp.server");
+  const central = getCentralWhatsApp();
+  if (!central) return;
+  const conn = await getActiveConn(userId);
+  if (!conn) return;
+  const phone = conn.user_phone.replace(/\D/g, "");
+  const text =
+    "🎉 Cele 30 de zile gratuite s-au încheiat! Rămâi pe planul *Starter gratuit* cu " +
+    "*7 zile gratuite în fiecare lună*.\n\nPentru campanii NELIMITATE, non-stop, treci pe " +
+    "Pro sau Premium: https://adpilot.ro/pricing";
+  try {
+    const { id } = await sendWhatsAppMessage(central.phoneNumberId, central.accessToken, phone, {
+      type: "text",
+      text,
+    });
+    await logOut(userId, conn.id, id, text, "signup_trial_ended_starter");
+  } catch (e) {
+    console.warn("[free-plan] starter bonus-ended message failed:", e);
+  }
+}
+
+/** Mesajul de consum al celor 7 zile/lună (Starter). */
+async function sendMonthlyConsumedMessage(userId: string): Promise<void> {
+  const { getCentralWhatsApp, sendWhatsAppMessage, sendWhatsAppTemplate } = await import(
+    "@/lib/whatsapp.server"
+  );
+  const { FREE_STARTER_CONSUMED_MESSAGE } = await import("@/lib/access.server");
+  const central = getCentralWhatsApp();
+  if (!central) return;
+  const conn = await getActiveConn(userId);
+  if (!conn) return;
+  const phone = conn.user_phone.replace(/\D/g, "");
+  try {
+    const { id } = await sendWhatsAppTemplate(
+      central.phoneNumberId,
+      central.accessToken,
+      phone,
+      "plan_gratuit_consumat",
+      "ro",
+      [],
+    );
+    await logOut(userId, conn.id, id, FREE_STARTER_CONSUMED_MESSAGE, "free_consumed");
+    return;
+  } catch {
+    /* fallback */
+  }
   try {
     const { id } = await sendWhatsAppMessage(central.phoneNumberId, central.accessToken, phone, {
       type: "text",
       text: FREE_STARTER_CONSUMED_MESSAGE,
     });
-    await log(id, FREE_STARTER_CONSUMED_MESSAGE);
-    return { sent: true, via: "text" };
+    await logOut(userId, conn.id, id, FREE_STARTER_CONSUMED_MESSAGE, "free_consumed");
   } catch (e) {
-    console.error("[free-plan] consumed message failed entirely:", e);
-    return { sent: false, via: "none" };
+    console.error("[free-plan] monthly consumed message failed:", e);
   }
 }
 
-/** Consumul planului gratuit: pune campaniile pe pauză + notifică pe WhatsApp. */
-export async function runFreePlanExpiry(): Promise<{
-  notified: number;
-  errors: number;
-  capi?: { ok: number; fail: number; lastError?: string };
-}> {
+async function pauseActiveCampaigns(userId: string): Promise<void> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { currentPlanMonth, FREE_STARTER_DAYS } = await import("@/lib/access.server");
   const { setMetaCampaignStatus } = await import("@/lib/campaign-control.server");
+  const { data: active } = await supabaseAdmin
+    .from("campaigns")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("platform", "meta")
+    .eq("status", "active");
+  for (const c of active ?? []) {
+    try {
+      await setMetaCampaignStatus({ userId, campaignId: c.id, next: "PAUSED" });
+    } catch (e) {
+      console.error("[free-plan] pause campaign failed", c.id, e);
+    }
+  }
+}
 
+/** Pornește ceasul lunar de 7 zile pt. Starter (post trial de 30z) cu reclamă activă. */
+export async function startFreePlanClocks(): Promise<{ started: number }> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { currentPlanMonth, isFreeChoice } = await import("@/lib/access.server");
   const month = currentPlanMonth();
-  const cutoff = new Date(Date.now() - FREE_STARTER_DAYS * 86_400_000).toISOString();
+  const nowIso = new Date().toISOString();
 
+  // Starter (gratuit), trecuți de trialul de 30 zile, care n-au pornit ceasul luna asta.
   const { data: profiles } = await (supabaseAdmin as any)
     .from("profiles")
-    .select("id")
+    .select("id, chosen_plan, free_plan_month, signup_trial_ends_at")
+    .lt("signup_trial_ends_at", nowIso)
+    .or(`free_plan_month.is.null,free_plan_month.neq.${month}`);
+  if (!profiles?.length) return { started: 0 };
+
+  let started = 0;
+  for (const p of profiles as any[]) {
+    if (!isFreeChoice(p.chosen_plan)) continue;
+    const { count } = await supabaseAdmin
+      .from("campaigns")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", p.id)
+      .eq("platform", "meta")
+      .eq("status", "active");
+    if ((count ?? 0) > 0) {
+      await (supabaseAdmin as any)
+        .from("profiles")
+        .update({
+          free_plan_month: month,
+          free_plan_started_at: nowIso,
+          free_plan_notified_at: null,
+        })
+        .eq("id", p.id);
+      started++;
+    }
+  }
+  return { started };
+}
+
+/** Expirări: trialul de 30 zile + cele 7 zile/lună (Starter). */
+export async function runFreePlanExpiry(): Promise<{
+  signupExpired: number;
+  monthlyExpired: number;
+  errors: number;
+}> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { currentPlanMonth, FREE_STARTER_DAYS, resolveAccess, isFreeChoice } = await import(
+    "@/lib/access.server"
+  );
+  const month = currentPlanMonth();
+  const nowIso = new Date().toISOString();
+
+  let signupExpired = 0;
+  let monthlyExpired = 0;
+  let errors = 0;
+
+  // ---- Pass 1: trialul de 30 de zile (de la crearea contului) ----
+  const { data: trialGone } = await (supabaseAdmin as any)
+    .from("profiles")
+    .select("id, chosen_plan")
+    .lt("signup_trial_ends_at", nowIso)
+    .is("signup_trial_notified_at", null);
+  for (const p of (trialGone ?? []) as any[]) {
+    try {
+      const access = await resolveAccess(supabaseAdmin, p.id);
+      if (access.paid) {
+        // A plătit între timp → marcăm ca notificat, fără mesaj.
+        await (supabaseAdmin as any)
+          .from("profiles")
+          .update({ signup_trial_notified_at: nowIso })
+          .eq("id", p.id);
+        continue;
+      }
+      if (isFreeChoice(p.chosen_plan)) {
+        // Starter → continuă pe 7 zile/lună (nu blocăm, doar anunțăm).
+        await sendStarterBonusEndedMessage(p.id);
+      } else {
+        // Pro/Premium neplătit → blocăm + link de plată pe WhatsApp.
+        await pauseActiveCampaigns(p.id);
+        await sendReactivationMessage(p.id, p.chosen_plan);
+      }
+      await (supabaseAdmin as any)
+        .from("profiles")
+        .update({ signup_trial_notified_at: nowIso })
+        .eq("id", p.id);
+      signupExpired++;
+    } catch (e) {
+      console.error("[free-plan] signup-trial expiry", p.id, e);
+      errors++;
+    }
+  }
+
+  // ---- Pass 2: cele 7 zile/lună (Starter) ----
+  const cutoff = new Date(Date.now() - FREE_STARTER_DAYS * 86_400_000).toISOString();
+  const { data: monthlyGone } = await (supabaseAdmin as any)
+    .from("profiles")
+    .select("id, chosen_plan")
     .eq("free_plan_month", month)
     .not("free_plan_started_at", "is", null)
     .lt("free_plan_started_at", cutoff)
     .is("free_plan_notified_at", null);
-  if (!profiles?.length) return { notified: 0, errors: 0 };
-
-  let notified = 0;
-  let errors = 0;
-  const capi = { ok: 0, fail: 0, lastError: undefined as string | undefined };
-  for (const p of profiles as { id: string }[]) {
+  for (const p of (monthlyGone ?? []) as any[]) {
     try {
-      // Pune pe pauză campaniile active pe Meta (altfel ar rula reclame gratis).
-      const { data: active } = await supabaseAdmin
-        .from("campaigns")
-        .select("id")
-        .eq("user_id", p.id)
-        .eq("platform", "meta")
-        .eq("status", "active");
-      for (const c of active ?? []) {
-        try {
-          await setMetaCampaignStatus({ userId: p.id, campaignId: c.id, next: "PAUSED" });
-        } catch (e) {
-          console.error("[free-plan] pause campaign failed", c.id, e);
-        }
-      }
-
-      await sendConsumedMessage(p.id);
-
-      // Meta CAPI: eveniment „TrialExpired" (server-side) pentru audiența de
-      // retargeting „trial expirat". No-op dacă META_CAPI_TOKEN nu e setat.
-      try {
-        const { data: u } = await supabaseAdmin.auth.admin.getUserById(p.id);
-        const { sendMetaCapiEvent } = await import("@/lib/meta-capi.server");
-        const r = await sendMetaCapiEvent("TrialExpired", {
-          email: u?.user?.email ?? null,
-          eventId: `trialexp_${p.id}_${month}`,
-        });
-        if (r.sent) capi.ok++;
-        else {
-          capi.fail++;
-          capi.lastError = r.error;
-        }
-      } catch (e) {
-        capi.fail++;
-        capi.lastError = e instanceof Error ? e.message : String(e);
-        console.error("[free-plan] CAPI TrialExpired", e);
-      }
-
+      if (!isFreeChoice(p.chosen_plan)) continue;
+      const access = await resolveAccess(supabaseAdmin, p.id);
+      if (access.paid) continue;
+      await pauseActiveCampaigns(p.id);
+      await sendMonthlyConsumedMessage(p.id);
       await (supabaseAdmin as any)
         .from("profiles")
-        .update({ free_plan_notified_at: new Date().toISOString() })
+        .update({ free_plan_notified_at: nowIso })
         .eq("id", p.id);
-      notified++;
+      monthlyExpired++;
     } catch (e) {
-      console.error("[free-plan-expiry]", p.id, e);
+      console.error("[free-plan] monthly expiry", p.id, e);
       errors++;
     }
   }
-  return { notified, errors, capi };
+
+  return { signupExpired, monthlyExpired, errors };
 }

@@ -29,7 +29,7 @@ export async function refreshAllInsights(): Promise<{ refreshed: number; errors:
   } catch (e) {
     console.error("[refresh-insights] status sync", e);
   }
-  // Pornește ceasul de 3 zile al planului gratuit când prima reclamă e activă.
+  // Pornește ceasul lunar de 7 zile al planului gratuit când prima reclamă e activă.
   try {
     const { startFreePlanClocks } = await import("./free-plan.server");
     await startFreePlanClocks();

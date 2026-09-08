@@ -322,12 +322,43 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
               // Load history
               // Access gate: paid (Pro/Premium) SAU Starter gratuit activ.
               {
-                const { resolveAccess, FREE_STARTER_CONSUMED_MESSAGE, CHOOSE_PLAN_MESSAGE } =
-                  await import("@/lib/access.server");
+                const {
+                  resolveAccess,
+                  FREE_STARTER_CONSUMED_MESSAGE,
+                  CHOOSE_PLAN_MESSAGE,
+                  isFreeChoice,
+                } = await import("@/lib/access.server");
                 const access = await resolveAccess(supabaseAdmin, conn.user_id);
                 if (!access.botAllowed) {
                   const consumed = access.freeStarter.state === "consumed";
-                  const msg = consumed ? FREE_STARTER_CONSUMED_MESSAGE : CHOOSE_PLAN_MESSAGE;
+                  const paidChoice = !!access.chosenPlan && !isFreeChoice(access.chosenPlan);
+                  let msg: string;
+                  let kind: string;
+                  if (paidChoice) {
+                    // Pro/Premium neplătit după perioada gratuită → link de plată Stripe.
+                    const { data: prof } = await (supabaseAdmin as any)
+                      .from("profiles")
+                      .select("pay_token")
+                      .eq("id", conn.user_id)
+                      .maybeSingle();
+                    const link = prof?.pay_token
+                      ? `https://www.adpilot.ro/api/public/pay/${prof.pay_token}`
+                      : "https://adpilot.ro/pricing";
+                    const planName = access.chosenPlan!.toLowerCase().includes("premium")
+                      ? "Premium"
+                      : "Pro";
+                    msg =
+                      `🎉 Perioada gratuită s-a încheiat! Ca să continui NELIMITAT cu planul *${planName}*, ` +
+                      `plătește rapid și sigur cu cardul aici:\n${link}\n\n` +
+                      `După plată, contul tău se reactivează automat. 💳`;
+                    kind = "signup_trial_ended_pay";
+                  } else if (consumed) {
+                    msg = FREE_STARTER_CONSUMED_MESSAGE;
+                    kind = "free_consumed";
+                  } else {
+                    msg = CHOOSE_PLAN_MESSAGE;
+                    kind = "plan_gate";
+                  }
                   try {
                     const { id } = await sendWhatsAppMessage(
                       central.phoneNumberId,
@@ -342,7 +373,7 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
                       direction: "out",
                       msg_type: "text",
                       text: msg,
-                      meta: { kind: consumed ? "free_consumed" : "plan_gate" },
+                      meta: { kind },
                     });
                   } catch (e) {
                     console.error("[wa] access gate notice failed", e);

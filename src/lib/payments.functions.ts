@@ -6,8 +6,6 @@ import {
   getStripeErrorMessage,
 } from "@/lib/stripe.server";
 
-const TRIAL_DAYS = 3;
-
 type CheckoutSessionResult = { clientSecret: string } | { error: string };
 type PortalSessionResult = { url: string } | { error: string };
 
@@ -42,40 +40,6 @@ async function resolveOrCreateCustomer(
     ...(options.userId && { metadata: { userId: options.userId } }),
   });
   return created.id;
-}
-
-/**
- * Cuponul „50% reducere prima lună" — get-or-create idempotent, per mediu
- * (live/sandbox au fiecare propriul cupon). `duration: "once"` => reducerea se
- * aplică o singură dată, pe prima factură = prima lună (după trialul de 3 zile).
- */
-const FIRST_MONTH_COUPON_ID = "adpilot_first_month_50";
-async function getOrCreateFirstMonthCoupon(
-  stripe: ReturnType<typeof createStripeClient>,
-): Promise<string | null> {
-  try {
-    const existing = await stripe.coupons.retrieve(FIRST_MONTH_COUPON_ID);
-    if (existing && !(existing as { deleted?: boolean }).deleted) return existing.id;
-  } catch {
-    /* încă nu există */
-  }
-  try {
-    const created = await stripe.coupons.create({
-      id: FIRST_MONTH_COUPON_ID,
-      percent_off: 50,
-      duration: "once",
-      name: "50% reducere prima lună",
-    });
-    return created.id;
-  } catch {
-    // Race: creat între timp de altă cerere → îl reluăm.
-    try {
-      const again = await stripe.coupons.retrieve(FIRST_MONTH_COUPON_ID);
-      return again.id;
-    } catch {
-      return null; // nu bloca checkout-ul dacă Stripe are un hiccup pe cupon
-    }
-  }
 }
 
 export const createCheckoutSession = createServerFn({ method: "POST" })
@@ -124,9 +88,6 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       const isRecurring = stripePrice.type === "recurring";
 
       const customerId = await resolveOrCreateCustomer(stripe, { email, userId });
-      // Planurile de agenție se plătesc curat: FĂRĂ trial și FĂRĂ -50% prima lună.
-      const isAgency = /^agency/.test(data.priceId);
-      const firstMonthCoupon = isAgency ? null : await getOrCreateFirstMonthCoupon(stripe);
 
       const session = await stripe.checkout.sessions.create({
         line_items: [{ price: stripePrice.id, quantity: 1 }],
@@ -134,27 +95,16 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         ui_mode: "embedded_page",
         return_url: data.returnUrl,
         customer: customerId,
-        // Ofertă: -50% prima lună (o singură factură). Nu se combină cu coduri promo.
-        ...(firstMonthCoupon ? { discounts: [{ coupon: firstMonthCoupon }] } : {}),
+        client_reference_id: userId,
+        // FĂRĂ trial și FĂRĂ reducere — plata pornește imediat la alegerea planului.
         metadata: { userId },
         customer_update: { address: "auto", name: "auto" },
         // „Factură pe firmă": bifă opțională în checkout care cere CUI + denumire
-        // firmă (pt. RO: tip `ro_tin`). Datele ajung pe factura Stripe, trimisă pe
-        // email. `customer_update.name`+`address` sunt necesare ca Stripe să le
-        // salveze pe client.
+        // firmă (pt. RO: tip `ro_tin`). Datele ajung pe factura Stripe, trimisă pe email.
         tax_id_collection: { enabled: true },
         ...(isRecurring && {
           payment_method_collection: "always",
-          subscription_data: {
-            metadata: { userId },
-            // Agenție → fără trial (plată imediată). Business → trial ca înainte.
-            ...(isAgency
-              ? {}
-              : {
-                  trial_period_days: TRIAL_DAYS,
-                  trial_settings: { end_behavior: { missing_payment_method: "cancel" } },
-                }),
-          },
+          subscription_data: { metadata: { userId } },
         }),
         automatic_tax: { enabled: true },
       });
