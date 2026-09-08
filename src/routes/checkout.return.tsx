@@ -1,5 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { CheckCircle2, CalendarClock, Sparkles } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { CheckCircle2, CalendarClock, MessageCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getMySubscription } from "@/lib/payments.functions";
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/checkout/return")({
 
 function CheckoutReturn() {
   const { session_id: sessionId } = Route.useSearch();
+  const navigate = useNavigate();
   const env = paymentsTokenAvailable() ? getStripeEnvironment() : null;
   const fetchSub = useServerFn(getMySubscription);
   const { data } = useQuery({
@@ -24,6 +26,16 @@ function CheckoutReturn() {
     refetchOnWindowFocus: false,
   });
   const sub = data?.subscription;
+
+  // Odată ce plata e confirmată, ducem userul ÎNAPOI în onboarding ca să conecteze
+  // WhatsApp-ul ușor de acolo (nu-l lăsăm blocat pe pagina de confirmare).
+  useEffect(() => {
+    if (!sub) return;
+    const t = setTimeout(() => {
+      navigate({ to: "/onboarding", replace: true });
+    }, 3500);
+    return () => clearTimeout(t);
+  }, [sub, navigate]);
   const trialEnd = sub?.trial_end
     ? new Date(sub.trial_end).toLocaleDateString("ro-RO", {
         day: "2-digit",
@@ -50,20 +62,29 @@ function CheckoutReturn() {
             Prima facturare pe {trialEnd}
           </div>
         )}
-        <div className="mt-8 grid grid-cols-1 gap-2">
+        <p className="mt-6 text-sm font-medium">
+          Ultimul pas: activează asistentul pe WhatsApp 📱
+        </p>
+        <div className="mt-4 grid grid-cols-1 gap-2">
           <Link
-            to="/create"
+            to="/onboarding"
+            replace
             className="press inline-flex items-center justify-center gap-2 w-full px-6 py-3 rounded-xl bg-foreground text-background font-medium"
           >
-            <Sparkles className="w-4 h-4" /> Creează prima campanie
+            <MessageCircle className="w-4 h-4" /> Conectează WhatsApp acum
           </Link>
           <Link
             to="/dashboard"
             className="press inline-flex items-center justify-center w-full px-6 py-3 rounded-xl border border-border hover:bg-secondary text-sm"
           >
-            Mergi la dashboard
+            Mai târziu — mergi la dashboard
           </Link>
         </div>
+        {sub && (
+          <p className="mt-4 text-xs text-muted-foreground">
+            Te ducem înapoi în onboarding în câteva secunde…
+          </p>
+        )}
         {!sessionId && (
           <p className="mt-4 text-xs text-muted-foreground">Mulțumim! Contul tău este pregătit.</p>
         )}

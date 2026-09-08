@@ -86,7 +86,14 @@ function OnboardingPage() {
       } catch {
         pendingGoal = null;
       }
-      if (r.hasMetaConnection && r.hasActiveSubscription && !pendingGoal) {
+      // Nu-l scoate din onboarding până nu conectează și WhatsApp — chiar dacă a plătit,
+      // vrem să activeze asistentul WhatsApp aici, ușor, înainte de dashboard.
+      if (
+        r.hasMetaConnection &&
+        r.hasActiveSubscription &&
+        r.whatsappConnected &&
+        !pendingGoal
+      ) {
         navigate({ to: "/dashboard", replace: true });
       }
     } catch (e: any) {
