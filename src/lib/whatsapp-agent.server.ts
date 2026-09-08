@@ -62,11 +62,13 @@ Reguli importante:
 - Dacă userul îți trimite o poză fără context, întreabă-l ce vrea să facă cu ea (campanie nouă? doar copy?).
 - Când generezi copy, oferă 2-3 variante scurte din care să aleagă.
 - Dacă userul cere ceva ce nu poți face, spune clar și sugerează o alternativă.
-- IMPORTANT pentru creative (poză SAU video): folosește DOAR fișiere trimise direct pe WhatsApp (vor apărea în „media disponibilă" din context). Acceptăm imagine (JPG/PNG) sau video (MP4/MOV — max ~100MB, 9:16/1:1/16:9). NU cere URL-uri externe și NU accepta link-uri spre site-uri (Pixabay, YouTube, etc.) — sistemul nu le poate descărca. Dacă userul nu a trimis nimic, cere-i clar: „Trimite-mi te rog poza SAU clipul pentru reclamă direct aici pe WhatsApp 📸🎬".
-- Dacă pentru create_campaign nu există media disponibilă (latestMedia lipsește), NU apela tool-ul — întâi cere fișierul. Media din ultimele 24h rămâne disponibilă pentru confirmări ulterioare.
+- IMPORTANT pentru creative (poză SAU video): pentru fișierele PROPRII folosește DOAR fișiere trimise direct pe WhatsApp (vor apărea în „media disponibilă" din context). Acceptăm imagine (JPG/PNG) sau video (MP4/MOV — max ~100MB, 9:16/1:1/16:9). NU cere URL-uri externe și NU accepta link-uri spre site-uri (Pixabay, YouTube, etc.) — sistemul nu le poate descărca.
+- CÂND E NEVOIE DE POZĂ ȘI USERUL NU A TRIMIS NIMIC, oferă-i alegerea: „Ai deja o poză pe care vrei s-o folosim, sau vrei să ți-o generez eu cu AI? 📸🤖". • Dacă alege POZA LUI → cere-i s-o trimită direct pe WhatsApp. • Dacă alege AI (și are plan Pro/Premium) → întreabă-l: „Perfect! Ai o imagine de referință (trimite-o aici) sau îmi descrii în cuvinte cum vrei să arate poza și despre ce e?". Dacă îmi dă o descriere → apelează \`generate_image\` cu prompt-ul detaliat (fără use_reference). Dacă trimite o imagine de referință și zice să plecăm de la ea → apelează \`generate_image\` cu use_reference=true. Compune tu un prompt vizual bogat din ce a spus userul (produs/serviciu, stil, atmosferă, culori, eventual text scurt pe imagine). Poza generată e trimisă automat userului pentru aprobare și rămâne salvată — la „da" o folosești direct, fără să ceri retrimiterea.
+- După ce userul aprobă imaginea generată („da / o folosim / îmi place") NU-i cere s-o retrimită — e deja în „media disponibilă" (latestMedia). Dacă zice „altă variantă / nu-mi place / mai încearcă" → apelează din nou \`generate_image\` cu un prompt ajustat pe feedback-ul lui.
+- Dacă pentru create_campaign nu există media disponibilă (latestMedia lipsește), NU apela tool-ul — întâi cere fișierul SAU oferă generarea cu AI (vezi mai sus). Media din ultimele 24h rămâne disponibilă pentru confirmări ulterioare.
 - NU cere niciodată userului URL-ul site-ului (landing_url). Pentru campanii Lead Generation formularul se completează direct pe Facebook/Instagram, nu e nevoie de site extern. Lasă landing_url gol și sistemul va folosi automat un URL valid implicit.
 - ATENȚIE LOCAȚIE: dacă userul menționează un oraș (ex: „pe București", „în Cluj", „target Timișoara") — FOLOSEȘTE parametrul "cities" la create_campaign cu numele orașului (ex: ["Bucharest"]). NU lăsa doar countries=["RO"] când userul a cerut explicit un oraș. Confirmă în mesajul de confirmare locația exactă (oraș + rază km).
-- NU anunța NICIODATĂ în avans că „lansezi acum" / „durează câteva secunde" / „stai puțin" înainte să apelezi un tool. Apelează direct tool-ul și trimite UN SINGUR mesaj DUPĂ ce primești rezultatul: dacă ok → confirmă LIVE cu detalii; dacă error → spune-i userului EXACT motivul (mesajul din câmpul "error" returnat de tool, tradus simplu în română, fără termeni tehnici) și sugerează ce poate face (ex: schimbă bugetul, alt oraș, reconectează contul Meta).
+- NU anunța NICIODATĂ în avans că „lansezi acum" / „durează câteva secunde" / „stai puțin" înainte să apelezi un tool. Apelează direct tool-ul și trimite UN SINGUR mesaj DUPĂ ce primești rezultatul: dacă ok → confirmă LIVE cu detalii; dacă error → spune-i userului EXACT motivul (mesajul din câmpul "error" returnat de tool, tradus simplu în română, fără termeni tehnici) și sugerează ce poate face (ex: schimbă bugetul, alt oraș, reconectează contul Meta). SINGURA EXCEPȚIE: la \`generate_image\` NU trimite tu mesajul „durează 1-2 min" — îl trimite tool-ul singur; tu doar apelează tool-ul direct.
 - NICIODATĂ nu spune „echipa tehnică a fost notificată" — nu există echipă tehnică în spate, ești TU agentul. Dacă ceva eșuează, arată motivul real returnat de sistem.
 - Dacă userul spune „încearcă iar / mai încearcă / retry” după o lansare eșuată, apelează \`retry_last_campaign\` direct. Nu inventa explicații și nu spune că nu poți încerca.
 - Dacă Meta returnează o eroare despre „persoana sau organizația promovată”, „beneficiary”, „payer” sau DSA, NU trimite mesajul generic Meta și NU-l trimite în setările Paginii. Întreabă direct: „Care este numele exact al firmei sau persoanei promovate?” și așteaptă răspunsul.
@@ -473,11 +475,15 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
 
     generate_image: tool({
       description:
-        "Generează o imagine pentru reclamă cu AI (1024x1024 JPG). Folosește când userul nu are poză. După generare, imaginea devine 'latestMedia' și poate fi folosită direct la create_campaign.",
+        "Generează o imagine pentru reclamă cu AI (gpt-image-1, calitate maximă, 1024x1024). Folosește când userul nu are poză proprie. Dacă userul a trimis o poză de REFERINȚĂ și vrea ca AI-ul să plece de la ea, apelează cu use_reference=true. După generare imaginea devine 'latestMedia', se salvează în storage și rămâne disponibilă pentru create_campaign la mesajele următoare (userul NU trebuie să o retrimită). Tool-ul trimite SINGUR userului mesajul despre timpul de asteptare la start — nu-l anunta tu inainte.",
       inputSchema: z.object({
-        prompt: z.string().min(10).max(600).describe("Descriere detaliată a imaginii dorite, în engleză sau română"),
+        prompt: z.string().min(10).max(600).describe("Descriere detaliată a imaginii dorite (produs, stil, atmosferă, culori, text pe imagine). Română sau engleză."),
+        use_reference: z
+          .boolean()
+          .optional()
+          .describe("true dacă userul a trimis o poză de referință pe WhatsApp și vrea ca imaginea AI să plece de la ea (latestMedia trebuie să fie o imagine)."),
       }),
-      execute: async ({ prompt }) => {
+      execute: async ({ prompt, use_reference }) => {
         try {
           // Limită lunară de poze AI: Starter = 0, Pro = 10, Premium = nelimitat.
           const { checkAiPhotoQuota, recordAiPhoto } = await import("./plan.server");
@@ -492,11 +498,69 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
                   error: `Ai atins limita de *${quota.limit} poze AI* pe luna aceasta (planul Pro). Treci pe *Premium* pentru poze nelimitate, sau trimite-mi o poză proprie. 📸`,
                 };
           }
+
+          // Imagine de referință (opțional): doar dacă userul a trimis o IMAGINE.
+          let reference: { bytes: Uint8Array; mime: string } | null = null;
+          if (
+            use_reference &&
+            ctx.latestMedia &&
+            ctx.latestMedia.mime.toLowerCase().startsWith("image/")
+          ) {
+            try {
+              const { data: refFile } = await supabaseAdmin.storage
+                .from("wa-media")
+                .download(ctx.latestMedia.path);
+              if (refFile) {
+                reference = {
+                  bytes: new Uint8Array(await refFile.arrayBuffer()),
+                  mime: ctx.latestMedia.mime,
+                };
+              }
+            } catch (e) {
+              console.error("[generate_image] reference download", e);
+            }
+          }
+
+          // Mesaj „durează ~1-2 min" ÎNAINTE de generare (excepția de la regula de a nu anunța).
+          try {
+            await sendWhatsAppMessage(
+              ctx.connection.phone_number_id,
+              ctx.connection.access_token,
+              ctx.toPhone,
+              {
+                type: "text",
+                text: reference
+                  ? "🎨 Am început să creez imaginea plecând de la poza ta... durează un minut, maxim două. Ți-o trimit imediat ce e gata. ⏳"
+                  : "🎨 Am început să-ți creez imaginea cu AI... durează un minut, maxim două. Ți-o trimit imediat ce e gata. ⏳",
+              },
+            );
+          } catch (e) {
+            console.error("[generate_image] heads-up send", e);
+          }
+
           const { generateCreativeImage } = await import("./wa-ai-extras.server");
-          const img = await generateCreativeImage(ctx.userId, prompt);
+          const img = await generateCreativeImage(ctx.userId, prompt, reference);
           await recordAiPhoto(supabaseAdmin, ctx.userId);
           ctx.latestMedia = img;
-          // Send preview to user on WhatsApp
+
+          // Persistă imaginea generată ca „media disponibilă" pentru mesajele URMĂTOARE,
+          // ca la aprobare userul să NU trebuiască să o retrimită — o luăm din storage.
+          try {
+            await supabaseAdmin.from("whatsapp_messages").insert({
+              user_id: ctx.userId,
+              connection_id: ctx.connection.id,
+              wa_message_id: `ai-gen-${Date.now()}`,
+              direction: "in",
+              msg_type: "image",
+              text: "[imagine generată cu AI]",
+              media_path: img.path,
+              media_mime: "image/jpeg",
+            });
+          } catch (e) {
+            console.error("[generate_image] persist media row", e);
+          }
+
+          // Trimite preview-ul pe WhatsApp
           try {
             const r = await fetch(img.signedUrl);
             const bytes = new Uint8Array(await r.arrayBuffer());
@@ -511,12 +575,21 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
               ctx.connection.phone_number_id,
               ctx.connection.access_token,
               ctx.toPhone,
-              { type: "image", mediaId, caption: "🎨 Iată o variantă. Vrei să o folosim?" },
+              {
+                type: "image",
+                mediaId,
+                caption:
+                  "🎨 Gata! Îți place varianta asta? Spune *da* și o folosim la reclamă, sau *altă variantă* dacă vrei să încerc din nou. 👇",
+              },
             );
           } catch (e) {
             console.error("[generate_image] preview send", e);
           }
-          return { ok: true, message: "Imagine generată și disponibilă pentru create_campaign." };
+          return {
+            ok: true,
+            message:
+              "Imaginea a fost generată, trimisă userului pentru aprobare și salvată în storage (disponibilă la create_campaign fără retrimitere). Așteaptă confirmarea userului (da / altă variantă) înainte să lansezi.",
+          };
         } catch (e: any) {
           return { error: e?.message ?? "Generarea imaginii a eșuat" };
         }

@@ -12,28 +12,60 @@ function openaiKey(): string {
   return key;
 }
 
-/** Generate a square 1024 image and save bytes to wa-media. Returns { path, mime, signedUrl }. */
+/**
+ * Generate a square 1024 image and save bytes to wa-media. Returns { path, mime, signedUrl }.
+ * Folosim gpt-image-1 la calitate MAXIMĂ (cel mai performant model de imagine OpenAI).
+ * Dacă `reference` e dat (o poză proprie trimisă de user), folosim /images/edits ca să
+ * generăm plecând de la acea imagine de referință; altfel /images/generations (text → imagine).
+ */
 export async function generateCreativeImage(
   userId: string,
   prompt: string,
+  reference?: { bytes: Uint8Array; mime: string } | null,
 ): Promise<{ path: string; mime: string; signedUrl: string }> {
-  const r = await fetch(`${OPENAI}/images/generations`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${openaiKey()}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "gpt-image-1",
-      prompt,
-      n: 1,
-      size: "1024x1024",
-      quality: "low",
-    }),
-  });
-  const j: any = await r.json();
-  if (!r.ok) {
-    throw new Error(j?.error?.message || `image gen failed (${r.status})`);
+  let j: any;
+  if (reference && reference.bytes?.length) {
+    // Image-to-image cu imagine de referință (gpt-image-1 /images/edits).
+    const ct = (reference.mime || "image/jpeg").split(";")[0]?.trim() || "image/jpeg";
+    const ext = ct.includes("png") ? "png" : ct.includes("webp") ? "webp" : "jpg";
+    const form = new FormData();
+    form.append("model", "gpt-image-1");
+    form.append(
+      "image",
+      new Blob([reference.bytes as BlobPart], { type: ct }),
+      `reference.${ext}`,
+    );
+    form.append("prompt", prompt);
+    form.append("size", "1024x1024");
+    form.append("quality", "high");
+    const r = await fetch(`${OPENAI}/images/edits`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${openaiKey()}` },
+      body: form,
+    });
+    j = await r.json();
+    if (!r.ok) {
+      throw new Error(j?.error?.message || `image edit failed (${r.status})`);
+    }
+  } else {
+    const r = await fetch(`${OPENAI}/images/generations`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${openaiKey()}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-image-1",
+        prompt,
+        n: 1,
+        size: "1024x1024",
+        quality: "high",
+      }),
+    });
+    j = await r.json();
+    if (!r.ok) {
+      throw new Error(j?.error?.message || `image gen failed (${r.status})`);
+    }
   }
   const b64: string | undefined = j?.data?.[0]?.b64_json;
   if (!b64) throw new Error("AI nu a returnat o imagine.");
