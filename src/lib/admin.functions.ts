@@ -1071,6 +1071,57 @@ export const sendWebinarBlast = createServerFn({ method: "POST" })
     return { sent, failed, remaining: remaining ?? 0 };
   });
 
+// ====== WEBINAR — EMAIL BLAST (listă externă importată în webinar_email_contacts) ======
+const WEBINAR_EMAIL_SUBJECT = "Îți arăt live cum întreci concurența. Ai 30 min?";
+
+export const getWebinarEmailStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin: __sa } = await import("@/integrations/supabase/client.server"); const supabaseAdmin: any = __sa;
+    const count = async (status?: string) => {
+      let q = supabaseAdmin.from("webinar_email_contacts").select("id", { count: "exact", head: true });
+      if (status) q = q.eq("status", status);
+      const { count: c } = await q;
+      return c ?? 0;
+    };
+    const [total, pending, sent, failed] = await Promise.all([
+      count(),
+      count("pending"),
+      count("sent"),
+      count("failed"),
+    ]);
+    return { total, pending, sent, failed, subject: WEBINAR_EMAIL_SUBJECT };
+  });
+
+const WebinarEmailBlastInput = z.object({
+  subject: z.string().trim().min(1).max(200).default(WEBINAR_EMAIL_SUBJECT),
+  limit: z.number().int().min(1).max(300).default(100),
+});
+
+export const sendWebinarEmailBlast = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => WebinarEmailBlastInput.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin: __sa } = await import("@/integrations/supabase/client.server"); const supabaseAdmin: any = __sa;
+    const { runWebinarEmailBlast } = await import("@/lib/webinar-email.server");
+
+    // Reply-to = emailul adminului, ca răspunsurile să ajungă la el.
+    const { data: au } = await supabaseAdmin.auth.admin.getUserById(context.userId);
+    const replyTo = au?.user?.email ?? undefined;
+
+    const res = await runWebinarEmailBlast({ subject: data.subject, limit: data.limit, replyTo });
+    if (res.sent || res.failed) {
+      await logAudit(context.userId, "webinar.email_blast_batch", null, null, {
+        sent: res.sent,
+        failed: res.failed,
+        remaining: res.remaining,
+      });
+    }
+    return res;
+  });
+
 export const listBroadcasts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
