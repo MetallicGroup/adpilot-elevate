@@ -17,6 +17,7 @@ import {
   sendWebinarBlast,
   getWebinarEmailStatus,
   sendWebinarEmailBlast,
+  sendWebinarEmailTest,
   adminSetCampaignStatus,
   getAiStatus,
   type AdminUserRow,
@@ -856,10 +857,27 @@ function WebinarBlastCard() {
 function WebinarEmailBlastCard() {
   const loadStatus = useServerFn(getWebinarEmailStatus);
   const blast = useServerFn(sendWebinarEmailBlast);
+  const testSend = useServerFn(sendWebinarEmailTest);
   const [st, setSt] = useState<any>(null);
   const [subject, setSubject] = useState("Îți arăt live cum întreci concurența. Ai 30 min?");
+  const [testTo, setTestTo] = useState("danudda2810@gmail.com");
+  const [testing, setTesting] = useState(false);
   const [running, setRunning] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+
+  const runTest = async () => {
+    if (!testTo.trim() || !subject.trim()) { setMsg("Pune subiect + email de test."); return; }
+    setTesting(true);
+    setMsg(null);
+    try {
+      const r = await testSend({ data: { to: testTo.trim(), subject: subject.trim() } });
+      setMsg(r.sent ? `✅ Test trimis către ${testTo.trim()} — verifică inbox-ul.` : `Test eșuat: ${r.error ?? "necunoscut"}`);
+    } catch (e: any) {
+      setMsg(`Test eșuat: ${e.message}`);
+    } finally {
+      setTesting(false);
+    }
+  };
 
   const refresh = () =>
     loadStatus()
@@ -917,6 +935,21 @@ function WebinarEmailBlastCard() {
           placeholder="Subiectul emailului"
         />
       </div>
+      <div className="flex flex-wrap items-end gap-2 pt-1">
+        <div className="flex-1 min-w-[200px]">
+          <label className="text-xs text-muted-foreground">Test către</label>
+          <input
+            value={testTo}
+            onChange={(e) => setTestTo(e.target.value)}
+            className="mt-1 w-full h-10 rounded-lg border border-border bg-secondary/40 text-sm px-3"
+            placeholder="email de test"
+          />
+        </div>
+        <button onClick={runTest} disabled={testing || running} className="h-10 px-4 rounded-lg border border-border text-sm hover:bg-secondary disabled:opacity-50 inline-flex items-center gap-2">
+          {testing ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+          Trimite test
+        </button>
+      </div>
       <div className="flex items-center gap-3">
         <button onClick={runAll} disabled={running || !st || st.pending === 0} className="px-4 h-10 rounded-lg text-white disabled:opacity-50 inline-flex items-center gap-2" style={{ background: "var(--gradient-primary)" }}>
           {running ? <Loader2 className="w-4 h-4 animate-spin" /> : <Megaphone className="w-4 h-4" />}
@@ -924,7 +957,7 @@ function WebinarEmailBlastCard() {
         </button>
         <button onClick={refresh} disabled={running} className="text-xs text-muted-foreground hover:text-foreground">Reîmprospătează</button>
       </div>
-      <p className="text-xs text-muted-foreground">Rulează în loturi (nu închide pagina până termină). Trimite invitația branded de webinar prin Resend (noreply@adpilot.ro), reply-to pe emailul tău.</p>
+      <p className="text-xs text-muted-foreground">Testează întâi pe emailul tău. Apoi rulează în loturi (nu închide pagina până termină). Trimite invitația branded de webinar prin Resend (noreply@adpilot.ro), reply-to pe emailul tău.</p>
       {msg && <p className="text-sm">{msg}</p>}
     </div>
   );

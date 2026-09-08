@@ -1094,6 +1094,26 @@ export const getWebinarEmailStatus = createServerFn({ method: "GET" })
     return { total, pending, sent, failed, subject: WEBINAR_EMAIL_SUBJECT };
   });
 
+const WebinarEmailTestInput = z.object({
+  to: z.string().trim().email(),
+  subject: z.string().trim().min(1).max(200).default(WEBINAR_EMAIL_SUBJECT),
+});
+
+export const sendWebinarEmailTest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => WebinarEmailTestInput.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin: __sa } = await import("@/integrations/supabase/client.server"); const supabaseAdmin: any = __sa;
+    const { webinarInviteEmail } = await import("@/lib/webinar-email.server");
+    const { sendUserEmail } = await import("@/lib/user-email.server");
+    const { data: au } = await supabaseAdmin.auth.admin.getUserById(context.userId);
+    const replyTo = au?.user?.email ?? undefined;
+    const { html, text } = webinarInviteEmail(data.subject);
+    const r = await sendUserEmail(data.to, data.subject, text, html, { replyTo });
+    return r;
+  });
+
 const WebinarEmailBlastInput = z.object({
   subject: z.string().trim().min(1).max(200).default(WEBINAR_EMAIL_SUBJECT),
   limit: z.number().int().min(1).max(300).default(100),
