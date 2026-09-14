@@ -309,20 +309,38 @@ export async function findExistingPixel(
   return p?.id ? { id: String(p.id), name: String(p.name ?? "Pixel") } : null;
 }
 
-/** Listează TOȚI pixelii Meta de pe contul de reclame (nume + id). */
+export type AdPixelInfo = {
+  id: string;
+  name: string;
+  last_fired_time: string | null;
+  /** true dacă a trimis evenimente în ultimele 30 zile (semnal util pentru Sales/Signups). */
+  active: boolean;
+};
+
+/** Listează TOȚI pixelii Meta de pe contul de reclame (nume + id + health). */
 export async function listAdPixels(
   adAccountId: string,
   accessToken: string,
-): Promise<Array<{ id: string; name: string }>> {
+): Promise<AdPixelInfo[]> {
   try {
     const res = await fetch(
-      `${GRAPH}/${metaApiVersion()}/act_${adAccountId}/adspixels?fields=id,name&limit=50&access_token=${encodeURIComponent(accessToken)}`,
+      `${GRAPH}/${metaApiVersion()}/act_${adAccountId}/adspixels?fields=id,name,last_fired_time&limit=50&access_token=${encodeURIComponent(accessToken)}`,
     );
     const json: any = await res.json();
     if (!res.ok || !Array.isArray(json?.data)) return [];
+    const now = Date.now();
     return json.data
       .filter((p: any) => p?.id)
-      .map((p: any) => ({ id: String(p.id), name: String(p.name ?? "Pixel") }));
+      .map((p: any) => {
+        const last = p.last_fired_time ? String(p.last_fired_time) : null;
+        const active = !!last && now - new Date(last).getTime() < 30 * 86_400_000;
+        return {
+          id: String(p.id),
+          name: String(p.name ?? "Pixel"),
+          last_fired_time: last,
+          active,
+        };
+      });
   } catch {
     return [];
   }
@@ -399,6 +417,11 @@ export async function createAdSet(
     pixel_id?: string;
     dsa_beneficiary?: string;
     dsa_payor?: string;
+    /**
+     * Advantage+ placements (default true): Meta alege placement-urile pe FB+IG.
+     * false = doar Feed Facebook (legacy / test controlat).
+     */
+    advantage_placements?: boolean;
   },
 ) {
   const geo_locations: Record<string, unknown> = {};
@@ -411,14 +434,20 @@ export async function createAdSet(
   } else {
     geo_locations.countries = args.targeting.countries;
   }
+  const advantagePlacements = args.advantage_placements !== false;
   const targeting: Record<string, unknown> = {
     geo_locations,
     age_min: args.targeting.age_min,
     age_max: args.targeting.age_max,
+    // FB + IG only (fără Audience Network by default). Fără poziții fixe =
+    // Advantage+ placements pe feed, stories, reels, etc.
     publisher_platforms: ["facebook", "instagram"],
-    facebook_positions: ["feed"],
     targeting_automation: { advantage_audience: 1 },
   };
+  if (!advantagePlacements) {
+    targeting.facebook_positions = ["feed"];
+    targeting.instagram_positions = ["stream"];
+  }
   if (args.targeting.genders && args.targeting.genders.length) {
     targeting.genders = args.targeting.genders;
   }

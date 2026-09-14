@@ -1,5 +1,5 @@
 /**
- * WhatsApp AI agent: runs Lovable AI with tool-calling to control campaigns.
+ * WhatsApp AI agent: Claude (tool-calling) to control Meta campaigns from WhatsApp.
  * Server-only. Invoked from the WA webhook (no user JWT — we pass user_id explicitly).
  */
 import { generateText, tool, stepCountIs, type ModelMessage } from "ai";
@@ -7,6 +7,17 @@ import { z } from "zod";
 import { sendWhatsAppMessage, uploadWhatsAppMedia } from "./whatsapp.server";
 import { metaApiVersion } from "./meta.server";
 import { setMetaCampaignStatus } from "./campaign-control.server";
+import { WA_AGENT_SYSTEM_PROMPT, WA_COPYWRITER_SYSTEM } from "./wa-agent-prompt.server";
+import {
+  budgetLearningWarning,
+  classifyPublishError,
+  creativeCountForBudget,
+  normalizeCreatives,
+  objectiveFromDraft,
+  suggestNicheFormQuestions,
+  type AgentPublishSnapshot,
+  type CreativeVariant,
+} from "./wa-campaign-strategy.server";
 
 const GRAPH = "https://graph.facebook.com";
 
@@ -28,80 +39,7 @@ type AgentCtx = {
   latestMedia: { path: string; mime: string; signedUrl: string } | null;
 };
 
-const SYSTEM_PROMPT = `Ești AdPilot AI — asistent expert de Facebook & Instagram Ads pentru clientul tău, care îți scrie pe WhatsApp.
-
-Stilul tău:
-- Vorbește mereu în limba română, cu ton prietenos, direct, profesionist. Folosește emoji-uri relevante moderat (📊 🎯 💰 🚀 ⚠️ ✅).
-- Răspunsuri scurte, structurate cu bullet-uri când e nevoie. Maxim 5-6 linii per mesaj.
-- Ești PROACTIV: când vezi probleme (CPL mare, spend 0, lead-uri 0 după mult buget) — semnalează singur și propune acțiuni.
-- FORMATARE WhatsApp: pentru bold folosește UN SINGUR asterisc (*text*), pentru italic UN SINGUR underscore (_text_). NU folosi NICIODATĂ **text** (markdown) — pe WhatsApp apar stelele vizibile. Nu folosi tabele markdown sau headinguri (#). Pentru liste folosește „•" sau „- ".
-
-Capacități:
-- Poți lista campaniile cu \`list_campaigns\`.
-- Poți vedea metrici (spend, lead-uri, CPL) cu \`get_insights\`.
-- Poți porni/opri/pune pe pauză campanii (\`pause_campaign\`, \`resume_campaign\`).
-- Poți modifica bugetul zilnic (\`update_budget\`).
-- Poți genera copy nou (headline + text + CTA) cu \`generate_copy\` — folosește emoji-uri și subtexte clare.
-- Poți crea o campanie complet nouă cu \`create_campaign\` — 4 obiective: *vânzări* (sales, magazin/produs, optimizat pe cumpărături cu Pixel), *clienți potențiali* (leads, formular), *apeluri* (calls, „Sună acum"), *trafic* (traffic). Necesită o imagine sau clip trimis de user pe WhatsApp + buget + descrierea ofertei. Confirmă mereu cu user-ul DETALIILE (obiectiv, nume, buget, copy) înainte să apelezi tool-ul. Dacă lipsește permisiunea pages_manage_ads (acum parte din Marketing API), campaniile pentru clienți potențiali se lansează automat ca "Sună acum" folosind numărul de telefon salvat.
-- Poți reîncerca publicarea ultimului draft eșuat cu \`retry_last_campaign\` când userul spune „încearcă iar”.
-- Poți lista lead-urile recente cu \`list_recent_leads\`.
-- Poți crea o pagină de prezentare (landing page) direct din WhatsApp cu \`create_landing_page\`, pentru obiectivele: programări, clienți potențiali sau apeluri. Întreabă scurt 3 lucruri (numele afacerii, serviciul promovat, orașul — plus telefonul dacă e „apeluri"), apoi apelează tool-ul și trimite-i userului link-ul public rezultat. Nu cere alte detalii tehnice — textele le scrie AI-ul automat.
-- Poți anula sau reactiva abonamentul AdPilot cu \`cancel_subscription\`. Dacă userul scrie orice legat de anulare/dezabonare/oprire abonament, cere o confirmare scurtă ("Confirmi anularea? Da/Nu") și apoi apelează tool-ul. Explică-i că păstrează accesul până la finalul perioadei deja plătite.
-- Poți escalada către echipa umană AdPilot cu \`request_human_support\`. Folosește-l când: userul cere explicit să vorbească cu un om, este nemulțumit/frustrat, ai încercat deja o soluție și problema persistă, sau e ceva ce tu nu poți rezolva (plăți blocate, cont Meta suspendat, erori repetate). ÎNTÂI întreabă-l scurt: „Vrei să te preia un coleg din echipă? Îmi confirmi numele și numărul de telefon" — apoi apelează tool-ul cu numele, telefonul și un rezumat clar al problemei. Dacă escaladarea vine după o eroare de la Meta (o campanie/acțiune care a eșuat), pune EROAREA EXACTĂ returnată de Meta în câmpul meta_error. Confirmă-i după aceea că echipa îl contactează în cel mai scurt timp.
-
-IMPORTANT despre lead-uri (datele de contact):
-- Userul cu care vorbești pe WhatsApp ESTE PROPRIETARUL contului și al lead-urilor. Lead-urile îi aparțin lui — au fost generate de campaniile lui Meta plătite din banii lui.
-- Când îți cere „cine a completat", „trimite-mi clientul", „dă-mi numărul/emailul leadului" etc. — apelează \`list_recent_leads\` și trimite-i DIRECT pe WhatsApp numele, telefonul, emailul și mesajul. Este complet legal și conform GDPR (e operatorul de date, nu o terță parte).
-- NU refuza niciodată pe motiv de „confidențialitate", „GDPR", „politici Meta" sau „nu pot partaja date personale". E GREȘIT — datele sunt ale lui.
-- NU-l trimite la Facebook Business Suite / „Formulare instant" / „Lead Ads" ca să-și caute singur lead-urile. Tu i le dai aici, pe WhatsApp, instant.
-- Format recomandat când livrezi un lead: „👤 *Nume* — 📞 telefon — ✉️ email — 💬 mesaj (dacă există)".
-
-Reguli importante:
-- Pentru acțiuni care schimbă bani (create_campaign, update_budget cu modificare >50%) — cere mereu confirmare scurtă ("Confirmi? Da/Nu") ÎNAINTE să apelezi tool-ul.
-- Pentru pause/resume — execută direct, apoi confirmă într-o linie.
-- Dacă userul îți trimite o poză fără context, întreabă-l ce vrea să facă cu ea (campanie nouă? doar copy?).
-- Când generezi copy, oferă 2-3 variante scurte din care să aleagă.
-- Dacă userul cere ceva ce nu poți face, spune clar și sugerează o alternativă.
-- IMPORTANT pentru creative (poză SAU video): pentru fișierele PROPRII folosește DOAR fișiere trimise direct pe WhatsApp (vor apărea în „media disponibilă" din context). Acceptăm imagine (JPG/PNG) sau video (MP4/MOV — max ~100MB, 9:16/1:1/16:9). NU cere URL-uri externe și NU accepta link-uri spre site-uri (Pixabay, YouTube, etc.) — sistemul nu le poate descărca.
-- CÂND E NEVOIE DE POZĂ ȘI USERUL NU A TRIMIS NIMIC, oferă-i alegerea: „Ai deja o poză pe care vrei s-o folosim, sau vrei să ți-o generez eu cu AI? 📸🤖". • Dacă alege POZA LUI → cere-i s-o trimită direct pe WhatsApp. • Dacă alege AI (și are plan Pro/Premium) → întreabă-l: „Perfect! Ai o imagine de referință (trimite-o aici) sau îmi descrii în cuvinte cum vrei să arate poza și despre ce e?". Dacă îmi dă o descriere → apelează \`generate_image\` cu prompt-ul detaliat (fără use_reference). Dacă trimite o imagine de referință și zice să plecăm de la ea → apelează \`generate_image\` cu use_reference=true. Compune tu un prompt vizual bogat din ce a spus userul (produs/serviciu, stil, atmosferă, culori, eventual text scurt pe imagine). Poza generată e trimisă automat userului pentru aprobare și rămâne salvată — la „da" o folosești direct, fără să ceri retrimiterea.
-- După ce userul aprobă imaginea generată („da / o folosim / îmi place") NU-i cere s-o retrimită — e deja în „media disponibilă" (latestMedia). Dacă zice „altă variantă / nu-mi place / mai încearcă" → apelează din nou \`generate_image\` cu un prompt ajustat pe feedback-ul lui.
-- Dacă pentru create_campaign nu există media disponibilă (latestMedia lipsește), NU apela tool-ul — întâi cere fișierul SAU oferă generarea cu AI (vezi mai sus). Media din ultimele 24h rămâne disponibilă pentru confirmări ulterioare.
-- NU cere niciodată userului URL-ul site-ului (landing_url). Pentru campanii Lead Generation formularul se completează direct pe Facebook/Instagram, nu e nevoie de site extern. Lasă landing_url gol și sistemul va folosi automat un URL valid implicit.
-- ATENȚIE LOCAȚIE: dacă userul menționează un oraș (ex: „pe București", „în Cluj", „target Timișoara") — FOLOSEȘTE parametrul "cities" la create_campaign cu numele orașului (ex: ["Bucharest"]). NU lăsa doar countries=["RO"] când userul a cerut explicit un oraș. Confirmă în mesajul de confirmare locația exactă (oraș + rază km).
-- NU anunța NICIODATĂ în avans că „lansezi acum" / „durează câteva secunde" / „stai puțin" înainte să apelezi un tool. Apelează direct tool-ul și trimite UN SINGUR mesaj DUPĂ ce primești rezultatul: dacă ok → confirmă LIVE cu detalii; dacă error → spune-i userului EXACT motivul (mesajul din câmpul "error" returnat de tool, tradus simplu în română, fără termeni tehnici) și sugerează ce poate face (ex: schimbă bugetul, alt oraș, reconectează contul Meta). SINGURA EXCEPȚIE: la \`generate_image\` NU trimite tu mesajul „durează 1-2 min" — îl trimite tool-ul singur; tu doar apelează tool-ul direct.
-- NICIODATĂ nu spune „echipa tehnică a fost notificată" — nu există echipă tehnică în spate, ești TU agentul. Dacă ceva eșuează, arată motivul real returnat de sistem.
-- Dacă userul spune „încearcă iar / mai încearcă / retry” după o lansare eșuată, apelează \`retry_last_campaign\` direct. Nu inventa explicații și nu spune că nu poți încerca.
-- Dacă Meta returnează o eroare despre „persoana sau organizația promovată”, „beneficiary”, „payer” sau DSA, NU trimite mesajul generic Meta și NU-l trimite în setările Paginii. Întreabă direct: „Care este numele exact al firmei sau persoanei promovate?” și așteaptă răspunsul.
-
-FLOW OBLIGATORIU pentru CAMPANII NOI (înainte să apelezi create_campaign):
-1. Întreabă userul CE VREA SĂ OBȚINĂ din reclamă — 5 variante:
-   a) 🛒 „Vânzări online" (are magazin/site cu produse) → objective="sales". Cere-i LINK-ul de promovat: tot magazinul, o categorie, sau un singur produs — orice URL (ex: pagina categoriei „garduri" sau a unui produs). Pixel-ul Meta e detectat automat de pe cont; dacă nu există, campania merge ca trafic și îi spui să instaleze Pixel-ul ca să urmărim vânzările.
-   b) 📝 „Clienți potențiali" (formular direct pe Facebook/Instagram, userul nu părăsește app-ul) → objective="leads".
-   c) 📞 „Apeluri" (clienții îl sună direct) → objective="calls". Cere-i NUMĂRUL de telefon pe care vrea să primească apelurile și trimite-l în câmpul call_phone. Butonul „Sună acum" formează acel număr.
-   d) 🌐 „Trafic pe site" (doar vizite, fără optimizare pe vânzări) → objective="traffic" (cere URL-ul site-ului).
-   e) ✍️ „Înscrieri pe site" (vrea ca oamenii să-și facă CONT / să se înregistreze / să se aboneze pe site-ul lui) → objective="signups". Cere-i LINK-ul paginii de înscriere. Optimizează pe crearea de cont (evenimentul CompleteRegistration din Pixel); Pixel-ul e detectat automat, iar fără el cade pe trafic și îi spui să-l instaleze. ALEGE ASTA (nu „leads" și nici „traffic") când scopul e conturi/înregistrări PE SITE-ul lui.
-1b. TARGETARE PE INTERESE (câmpul interests) — pentru rezultate bune: alege INTERESE reale din Meta (nume în ENGLEZĂ, le caut automat). Folosește nume care EXISTĂ ca interese (industrie/nișă/pasiune), NU descrieri (ex NU 'Small business owners' — nu e interes).
-   • Dacă userul ÎȚI SPUNE ce public/interese vrea → folosește exact alea (mod MANUAL).
-   • Dacă NU → alege TU automat, pe baza a ce promovează:
-     – B2C (vinde către clienți): interese de consum. Ex salon→cliente: ['Beauty','Makeup','Cosmetics']; sală→membri: ['Fitness and wellness','Physical fitness'].
-     – B2B (se adresează unor AFACERI/patroni): folosește interesul de INDUSTRIE al nișei + antreprenoriat. Ex „platformă către saloane": ['Beauty salon','Cosmetics','Entrepreneurship']; „către restaurante": ['Restaurants','Entrepreneurship','Small business'].
-   • După lansare îți spun pe ce interese am targetat efectiv — dacă vreunul e greșit, userul poate cere altul.
-   • Lasă GOL doar dacă userul cere explicit „public larg / toată lumea".
-1c. PIXEL (doar pentru 'sales' și 'signups'): înainte să lansezi, apelează tool-ul list_pixels ca să VEZI pixelii de pe cont.
-   • Dacă e UN singur pixel → spune-i userului care e (numele) și folosește-l automat.
-   • Dacă sunt MAI MULȚI pixeli → arată-i userului lista (nume) și ÎNTREABĂ-L pe care să-l folosească; trimite pixel_id-ul ales în create_campaign.
-   • Dacă userul te întreabă „ce pixel vezi?" → apelează list_pixels și răspunde-i concret.
-   • Dacă NU e niciun pixel → spune-i să instaleze pixelul (până atunci campania va merge ca trafic simplu).
-2. Dacă a ales „clienți potențiali", întreabă-l dacă vrea să afle DOAR nume + telefon SAU și alte informații (ex: oraș, serviciu dorit, buget, dată preferată).
-3. Dacă vrea informații suplimentare, întreabă-l CONCRET ce vrea să afle. Pentru fiecare info propune userului dacă e mai bine cu „răspuns scurt" (user tastează) sau „grilă" (user alege dintr-o listă de opțiuni). Sugerează tu opțiunile când e logic (ex: pentru „serviciu" propune lista de servicii din contextul lui).
-4. Înainte să trimiți întrebările la Meta, REFORMULEAZĂ-le frumos și fără greșeli gramaticale, scurte (max 90 caractere fiecare), clare, profesioniste. Userul nu trebuie să vadă întrebări brute cu typos.
-5. Confirmă cu userul lista finală de întrebări (1 mesaj scurt cu bullet-uri) și abia apoi apelează create_campaign cu "custom_questions".
-
-Reguli pentru întrebări custom:
-- Max 8 întrebări per formular (limita practică Meta).
-- Întrebare scurtă: { label: "...", type: "short" }.
-- Întrebare grilă (multiple choice): { label: "...", type: "choice", options: ["Opțiunea 1", "Opțiunea 2", ...] } — max 6 opțiuni, fiecare max 60 caractere.
-- NU pune întrebări lungi (peste 90 caractere) — Meta le respinge sau apar urât în formular.`;
+const SYSTEM_PROMPT = WA_AGENT_SYSTEM_PROMPT;
 
 export async function runWhatsAppAgent(
   ctx: AgentCtx,
@@ -312,22 +250,43 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
     }),
 
     generate_copy: tool({
-      description: "Generează 3 variante de copy pentru o reclamă: headline (max 40 char), primary text (cu emoji-uri și subtexte), description (max 30 char), CTA recomandat.",
+      description:
+        "Generează 3 variante de copy pe unghiuri DISTINCTE (durere / beneficiu / social proof): headline (max 40), primary text, description (max 30), CTA. Folosește pentru orice nișă — trimite un brief complet (afacere, ofertă, oraș, obiectiv).",
       inputSchema: z.object({
-        product_description: z.string(),
+        product_description: z
+          .string()
+          .describe(
+            "Brief complet: tip afacere, ce promovează, ofertă, oraș/zonă, obiectiv (leads/sales/calls/traffic/signups), ton dorit, dovezi dacă există.",
+          ),
         tone: z.enum(["profesionist", "casual", "urgent", "premium"]).default("casual"),
         language: z.string().default("ro"),
+        objective: z
+          .enum(["leads", "sales", "calls", "traffic", "signups"])
+          .optional()
+          .describe("Obiectivul campaniei — influențează CTA și unghiul."),
+        business_type: z
+          .string()
+          .max(80)
+          .optional()
+          .describe("Categorie afacere (ex: cabinet stomatologic, salon, ecom)."),
       }),
-      execute: async ({ product_description, tone, language }) => {
+      execute: async ({ product_description, tone, language, objective, business_type }) => {
         const { chatModel } = await import("./llm.server");
+        const brief = [
+          product_description,
+          business_type ? `Tip afacere: ${business_type}` : "",
+          objective ? `Obiectiv Meta: ${objective}` : "",
+        ]
+          .filter(Boolean)
+          .join("\n");
         const sub = await generateText({
           model: chatModel(),
           messages: [
             {
               role: "system",
-              content: `Ești copywriter pentru Facebook Ads. Generează în limba ${language} 3 variante distincte (A, B, C) în format JSON: [{"headline":"","primary_text":"","description":"","cta":""}]. Headline max 40 char. Primary text: 2-4 linii, cu 2-3 emoji-uri relevante, hook puternic prima linie, beneficii și CTA la final. CTA din: Learn More, Sign Up, Shop Now, Book Now, Apply Now. Ton: ${tone}.`,
+              content: WA_COPYWRITER_SYSTEM(language, tone),
             },
-            { role: "user", content: product_description },
+            { role: "user", content: brief },
           ],
         });
         const txt = sub.text;
@@ -359,72 +318,81 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
 
     create_campaign: tool({
       description:
-          "Creează și lansează o campanie Meta completă (Vânzări / Lead Generation / Apeluri / Traffic). Necesită imagine sau video (latestMedia). Cere mereu CONFIRMAREA user-ului înainte să apelezi (inclusiv obiectiv, locație, întrebări).",
+        "Creează și lansează o campanie Meta (1 ad set + mai multe creative pe unghiuri). Necesită imagine/video (latestMedia). Confirmă mereu cu userul ÎNAINTE (obiectiv, locație, vârstă, buget, copy, formular).",
       inputSchema: z.object({
         name: z.string().max(80),
-        daily_budget: z.number().positive().describe("Buget zilnic în RON/valuta cont"),
-          objective: z
-            .enum(["leads", "sales", "calls", "traffic", "signups"])
-            .default("leads")
-            .describe(
-              "'leads' = formular pe Facebook/IG (nume+telefon) · 'sales' = VÂNZĂRI online: trimite pe magazin/categorie/produs și optimizează pe cumpărături (necesită landing_url; Pixel detectat automat) · 'signups' = ÎNSCRIERI pe site: optimizează pe crearea de cont/înregistrare pe site (evenimentul CompleteRegistration din Pixel) — folosește-l când userul vrea ca oamenii să-și facă CONT / să se înregistreze pe site-ul lui (necesită landing_url; Pixel detectat automat) · 'calls' = APELURI 'Sună acum' (necesită call_phone) · 'traffic' = doar vizite pe site, fără optimizare pe conversie (necesită landing_url)",
-            ),
-        headline: z.string().max(40),
-        primary_text: z.string().max(500),
+        daily_budget: z.number().positive().describe("Buget zilnic în RON (comun pe ad set — Meta împarte pe creative)"),
+        objective: z
+          .enum(["leads", "sales", "calls", "traffic", "signups"])
+          .default("leads")
+          .describe(
+            "'leads' = formular FB/IG · 'sales' = vânzări + Pixel · 'signups' = înscrieri CompleteRegistration · 'calls' = Sună acum · 'traffic' = vizite site",
+          ),
+        business_type: z
+          .string()
+          .max(80)
+          .optional()
+          .describe("Tip afacere (ex: cabinet stomatologic, salon, ecom) — pentru formular + buget dinamic."),
+        headline: z.string().max(40).describe("Headline principal (sau al unghiului 1)"),
+        primary_text: z.string().max(500).describe("Text principal (sau al unghiului 1)"),
         description: z.string().max(50).optional(),
         cta: z.enum(["Learn More", "Sign Up", "Shop Now", "Book Now", "Apply Now", "Call Now"]).default("Learn More"),
-          landing_url: z
-            .string()
-            .url()
-            .optional()
-            .describe("Obligatoriu pentru 'sales', 'signups' și 'traffic' (URL magazin/categorie/produs sau pagina de înscriere/site). Pentru 'leads' și 'calls' lasă gol."),
-          call_phone: z
-            .string()
-            .max(30)
-            .optional()
-            .describe("Doar pentru objective='calls': numărul pe care vrei să primești apelurile (ex '0722334455'). Butonul 'Sună acum' formează acest număr."),
-          custom_questions: z
-            .array(
-              z.object({
-                label: z.string().max(90),
-                type: z.enum(["short", "choice"]).default("short"),
-                options: z.array(z.string().max(60)).max(6).optional(),
-              }),
-            )
-            .max(8)
-            .optional()
-            .describe("Întrebări extra în formular peste nume+telefon. Doar pentru objective='leads'."),
-        countries: z.array(z.string()).default(["RO"]).describe("Coduri ISO 2-litere, ex ['RO']"),
-          cities: z
-            .array(z.string())
-            .optional()
-            .describe(
-              "Nume orașe pentru targetare locală (ex ['Bucharest','Cluj-Napoca']). Folosește în engleză sau română — sistemul caută cheia oficială Meta. Dacă e setat, countries e ignorat.",
-            ),
-          city_radius_km: z.number().int().min(10).max(80).default(25).describe("Raza în km în jurul orașelor"),
-        age_min: z.number().int().min(13).max(65).default(18),
-        age_max: z.number().int().min(13).max(65).default(65),
+        creatives: z
+          .array(
+            z.object({
+              angle: z.enum(["pain", "benefit", "social_proof"]).optional(),
+              headline: z.string().max(40),
+              primary_text: z.string().max(500),
+              description: z.string().max(30).optional(),
+              cta: z.enum(["Learn More", "Sign Up", "Shop Now", "Book Now", "Apply Now", "Call Now"]).optional(),
+            }),
+          )
+          .min(2)
+          .max(6)
+          .optional()
+          .describe(
+            "OBLIGATORIU pentru rezultate bune: 3 variante pe unghiuri DISTINCTE (pain/benefit/social_proof). Același buget pe ad set — Meta alocă. Dacă lipsește, se lansează doar copy-ul principal.",
+          ),
+        landing_url: z
+          .string()
+          .url()
+          .optional()
+          .describe("Obligatoriu pentru sales/signups/traffic. Pentru leads/calls lasă gol."),
+        call_phone: z
+          .string()
+          .max(30)
+          .optional()
+          .describe("Doar pentru calls: numărul de apel."),
+        custom_questions: z
+          .array(
+            z.object({
+              label: z.string().max(90),
+              type: z.enum(["short", "choice"]).default("short"),
+              options: z.array(z.string().max(60)).max(6).optional(),
+            }),
+          )
+          .max(8)
+          .optional()
+          .describe("Întrebări calificare pe nișă (leads). Dacă goale, sistemul sugerează automat pe business_type."),
+        countries: z.array(z.string()).default(["RO"]).describe("Coduri ISO, ex ['RO']"),
+        cities: z
+          .array(z.string())
+          .optional()
+          .describe("Orașe locale (ex ['Bucharest']). Dacă e setat, countries e ignorat la geo."),
+        city_radius_km: z.number().int().min(10).max(80).default(25),
         interests: z
           .array(z.string().max(60))
           .max(10)
           .optional()
-          .describe(
-            "Targetare detaliată pe INTERESE și COMPORTAMENTE (nume în engleză, le caut automat în Meta). Poți alege TU automat, pe baza publicului descris, SAU folosi exact ce cere userul. B2C (clienți): interese de consum (ex: 'Beauty','Makeup','Skincare','Fitness'). B2B (patroni/afaceri): comportamente + interese de business (ex: 'Small business owners','Beauty salon','Restaurants'). Lasă GOL doar dacă userul vrea explicit public larg.",
-          ),
+          .describe("Sugestii interese EN. Default GOL (Advantage+). Max 1–3."),
+        age_min: z.number().int().min(13).max(65).default(18),
+        age_max: z.number().int().min(13).max(65).default(65),
         pixel_id: z
           .string()
           .max(40)
           .optional()
-          .describe(
-            "Doar pentru 'sales'/'signups': ID-ul pixelului ALES de user când sunt MAI MULȚI pixeli pe cont (îl iei din tool-ul list_pixels). Dacă e un singur pixel, lasă gol — se folosește automat.",
-          ),
-        beneficiary: z
-          .string()
-          .max(100)
-          .optional()
-          .describe(
-            "Numele firmei/persoanei promovate de reclamă (cerut de UE - DSA). Dacă lipsește, se folosește numele Paginii Facebook.",
-          ),
+          .describe("Pixel ales când sunt mai mulți (din list_pixels)."),
+        beneficiary: z.string().max(100).optional().describe("DSA: nume firmă/persoană promovată."),
       }),
       execute: async (args) => {
         if (args.daily_budget < MIN_AGENT_DAILY_BUDGET_RON || args.daily_budget > MAX_AGENT_DAILY_BUDGET_RON) {
@@ -435,7 +403,6 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
         if (!ctx.latestMedia) {
           return { error: "Userul nu a trimis imagine. Cere-i să trimită o poză pentru reclamă." };
         }
-        // Vânzări / înscrieri / trafic au nevoie de un URL valid.
         if (
           (args.objective === "sales" ||
             args.objective === "signups" ||
@@ -452,7 +419,38 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
             } (https://...). Cere-l userului.`,
           };
         }
-        // Apeluri: campanie 'Sună acum' — o transformăm în trafic către tel:<număr>.
+
+        const maxCreatives = creativeCountForBudget(args.daily_budget);
+        const creatives = normalizeCreatives(
+          {
+            headline: args.headline,
+            primary_text: args.primary_text,
+            description: args.description,
+            cta: args.cta,
+          },
+          args.creatives as CreativeVariant[] | undefined,
+          maxCreatives,
+        );
+
+        let custom_questions = args.custom_questions;
+        if (args.objective === "leads" && (!custom_questions || custom_questions.length === 0)) {
+          custom_questions = suggestNicheFormQuestions(
+            args.business_type || args.name,
+            args.primary_text,
+          ).map((q) => ({
+            label: q.label,
+            type: (q.type ?? "short") as "short" | "choice",
+            options: q.options,
+          }));
+        }
+
+        const budgetNote = budgetLearningWarning(
+          args.daily_budget,
+          args.objective === "calls" ? "calls" : args.objective,
+          args.business_type,
+          args.cities?.[0],
+        );
+
         if (args.objective === "calls") {
           const raw = (args.call_phone || "").replace(/[^\d+]/g, "");
           if (!raw) {
@@ -462,22 +460,58 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
             };
           }
           const tel = raw.startsWith("+") ? raw : `+40${raw.replace(/^0/, "")}`;
-          return await createMetaCampaignFromAgent(supabaseAdmin, ctx, {
+          const result = await createMetaCampaignFromAgent(supabaseAdmin, ctx, {
             ...args,
             objective: "traffic",
             landing_url: `tel:${tel}`,
             cta: "Call Now",
+            creatives,
+            custom_questions,
           });
+          if (budgetNote && !("error" in result && result.error)) {
+            return { ...result, budget_note: budgetNote, creatives_launched: creatives.length };
+          }
+          return result;
         }
-        return await createMetaCampaignFromAgent(supabaseAdmin, ctx, args);
+
+        const result = await createMetaCampaignFromAgent(supabaseAdmin, ctx, {
+          ...args,
+          creatives,
+          custom_questions,
+        });
+        if (budgetNote && !("error" in result && result.error)) {
+          return { ...result, budget_note: budgetNote, creatives_launched: creatives.length };
+        }
+        return { ...result, creatives_launched: creatives.length };
+      },
+    }),
+
+    retry_last_campaign: tool({
+      description:
+        "Reîncearcă publicarea ultimului draft eșuat (cu snapshot salvat: obiectiv, creative, pixel, media). Folosește când userul zice „încearcă iar” / retry după o eroare de lansare.",
+      inputSchema: z.object({
+        beneficiary: z
+          .string()
+          .max(100)
+          .optional()
+          .describe("Dacă eroarea a fost DSA — noul nume firmă/persoană."),
+      }),
+      execute: async ({ beneficiary }) => {
+        return retryLastDraftCampaign(supabaseAdmin, ctx, { beneficiary });
       },
     }),
 
     generate_image: tool({
       description:
-        "Generează o imagine pentru reclamă cu AI (gpt-image-1, calitate maximă, 1024x1024). Folosește când userul nu are poză proprie. Dacă userul a trimis o poză de REFERINȚĂ și vrea ca AI-ul să plece de la ea, apelează cu use_reference=true. După generare imaginea devine 'latestMedia', se salvează în storage și rămâne disponibilă pentru create_campaign la mesajele următoare (userul NU trebuie să o retrimită). Tool-ul trimite SINGUR userului mesajul despre timpul de asteptare la start — nu-l anunta tu inainte.",
+        "Generează o imagine pentru reclamă cu AI (gpt-image-1, calitate maximă, 1024x1024). Folosește când userul nu are poză proprie. Promptul trebuie să fie mobile-first, legat de ofertă, cu text scurt pe imagine (max ~5–6 cuvinte) dacă e cazul. Dacă userul a trimis o poză de REFERINȚĂ și vrea ca AI-ul să plece de la ea, apelează cu use_reference=true. După generare imaginea devine 'latestMedia', se salvează în storage și rămâne disponibilă pentru create_campaign la mesajele următoare (userul NU trebuie să o retrimită). Tool-ul trimite SINGUR userului mesajul despre timpul de asteptare la start — nu-l anunta tu inainte.",
       inputSchema: z.object({
-        prompt: z.string().min(10).max(600).describe("Descriere detaliată a imaginii dorite (produs, stil, atmosferă, culori, text pe imagine). Română sau engleză."),
+        prompt: z
+          .string()
+          .min(10)
+          .max(600)
+          .describe(
+            "Descriere detaliată: tip afacere, scenă, stil, atmosferă, culori, text scurt pe imagine legat de ofertă. Mobile-first, realist, fără clutter. Română sau engleză.",
+          ),
         use_reference: z
           .boolean()
           .optional()
@@ -804,7 +838,7 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
 
     list_pixels: tool({
       description:
-        "Listează pixelii Meta de pe contul de reclame. Folosește-l când userul întreabă ce pixel vezi, SAU înainte de o campanie 'sales'/'signups'. Dacă sunt MAI MULȚI pixeli, arată-i userului lista (nume + id) și ÎNTREABĂ-L pe care să-l folosești, apoi trimite pixel_id-ul ales în create_campaign. Dacă e unul singur, spune-i care e și folosește-l automat.",
+        "Listează pixelii Meta + health (last_fired_time, active în ultimele 30 zile). Folosește înainte de sales/signups. Preferă pixelul *active*. Dacă sunt mai mulți, întreabă userul.",
       inputSchema: z.object({}),
       execute: async () => {
         const token = await getMetaToken(supabaseAdmin, ctx.userId);
@@ -815,7 +849,24 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
         if (!adAcc?.ad_account_id) return { error: "Selectează un ad account din Settings." };
         const { listAdPixels } = await import("./meta-publish.server");
         const pixels = await listAdPixels(adAcc.ad_account_id, token);
-        return { count: pixels.length, pixels };
+        const healthy = pixels.filter((p) => p.active).length;
+        return {
+          count: pixels.length,
+          healthy_count: healthy,
+          pixels: pixels.map((p) => ({
+            id: p.id,
+            name: p.name,
+            last_fired_time: p.last_fired_time,
+            active: p.active,
+            health: p.active ? "ok" : "no_recent_events",
+          })),
+          tip:
+            healthy === 0 && pixels.length > 0
+              ? "Pixelii există dar n-au evenimente recente — Sales/Signups vor învăța greu. Repară Pixel/CAPI pe site sau pornește pe Traffic/Leads."
+              : healthy > 0
+                ? "Cel puțin un Pixel e activ (evenimente în ultimele 30 zile)."
+                : "Niciun Pixel pe cont — pentru Sales/Signups trebuie instalat.",
+        };
       },
     }),
 
@@ -1045,73 +1096,145 @@ function isMetaRateLimitError(message: string): boolean {
 }
 
 function formatPublishErrorForWhatsApp(error: string): string {
-  if (isMetaRateLimitError(error)) {
-    return "Nu mai încerc automat acum — Meta a blocat temporar contul de reclame pentru prea multe apeluri. Așteaptă 15-30 minute, apoi scrie-mi *publică din nou campania*. Draftul rămâne salvat ✅";
-  }
-  return `Nu a mers încă. Motivul real: ${error}`;
+  return classifyPublishError(error).user_message;
 }
 
-async function retryLastDraftCampaign(supabaseAdmin: any, ctx: AgentCtx) {
-  if (!ctx.latestMedia) return { error: "Nu mai găsesc poza/clipul pentru reclamă. Trimite media încă o dată pe WhatsApp." };
+async function retryLastDraftCampaign(
+  supabaseAdmin: any,
+  ctx: AgentCtx,
+  opts?: { beneficiary?: string },
+) {
   const { data: draft } = await supabaseAdmin
     .from("campaigns")
-    .select("id, name, objective, budget, targeting, creative, lead_form")
+    .select("id, name, objective, budget, targeting, creative, lead_form, pixel_id")
     .eq("user_id", ctx.userId)
     .eq("platform", "meta")
     .eq("status", "draft")
     .is("meta_campaign_id", null)
-    .gte("updated_at", new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString())
+    .gte("updated_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
-  if (!draft) return { error: "Nu am găsit o campanie eșuată recentă pe care să o reîncerc. Dacă vrei, îmi spui din nou detaliile și o lansez curat." };
+  if (!draft) {
+    return {
+      error:
+        "Nu am găsit o campanie eșuată recentă pe care să o reîncerc. Dacă vrei, îmi spui din nou detaliile și o lansez curat.",
+    };
+  }
 
   const creative = (draft.creative ?? {}) as any;
+  const snapshot = (creative.agent_publish ?? null) as AgentPublishSnapshot | null;
   const leadForm = (draft.lead_form ?? {}) as any;
   const targeting = (draft.targeting ?? {}) as any;
-  const age = String(targeting.age_groups?.[0] ?? "18-65").match(/(\d+)\D+(\d+)/);
-  const locations = Array.isArray(targeting.locations) ? targeting.locations : ["RO"];
-  const countries = locations.filter((l: string) => /^[A-Z]{2}$/.test(l));
-  const cities = locations.filter((l: string) => !/^[A-Z]{2}$/.test(l));
-  const { data: file, error: dlErr } = await supabaseAdmin.storage.from("wa-media").download(ctx.latestMedia.path);
-  if (dlErr || !file) return { error: `Nu pot citi poza/clipul: ${dlErr?.message ?? "fișier lipsă"}` };
+  const age = String(targeting.age_groups?.[0] ?? `${snapshot?.age_min ?? 18}-${snapshot?.age_max ?? 65}`).match(
+    /(\d+)\D+(\d+)/,
+  );
+  const locations = Array.isArray(targeting.locations) ? targeting.locations : snapshot?.countries ?? ["RO"];
+  const countries =
+    snapshot?.countries?.length
+      ? snapshot.countries
+      : locations.filter((l: string) => /^[A-Z]{2}$/.test(l));
+  const cities =
+    snapshot?.cities?.length
+      ? snapshot.cities
+      : locations.filter((l: string) => !/^[A-Z]{2}$/.test(l));
+
+  const mediaPath = ctx.latestMedia?.path || snapshot?.media_path;
+  const mediaMime = ctx.latestMedia?.mime || snapshot?.media_mime || "image/jpeg";
+  if (!mediaPath) {
+    return {
+      error:
+        "Nu mai găsesc poza/clipul pentru reclamă. Trimite media încă o dată pe WhatsApp, apoi spune *încearcă iar*.",
+    };
+  }
+
+  const { data: file, error: dlErr } = await supabaseAdmin.storage.from("wa-media").download(mediaPath);
+  if (dlErr || !file) {
+    return { error: `Nu pot citi poza/clipul: ${dlErr?.message ?? "fișier lipsă"}` };
+  }
 
   const conn = await getActiveMetaSetup(supabaseAdmin, ctx.userId);
   if ("error" in conn) return conn;
 
+  const objective = objectiveFromDraft(draft.objective, snapshot);
+  const creatives = normalizeCreatives(
+    {
+      headline: String(snapshot?.headline ?? creative.headline ?? draft.name).slice(0, 40),
+      primary_text: String(snapshot?.primary_text ?? creative.primary_text ?? creative.description ?? ""),
+      description: String(snapshot?.description ?? creative.description ?? ""),
+      cta: snapshot?.cta ?? creative.cta ?? "Learn More",
+    },
+    snapshot?.creatives,
+    creativeCountForBudget(Number(snapshot?.daily_budget ?? draft.budget)),
+  );
+
   const bytes = new Uint8Array(await file.arrayBuffer());
   const args = {
-    name: draft.name,
-    daily_budget: Number(draft.budget),
-    objective: draft.objective === "LINK_CLICKS" ? "traffic" as const : "leads" as const,
-    headline: String(creative.headline ?? draft.name).slice(0, 40),
-    primary_text: String(creative.primary_text ?? creative.description ?? ""),
-    description: String(creative.description ?? ""),
-    cta: creative.cta ?? "Learn More",
-    landing_url: creative.landing_url ?? "https://adpilot.ro",
-    beneficiary: typeof creative.beneficiary === "string" ? creative.beneficiary : undefined,
-    custom_questions: leadForm.custom_questions ?? [],
+    name: snapshot?.name ?? draft.name,
+    daily_budget: Number(snapshot?.daily_budget ?? draft.budget),
+    objective,
+    headline: creatives[0]!.headline,
+    primary_text: creatives[0]!.primary_text,
+    description: creatives[0]!.description ?? "",
+    cta: creatives[0]!.cta ?? snapshot?.cta ?? creative.cta ?? "Learn More",
+    landing_url: snapshot?.landing_url ?? creative.landing_url ?? "https://adpilot.ro",
+    beneficiary:
+      (opts?.beneficiary && opts.beneficiary.trim()) ||
+      snapshot?.beneficiary ||
+      (typeof creative.beneficiary === "string" ? creative.beneficiary : undefined),
+    custom_questions: snapshot?.custom_questions ?? leadForm.custom_questions ?? [],
     countries: countries.length ? countries : ["RO"],
     cities: cities.length ? cities : undefined,
-    age_min: age ? Number(age[1]) : 18,
-    age_max: age ? Number(age[2]) : 65,
+    city_radius_km: snapshot?.city_radius_km ?? 25,
+    age_min: snapshot?.age_min ?? (age ? Number(age[1]) : 18),
+    age_max: snapshot?.age_max ?? (age ? Number(age[2]) : 65),
+    interests: snapshot?.interests,
+    pixel_id: snapshot?.pixel_id ?? draft.pixel_id ?? undefined,
+    creatives,
   };
 
-  const cityKeys = await resolveCityKeys(conn.accessToken, args.cities, args.countries, 25);
-  if (args.cities?.length && !cityKeys.length) return { error: `Nu am găsit orașele cerute (${args.cities.join(", ")}) în Meta.` };
-  return publishCampaignToMeta(supabaseAdmin, {
+  // Persist beneficiary fix into snapshot for next retries
+  if (opts?.beneficiary) {
+    await supabaseAdmin
+      .from("campaigns")
+      .update({
+        creative: {
+          ...creative,
+          beneficiary: opts.beneficiary,
+          agent_publish: { ...(snapshot ?? {}), beneficiary: opts.beneficiary },
+        },
+      })
+      .eq("id", draft.id);
+  }
+
+  const cityKeys = await resolveCityKeys(
+    conn.accessToken,
+    args.cities,
+    args.countries,
+    args.city_radius_km ?? 25,
+  );
+  if (args.cities?.length && !cityKeys.length) {
+    return { error: `Nu am găsit orașele cerute (${args.cities.join(", ")}) în Meta.` };
+  }
+
+  const result = await publishCampaignToMeta(supabaseAdmin, {
     campaignRowId: draft.id,
     adAccountId: conn.adAccountId,
     accessToken: conn.accessToken,
     pageId: conn.pageId,
     pageAccessToken: conn.pageAccessToken,
     bytes,
-    mediaMime: ctx.latestMedia.mime,
+    mediaMime,
     args,
-    objective: args.objective,
+    objective: objective === "calls" ? "traffic" : (objective as "leads" | "traffic" | "sales" | "signups"),
     cityKeys,
     userId: ctx.userId,
   });
+
+  if ("error" in result && result.error) {
+    return { error: classifyPublishError(result.error).user_message, raw_error: result.error };
+  }
+  return result;
 }
 
 async function getActiveMetaSetup(supabaseAdmin: any, userId: string) {
@@ -1188,6 +1311,7 @@ async function publishCampaignToMeta(
       beneficiary?: string;
       interests?: string[];
       pixel_id?: string;
+      creatives?: CreativeVariant[];
     };
     objective: "leads" | "traffic" | "sales" | "signups";
     cityKeys: Array<{ key: string; radius?: number }>;
@@ -1197,10 +1321,31 @@ async function publishCampaignToMeta(
   const { createLeadForm, uploadAdImageFromBytes, createCampaign, createAdSet, createAdCreative, createAd, fetchPageName, fetchPageInstagramId, resolveAdTargeting } =
     await import("./meta-publish.server");
 
+  const persistPublishError = async (msg: string) => {
+    try {
+      const { data: row } = await supabaseAdmin
+        .from("campaigns")
+        .select("creative")
+        .eq("id", input.campaignRowId)
+        .maybeSingle();
+      const creative = (row?.creative ?? {}) as Record<string, unknown>;
+      await supabaseAdmin
+        .from("campaigns")
+        .update({
+          status: "draft",
+          creative: {
+            ...creative,
+            last_publish_error: msg,
+            last_publish_error_at: new Date().toISOString(),
+          },
+        })
+        .eq("id", input.campaignRowId);
+    } catch {
+      /* ignore */
+    }
+  };
+
   try {
-    // Fail-fast: nu crea NIMIC pe Meta dacă contul de reclame nu poate rula
-    // reclame (sold neplătit, dezactivat, în review) — altfel rămân campanii
-    // pe jumătate create. Îi dăm userului mesajul clar.
     const { checkAdAccountRunnable } = await import("./meta-publish.server");
     const runnable = await checkAdAccountRunnable(input.adAccountId, input.accessToken);
     if (!runnable.ok) {
@@ -1210,10 +1355,21 @@ async function publishCampaignToMeta(
 
     let form: { id: string } | null = null;
     let objective: "leads" | "traffic" | "sales" | "signups" = input.objective;
-    let cta = input.args.cta;
     let landing_url = input.args.landing_url ?? "https://adpilot.ro";
     let fallbackNote = "";
     let pixel_id: string | undefined;
+    let pixelHealthNote = "";
+
+    const creatives = normalizeCreatives(
+      {
+        headline: input.args.headline,
+        primary_text: input.args.primary_text,
+        description: input.args.description,
+        cta: input.args.cta,
+      },
+      input.args.creatives,
+      creativeCountForBudget(input.args.daily_budget),
+    );
 
     if (input.objective === "leads") {
       try {
@@ -1236,9 +1392,9 @@ async function publishCampaignToMeta(
             };
           }
           objective = "traffic";
-          cta = "Call Now";
           landing_url = `tel:${phone}`;
           fallbackNote = "formular lead dezactivat — campanie 'Sună acum'";
+          for (const c of creatives) c.cta = "Call Now";
           await supabaseAdmin
             .from("campaigns")
             .update({
@@ -1248,6 +1404,7 @@ async function publishCampaignToMeta(
                 ...input.args,
                 cta: "Call Now",
                 landing_url,
+                variants: creatives,
               },
             })
             .eq("id", input.campaignRowId);
@@ -1257,50 +1414,72 @@ async function publishCampaignToMeta(
       }
     }
 
-    // Conversii pe site (vânzări / înscrieri): detectăm automat Pixel-ul Meta de pe
-    // cont. Cu pixel → optimizăm pe conversia reală (achiziție / creare cont). Fără
-    // pixel → cădem pe trafic spre site și îi spunem userului să-l instaleze.
     if (objective === "sales" || objective === "signups") {
       const { listAdPixels } = await import("./meta-publish.server");
       const pixels = await listAdPixels(input.adAccountId, input.accessToken);
-      let chosen: { id: string; name: string } | null = null;
-      if (input.args.pixel_id) chosen = pixels.find((p) => p.id === input.args.pixel_id) ?? null;
-      if (!chosen && pixels.length === 1) chosen = pixels[0];
-      if (!chosen && pixels.length > 1) {
-        // Mai mulți pixeli, niciunul ales explicit → folosim primul + îi spunem userului.
-        chosen = pixels[0];
-        fallbackNote =
-          (fallbackNote ? fallbackNote + " · " : "") +
-          `ai ${pixels.length} pixeli pe cont — am folosit '${pixels[0].name}'. Dacă vrei altul, spune-mi`;
+      let chosen = input.args.pixel_id
+        ? pixels.find((p) => p.id === input.args.pixel_id) ?? null
+        : null;
+      if (!chosen) {
+        const healthy = pixels.filter((p) => p.active);
+        if (healthy.length === 1) chosen = healthy[0]!;
+        else if (pixels.length === 1) chosen = pixels[0]!;
+        else if (healthy.length > 1) {
+          chosen = healthy[0]!;
+          fallbackNote =
+            (fallbackNote ? fallbackNote + " · " : "") +
+            `ai ${healthy.length} pixeli activi — am folosit '${chosen.name}'. Dacă vrei altul, spune-mi`;
+        } else if (pixels.length > 1) {
+          chosen = pixels[0]!;
+          fallbackNote =
+            (fallbackNote ? fallbackNote + " · " : "") +
+            `ai ${pixels.length} pixeli pe cont — am folosit '${chosen.name}' (fără evenimente recente)`;
+        }
       }
       if (chosen) {
         pixel_id = chosen.id;
+        if (!chosen.active) {
+          pixelHealthNote =
+            `Pixelul '${chosen.name}' n-are evenimente în ultimele 30 zile — Sales/Signups învață greu. Verifică Pixel + CAPI pe site.`;
+          fallbackNote = (fallbackNote ? fallbackNote + " · " : "") + pixelHealthNote;
+        } else {
+          fallbackNote =
+            (fallbackNote ? fallbackNote + " · " : "") +
+            `Pixel activ: ${chosen.name}`;
+        }
         await supabaseAdmin.from("campaigns").update({ pixel_id: chosen.id }).eq("id", input.campaignRowId);
       } else {
         const what = objective === "signups" ? "înscrieri" : "vânzări reale";
         objective = "traffic";
         fallbackNote =
           (fallbackNote ? fallbackNote + " · " : "") +
-          `n-am găsit Pixel Meta pe cont — am făcut campanie de *trafic* spre site. Instalează Pixel-ul Meta pe site ca să optimizăm pe ${what}`;
+          `n-am găsit Pixel Meta pe cont — am făcut campanie de *trafic* spre site. Instalează Pixel-ul (și CAPI) pe site ca să optimizăm pe ${what}`;
         await supabaseAdmin.from("campaigns").update({ objective: "LINK_CLICKS" }).eq("id", input.campaignRowId);
       }
     }
+
+    const metaObjective =
+      objective === "traffic"
+        ? "OUTCOME_TRAFFIC"
+        : objective === "sales" || objective === "signups"
+          ? "OUTCOME_SALES"
+          : "OUTCOME_LEADS";
 
     const metaCamp = await createCampaign(
       input.adAccountId,
       input.accessToken,
       input.args.name,
       "ACTIVE",
-      objective === "traffic" ? "OUTCOME_TRAFFIC" : objective === "sales" ? "OUTCOME_SALES" : "OUTCOME_LEADS",
+      metaObjective,
     );
     await supabaseAdmin.from("campaigns").update({ meta_campaign_id: metaCamp.id }).eq("id", input.campaignRowId);
-    // EU DSA: numele entității promovate (beneficiar/plătitor) — luat automat din Pagina Facebook.
+
     const dsaName =
       (input.args.beneficiary && input.args.beneficiary.trim()) ||
       (await fetchPageName(input.pageId, input.pageAccessToken)) ||
       (await fetchPageName(input.pageId, input.accessToken)) ||
       "AdPilot";
-    // Targetare detaliată: rezolvăm numele de interese/comportamente în ID-uri Meta.
+
     const detailed = input.args.interests?.length
       ? await resolveAdTargeting(input.accessToken, input.args.interests)
       : null;
@@ -1308,7 +1487,7 @@ async function publishCampaignToMeta(
       if (detailed.matched.length) {
         fallbackNote =
           (fallbackNote ? fallbackNote + " · " : "") +
-          `am targetat pe interesele: ${detailed.matched.join(", ")}`;
+          `sugestii interese: ${detailed.matched.join(", ")}`;
       }
       if (detailed.missed.length) {
         fallbackNote =
@@ -1317,9 +1496,6 @@ async function publishCampaignToMeta(
       }
     }
 
-    // Buget: userul vorbește în LEI, dar Meta îl vrea în valuta contului.
-    // Dacă contul e pe altă valută (ex. USD/EUR), convertim — altfel s-ar seta
-    // ex. $50/zi în loc de 50 lei/zi.
     const { ronBudgetToAccountCents } = await import("@/lib/currency.server");
     const budgetConv = await ronBudgetToAccountCents(
       input.args.daily_budget,
@@ -1349,6 +1525,7 @@ async function publishCampaignToMeta(
         status: "ACTIVE",
         objective,
         pixel_id,
+        advantage_placements: true,
       });
 
     let adset: { id: string };
@@ -1358,8 +1535,6 @@ async function publishCampaignToMeta(
       const m = String(e?.message ?? "");
       const isDsa = /beneficiar|beneficiary|payer|payor|person or organization|organization being promoted|dsa/i.test(m);
       if (!isDsa) throw e;
-      // Fallback automat: reîncercăm cu numele Paginii (sau cu numele campaniei),
-      // ca utilizatorul să nu fie nevoit să completeze nimic manual în Meta.
       const fallbacks = [
         (await fetchPageName(input.pageId, input.pageAccessToken)) || "",
         (await fetchPageName(input.pageId, input.accessToken)) || "",
@@ -1379,6 +1554,7 @@ async function publishCampaignToMeta(
       adset = ok;
     }
     await supabaseAdmin.from("campaigns").update({ meta_adset_id: adset.id }).eq("id", input.campaignRowId);
+
     const isVideo = (input.mediaMime || "").toLowerCase().startsWith("video/");
     let image_hash: string | undefined;
     let video_id: string | undefined;
@@ -1386,70 +1562,118 @@ async function publishCampaignToMeta(
     if (isVideo) {
       const { uploadAdVideoFromBytes } = await import("./meta-publish.server");
       const ext = (input.mediaMime.split("/")[1] || "mp4").split(";")[0];
-      const v = await uploadAdVideoFromBytes(input.adAccountId, input.accessToken, input.bytes, `ad.${ext}`, input.mediaMime || "video/mp4");
+      const v = await uploadAdVideoFromBytes(
+        input.adAccountId,
+        input.accessToken,
+        input.bytes,
+        `ad.${ext}`,
+        input.mediaMime || "video/mp4",
+      );
       video_id = v.video_id;
       thumbnail_url = v.thumbnail_url;
     } else {
-      image_hash = await uploadAdImageFromBytes(input.adAccountId, input.accessToken, input.bytes, "ad.jpg", input.mediaMime || "image/jpeg");
+      image_hash = await uploadAdImageFromBytes(
+        input.adAccountId,
+        input.accessToken,
+        input.bytes,
+        "ad.jpg",
+        input.mediaMime || "image/jpeg",
+      );
     }
-    const adCreative = await createAdCreative(input.adAccountId, input.accessToken, {
-      name: `${input.args.name} — Creative`,
-      page_id: input.pageId,
-      instagram_user_id:
-        (await fetchPageInstagramId(input.pageId, input.pageAccessToken)) ||
-        (await fetchPageInstagramId(input.pageId, input.accessToken)),
-      image_hash,
-      video_id,
-      thumbnail_url,
-      headline: input.args.headline,
-      description: input.args.primary_text,
-      cta,
-      landing_url,
-      lead_gen_form_id: form?.id,
-    });
-    const ad = await createAd(input.adAccountId, input.accessToken, {
-      name: `${input.args.name} — Ad`,
-      adset_id: adset.id,
-      creative_id: adCreative.id,
-      status: "ACTIVE",
-    });
-    await supabaseAdmin.from("campaigns").update({ meta_ad_id: ad.id }).eq("id", input.campaignRowId);
+
+    const igId =
+      (await fetchPageInstagramId(input.pageId, input.pageAccessToken)) ||
+      (await fetchPageInstagramId(input.pageId, input.accessToken));
+
+    const adIds: string[] = [];
+    for (let i = 0; i < creatives.length; i++) {
+      const variant = creatives[i]!;
+      const label = variant.angle ? String(variant.angle) : `V${i + 1}`;
+      const adCta = variant.cta || creatives[0]?.cta || input.args.cta;
+      const adCreative = await createAdCreative(input.adAccountId, input.accessToken, {
+        name: `${input.args.name} — ${label}`,
+        page_id: input.pageId,
+        instagram_user_id: igId,
+        image_hash,
+        video_id,
+        thumbnail_url,
+        headline: variant.headline,
+        description: variant.primary_text,
+        cta: adCta,
+        landing_url,
+        lead_gen_form_id: form?.id,
+      });
+      const ad = await createAd(input.adAccountId, input.accessToken, {
+        name: `${input.args.name} — ${label}`,
+        adset_id: adset.id,
+        creative_id: adCreative.id,
+        status: "ACTIVE",
+      });
+      adIds.push(ad.id);
+    }
+
+    const primaryAdId = adIds[0]!;
+    fallbackNote =
+      (fallbackNote ? fallbackNote + " · " : "") +
+      `${creatives.length} creative în același ad set (Advantage+ placements)`;
+
+    const { data: existingRow } = await supabaseAdmin
+      .from("campaigns")
+      .select("creative")
+      .eq("id", input.campaignRowId)
+      .maybeSingle();
+    const prevCreative = (existingRow?.creative ?? {}) as Record<string, unknown>;
+
     await supabaseAdmin
       .from("campaigns")
       .update({
         meta_campaign_id: metaCamp.id,
         meta_adset_id: adset.id,
-        meta_ad_id: ad.id,
+        meta_ad_id: primaryAdId,
         meta_lead_form_id: form?.id ?? null,
         status: "active",
-        ...(objective === "sales"
+        creative: {
+          ...prevCreative,
+          headline: creatives[0]!.headline,
+          primary_text: creatives[0]!.primary_text,
+          description: creatives[0]!.description ?? input.args.description ?? "",
+          cta: creatives[0]!.cta ?? input.args.cta,
+          landing_url,
+          variants: creatives,
+          meta_ad_ids: adIds,
+          last_publish_error: null,
+        },
+        ...(objective === "sales" || objective === "signups"
           ? { objective: "CONVERSIONS", lead_form: null }
           : objective === "traffic"
             ? { objective: "LINK_CLICKS", lead_form: null }
             : {}),
       })
       .eq("id", input.campaignRowId);
+
+    const baseMsg =
+      objective === "sales"
+        ? "Campanie de *vânzări* LIVE ✅ — Pixel + mai multe creative."
+        : objective === "signups"
+          ? "Campanie de *înscrieri* LIVE ✅ — Pixel + mai multe creative."
+          : objective === "traffic"
+            ? `Campanie LIVE ✅${fallbackNote ? " — " + fallbackNote : ""}`
+            : `Campanie LIVE (lead form) ✅ — ${creatives.length} creative.`;
+
     return {
       ok: true,
       campaign_id: input.campaignRowId,
       meta_campaign_id: metaCamp.id,
-      message:
-        objective === "sales"
-          ? "Campanie de *vânzări* LIVE ✅ — optimizată pe cumpărături, cu Pixel."
-          : objective === "traffic"
-            ? `Campanie LIVE ✅${fallbackNote ? " — " + fallbackNote : ""}`
-            : "Campanie LIVE (lead form) ✅",
+      meta_ad_ids: adIds,
+      creatives_count: creatives.length,
+      message: fallbackNote && objective !== "traffic" ? `${baseMsg} ${fallbackNote}` : baseMsg,
+      pixel_health_note: pixelHealthNote || undefined,
     };
   } catch (e: any) {
     const msg = e?.message ?? "Publish failed";
     console.error("[wa-agent] create_campaign publish failed:", msg, e);
-    if (isMetaRateLimitError(msg)) {
-      await supabaseAdmin
-        .from("campaigns")
-        .update({ status: "draft" })
-        .eq("id", input.campaignRowId);
-    }
-    return { error: msg };
+    await persistPublishError(msg);
+    return { error: msg, hint: classifyPublishError(msg) };
   }
 }
 
@@ -1460,6 +1684,7 @@ async function createMetaCampaignFromAgent(
     name: string;
     daily_budget: number;
     objective?: "leads" | "traffic" | "sales" | "calls" | "signups";
+    business_type?: string;
     headline: string;
     primary_text: string;
     description?: string;
@@ -1474,17 +1699,15 @@ async function createMetaCampaignFromAgent(
     beneficiary?: string;
     interests?: string[];
     pixel_id?: string;
+    creatives?: CreativeVariant[];
   },
 ) {
-  // 'calls' e o campanie de trafic către tel:<număr> (transformată deja în tool).
   const objective: "leads" | "traffic" | "sales" | "signups" =
     args.objective === "calls" ? "traffic" : (args.objective ?? "leads");
 
-  // Gate acces + cotă: Pro/Premium = nelimitat; Starter gratuit = 1 campanie.
   const { assertCanPublishCampaign } = await import("@/lib/access.server");
   await assertCanPublishCampaign(supabaseAdmin, ctx.userId);
 
-  // Resolve connection / ad account / page
   const { data: conn } = await supabaseAdmin
     .from("meta_connections")
     .select("id, access_token")
@@ -1513,14 +1736,12 @@ async function createMetaCampaignFromAgent(
     .maybeSingle();
   if (!page?.page_id || !page.page_access_token) return { error: "Conectează o Pagină în Settings." };
 
-  // Download media bytes from wa-media bucket
   const { data: file, error: dlErr } = await supabaseAdmin.storage
     .from("wa-media")
     .download(ctx.latestMedia!.path);
   if (dlErr || !file) return { error: `Nu pot citi imaginea: ${dlErr?.message}` };
   const bytes = new Uint8Array(await file.arrayBuffer());
 
-  // Resolve city names → Meta city keys (if any)
   const { findCityKey } = await import("./meta-publish.server");
   const cityKeys: Array<{ key: string; radius?: number }> = [];
   const resolvedCityNames: string[] = [];
@@ -1538,25 +1759,67 @@ async function createMetaCampaignFromAgent(
     }
   }
 
-  // Insert campaign row first
+  const creatives = normalizeCreatives(
+    {
+      headline: args.headline,
+      primary_text: args.primary_text,
+      description: args.description,
+      cta: args.cta,
+    },
+    args.creatives,
+    creativeCountForBudget(args.daily_budget),
+  );
+
+  const snapshot: AgentPublishSnapshot = {
+    objective: args.objective === "calls" ? "calls" : objective,
+    name: args.name,
+    daily_budget: args.daily_budget,
+    headline: creatives[0]!.headline,
+    primary_text: creatives[0]!.primary_text,
+    description: creatives[0]!.description ?? args.description,
+    cta: (creatives[0]!.cta as string) ?? args.cta,
+    landing_url: args.landing_url,
+    beneficiary: args.beneficiary,
+    countries: args.countries,
+    cities: args.cities,
+    city_radius_km: args.city_radius_km,
+    age_min: args.age_min,
+    age_max: args.age_max,
+    interests: args.interests,
+    pixel_id: args.pixel_id,
+    custom_questions: args.custom_questions,
+    creatives,
+    media_path: ctx.latestMedia!.path,
+    media_mime: ctx.latestMedia!.mime,
+  };
+
+  const dbObjective =
+    objective === "traffic"
+      ? "LINK_CLICKS"
+      : objective === "sales" || objective === "signups"
+        ? "CONVERSIONS"
+        : "LEAD_GENERATION";
+
   const { data: campRow, error: insErr } = await supabaseAdmin
     .from("campaigns")
     .insert({
       user_id: ctx.userId,
       name: args.name,
       platform: "meta",
-      objective: objective === "traffic" ? "LINK_CLICKS" : objective === "sales" ? "CONVERSIONS" : "LEAD_GENERATION",
+      objective: dbObjective,
       status: "draft",
       budget: args.daily_budget,
       budget_mode: "BUDGET_MODE_DAY",
       creative: {
-        headline: args.headline,
-        description: args.description ?? "",
-        primary_text: args.primary_text,
-        cta: args.cta,
+        headline: creatives[0]!.headline,
+        description: creatives[0]!.description ?? args.description ?? "",
+        primary_text: creatives[0]!.primary_text,
+        cta: creatives[0]!.cta ?? args.cta,
         landing_url: args.landing_url ?? "https://adpilot.ro",
         media_url: ctx.latestMedia!.signedUrl,
         beneficiary: args.beneficiary,
+        variants: creatives,
+        agent_publish: snapshot,
       },
       lead_form:
         objective === "leads"
@@ -1584,7 +1847,7 @@ async function createMetaCampaignFromAgent(
     pageAccessToken: page.page_access_token,
     bytes,
     mediaMime: ctx.latestMedia!.mime,
-    args,
+    args: { ...args, creatives },
     objective,
     cityKeys,
     userId: ctx.userId,
