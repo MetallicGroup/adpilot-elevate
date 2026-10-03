@@ -234,14 +234,40 @@ export const listAllTickets = createServerFn({ method: "GET" })
       .limit(200);
 
     const ids = Array.from(new Set((tickets ?? []).map((t: any) => t.user_id)));
+    const ticketIds = (tickets ?? []).map((t: any) => t.id as string);
+
     const { data: profiles } = ids.length
       ? await supabaseAdmin.from("profiles").select("id, full_name").in("id", ids)
       : { data: [] as any[] };
     const nameById = new Map<string, string>();
     for (const p of profiles ?? []) nameById.set(p.id, p.full_name ?? "");
 
+    // First customer message per ticket (preview in list without opening thread)
+    const previewByTicket = new Map<string, string>();
+    if (ticketIds.length) {
+      const { data: msgs } = await supabaseAdmin
+        .from("support_messages")
+        .select("ticket_id, body, sender, created_at")
+        .in("ticket_id", ticketIds)
+        .order("created_at", { ascending: true });
+      for (const m of msgs ?? []) {
+        if (previewByTicket.has(m.ticket_id)) continue;
+        if (m.sender === "admin") continue;
+        previewByTicket.set(m.ticket_id, String(m.body ?? "").slice(0, 180));
+      }
+      // fallback: any first message
+      for (const m of msgs ?? []) {
+        if (previewByTicket.has(m.ticket_id)) continue;
+        previewByTicket.set(m.ticket_id, String(m.body ?? "").slice(0, 180));
+      }
+    }
+
     return {
-      tickets: (tickets ?? []).map((t: any) => ({ ...t, user_name: nameById.get(t.user_id) ?? "" })),
+      tickets: (tickets ?? []).map((t: any) => ({
+        ...t,
+        user_name: nameById.get(t.user_id) ?? "",
+        preview: previewByTicket.get(t.id) ?? "",
+      })),
     };
   });
 
@@ -255,19 +281,21 @@ export const getTicketThread = createServerFn({ method: "POST" })
     const admin = await (context.supabase as any).rpc("is_admin");
     const isAdminUser = !!admin.data;
 
-    const { data: ticket } = await supabaseAdmin
+    const { data: ticket, error: ticketErr } = await supabaseAdmin
       .from("support_tickets")
       .select("*")
       .eq("id", data.ticket_id)
       .maybeSingle();
+    if (ticketErr) throw new Error(ticketErr.message);
     if (!ticket) throw new Error("Ticket not found");
     if (!isAdminUser && ticket.user_id !== context.userId) throw new Error("Forbidden");
 
-    const { data: messages } = await supabaseAdmin
+    const { data: messages, error: msgErr } = await supabaseAdmin
       .from("support_messages")
       .select("*")
       .eq("ticket_id", data.ticket_id)
       .order("created_at", { ascending: true });
+    if (msgErr) throw new Error(msgErr.message);
 
     const { data: profile } = await supabaseAdmin
       .from("profiles")

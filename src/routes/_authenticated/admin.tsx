@@ -532,7 +532,14 @@ function TicketsTable({ tickets }: { tickets: any[] }) {
           <tbody>
             {filtered.map((t) => (
               <tr key={t.id} className="border-t border-border hover:bg-secondary/30">
-                <td className="px-3 py-2"><Link to="/admin/tickets/$id" params={{ id: t.id }} className="font-medium text-primary hover:underline">{t.subject}</Link></td>
+                <td className="px-3 py-2">
+                  <Link to="/admin/tickets/$id" params={{ id: t.id }} className="font-medium text-primary hover:underline block">
+                    {t.subject}
+                  </Link>
+                  {t.preview ? (
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 max-w-md">{t.preview}</p>
+                  ) : null}
+                </td>
                 <td className="px-3 py-2">{t.user_name || t.user_id.slice(0, 8)}</td>
                 <td className="px-3 py-2"><PriorityBadge priority={t.priority ?? "normal"} /></td>
                 <td className="px-3 py-2"><span className={`px-2 py-0.5 rounded-full text-xs ${t.status === "open" ? "bg-amber-500/15 text-amber-500" : "bg-muted text-muted-foreground"}`}>{t.status === "open" ? "deschis" : "închis"}</span></td>

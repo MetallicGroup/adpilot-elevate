@@ -18,6 +18,7 @@ function TicketPage() {
 
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -25,17 +26,35 @@ function TicketPage() {
   const refresh = async () => {
     const r = await load({ data: { ticket_id: id } });
     setData(r);
+    setError(null);
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
   };
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
+      setLoading(true);
+      setError(null);
       try {
         const a = await checkAdmin();
-        if (!a.admin) { setData({ forbidden: true }); return; }
+        if (cancelled) return;
+        if (!a.admin) {
+          setData({ forbidden: true });
+          return;
+        }
         await refresh();
-      } finally { setLoading(false); }
+      } catch (e: any) {
+        if (!cancelled) {
+          setError(e?.message || "Nu am putut încărca tichetul.");
+          setData(null);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   const send = async () => {
@@ -46,12 +65,13 @@ function TicketPage() {
       setBody("");
       await refresh();
       if (!r.sent_to_whatsapp) {
-        // small notice
         console.warn("Mesajul a fost salvat dar nu s-a putut trimite pe WhatsApp (user neconectat).");
       }
     } catch (e: any) {
       alert(e.message || "Eroare la trimitere");
-    } finally { setSending(false); }
+    } finally {
+      setSending(false);
+    }
   };
 
   const toggleStatus = async () => {
@@ -66,8 +86,53 @@ function TicketPage() {
     await refresh();
   };
 
-  if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="w-6 h-6 animate-spin" /></div>;
-  if (data?.forbidden) return <div className="p-8 text-center">Acces interzis.</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-6 h-6 animate-spin" />
+      </div>
+    );
+  }
+
+  if (data?.forbidden) {
+    return <div className="p-8 text-center">Acces interzis.</div>;
+  }
+
+  if (error || !data?.ticket) {
+    return (
+      <div className="max-w-lg mx-auto px-4 py-16 text-center space-y-4">
+        <p className="font-semibold">Nu pot deschide tichetul</p>
+        <p className="text-sm text-muted-foreground">{error || "Tichetul nu a fost găsit sau datele sunt incomplete."}</p>
+        <p className="text-xs text-muted-foreground break-all">ID: {id}</p>
+        <div className="flex items-center justify-center gap-3">
+          <Link to="/admin" className="text-sm text-primary hover:underline">
+            ← Înapoi la admin
+          </Link>
+          <button
+            type="button"
+            className="text-sm px-3 py-1.5 rounded-md border border-border hover:bg-secondary"
+            onClick={() => {
+              setLoading(true);
+              setError(null);
+              (async () => {
+                try {
+                  await refresh();
+                } catch (e: any) {
+                  setError(e?.message || "Nu am putut încărca tichetul.");
+                } finally {
+                  setLoading(false);
+                }
+              })();
+            }}
+          >
+            Reîncearcă
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const messages = Array.isArray(data.messages) ? data.messages : [];
 
   return (
     <div className="max-w-4xl mx-auto px-4 md:px-6 py-6 flex flex-col h-[calc(100vh-8rem)]">
@@ -75,12 +140,12 @@ function TicketPage() {
         <ArrowLeft className="w-4 h-4" /> Înapoi
       </Link>
 
-      <div className="rounded-xl border border-border bg-card p-4 mb-3 flex items-center justify-between">
-        <div>
-          <h1 className="font-bold">{data.ticket.subject}</h1>
+      <div className="rounded-xl border border-border bg-card p-4 mb-3 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="font-bold break-words">{data.ticket.subject}</h1>
           <p className="text-xs text-muted-foreground">de la {data.user_name || data.ticket.user_id.slice(0, 8)}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <select
             value={data.ticket.priority ?? "normal"}
             onChange={(e) => changePriority(e.target.value)}
@@ -101,11 +166,22 @@ function TicketPage() {
       </div>
 
       <div className="flex-1 overflow-y-auto rounded-xl border border-border bg-card p-4 space-y-3">
-        {data.messages.map((m: any) => (
+        {messages.length === 0 && (
+          <p className="text-sm text-muted-foreground text-center py-8">Niciun mesaj pe acest tichet încă.</p>
+        )}
+        {messages.map((m: any) => (
           <div key={m.id} className={`flex ${m.sender === "admin" ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${m.sender === "admin" ? "bg-primary text-primary-foreground" : "bg-secondary"}`}>
+            <div
+              className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
+                m.sender === "admin" ? "bg-primary text-primary-foreground" : "bg-secondary"
+              }`}
+            >
               <div className="whitespace-pre-wrap break-words">{m.body}</div>
-              <div className={`text-[10px] mt-1 opacity-70 flex gap-2 ${m.sender === "admin" ? "justify-end" : ""}`}>
+              <div
+                className={`text-[10px] mt-1 opacity-70 flex gap-2 ${
+                  m.sender === "admin" ? "justify-end" : ""
+                }`}
+              >
                 <span>{new Date(m.created_at).toLocaleString("ro-RO")}</span>
                 {m.sender === "admin" && m.sent_to_whatsapp && <span>📱 WhatsApp</span>}
               </div>
@@ -122,7 +198,9 @@ function TicketPage() {
           placeholder="Scrie răspunsul tău…"
           rows={2}
           className="flex-1 rounded-xl border border-border bg-secondary/40 px-3 py-2 text-sm resize-none"
-          onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) send(); }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) send();
+          }}
         />
         <button
           onClick={send}
@@ -134,7 +212,9 @@ function TicketPage() {
           Trimite
         </button>
       </div>
-      <p className="text-xs text-muted-foreground mt-2">Răspunsul ajunge și pe WhatsApp-ul clientului dacă e conectat.</p>
+      <p className="text-xs text-muted-foreground mt-2">
+        Răspunsul ajunge și pe WhatsApp-ul clientului dacă e conectat.
+      </p>
     </div>
   );
 }
