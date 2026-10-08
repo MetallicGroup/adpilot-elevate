@@ -794,3 +794,4 @@ html:has(.v2){scroll-behavior:smooth}
 @media(max-width:820px){.v2 .docs{grid-template-columns:1fr}.v2 .docs aside{position:static;flex-direction:row;flex-wrap:wrap}}
 .v2 .note{margin-top:28px;border:1px solid var(--line);border-radius:24px;padding:28px;background:var(--card)}
 .v2 .note p{margin:8px 0 0;color:var(--mut)}.v2 .note a{text-decoration:underline;text-underline-offset:3px}
+.v2 .btn:disabled{opacity:.45;cursor:default;transform:none;box-shadow:none}

@@ -11,7 +11,6 @@ import { getStripeEnvironment } from "@/lib/stripe";
 import { toast } from "sonner";
 import { WhatsAppConnectionCard } from "@/components/whatsapp/WhatsAppConnectionCard";
 import { AdAccountGate } from "@/components/onboarding/AdAccountGate";
-import { GoalSetupStep } from "@/components/onboarding/goal/GoalSetupStep";
 
 type OnboardingSearch = { meta?: string; reason?: string; limited?: string };
 
@@ -25,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/onboarding")({
 });
 
 // Nuanța strălucirii de fundal pentru fiecare pas.
-const GLOW = ["47,107,255", "107,61,255", "225,58,212", "31,191,95", "255,140,90"];
+const GLOW = ["47,107,255", "107,61,255", "225,58,212", "31,191,95"];
 
 const PLANS = [
   {
@@ -81,20 +80,8 @@ function OnboardingPage() {
     try {
       const r = await fetchStatus({ data: { environment: getStripeEnvironment() } });
       setStatus(r);
-      let pendingGoal: string | null = null;
-      try {
-        pendingGoal = window.localStorage.getItem("adpilot:goal");
-      } catch {
-        pendingGoal = null;
-      }
-      // Nu-l scoate din onboarding până nu conectează și WhatsApp — chiar dacă a plătit,
-      // vrem să activeze asistentul WhatsApp aici, ușor, înainte de dashboard.
-      if (
-        r.hasMetaConnection &&
-        r.hasActiveSubscription &&
-        r.whatsappConnected &&
-        !pendingGoal
-      ) {
+      // Facebook + plan + WhatsApp = gata. Intră direct în dashboard.
+      if (r.hasMetaConnection && r.planChosen && r.whatsappConnected) {
         navigate({ to: "/dashboard", replace: true });
       }
     } catch (e: any) {
@@ -163,13 +150,21 @@ function OnboardingPage() {
   const whatsappAllowed = !!status?.whatsappAllowed; // Pro/Premium sau Starter gratuit activ
   const freeState = status?.freeStarter?.state;
   const waDone = !!status?.whatsappConnected;
-  const activeStep = !step1Done ? 1 : !adReady ? 2 : !planChosen ? 3 : !waDone ? 4 : 5;
+  const activeStep = !step1Done ? 1 : !adReady ? 2 : !planChosen ? 3 : 4;
   // Pasul afișat: urmează automat progresul, dar userul poate reveni la un pas deblocat.
   const [view, setView] = useState(1);
   const [planPick, setPlanPick] = useState(1);
   useEffect(() => {
     setView(activeStep);
   }, [activeStep]);
+  // Activarea se întâmplă în WhatsApp, în afara paginii: verificăm periodic și,
+  // când e conectat, `reload` duce userul în dashboard.
+  useEffect(() => {
+    if (view !== 4 || waDone || !planChosen) return;
+    const t = setInterval(() => void reload(), 4000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, waDone, planChosen]);
 
   if (loading) {
     return (
@@ -189,13 +184,12 @@ function OnboardingPage() {
     { t: "Cont de reclame și card", s: "Verificat automat în Meta", done: adReady, open: step1Done },
     { t: "Alege planul", s: "7 zile gratuite, fără card", done: planChosen, open: step1Done },
     { t: "Activează WhatsApp", s: "Aici vorbești cu AdPilot", done: waDone, open: step1Done },
-    { t: "Obiectivul tău", s: "Pentru prima campanie", done: false, open: planChosen },
   ];
   const doneCount = steps.filter((x) => x.done).length;
   const picked = PLANS[planPick];
   const pickedHue = picked.free ? "31,191,95" : picked.featured ? "107,61,255" : "225,58,212";
   const next = (
-    <button type="button" className="btn btn-w" onClick={() => setView((v) => Math.min(5, v + 1))}>
+    <button type="button" className="btn btn-w" onClick={() => setView((v) => Math.min(4, v + 1))}>
       Continuă <span className="arr">→</span>
     </button>
   );
@@ -226,11 +220,11 @@ function OnboardingPage() {
                   </linearGradient>
                 </defs>
                 <circle className="bg" cx="32" cy="32" r="28" />
-                <circle className="fg" cx="32" cy="32" r="28" style={{ stroke: "url(#onb-ring)", strokeDashoffset: 176 * (1 - doneCount / 5) }} />
+                <circle className="fg" cx="32" cy="32" r="28" style={{ stroke: "url(#onb-ring)", strokeDashoffset: 176 * (1 - doneCount / 4) }} />
               </svg>
-              <span>{doneCount}/5</span>
+              <span>{doneCount}/4</span>
             </div>
-            <h2>Cinci pași și ești live.</h2>
+            <h2>Patru pași și ești live.</h2>
             <p>Durează cam 5 minute. Poți reveni oricând de unde ai rămas.</p>
             {steps.map((st, i) => (
               <button
@@ -252,7 +246,7 @@ function OnboardingPage() {
           <div className="panel">
             {view === 1 && (
               <div className="pane" key="1">
-                <p className="ey">Pasul 1 din 5</p>
+                <p className="ey">Pasul 1 din 4</p>
                 <h3>Conectează pagina ta de Facebook</h3>
                 <p>
                   AdPilot are nevoie de acces la pagină și la contul de reclame ca să lanseze campaniile
@@ -284,7 +278,7 @@ function OnboardingPage() {
             {/* Rămâne montat după conectare: el verifică singur contul și cardul. */}
             {step1Done && (
               <div className="pane" hidden={view !== 2}>
-                <p className="ey">Pasul 2 din 5</p>
+                <p className="ey">Pasul 2 din 4</p>
                 <h3>Cont de reclame și card</h3>
                 <p>Meta încasează bugetul de reclame direct de pe cardul tău. Verificăm noi dacă totul e în regulă.</p>
                 <AdAccountGate connected={step1Done} onReady={() => setAdReady(true)} />
@@ -294,7 +288,7 @@ function OnboardingPage() {
 
             {view === 3 && (
               <div className="pane" key="3">
-                <p className="ey">Pasul 3 din 5</p>
+                <p className="ey">Pasul 3 din 4</p>
                 <h3>Alege planul tău</h3>
                 <p>Toate planurile sunt gratuite primele 7 zile, fără card. Nu plătești nimic acum.</p>
                 <div className="pp">
@@ -372,27 +366,20 @@ function OnboardingPage() {
 
             {view === 4 && (
               <div className="pane" key="4">
-                <p className="ey">Pasul 4 din 5</p>
+                <p className="ey">Pasul 4 din 4</p>
                 <h3>Activează asistentul pe WhatsApp</h3>
                 <p>
                   Aici primești clienții, rapoartele și controlezi campaniile. Scrii numărul, apoi trimiți
                   mesajul pregătit.{planChosen ? "" : " Activarea se deblochează după ce alegi un plan."}
                 </p>
                 <WhatsAppConnectionCard onboarding planChosen={planChosen} />
-                {planChosen && <div className="acts">{next}</div>}
-              </div>
-            )}
-
-            {view === 5 && (
-              <div className="pane" key="5">
-                <p className="ey">Pasul 5 din 5</p>
-                <h3>Ce vrei să obții?</h3>
-                <p>Configurăm prima campanie exact pentru obiectivul tău.</p>
-                <GoalSetupStep />
                 <div className="acts">
-                  <button type="button" className="btn btn-g" onClick={() => navigate({ to: "/dashboard" })}>
+                  <button type="button" className="btn btn-g" disabled={!waDone} onClick={() => navigate({ to: "/dashboard" })}>
                     Intră în Dashboard <span className="arr">→</span>
                   </button>
+                  <span className="fine" style={{ color: "#8c89a6" }}>
+                    {waDone ? "WhatsApp conectat." : "După ce trimiți mesajul de activare, intri singur în dashboard."}
+                  </span>
                 </div>
               </div>
             )}
