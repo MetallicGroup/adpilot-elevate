@@ -45,7 +45,7 @@ export function WizardShell({
           </button>
           <div className="flex-1">
             <div className="text-[11px] font-medium text-muted-foreground tracking-wide">
-              STEP {step} OF {total}
+              PASUL {step} DIN {total}
             </div>
             <div className="mt-1 h-[3px] bg-muted rounded-full overflow-hidden">
               <motion.div
@@ -79,7 +79,7 @@ export function WizardShell({
         </AnimatePresence>
       </main>
 
-      <div className="fixed bottom-16 inset-x-0 bg-background/95 backdrop-blur border-t border-border z-40">
+      <div className="fixed bottom-16 inset-x-0 bg-background/95 backdrop-blur border-t border-border z-40 lg:bottom-0 lg:left-[248px]">
         <div className="max-w-md mx-auto px-5 py-4">
           <Button
             size="lg"

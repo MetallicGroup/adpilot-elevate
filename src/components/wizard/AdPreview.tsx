@@ -21,7 +21,7 @@ export function AdPreview({ pageName, headline, description, cta, mediaUrl, land
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-[13px] font-semibold truncate">{pageName || "Your Page"}</div>
-          <div className="text-[11px] text-muted-foreground">Sponsored · 🌐</div>
+          <div className="text-[11px] text-muted-foreground">Sponsorizat · 🌐</div>
         </div>
         <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
       </div>
@@ -33,23 +33,23 @@ export function AdPreview({ pageName, headline, description, cta, mediaUrl, land
           <img src={mediaUrl} alt="Ad creative" className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
-            Upload an image to see it here
+            Încarcă o imagine ca s-o vezi aici
           </div>
         )}
       </div>
       <div className="flex items-center justify-between gap-3 px-3 py-3 bg-secondary/50">
         <div className="min-w-0">
           {host && <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{host}</div>}
-          <div className="text-[14px] font-semibold leading-snug truncate">{headline || "Your headline"}</div>
+          <div className="text-[14px] font-semibold leading-snug truncate">{headline || "Titlul tău"}</div>
         </div>
         <button className="shrink-0 px-3 py-1.5 rounded-md bg-foreground text-background text-[12px] font-medium">
           {cta || "Learn More"}
         </button>
       </div>
       <div className="flex items-center justify-around px-3 py-2 text-[12px] text-muted-foreground border-t border-border">
-        <span className="flex items-center gap-1.5"><ThumbsUp className="w-3.5 h-3.5" /> Like</span>
-        <span className="flex items-center gap-1.5"><MessageCircle className="w-3.5 h-3.5" /> Comment</span>
-        <span className="flex items-center gap-1.5"><Share2 className="w-3.5 h-3.5" /> Share</span>
+        <span className="flex items-center gap-1.5"><ThumbsUp className="w-3.5 h-3.5" />Îmi place</span>
+        <span className="flex items-center gap-1.5"><MessageCircle className="w-3.5 h-3.5" />Comentează</span>
+        <span className="flex items-center gap-1.5"><Share2 className="w-3.5 h-3.5" />Distribuie</span>
       </div>
     </div>
   );

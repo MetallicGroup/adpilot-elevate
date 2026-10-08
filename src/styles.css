@@ -149,8 +149,55 @@
   --shadow-glow: 0 12px 30px -12px rgb(107 61 255 / 0.55);
   --shadow-card: 0 1px 2px rgb(15 13 28 / 0.04), 0 10px 26px -14px rgb(15 13 28 / 0.14);
   --shadow-card-lg: 0 1px 2px rgb(15 13 28 / 0.05), 0 30px 70px -34px rgb(60 40 140 / 0.35);
+  /* Tailwind's --color-* aliases are computed once on :root, so component classes
+     that read them (card-floating, skeleton, ...) would keep the dark values here.
+     Re-pointing them makes them resolve against the light tokens above. */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
   background-color: var(--background);
   color: var(--foreground);
+}
+
+/* Components written with dark-only colours, restated for the light app. */
+.app-light .surface-card,
+.app-light .glass-panel,
+.app-light .glass {
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: none;
+}
+.app-light .eyebrow {
+  color: #5b3fd6;
+  border-color: rgb(107 61 255 / 0.25);
+  background: rgb(107 61 255 / 0.07);
+  box-shadow: none;
+}
+.app-light .skeleton {
+  background: linear-gradient(90deg, #eceaf4 0%, #f7f6fb 50%, #eceaf4 100%);
+  background-size: 200% 100%;
+}
+.app-light .btn-primary {
+  box-shadow: var(--shadow-glow);
 }
 
 /* .dark is the only theme — tokens live in :root; keep the class for dark: variants */
