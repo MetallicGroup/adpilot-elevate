@@ -1,6 +1,6 @@
-import { createFileRoute, Outlet, redirect, Link } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, Link, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { Home, Plus, BarChart3, Settings, Users, Sparkles, CalendarCheck } from "lucide-react";
+import { Home, Plus, BarChart3, Settings, Users, CalendarCheck } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -54,8 +54,12 @@ const TABS = [
 ] as const;
 
 function AuthLayout() {
+  // Onboarding is a full-screen flow with its own dark layout; no app shell around it.
+  const onboarding = useRouterState({ select: (st) => st.location.pathname.startsWith("/onboarding") });
+  if (onboarding) return <Outlet />;
+
   return (
-    <div className="min-h-screen pb-24 lg:pb-0 lg:pl-[248px]">
+    <div className="app-light relative min-h-screen pb-24 lg:pb-0 lg:pl-[248px]">
       <DesktopSidebar />
       <Outlet />
       <BottomNav />
@@ -63,36 +67,28 @@ function AuthLayout() {
   );
 }
 
+const NAV_ITEM =
+  "flex items-center gap-3 rounded-xl px-3 py-2.5 text-[15px] text-[#b9b6cf] transition-colors hover:bg-white/[0.06] hover:text-white";
+const NAV_ACTIVE = { className: "bg-white/10 text-white" };
+
 function DesktopSidebar() {
   return (
-    <aside className="fixed inset-y-0 left-0 z-40 hidden w-[248px] flex-col justify-between border-r border-white/[0.06] bg-black/25 px-4 py-6 backdrop-blur-xl lg:flex">
+    <aside className="fixed inset-y-0 left-0 z-40 hidden w-[248px] flex-col justify-between bg-[#0a0912] px-4 py-6 text-white lg:flex">
       <div>
-        <Link to="/dashboard" className="mb-8 flex items-center gap-2.5 px-2 font-bold tracking-tight">
-          <img src="/adpilot-icon.png" alt="AdPilot" className="h-9 w-9 rounded-xl object-contain" />
+        <Link to="/dashboard" className="mb-8 flex items-center gap-2.5 px-2 font-serif text-[21px]">
+          <img src="/adpilot-icon.png" alt="" className="h-[34px] w-[34px] object-contain" />
           AdPilot
         </Link>
 
         <nav className="grid gap-1">
           {TABS.map((t) => (
-            <Link
-              key={t.to}
-              to={t.to}
-              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-white/[0.04] hover:text-foreground"
-              activeProps={{
-                className:
-                  "bg-primary/12 text-foreground border border-primary/25 shadow-[inset_0_1px_0_oklch(1_0_0/0.06)]",
-              }}
-            >
-              <t.icon className="h-4 w-4" />
+            <Link key={t.to} to={t.to} className={NAV_ITEM} activeProps={NAV_ACTIVE}>
+              <t.icon className="h-[18px] w-[18px]" />
               {t.label}
             </Link>
           ))}
-          <Link
-            to="/bookings"
-            className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-white/[0.04] hover:text-foreground"
-            activeProps={{ className: "bg-primary/12 text-foreground border border-primary/25" }}
-          >
-            <CalendarCheck className="h-4 w-4" />
+          <Link to="/bookings" className={NAV_ITEM} activeProps={NAV_ACTIVE}>
+            <CalendarCheck className="h-[18px] w-[18px]" />
             Programări
           </Link>
         </nav>
@@ -100,7 +96,8 @@ function DesktopSidebar() {
 
       <Link
         to="/create"
-        className="press btn-primary shine flex h-11 items-center justify-center gap-2 rounded-xl text-sm font-semibold"
+        className="press flex h-11 items-center justify-center gap-2 rounded-full text-sm font-semibold text-white"
+        style={{ background: "var(--gradient-primary)" }}
       >
         <Plus className="h-4 w-4" /> Campanie nouă
       </Link>
@@ -110,7 +107,7 @@ function DesktopSidebar() {
 
 function BottomNav() {
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-50 border-t border-white/[0.06] bg-background/85 backdrop-blur-xl lg:hidden">
+    <nav className="fixed bottom-0 inset-x-0 z-50 border-t border-border bg-background/90 backdrop-blur-xl lg:hidden">
       <div className="max-w-md mx-auto flex justify-around px-2 py-2">
         {TABS.map((t) => (
           <Link

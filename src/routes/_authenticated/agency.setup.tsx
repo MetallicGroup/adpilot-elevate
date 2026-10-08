@@ -70,7 +70,7 @@ function AgencySetup() {
             onChange={(e) => setName(e.target.value)}
             required
             autoFocus
-            className="h-[52px] w-full rounded-[13px] border border-white/[0.08] bg-black/25 px-3.5 text-sm outline-none transition focus:border-primary/55 focus:ring-4 focus:ring-primary/10"
+            className="h-[52px] w-full rounded-[13px] border border-input bg-card px-3.5 text-sm outline-none transition focus:border-primary/55 focus:ring-4 focus:ring-primary/10"
           />
           <button
             type="submit"

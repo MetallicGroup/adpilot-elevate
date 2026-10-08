@@ -124,6 +124,35 @@
   --font-serif: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
 }
 
+/*
+ * Light surface for the logged-in app (v2): paper background, white cards, ink text.
+ * Scoped to the app shell so the dark marketing pages and overlays keep the root tokens.
+ * --primary / --ring / --gradient-primary are left alone: the user's accent sets them on :root.
+ */
+.app-light {
+  color-scheme: light;
+  --background: #f5f4f9;
+  --foreground: #0f0d1c;
+  --card: #ffffff;
+  --card-foreground: #0f0d1c;
+  --popover: #ffffff;
+  --popover-foreground: #0f0d1c;
+  --secondary: #eeecf6;
+  --secondary-foreground: #0f0d1c;
+  --muted: #eeecf6;
+  --muted-foreground: #6b6880;
+  --destructive: #d3264a;
+  --success: #12924a;
+  --warning: #b7791f;
+  --border: #e3e1ee;
+  --input: #d6d3e6;
+  --shadow-glow: 0 12px 30px -12px rgb(107 61 255 / 0.55);
+  --shadow-card: 0 1px 2px rgb(15 13 28 / 0.04), 0 10px 26px -14px rgb(15 13 28 / 0.14);
+  --shadow-card-lg: 0 1px 2px rgb(15 13 28 / 0.05), 0 30px 70px -34px rgb(60 40 140 / 0.35);
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
 /* .dark is the only theme — tokens live in :root; keep the class for dark: variants */
 .dark {
   color-scheme: dark;
