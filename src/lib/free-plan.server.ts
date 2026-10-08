@@ -1,9 +1,9 @@
 /**
  * Logica de server pentru perioadele gratuite (server-only):
  *  - `startFreePlanClocks`: pentru cei care au ales Starter (gratuit) și au trecut de
- *    trialul de 30 zile, pornește ceasul lunar de 7 zile când au prima reclamă activă.
+ *    trialul de 7 zile, pornește ceasul lunar de 7 zile când au prima reclamă activă.
  *  - `runFreePlanExpiry`: două treceri —
- *      (1) expirarea trialului de 30 zile (de la crearea contului): pentru Pro/Premium
+ *      (1) expirarea trialului de 7 zile (de la crearea contului): pentru Pro/Premium
  *          neplătiți → pune campaniile pe pauză + trimite pe WhatsApp LINKUL de plată
  *          Stripe; pentru Starter → mesaj că trece pe 7 zile/lună.
  *      (2) consumul celor 7 zile/lună (Starter): pune campaniile pe pauză + notifică.
@@ -62,7 +62,7 @@ async function sendReactivationMessage(userId: string, chosenPlan: string | null
   const planName = (chosenPlan ?? "").toLowerCase().includes("premium") ? "Premium" : "Pro";
 
   const text =
-    `🎉 Cele 30 de zile gratuite s-au încheiat — ai lansat reclame ca un profesionist!\n\n` +
+    `🎉 Cele 7 zile gratuite s-au încheiat — ai lansat reclame ca un profesionist!\n\n` +
     `Ca să continui NELIMITAT cu planul *${planName}* (campanii non-stop + asistent WhatsApp), ` +
     `plătește rapid și sigur cu cardul aici:\n${link}\n\n` +
     `După plată, contul tău se reactivează automat și pornim din nou. 💳`;
@@ -93,7 +93,7 @@ async function sendReactivationMessage(userId: string, chosenPlan: string | null
   }
 }
 
-/** Mesaj: trialul de 30 zile s-a încheiat, rămâi pe planul gratuit 7 zile/lună. */
+/** Mesaj: trialul de 7 zile s-a încheiat, rămâi pe planul gratuit 7 zile/lună. */
 async function sendStarterBonusEndedMessage(userId: string): Promise<void> {
   const { getCentralWhatsApp, sendWhatsAppMessage } = await import("@/lib/whatsapp.server");
   const central = getCentralWhatsApp();
@@ -102,7 +102,7 @@ async function sendStarterBonusEndedMessage(userId: string): Promise<void> {
   if (!conn) return;
   const phone = conn.user_phone.replace(/\D/g, "");
   const text =
-    "🎉 Cele 30 de zile gratuite s-au încheiat! Rămâi pe planul *Starter gratuit* cu " +
+    "🎉 Cele 7 zile gratuite s-au încheiat! Rămâi pe planul *Starter gratuit* cu " +
     "*7 zile gratuite în fiecare lună*.\n\nPentru campanii NELIMITATE, non-stop, treci pe " +
     "Pro sau Premium: https://adpilot.ro/pricing";
   try {
@@ -170,14 +170,14 @@ async function pauseActiveCampaigns(userId: string): Promise<void> {
   }
 }
 
-/** Pornește ceasul lunar de 7 zile pt. Starter (post trial de 30z) cu reclamă activă. */
+/** Pornește ceasul lunar de 7 zile pt. Starter (post trial de 7z) cu reclamă activă. */
 export async function startFreePlanClocks(): Promise<{ started: number }> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { currentPlanMonth, isFreeChoice } = await import("@/lib/access.server");
   const month = currentPlanMonth();
   const nowIso = new Date().toISOString();
 
-  // Starter (gratuit), trecuți de trialul de 30 zile, care n-au pornit ceasul luna asta.
+  // Starter (gratuit), trecuți de trialul de 7 zile, care n-au pornit ceasul luna asta.
   const { data: profiles } = await (supabaseAdmin as any)
     .from("profiles")
     .select("id, chosen_plan, free_plan_month, signup_trial_ends_at")
@@ -209,7 +209,7 @@ export async function startFreePlanClocks(): Promise<{ started: number }> {
   return { started };
 }
 
-/** Expirări: trialul de 30 zile + cele 7 zile/lună (Starter). */
+/** Expirări: trialul de 7 zile + cele 7 zile/lună (Starter). */
 export async function runFreePlanExpiry(): Promise<{
   signupExpired: number;
   monthlyExpired: number;
@@ -226,7 +226,7 @@ export async function runFreePlanExpiry(): Promise<{
   let monthlyExpired = 0;
   let errors = 0;
 
-  // ---- Pass 1: trialul de 30 de zile (de la crearea contului) ----
+  // ---- Pass 1: trialul de 7 zile (de la crearea contului) ----
   const { data: trialGone } = await (supabaseAdmin as any)
     .from("profiles")
     .select("id, chosen_plan")

@@ -20,9 +20,9 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "AdPilot — Tu conduci afacerea. AdPilot conduce reclamele." },
-      { name: "description", content: "Tu conduci afacerea. AdPilot conduce reclamele: creează, lansează și optimizează campanii Facebook și Instagram, iar lead-urile vin pe WhatsApp. 30 de zile gratuite, fără card." },
+      { name: "description", content: "Tu conduci afacerea. AdPilot conduce reclamele: creează, lansează și optimizează campanii Facebook și Instagram, iar lead-urile vin pe WhatsApp. 7 zile gratuite, fără card." },
       { property: "og:title", content: "AdPilot — Tu conduci afacerea. AdPilot conduce reclamele." },
-      { property: "og:description", content: "Spune-i ce vrei să obții. AdPilot creează, lansează și optimizează reclamele tale Facebook și Instagram. 30 de zile gratuite, fără card." },
+      { property: "og:description", content: "Spune-i ce vrei să obții. AdPilot creează, lansează și optimizează reclamele tale Facebook și Instagram. 7 zile gratuite, fără card." },
       { property: "og:url", content: "https://adpilot.ro/" },
     ],
     links: [{ rel: "canonical", href: "https://adpilot.ro/" }],
@@ -105,7 +105,7 @@ function Index() {
                 className="eyebrow"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-success pulse-dot text-success" />
-                ✨ 30 de zile gratuite · fără card
+                ✨ 7 zile gratuite · fără card
               </motion.div>
 
               <h1 className="mt-7 text-[2.45rem] leading-[1.06] sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight">
@@ -129,7 +129,7 @@ function Index() {
               <HeroVideo />
 
               <p className="mt-5 text-[13px] text-muted-foreground">
-                30 de zile gratuite · Fără experiență necesară · Configurare în câteva minute
+                7 zile gratuite · Fără experiență necesară · Configurare în câteva minute
               </p>
 
               <div className="mt-8 flex items-center justify-center md:justify-start gap-3 text-sm text-muted-foreground">
@@ -386,7 +386,7 @@ function Index() {
       <Section eyebrow="Prețuri" title="Simple. Transparente.">
         <p className="text-center -mt-6 mb-3">
           <span className="inline-block text-sm font-bold px-3 py-1 rounded-full bg-success/15 text-success">
-            🎉 Ofertă: 30 de zile gratuite pe orice plan, fără card
+            🎉 Ofertă: 7 zile gratuite pe orice plan, fără card
           </span>
         </p>
         <p className="text-center text-muted-foreground mb-12">Începe gratuit. Upgrade când ești gata. 💎</p>
@@ -423,7 +423,7 @@ function Index() {
                     <span className="text-base text-muted-foreground font-normal">/lună</span>
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Gratuit 30 de zile, fără card
+                    Gratuit 7 zile, fără card
                   </p>
                 </>
               )}
@@ -437,7 +437,7 @@ function Index() {
               <Link to="/auth" onClick={() => tkClickButton(`home-plan-${p.name}`)} className={`press mt-7 inline-flex w-full items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold ${p.featured ? "btn-primary" : "glass hover:bg-card text-foreground"}`}>
                 Începe gratuit
               </Link>
-              <p className="mt-3 text-xs text-center text-muted-foreground">30 de zile gratuite · fără card · anulezi oricând</p>
+              <p className="mt-3 text-xs text-center text-muted-foreground">7 zile gratuite · fără card · anulezi oricând</p>
             </div>
           ))}
         </div>
@@ -500,7 +500,7 @@ function Index() {
             Vreau să încep <ArrowRight className="w-5 h-5" />
           </a>
           <p className="mt-5 text-[13px] text-muted-foreground">
-            30 de zile gratuite · fără card · anulezi oricând
+            7 zile gratuite · fără card · anulezi oricând
           </p>
         </div>
       </section>

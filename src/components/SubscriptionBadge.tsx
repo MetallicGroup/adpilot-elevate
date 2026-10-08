@@ -75,7 +75,7 @@ export function SubscriptionBadge() {
         <div>
           <p className="font-semibold">Fără abonament activ</p>
           <p className="text-xs text-muted-foreground mt-1">
-            Alege un plan — ai 30 de zile gratuite, fără card.
+            Alege un plan — ai 7 zile gratuite, fără card.
           </p>
         </div>
         <a
@@ -97,7 +97,7 @@ export function SubscriptionBadge() {
 
   const badge = trialActive ? (
     <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-success/15 text-success">
-      <ShieldCheck className="w-3.5 h-3.5" /> Trial activ · 30 de zile
+      <ShieldCheck className="w-3.5 h-3.5" /> Trial activ · 7 zile
     </span>
   ) : trialExpired ? (
     <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-destructive/15 text-destructive">

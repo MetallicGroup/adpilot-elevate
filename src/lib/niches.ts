@@ -70,7 +70,7 @@ export const NICHES: Record<string, NicheConfig> = {
     ],
     faq: [
       { q: "Trebuie să știu ceva despre reclame?", a: "Nu. Îi spui pe WhatsApp ce vrei („mai multe cliente”), iar AdPilot creează, lansează și optimizează reclama singur." },
-      { q: "Cât costă reclamele?", a: "Bugetul de reclame îl alegi tu (ex. 30–100 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 30 de zile ca să testezi, apoi de la un plan lunar." },
+      { q: "Cât costă reclamele?", a: "Bugetul de reclame îl alegi tu (ex. 30–100 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 7 zile ca să testezi, apoi de la un plan lunar." },
       { q: "Pe ce apar reclamele?", a: "Pe Facebook și Instagram — exact unde sunt clientele tale, targetate pe orașul și zona ta." },
       { q: "Cum primesc programările?", a: "Fiecare persoană interesată îți vine ca lead direct pe WhatsApp, cu nume și telefon, gata de contactat." },
       { q: "Pot să mă opresc oricând?", a: "Da. Pornești și oprești reclama când vrei, direct din WhatsApp. Fără contracte, fără bătăi de cap." },
@@ -120,7 +120,7 @@ export const NICHES: Record<string, NicheConfig> = {
     ],
     faq: [
       { q: "E permis să faci reclame la servicii medicale?", a: "Da, cu mesaje corecte. AdPilot construiește reclame conforme cu regulile Meta pentru domeniul medical." },
-      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 100–300 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 30 de zile, apoi de la un plan lunar." },
+      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 100–300 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 7 zile, apoi de la un plan lunar." },
       { q: "Cum primesc pacienții?", a: "Fiecare persoană interesată îți vine ca lead pe WhatsApp, cu nume și telefon, gata de programat." },
       { q: "Funcționează pentru orice specialitate?", a: "Da — stomatologie, estetică, dermatologie, clinici generale. Targetăm exact zona și publicul tău." },
       { q: "Pot opri oricând?", a: "Da, pornești și oprești reclama din WhatsApp, fără contracte." },
@@ -170,7 +170,7 @@ export const NICHES: Record<string, NicheConfig> = {
     ],
     faq: [
       { q: "Trebuie să știu ceva despre reclame?", a: "Nu. Îi spui pe WhatsApp ce oferi, iar AdPilot creează, lansează și optimizează reclama singur." },
-      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 50–150 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 30 de zile, apoi de la un plan lunar." },
+      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 50–150 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 7 zile, apoi de la un plan lunar." },
       { q: "Funcționează și pentru personal traineri?", a: "Da — pentru săli, studiouri și traineri individuali. Targetăm exact orașul și publicul tău." },
       { q: "Cum primesc clienții?", a: "Fiecare persoană interesată îți vine ca lead pe WhatsApp, cu nume și telefon." },
       { q: "Pot opri oricând?", a: "Da, pornești și oprești reclama din WhatsApp, fără contracte." },
@@ -220,7 +220,7 @@ export const NICHES: Record<string, NicheConfig> = {
     ],
     faq: [
       { q: "Reclamele apar în zona mea?", a: "Da. Targetăm exact orașul și zona din jurul localului tău, ca să vină clienți care chiar pot ajunge." },
-      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 40–100 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 30 de zile, apoi de la un plan lunar." },
+      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 40–100 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 7 zile, apoi de la un plan lunar." },
       { q: "Cum primesc rezervările?", a: "Fiecare persoană interesată îți vine ca lead pe WhatsApp, cu nume și telefon." },
       { q: "Funcționează și pentru cafenele sau baruri?", a: "Da — pentru orice local. Adaptăm mesajul la ce oferi tu." },
       { q: "Pot opri oricând?", a: "Da, pornești și oprești reclama din WhatsApp, fără contracte." },
@@ -270,7 +270,7 @@ export const NICHES: Record<string, NicheConfig> = {
     ],
     faq: [
       { q: "Lead-urile sunt calificate?", a: "Da. Targetăm oameni cu intenție reală pentru zona și tipul proprietății, ca să pierzi mai puțin timp." },
-      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 50–150 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 30 de zile, apoi de la un plan lunar." },
+      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 50–150 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 7 zile, apoi de la un plan lunar." },
       { q: "Funcționează pentru vânzare și închiriere?", a: "Da — pentru orice tip de proprietate, rezidențial sau comercial." },
       { q: "Cum primesc clienții?", a: "Fiecare persoană interesată îți vine ca lead pe WhatsApp, cu nume și telefon." },
       { q: "Pot opri oricând?", a: "Da, pornești și oprești reclama din WhatsApp, fără contracte." },
@@ -320,7 +320,7 @@ export const NICHES: Record<string, NicheConfig> = {
     ],
     faq: [
       { q: "Trebuie să știu ceva despre reclame?", a: "Nu. Îi spui pe WhatsApp ce curs oferi, iar AdPilot creează, lansează și optimizează reclama singur." },
-      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 40–120 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 30 de zile, apoi de la un plan lunar." },
+      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 40–120 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 7 zile, apoi de la un plan lunar." },
       { q: "Funcționează pentru orice tip de curs?", a: "Da — cursuri online, ateliere, coaching, mentorat. Targetăm exact publicul potrivit." },
       { q: "Cum primesc înscrierile?", a: "Fiecare persoană interesată îți vine ca lead pe WhatsApp, cu nume și telefon." },
       { q: "Pot opri oricând?", a: "Da, pornești și oprești reclama din WhatsApp, fără contracte." },
@@ -370,7 +370,7 @@ export const NICHES: Record<string, NicheConfig> = {
     ],
     faq: [
       { q: "Reclamele apar în zona mea?", a: "Da. Targetăm exact orașul și zona din jurul service-ului, ca să vină clienți care pot ajunge la tine." },
-      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 40–100 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 30 de zile, apoi de la un plan lunar." },
+      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 40–100 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 7 zile, apoi de la un plan lunar." },
       { q: "Funcționează pentru vulcanizări sau detailing?", a: "Da — pentru orice service auto. Adaptăm mesajul la serviciile tale." },
       { q: "Cum primesc clienții?", a: "Fiecare persoană interesată îți vine ca lead pe WhatsApp, cu nume și telefon." },
       { q: "Pot opri oricând?", a: "Da, pornești și oprești reclama din WhatsApp, fără contracte." },
@@ -420,7 +420,7 @@ export const NICHES: Record<string, NicheConfig> = {
     ],
     faq: [
       { q: "Reclamele apar în zona mea?", a: "Da. Targetăm exact orașul și zonele unde vrei să lucrezi." },
-      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 80–250 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 30 de zile, apoi de la un plan lunar." },
+      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 80–250 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 7 zile, apoi de la un plan lunar." },
       { q: "Ce fel de proiecte pot promova?", a: "Orice — renovări, construcții la roșu sau la cheie, amenajări interioare și exterioare." },
       { q: "Cum primesc cererile?", a: "Fiecare persoană interesată îți vine ca lead pe WhatsApp, cu nume și telefon." },
       { q: "Pot opri oricând?", a: "Da, pornești și oprești reclama din WhatsApp, fără contracte." },
@@ -470,7 +470,7 @@ export const NICHES: Record<string, NicheConfig> = {
     ],
     faq: [
       { q: "E permis să faci reclame la servicii medicale?", a: "Da, cu mesaje corecte. AdPilot construiește reclame conforme cu regulile Meta pentru domeniul medical." },
-      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 100–300 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 30 de zile, apoi de la un plan lunar." },
+      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 100–300 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 7 zile, apoi de la un plan lunar." },
       { q: "Funcționează pentru orice specialitate?", a: "Da — dermatologie, recuperare, ORL, cardiologie, clinici generale. Targetăm publicul potrivit." },
       { q: "Cum primesc pacienții?", a: "Fiecare persoană interesată îți vine ca lead pe WhatsApp, cu nume și telefon." },
       { q: "Pot opri oricând?", a: "Da, pornești și oprești reclama din WhatsApp, fără contracte." },
@@ -520,7 +520,7 @@ export const NICHES: Record<string, NicheConfig> = {
     ],
     faq: [
       { q: "Reclamele apar în zona mea?", a: "Da. Targetăm exact orașul și zona din jurul școlii, unde sunt părinții." },
-      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 40–120 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 30 de zile, apoi de la un plan lunar." },
+      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 40–120 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 7 zile, apoi de la un plan lunar." },
       { q: "Funcționează pentru grădinițe și afterschool?", a: "Da — pentru orice unitate privată de învățământ. Adaptăm mesajul." },
       { q: "Cum primesc înscrierile?", a: "Fiecare părinte interesat îți vine ca lead pe WhatsApp, cu nume și telefon." },
       { q: "Pot opri oricând?", a: "Da, pornești și oprești reclama din WhatsApp, fără contracte." },

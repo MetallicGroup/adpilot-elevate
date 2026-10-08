@@ -3,8 +3,8 @@
  *
  * Model nou:
  *  1) PLĂTIT (Pro/Premium/comp) → acces nelimitat.
- *  2) TRIAL DE ÎNSCRIERE: 30 de zile gratuite de la CREAREA contului
- *     (`profiles.signup_trial_ends_at` = created_at + 30 zile). Acces complet,
+ *  2) TRIAL DE ÎNSCRIERE: 7 zile gratuite de la CREAREA contului
+ *     (`profiles.signup_trial_ends_at` = created_at + 7 zile). Acces complet,
  *     indiferent de planul ales, fără card.
  *  3) După trial: dacă a ales planul GRATUIT (Starter) → 7 zile gratuite/lună
  *     (reset lunar). Dacă a ales Pro/Premium și n-a plătit → NU are acces (primește
@@ -17,7 +17,7 @@
  */
 import { getUserPlanTier, type PlanTier } from "@/lib/plan.server";
 
-export const SIGNUP_TRIAL_DAYS = 30;
+export const SIGNUP_TRIAL_DAYS = 7;
 export const FREE_STARTER_DAYS = 7;
 
 export const PRICING_URL = "https://adpilot.ro/pricing";
@@ -86,7 +86,7 @@ export async function resolveAccess(
 
   const chosenPlan: string | null = profile?.chosen_plan ?? null;
 
-  // 30 de zile de la crearea contului.
+  // 7 zile de la crearea contului.
   const trialEndsAt: string | null = profile?.signup_trial_ends_at ?? null;
   const signupActive = !paid && !!trialEndsAt && Date.now() < new Date(trialEndsAt).getTime();
 
@@ -128,7 +128,7 @@ export async function resolveAccess(
 
 /**
  * Gate la publicarea unei campanii:
- *  - Plătit sau în trialul de 30 zile → nelimitat.
+ *  - Plătit sau în trialul de 7 zile → nelimitat.
  *  - Starter gratuit (7 zile/lună) → O SINGURĂ campanie.
  *  - Altfel → blocat (alege/plătește un plan).
  */

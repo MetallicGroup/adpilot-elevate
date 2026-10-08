@@ -15,9 +15,9 @@ export const Route = createFileRoute("/pricing")({
   }),
   head: () => ({ meta: [
     { title: "Prețuri — AdPilot" },
-    { name: "description", content: "Planuri lunare simple pentru afaceri de orice mărime. 30 de zile gratuite, fără card. Anulezi oricând." },
+    { name: "description", content: "Planuri lunare simple pentru afaceri de orice mărime. 7 zile gratuite, fără card. Anulezi oricând." },
     { property: "og:title", content: "Prețuri — AdPilot" },
-    { property: "og:description", content: "30 de zile gratuite, fără card. Anulezi oricând." },
+    { property: "og:description", content: "7 zile gratuite, fără card. Anulezi oricând." },
     { property: "og:url", content: "https://adpilot.ro/pricing" },
   ], links: [{ rel: "canonical", href: "https://adpilot.ro/pricing" }],
     scripts: [
@@ -82,7 +82,7 @@ const plans = [
 ];
 
 const faqs = [
-  { q: "Există perioadă de probă gratuită?", a: "Da — 30 de zile gratuite pentru orice cont nou, fără card, de la crearea contului. Planul Starter rămâne gratuit apoi 7 zile în fiecare lună. Pentru Pro/Premium primești pe WhatsApp un link de plată când vrei să continui nelimitat." },
+  { q: "Există perioadă de probă gratuită?", a: "Da — 7 zile gratuite pentru orice cont nou, fără card, de la crearea contului. Planul Starter rămâne gratuit apoi 7 zile în fiecare lună. Pentru Pro/Premium primești pe WhatsApp un link de plată când vrei să continui nelimitat." },
   { q: "Pot anula oricând?", a: "Da. Poți anula oricând în timpul perioadei de probă fără să fii taxat, sau ulterior direct din contul tău, fără întrebări." },
   { q: "Prețul include bugetul de reclame?", a: "Nu. Abonamentul AdPilot acoperă doar platforma. Bugetul de reclame este plătit direct către Meta (Facebook & Instagram), din contul tău." },
   { q: "Ce metode de plată acceptați?", a: "Toate cardurile majore: Visa, Mastercard, Maestro. Plățile sunt procesate securizat prin Stripe." },
@@ -138,7 +138,7 @@ function PricingPage() {
       <PageHero
         eyebrow="Prețuri"
         title="Planuri simple care cresc o dată cu tine."
-        subtitle="🎉 30 de zile gratuite pentru orice cont nou, fără card. Starter rămâne gratuit 7 zile/lună; Pro/Premium continuă nelimitat după ce plătești."
+        subtitle="🎉 7 zile gratuite pentru orice cont nou, fără card. Starter rămâne gratuit 7 zile/lună; Pro/Premium continuă nelimitat după ce plătești."
       />
       <section className="px-6 pb-20 max-w-6xl mx-auto w-full">
         <h2 className="sr-only">Planuri și prețuri AdPilot</h2>
@@ -176,7 +176,7 @@ function PricingPage() {
                   <span className="text-base text-muted-foreground font-sans">/lună</span>
                 </p>
                 <p className="mt-2 text-xs text-success font-medium">
-                  ✨ Gratuit 30 de zile, fără card
+                  ✨ Gratuit 7 zile, fără card
                 </p>
               </>
             )}
@@ -194,7 +194,7 @@ function PricingPage() {
                 p.featured ? "bg-primary text-primary-foreground" : "bg-foreground text-background"
               }`}
             >
-              {p.free ? "Începe gratuit" : "Începe gratuit 30 de zile"}
+              {p.free ? "Începe gratuit" : "Începe gratuit 7 zile"}
             </button>
           </div>
         ))}

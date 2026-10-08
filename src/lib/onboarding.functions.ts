@@ -22,7 +22,7 @@ export type OnboardingStatus = {
   whatsappAllowed: boolean;
   /** Planul ales la înscriere (starter/pro/premium) — fără plată la înscriere. */
   chosenPlan: string | null;
-  /** Trial de 30 zile de la crearea contului. */
+  /** Trial de 7 zile de la crearea contului. */
   signupTrial: { active: boolean; endsAt: string | null };
   freeStarter: {
     state: "none" | "eligible" | "active" | "consumed";
@@ -126,8 +126,8 @@ export const getOnboardingStatus = createServerFn({ method: "POST" })
 
 /**
  * Alege planul la înscriere (FĂRĂ card, FĂRĂ plată): doar salvează `chosen_plan`.
- * Toți userii au deja 30 de zile gratuite de la crearea contului (signup_trial).
- * După cele 30 de zile: Starter → 7 zile/lună; Pro/Premium → link de plată pe WhatsApp.
+ * Toți userii au deja 7 zile gratuite de la crearea contului (signup_trial).
+ * După cele 7 zile: Starter → 7 zile/lună; Pro/Premium → link de plată pe WhatsApp.
  * Nu setăm `plan` = pro/premium (ar acorda acces plătit fără plată).
  */
 export const chooseSignupPlan = createServerFn({ method: "POST" })

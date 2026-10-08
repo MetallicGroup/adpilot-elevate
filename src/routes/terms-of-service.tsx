@@ -38,7 +38,7 @@ export const Route = createFileRoute("/terms-of-service")({
       <P>Trebuie să respecți și politicile de publicitate ale Meta.</P>
 
       <H2>5. Abonamente, facturare și perioadă de probă</H2>
-      <P>AdPilot este oferit ca abonament lunar plătit. Clienții noi beneficiază de 30 de zile gratuite (fără card), de la crearea contului; planul Starter rămâne apoi gratuit 7 zile pe lună. După această perioadă, abonamentele se reînnoiesc automat lunar la prețul curent până la anulare. Poți anula oricând din contul tău; anularea intră în vigoare la finalul perioadei plătite. Rambursările sunt acordate conform Politicii de rambursare — în principal, poți solicita rambursarea completă a primei plăți în primele 7 zile. Putem modifica prețurile cu notificare de cel puțin 30 de zile; modificările se aplică doar la reînnoire.</P>
+      <P>AdPilot este oferit ca abonament lunar plătit. Clienții noi beneficiază de 7 zile gratuite (fără card), de la crearea contului; planul Starter rămâne apoi gratuit 7 zile pe lună. După această perioadă, abonamentele se reînnoiesc automat lunar la prețul curent până la anulare. Poți anula oricând din contul tău; anularea intră în vigoare la finalul perioadei plătite. Rambursările sunt acordate conform Politicii de rambursare — în principal, poți solicita rambursarea completă a primei plăți în primele 7 zile. Putem modifica prețurile cu notificare de cel puțin 30 de zile; modificările se aplică doar la reînnoire.</P>
       <P>Abonamentul acoperă doar accesul la platformă. Bugetul de reclame este facturat direct de Meta sau Google și nu este inclus.</P>
 
       <H2>6. Conținutul și datele Clientului</H2>

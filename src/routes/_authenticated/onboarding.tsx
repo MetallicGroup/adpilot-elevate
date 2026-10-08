@@ -134,7 +134,7 @@ function OnboardingPage() {
 
   async function selectPlan(plan: { id: string; free?: boolean }) {
     // FĂRĂ card la înscriere: alegerea planului doar se salvează. Toți userii au deja
-    // 30 de zile gratuite de la crearea contului. După, Starter = 7 zile/lună, iar
+    // 7 zile gratuite de la crearea contului. După, Starter = 7 zile/lună, iar
     // Pro/Premium primesc pe WhatsApp linkul de plată Stripe.
     const key = plan.id.startsWith("starter")
       ? "starter"
@@ -145,8 +145,8 @@ function OnboardingPage() {
       await choosePlan({ data: { plan: key } });
       toast.success(
         key === "starter"
-          ? "Gata! Ai 30 de zile gratuite acum, apoi 7 zile în fiecare lună. Activează WhatsApp 👇"
-          : `Gata! Ai ales ${key === "premium" ? "Premium" : "Pro"} — 30 de zile gratuite acum. Activează WhatsApp 👇`,
+          ? "Gata! Planul Starter e activ: 7 zile gratuite în fiecare lună. Activează WhatsApp 👇"
+          : `Gata! Ai ales ${key === "premium" ? "Premium" : "Pro"} — 7 zile gratuite acum. Activează WhatsApp 👇`,
       );
       await reload();
     } catch (e: any) {
@@ -189,7 +189,7 @@ function OnboardingPage() {
             Două minute și ești gata să lansezi.
           </h1>
           <p className="mt-3 text-muted-foreground">
-            Conectează pagina ta de Facebook și alege un plan — 30 de zile gratuite, fără card.
+            Conectează pagina ta de Facebook și alege un plan — 7 zile gratuite, fără card.
           </p>
         </motion.div>
 
@@ -251,7 +251,7 @@ function OnboardingPage() {
             <div className="flex-1">
               <h2 className="font-semibold text-lg">Alege planul tău</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                <b className="text-foreground">30 de zile gratuite</b> pentru orice plan, fără card —
+                <b className="text-foreground">7 zile gratuite</b> pentru orice plan, fără card —
                 de la crearea contului. Starter rămâne apoi gratuit{" "}
                 <b className="text-foreground">7 zile în fiecare lună</b>; Pro/Premium continuă
                 nelimitat după ce plătești (link primit pe WhatsApp).
@@ -310,7 +310,7 @@ function OnboardingPage() {
                       <span className="text-xs text-muted-foreground font-sans">/lună</span>
                     </p>
                     <p className="mt-1 text-[11px] text-success font-medium">
-                      ✨ Gratuit 30 de zile, apoi {p.price}/lună
+                      ✨ Gratuit 7 zile, apoi {p.price}/lună
                     </p>
                   </>
                 )}
@@ -331,7 +331,7 @@ function OnboardingPage() {
                         : "bg-foreground text-background"
                   }`}
                 >
-                  {p.free ? "Începe gratuit" : "Începe gratuit 30 zile"}
+                  {p.free ? "Începe gratuit" : "Începe gratuit 7 zile"}
                 </button>
               </div>
             ))}

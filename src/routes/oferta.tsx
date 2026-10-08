@@ -29,7 +29,7 @@ export const Route = createFileRoute("/oferta")({
       {
         name: "description",
         content:
-          "Spune-i ce vrei să obții. AdPilot creează, lansează și optimizează reclamele tale pe Facebook și Instagram — fără agenție și fără experiență. 30 de zile gratuite pentru orice cont nou, fără card.",
+          "Spune-i ce vrei să obții. AdPilot creează, lansează și optimizează reclamele tale pe Facebook și Instagram — fără agenție și fără experiență. 7 zile gratuite pentru orice cont nou, fără card.",
       },
       { property: "og:title", content: "Începe GRATUIT — AdPilot" },
       {
@@ -113,7 +113,7 @@ function OfertaPage() {
             <SignupCTA id="hero" label="Începe gratuit acum" className="text-lg px-8 py-4" />
           </div>
           <p className="mt-4 text-sm text-muted-foreground">
-            🎉 <b className="text-foreground">30 de zile gratuite</b>, fără card · Asistent
+            🎉 <b className="text-foreground">7 zile gratuite</b>, fără card · Asistent
             WhatsApp AI inclus
           </p>
         </Reveal>
@@ -221,7 +221,7 @@ function OfertaPage() {
                     {p.price}
                     <span className="text-sm text-muted-foreground font-sans">/lună</span>
                   </p>
-                  <p className="mt-1 text-sm text-muted-foreground">Gratuit 30 de zile, fără card</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Gratuit 7 zile, fără card</p>
                 </>
               )}
               <ul className="mt-5 space-y-2">
@@ -237,7 +237,7 @@ function OfertaPage() {
                 onClick={() => tkClickButton(`oferta-plan-${p.name}`)}
                 className={`press mt-6 inline-flex w-full items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold ${p.featured ? "btn-primary" : p.free ? "bg-success text-white" : "glass hover:bg-card text-foreground"}`}
               >
-                {p.free ? "Începe gratuit" : "Începe gratuit 30 de zile"}
+                {p.free ? "Începe gratuit" : "Începe gratuit 7 zile"}
               </Link>
             </Reveal>
           ))}

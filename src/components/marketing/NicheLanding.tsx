@@ -184,7 +184,7 @@ export function NicheLanding({ niche }: { niche: NicheConfig }) {
                     {p.price}
                     <span className="text-sm text-muted-foreground font-sans">/lună</span>
                   </p>
-                  <p className="mt-1 text-sm text-muted-foreground">Gratuit 30 de zile, fără card</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Gratuit 7 zile, fără card</p>
                 </>
               )}
               <ul className="mt-5 space-y-2">
@@ -200,7 +200,7 @@ export function NicheLanding({ niche }: { niche: NicheConfig }) {
                 onClick={() => tkClickButton(`niche-${niche.slug}-plan-${p.name}`)}
                 className={`press mt-6 inline-flex w-full items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold ${p.featured ? "btn-primary" : p.free ? "bg-success text-white" : "glass hover:bg-card text-foreground"}`}
               >
-                {p.free ? "Începe gratuit" : "Începe gratuit 30 de zile"}
+                {p.free ? "Începe gratuit" : "Începe gratuit 7 zile"}
               </Link>
             </Reveal>
           ))}
