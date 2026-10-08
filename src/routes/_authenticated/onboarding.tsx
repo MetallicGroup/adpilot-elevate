@@ -216,7 +216,7 @@ function OnboardingPage() {
         </span>
         <div className="grid">
           <aside className="rail">
-            <div className="ring">
+            <div className="oring">
               <svg width="64" height="64" viewBox="0 0 64 64">
                 <defs>
                   <linearGradient id="onb-ring" x1="0" x2="1">
@@ -252,7 +252,7 @@ function OnboardingPage() {
           <div className="panel">
             {view === 1 && (
               <div className="pane" key="1">
-                <p className="eyebrow">Pasul 1 din 5</p>
+                <p className="ey">Pasul 1 din 5</p>
                 <h3>Conectează pagina ta de Facebook</h3>
                 <p>
                   AdPilot are nevoie de acces la pagină și la contul de reclame ca să lanseze campaniile
@@ -284,7 +284,7 @@ function OnboardingPage() {
             {/* Rămâne montat după conectare: el verifică singur contul și cardul. */}
             {step1Done && (
               <div className="pane" hidden={view !== 2}>
-                <p className="eyebrow">Pasul 2 din 5</p>
+                <p className="ey">Pasul 2 din 5</p>
                 <h3>Cont de reclame și card</h3>
                 <p>Meta încasează bugetul de reclame direct de pe cardul tău. Verificăm noi dacă totul e în regulă.</p>
                 <AdAccountGate connected={step1Done} onReady={() => setAdReady(true)} />
@@ -294,7 +294,7 @@ function OnboardingPage() {
 
             {view === 3 && (
               <div className="pane" key="3">
-                <p className="eyebrow">Pasul 3 din 5</p>
+                <p className="ey">Pasul 3 din 5</p>
                 <h3>Alege planul tău</h3>
                 <p>Toate planurile sunt gratuite primele 7 zile, fără card. Nu plătești nimic acum.</p>
                 <div className="pp">
@@ -372,7 +372,7 @@ function OnboardingPage() {
 
             {view === 4 && (
               <div className="pane" key="4">
-                <p className="eyebrow">Pasul 4 din 5</p>
+                <p className="ey">Pasul 4 din 5</p>
                 <h3>Activează asistentul pe WhatsApp</h3>
                 <p>
                   Aici primești clienții, rapoartele și controlezi campaniile. Scrii numărul, apoi trimiți
@@ -385,7 +385,7 @@ function OnboardingPage() {
 
             {view === 5 && (
               <div className="pane" key="5">
-                <p className="eyebrow">Pasul 5 din 5</p>
+                <p className="ey">Pasul 5 din 5</p>
                 <h3>Ce vrei să obții?</h3>
                 <p>Configurăm prima campanie exact pentru obiectivul tău.</p>
                 <GoalSetupStep />

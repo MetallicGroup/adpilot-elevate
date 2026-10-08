@@ -1,12 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { MarketingLayout, PageHero } from "@/components/marketing/MarketingLayout";
-import { Check, X } from "lucide-react";
+import { MarketingLayout } from "@/components/marketing/MarketingLayout";
+import { Band, Faq, FinalCta, Hero, PlanCards } from "@/components/v2/kit";
 import { useStripeCheckout } from "@/hooks/useStripeCheckout";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "@tanstack/react-router";
 import { tkViewContent, tkClickButton } from "@/lib/tiktok-pixel";
-import { SIGNUP_TRIAL_LABEL, FREE_STARTER_LABEL, FREE_STARTER_SUBLABEL } from "@/lib/promo";
 
 export const Route = createFileRoute("/pricing")({
   validateSearch: (s: Record<string, unknown>): { plan?: string; redirect?: string } => ({
@@ -37,49 +36,6 @@ export const Route = createFileRoute("/pricing")({
   }),
   component: PricingPage,
 });
-
-const plans = [
-  {
-    name: "Starter",
-    priceId: "starter_free",
-    free: true,
-    price: "Gratuit",
-    desc: "Testează AdPilot complet — 7 zile gratuite în fiecare lună, fără card.",
-    items: [
-      "Asistent WhatsApp AI inclus",
-      "Pornești campanii pe Facebook & Instagram",
-      "7 zile gratuite în fiecare lună",
-    ],
-    notIncluded: ["Campanii nelimitate, non-stop", "Generare AI de poze"],
-  },
-  {
-    name: "Pro",
-    priceId: "pro_monthly",
-    price: "495 lei",
-    featured: true,
-    desc: "Pentru afacerile care vor să crească rapid.",
-    items: [
-      "Campanii nelimitate, non-stop",
-      "10 poze AI pe lună",
-      "Asistent WhatsApp AI",
-      "Suport prioritar",
-    ],
-    notIncluded: [],
-  },
-  {
-    name: "Premium",
-    priceId: "premium_monthly",
-    price: "995 lei",
-    desc: "Pentru branduri și agenții care scalează agresiv.",
-    items: [
-      "Campanii nelimitate, non-stop",
-      "Poze AI nelimitate",
-      "Asistent WhatsApp AI",
-      "Manager dedicat",
-    ],
-    notIncluded: [],
-  },
-];
 
 const faqs = [
   { q: "Există perioadă de probă gratuită?", a: "Da — 7 zile gratuite pentru orice cont nou, fără card, de la crearea contului. Planul Starter rămâne gratuit apoi 7 zile în fiecare lună. Pentru Pro/Premium primești pe WhatsApp un link de plată când vrei să continui nelimitat." },
@@ -135,82 +91,22 @@ function PricingPage() {
 
   return (
     <MarketingLayout>
-      <PageHero
+      <Hero
         eyebrow="Prețuri"
-        title="Planuri simple care cresc o dată cu tine."
-        subtitle="🎉 7 zile gratuite pentru orice cont nou, fără card. Starter rămâne gratuit 7 zile/lună; Pro/Premium continuă nelimitat după ce plătești."
+        title="Primele 7 zile sunt gratuite. Fără card."
+        sub="Alegi planul la înscriere și îl folosești complet 7 zile. Starter rămâne gratuit 7 zile pe lună; Pro și Premium continuă nelimitat după ce plătești. Bugetul de reclame îl plătești separat, direct către Meta."
       />
-      <section className="px-6 pb-20 max-w-6xl mx-auto w-full">
+      <Band tone="light">
         <h2 className="sr-only">Planuri și prețuri AdPilot</h2>
-        <div className="grid gap-5 md:grid-cols-3">
-        {plans.map((p) => (
-          <div key={p.name} className={`card-floating p-8 ${p.featured ? "ring-2 ring-primary relative" : ""}`}>
-            {p.featured && (
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-semibold uppercase tracking-wider px-3 py-1 rounded-full bg-primary text-primary-foreground">
-                Cel mai popular
-              </span>
-            )}
-            <h3 className="font-semibold text-xl">{p.name}</h3>
-            <p className="mt-2 text-sm text-muted-foreground">{p.desc}</p>
-            {p.free ? (
-              <>
-                <div className="mt-6">
-                  <span className="inline-block text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-success/15 text-success">
-                    ✅ {FREE_STARTER_LABEL}
-                  </span>
-                </div>
-                <p className="mt-3 font-serif text-5xl">Gratuit</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {FREE_STARTER_SUBLABEL} · fără card
-                </p>
-              </>
-            ) : (
-              <>
-                <div className="mt-6">
-                  <span className="inline-block text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-success/15 text-success">
-                    🎉 {SIGNUP_TRIAL_LABEL}
-                  </span>
-                </div>
-                <p className="mt-3 font-serif text-5xl">
-                  {p.price}
-                  <span className="text-base text-muted-foreground font-sans">/lună</span>
-                </p>
-                <p className="mt-2 text-xs text-success font-medium">
-                  ✨ Gratuit 7 zile, fără card
-                </p>
-              </>
-            )}
-            <ul className="mt-6 space-y-2">
-              {p.items.map((it) => (
-                <li key={it} className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-success" />{it}</li>
-              ))}
-              {p.notIncluded?.map((it) => (
-                <li key={it} className="flex items-center gap-2 text-sm text-muted-foreground/70 line-through"><X className="w-4 h-4" />{it}</li>
-              ))}
-            </ul>
-            <button
-              onClick={() => handleSelect(p.priceId, p.free)}
-              className={`press mt-8 inline-flex w-full items-center justify-center px-4 py-3 rounded-lg font-medium ${
-                p.featured ? "bg-primary text-primary-foreground" : "bg-foreground text-background"
-              }`}
-            >
-              {p.free ? "Începe gratuit" : "Începe gratuit 7 zile"}
-            </button>
-          </div>
-        ))}
-        </div>
-      </section>
-      <section className="px-6 pb-24 max-w-3xl mx-auto w-full">
-        <h2 className="font-serif text-3xl font-semibold mb-6">Întrebări frecvente</h2>
-        <div className="space-y-3">
-          {faqs.map((f) => (
-            <div key={f.q} className="card-floating p-6">
-              <h3 className="font-semibold">{f.q}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{f.a}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+        <PlanCards onSelect={(p) => handleSelect(p.id, p.free)} />
+      </Band>
+      <Band tone="light" className="tight">
+        <h2 className="d2" data-r>
+          Întrebări frecvente
+        </h2>
+        <Faq items={faqs} />
+      </Band>
+      <FinalCta title={<>Prima reclamă,<br />în 5 minute.</>} />
 
       {isOpen && (
         <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm overflow-y-auto">

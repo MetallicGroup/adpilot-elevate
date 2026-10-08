@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MarketingLayout, PageHero } from "@/components/marketing/MarketingLayout";
+import { Band, FinalCta } from "@/components/v2/kit";
 
 export const Route = createFileRoute("/about")({
   head: () => ({ meta: [
@@ -16,25 +17,28 @@ function AboutPage() {
   return (
     <MarketingLayout>
       <PageHero eyebrow="Despre noi" title="Reclame online accesibile oricărei afaceri." subtitle="Am construit AdPilot pentru că orice afacere mică merită aceeași putere de publicitate ca brandurile mari — fără costurile unei agenții." />
-      <section className="px-6 pb-20 max-w-3xl mx-auto w-full space-y-8 text-muted-foreground leading-relaxed">
-        <p>AdPilot a fost fondat în 2025 de o echipă de marketeri, ingineri și cercetători AI care au construit ani la rând campanii de performanță pentru branduri direct-to-consumer. Vedeam mereu aceeași poveste: un produs bun, un buget mic, și o platformă de reclame atât de complexă încât avea nevoie de un specialist full-time doar pentru a lansa o singură campanie.</p>
-        <p>Meta (Facebook și Instagram) este cea mai puternică platformă de achiziție de clienți a deceniului — și merită un instrument care vine la nivelul oamenilor. AdPilot înlocuiește agenția cu un co-pilot AI care construiește, lansează și optimizează campanii în câteva minute, nu săptămâni.</p>
-        <p>Astăzi, AdPilot ajută afaceri de servicii, magazine online și antreprenori locali din toată Europa. Avem sediul în București, România, cu o echipă fully remote în toată UE.</p>
-        <div className="grid sm:grid-cols-3 gap-4 not-prose pt-4">
-          <Stat label="Fondat" value="2025" />
-          <Stat label="Sediu" value="București, RO" />
-          <Stat label="Echipă" value="Fully remote" />
+      <Band tone="light">
+        <article className="legal">
+          <p>AdPilot a fost fondat în 2025 de o echipă de marketeri, ingineri și cercetători AI care au construit ani la rând campanii de performanță pentru branduri direct-to-consumer. Vedeam mereu aceeași poveste: un produs bun, un buget mic, și o platformă de reclame atât de complexă încât avea nevoie de un specialist full-time doar pentru a lansa o singură campanie.</p>
+          <p>Meta (Facebook și Instagram) este cea mai puternică platformă de achiziție de clienți a deceniului — și merită un instrument care vine la nivelul oamenilor. AdPilot înlocuiește agenția cu un co-pilot AI care construiește, lansează și optimizează campanii în câteva minute, nu săptămâni.</p>
+          <p>Astăzi, AdPilot ajută afaceri de servicii, magazine online și antreprenori locali din toată Europa. Avem sediul în București, România, cu o echipă fully remote în toată UE.</p>
+        </article>
+        <div className="trio">
+          <div data-r>
+            <span className="k">FONDAT</span>
+            <h3>2025</h3>
+          </div>
+          <div data-r>
+            <span className="k">SEDIU</span>
+            <h3>București, RO</h3>
+          </div>
+          <div data-r>
+            <span className="k">ECHIPĂ</span>
+            <h3>Fully remote</h3>
+          </div>
         </div>
-      </section>
+      </Band>
+      <FinalCta title={<>Prima reclamă,<br />în 5 minute.</>} />
     </MarketingLayout>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="card-floating p-5 text-center">
-      <p className="text-xs uppercase tracking-widest text-muted-foreground">{label}</p>
-      <p className="mt-2 font-serif text-2xl text-foreground">{value}</p>
-    </div>
   );
 }

@@ -324,7 +324,7 @@ function AuthPage() {
             AdPilot
           </Link>
           <div>
-            <p className="eyebrow" style={{ color: "#c9c6dc" }}>
+            <p className="ey" style={{ color: "#c9c6dc" }}>
               7 zile gratuite · fără card
             </p>
             <h2 style={{ marginTop: 16 }}>

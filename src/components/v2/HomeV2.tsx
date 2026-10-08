@@ -1,6 +1,7 @@
 import { useEffect, useRef, type CSSProperties, type MouseEvent } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { tkClickButton } from "@/lib/tiktok-pixel";
+import { SiteFooter } from "@/components/marketing/SiteFooter";
 import { initHomeMotion } from "./home-motion";
 
 const NICHES = [
@@ -81,7 +82,7 @@ export function HomeV2() {
 
 <section className="band light" id="ce">
   <div className="wrap">
-    <p className="eyebrow" data-r>Ce face AdPilot</p>
+    <p className="ey" data-r>Ce face AdPilot</p>
     <p className="two" data-r style={css({ maxWidth: "24ch", margin: "18px 0 0" })}><b>Tu conduci afacerea. AdPilot conduce reclamele.</b> Scrie textele, face poza, alege publicul, pornește campania și îți spune în fiecare dimineață ce a ieșit.</p>
     <div className="bento">
       <div className="cell c3" data-r>
@@ -112,7 +113,7 @@ export function HomeV2() {
   <div className="track" id="track">
     <div className="stick">
       <div className="steps">
-        <p className="eyebrow" style={css({ margin: "0 0 18px" })}>Cum funcționează</p>
+        <p className="ey" style={css({ margin: "0 0 18px" })}>Cum funcționează</p>
         <div className="step on"><span className="k">PASUL 1</span><h3>Conectezi Facebook</h3><p>Un singur buton. Contul de reclame rămâne al tău, pe numele tău.</p></div>
         <div className="step"><span className="k">PASUL 2</span><h3>Spui ce vrei să obții</h3><p>Vânzări, programări, clienți potențiali sau apeluri. Scrii orașul și bugetul.</p></div>
         <div className="step"><span className="k">PASUL 3</span><h3>AdPilot face reclama</h3><p>Text, poză, public, formular. Tu doar confirmi cu „da”.</p></div>
@@ -121,8 +122,8 @@ export function HomeV2() {
       <div className="iph"><div className="bz"><div className="scr" id="pinScr"></div></div></div>
       <div className="pside" id="pside">
         <div className="card on"><div className="live">CONECTAT</div><h3 className="d3" style={css({ marginTop: "12px" })}>Pagina „Salon Eleganza”</h3><p style={css({ color: "var(--mut)", margin: "8px 0 0", fontSize: "14px" })}>Cont de reclame și card verificate.</p></div>
-        <div className="card"><p className="eyebrow">Obiectiv ales</p><h3 className="d3" style={css({ marginTop: "10px" })}>Mai multe programări</h3><div className="chips" style={css({ marginTop: "14px" })}><span className="chip">Cluj-Napoca + 15 km</span><span className="chip">50 lei pe zi</span></div></div>
-        <div className="card"><p className="eyebrow">Reclamă generată</p><div style={css({ height: "150px", marginTop: "12px", borderRadius: "14px", background: "var(--img-salon) center 30%/cover" })}></div><p style={css({ margin: "12px 0 0", fontSize: "14px" })}><b>Tuns și coafat cu 20% reducere</b><br /><span style={css({ color: "var(--mut)" })}>Programează-te în 30 de secunde.</span></p></div>
+        <div className="card"><p className="ey">Obiectiv ales</p><h3 className="d3" style={css({ marginTop: "10px" })}>Mai multe programări</h3><div className="chips" style={css({ marginTop: "14px" })}><span className="chip">Cluj-Napoca + 15 km</span><span className="chip">50 lei pe zi</span></div></div>
+        <div className="card"><p className="ey">Reclamă generată</p><div style={css({ height: "150px", marginTop: "12px", borderRadius: "14px", background: "var(--img-salon) center 30%/cover" })}></div><p style={css({ margin: "12px 0 0", fontSize: "14px" })}><b>Tuns și coafat cu 20% reducere</b><br /><span style={css({ color: "var(--mut)" })}>Programează-te în 30 de secunde.</span></p></div>
         <div className="card"><div className="live">LEAD NOU</div><div className="row" style={css({ display: "flex", gap: "12px", alignItems: "center", marginTop: "14px" })}><span className="av">IP</span><div><b>Ioana P.</b><div style={css({ color: "var(--mut)", fontSize: "13px" })}>0740 ··· 579 · acum 4 secunde</div></div></div></div>
       </div>
       <div className="progress"><i id="pinBar"></i></div>
@@ -132,7 +133,7 @@ export function HomeV2() {
 
 <section className="band light" id="rezultat">
   <div className="wrap">
-    <p className="eyebrow" data-r>Așa arată în flux</p>
+    <p className="ey" data-r>Așa arată în flux</p>
     <h2 className="d2" data-r style={css({ maxWidth: "17ch", marginTop: "16px" })}>Reclame care arată ca făcute de o agenție.</h2>
     <p className="lead" data-r style={css({ marginTop: "22px" })}>Text, imagine și buton, gata de publicat pe Facebook și Instagram. Tu doar confirmi.</p>
     <div className="ads">
@@ -161,7 +162,7 @@ export function HomeV2() {
         <div className="rx"><span className="re"><u><span style={css({ background: "#0866ff" })}>👍</span><span style={css({ background: "#f33e58" })}>❤️</span><span style={css({ background: "#ffd766" })}>😮</span></u>128</span><span>18 comentarii</span></div><div className="ac"><span><svg viewBox="0 0 24 24"><path d="M7 11v9H4v-9zM7 11l4-7c1.500 0 2.500 1 2.500 2.500V10H19a2 2 0 012 2.300l-1 6a2 2 0 01-2 1.700H7"/></svg>Îmi place</span><span><svg viewBox="0 0 24 24"><path d="M5 5h14a2 2 0 012 2v8a2 2 0 01-2 2h-7l-4 3.500V17H5a2 2 0 01-2-2V7a2 2 0 012-2z"/></svg>Comentează</span><span><svg viewBox="0 0 24 24"><path d="M14 5l7 6.500-7 6.500v-4c-5 0-8 1.500-10 5 0-6 3-10 10-10z"/></svg>Distribuie</span></div>
       </article>
     </div>
-    <p className="eyebrow" data-r>Rezultat real · școală de șoferi</p>
+    <p className="ey" data-r>Rezultat real · școală de șoferi</p>
     <h2 className="d2" data-r style={css({ maxWidth: "16ch", marginTop: "16px" })}>126 de lei cheltuiți. 72 de oameni care au cerut detalii.</h2>
     <div className="proof">
       <div data-r><div className="n" data-count="72">72</div><div className="l">clienți potențiali</div></div>
@@ -173,7 +174,7 @@ export function HomeV2() {
 
 <section className="band dark" id="obiectiv">
   <div className="wrap">
-    <p className="eyebrow" data-r>Începe de aici</p>
+    <p className="ey" data-r>Începe de aici</p>
     <h2 className="d2" data-r style={css({ marginTop: "16px" })}>Tu ce vrei să obții?</h2>
     <div className="goals" id="goals">
       <button className="goal" data-r aria-pressed="false" data-g="0" style={css({ "--c": "#2f6bff" })}><span className="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M5 8h14l-1.2 11H6.2L5 8z"/><path d="M9 8V6a3 3 0 016 0v2"/></svg></span><h3>Mai multe vânzări</h3><p>Magazin online sau produse fizice</p></button>
@@ -187,7 +188,7 @@ export function HomeV2() {
 
 <section className="band light" id="preturi">
   <div className="wrap">
-    <p className="eyebrow" data-r>Prețuri</p>
+    <p className="ey" data-r>Prețuri</p>
     <h2 className="d2" data-r style={css({ marginTop: "16px", maxWidth: "15ch" })}>Primele 7 zile sunt gratuite. Fără card.</h2>
     <p className="lead" data-r style={css({ marginTop: "22px" })}>Alegi planul la înscriere și îl folosești complet 7 zile, fără să plătești nimic. Bugetul de reclame îl plătești separat, direct către Meta.</p>
     <div className="plans">
@@ -201,7 +202,7 @@ export function HomeV2() {
         <ul><li>Tot ce are Pro</li><li>Poze generate cu AI, nelimitat</li><li>Manager dedicat</li></ul>
         <button className="btn btn-k" data-go="signup" style={css({ justifyContent: "center" })}>Începe gratuit 7 zile</button></div>
     </div>
-    <div className="agency" data-r><div><p className="eyebrow" style={css({ color: "#a5a2bc" })}>Pentru agenții</p><h3 className="d3" style={css({ marginTop: "10px" })}>Toți clienții tăi, într-un singur cont.</h3><p>995 lei pe lună cu 2 afaceri incluse, apoi 249 lei pentru fiecare afacere în plus. Clienții se conectează singuri, printr-un link.</p></div><button className="btn btn-w" data-go="signup">AdPilot pentru agenții <span className="arr">→</span></button></div>
+    <div className="agency" data-r><div><p className="ey" style={css({ color: "#a5a2bc" })}>Pentru agenții</p><h3 className="d3" style={css({ marginTop: "10px" })}>Toți clienții tăi, într-un singur cont.</h3><p>995 lei pe lună cu 2 afaceri incluse, apoi 249 lei pentru fiecare afacere în plus. Clienții se conectează singuri, printr-un link.</p></div><button className="btn btn-w" data-go="signup">AdPilot pentru agenții <span className="arr">→</span></button></div>
   </div>
 </section>
 
@@ -218,15 +219,16 @@ export function HomeV2() {
   </div>
 </section>
 
-<section className="band dark final">
+<section className="band dark final fin">
   <canvas className="ribbon" data-ribbon style={css({ top: "auto", bottom: "-40%" })}></canvas><div className="grain"></div>
   <div className="wrap">
     <h2 className="d1" data-r>Prima reclamă,<br />în 5 minute.</h2>
     <div className="cta" data-r><button className="btn btn-w" data-go="signup">Începe gratuit 7 zile <span className="arr">→</span></button></div>
-    <div className="foot"><span className="brand"><span className="logo"></span>AdPilot</span><span>Tu conduci afacerea. AdPilot conduce reclamele.</span><span>Termeni · Confidențialitate · Contact</span></div>
+    
   </div>
 </section>
 
+      <SiteFooter />
     </div>
   );
 }
