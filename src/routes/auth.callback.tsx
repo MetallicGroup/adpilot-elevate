@@ -55,6 +55,14 @@ function AuthCallbackPage() {
       if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code);
         if (error) {
+          // Linkul a fost deschis în alt browser decât cel în care a început fluxul
+          // (tipic: confirmarea din aplicația de mail). Emailul e deja confirmat de
+          // Supabase, deci userul se poate loga normal; nu-i arătăm eroarea tehnică.
+          if (/code verifier/i.test(error.message)) {
+            toast.success("Ai deschis linkul în alt browser. Contul e confirmat: intră cu emailul și parola.");
+            if (!cancelled) navigate({ to: "/auth", search: { mode: "signin" }, replace: true });
+            return;
+          }
           toast.error(translateAuthError(error.message));
           if (!cancelled) navigate({ to: "/auth", replace: true });
           return;
