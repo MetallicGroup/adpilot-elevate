@@ -712,3 +712,11 @@ html:has(.v2){scroll-behavior:smooth}
 .v2 .plan.hot .pr .z{color:#3ddc84}
 .v2 .plan .pr s{font:500 .38em var(--f-display);color:var(--mut);letter-spacing:0;text-decoration-thickness:1.5px;margin-left:6px}
 .v2 .plan .then{color:var(--mut);font-size:14px;margin-top:-10px}
+
+/* auth: additions for the real page */
+.v2 .sso:disabled,.v2 .asubmit:disabled{opacity:.6;cursor:default;transform:none}
+.v2 .asubmit{justify-content:center;border-radius:14px;height:50px;width:100%}
+.v2 .alink{text-decoration:underline;text-underline-offset:2px}
+.v2 .spin{animation:v2-sp 1s linear infinite}
+.v2 .amob{display:none;color:#0f0d1c;margin-bottom:8px}
+@media(max-width:900px){.v2 .amob{display:flex}}
