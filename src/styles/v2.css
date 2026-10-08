@@ -795,3 +795,50 @@ html:has(.v2){scroll-behavior:smooth}
 .v2 .note{margin-top:28px;border:1px solid var(--line);border-radius:24px;padding:28px;background:var(--card)}
 .v2 .note p{margin:8px 0 0;color:var(--mut)}.v2 .note a{text-decoration:underline;text-underline-offset:3px}
 .v2 .btn:disabled{opacity:.45;cursor:default;transform:none;box-shadow:none}
+
+/* ===== phone refinements ===== */
+.v2 .burger{flex:none}
+@media(max-width:860px){
+  .v2 .nav .in{gap:10px}
+  .v2 .nav .brand{font-size:19px}
+  .v2 .nav .btn-s{height:40px;padding:0 15px}
+}
+/* The phone already tells the whole story; the side cards only cover it on small screens. */
+@media(max-width:960px){
+  .v2 .stage .float{display:none}
+  .v2 .stage{min-height:700px}
+}
+/* Onboarding: the step list collapses into a row of dots so the active step is on screen. */
+@media(max-width:860px){
+  .v2 .onb{padding-bottom:60px}
+  .v2 .onb .grid{margin-top:22px;gap:18px}
+  .v2 .rail{flex-direction:row;align-items:center;flex-wrap:wrap;gap:10px}
+  .v2 .rail h2,.v2 .rail>p{display:none}
+  .v2 .oring{margin:0 6px 0 0;width:48px;height:48px}
+  .v2 .oring svg{width:48px;height:48px}
+  .v2 .oring span{font-size:12px}
+  .v2 .rs{padding:0;gap:0}
+  .v2 .rs>span:last-child{display:none}
+  .v2 .rs:not(:last-child)::after{display:none}
+  .v2 .panel{padding:22px 18px;border-radius:24px;min-height:0}
+  .v2 .pane h3{font-size:27px}
+  .v2 .pane>p{font-size:15.5px}
+  .v2 .pane .acts .btn,.v2 .pane .acts .sso{width:100%;justify-content:center}
+  .v2 .pp-row{padding:14px 13px;gap:10px}
+  .v2 .pp-detail{padding:20px}
+  .v2 .tl small{font-size:11px}
+}
+@media(max-width:520px){
+  .v2 .band:not(.hero):not(.phero):not(.pin){padding-block:64px}
+  .v2 .band.tight{padding-top:0}
+  .v2 .plan{padding:24px}
+  .v2 .cell{padding:22px;min-height:0}
+  .v2 .fbp{font-size:13.5px}
+  .v2 .faq summary{font-size:18px}
+  .v2 .proof .n{font-size:64px}
+  .v2 .goal-out{padding:18px}
+  .v2 .goal-out .btn{width:100%;justify-content:center}
+  .v2 .cta .btn{width:100%;justify-content:center}
+  .v2 .phero .cta .btn,.v2 .hero .cta .btn{width:100%;justify-content:center}
+  .v2 .auth .form{padding-inline:20px}
+}
