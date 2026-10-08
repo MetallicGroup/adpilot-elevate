@@ -720,3 +720,5 @@ html:has(.v2){scroll-behavior:smooth}
 .v2 .spin{animation:v2-sp 1s linear infinite}
 .v2 .amob{display:none;color:#0f0d1c;margin-bottom:8px}
 @media(max-width:900px){.v2 .amob{display:flex}}
+.v2 [hidden]{display:none!important}
+.v2 .rs:disabled{cursor:default}

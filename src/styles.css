@@ -1,7 +1,10 @@
+/* v2 sits above Tailwind's base reset but below utilities, so Tailwind-styled
+   components still work when rendered inside a .v2 page. */
+@layer theme, base, v2, components, utilities;
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
-@import "./styles/v2.css";
+@import "./styles/v2.css" layer(v2);
 
 @custom-variant dark (&:is(.dark *));
 
