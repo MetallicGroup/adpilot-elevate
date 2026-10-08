@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { MiniShell } from "@/components/v2/kit";
 import { useEffect } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -38,7 +39,7 @@ function CheckoutReturn() {
   }, [sub, navigate]);
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-6 ">
+    <MiniShell className="flex items-center justify-center px-6">
       <div className="max-w-md w-full card-floating p-10 text-center">
         <div className="w-14 h-14 mx-auto rounded-full bg-success/15 flex items-center justify-center">
           <CheckCircle2 className="w-8 h-8 text-success" />
@@ -63,6 +64,6 @@ function CheckoutReturn() {
           <p className="mt-4 text-xs text-muted-foreground">Mulțumim! Contul tău este pregătit.</p>
         )}
       </div>
-    </main>
+    </MiniShell>
   );
 }

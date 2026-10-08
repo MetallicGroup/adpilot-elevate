@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { MarketingLayout, PageHero } from "@/components/marketing/MarketingLayout";
+import { Band, CardGrid } from "@/components/v2/kit";
 import { Rocket, CreditCard, ShieldCheck, Megaphone, Inbox, MessageCircle, Settings, HelpCircle } from "lucide-react";
 
 export const Route = createFileRoute("/help-center")({
@@ -28,30 +29,17 @@ function HelpCenter() {
   return (
     <MarketingLayout>
       <PageHero eyebrow="Centru de ajutor" title="Cu ce te putem ajuta?" subtitle="Caută ghiduri pe categorii sau scrie-ne la support@adpilot.ro — răspundem într-o zi lucrătoare." />
-      <section className="px-6 pb-12 max-w-5xl mx-auto w-full">
+      <Band tone="light">
         <h2 className="sr-only">Categorii de ajutor</h2>
-        <div className="grid gap-4 md:grid-cols-2">
-        {categories.map((c) => (
-          <div key={c.title} className="card-floating p-6 flex items-start gap-4">
-            <c.icon className="w-5 h-5 text-facebook shrink-0 mt-0.5" />
-            <div>
-              <h3 className="font-semibold">{c.title}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">{c.body}</p>
-            </div>
-          </div>
-        ))}
+        <CardGrid items={categories.map((c) => ({ title: c.title, body: c.body }))} />
+        <div className="note" data-r>
+          <h3 className="d3">Ai nevoie de ajutor?</h3>
+          <p>
+            Scrie-ne la <a href="mailto:support@adpilot.ro">support@adpilot.ro</a>. Pentru ghiduri de produs, vezi{" "}
+            <Link to="/documentation">documentația</Link>.
+          </p>
         </div>
-      </section>
-      <section className="px-6 pb-24 max-w-3xl mx-auto w-full text-center">
-        <div className="card-floating-lg p-8">
-          <h2 className="font-semibold text-lg">Ai nevoie de ajutor?</h2>
-          <p className="mt-2 text-sm text-muted-foreground">Echipa noastră e la un email distanță.</p>
-          <a href="mailto:support@adpilot.ro" className="press mt-6 inline-flex items-center px-6 py-3 rounded-lg bg-foreground text-background text-sm font-medium">
-            Email support@adpilot.ro
-          </a>
-          <p className="mt-4 text-xs text-muted-foreground">Looking for product docs? <Link to="/documentation" className="underline">Visit the documentation</Link>.</p>
-        </div>
-      </section>
+      </Band>
     </MarketingLayout>
   );
 }

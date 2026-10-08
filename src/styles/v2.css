@@ -774,3 +774,23 @@ html:has(.v2){scroll-behavior:smooth}
 .v2 .agx{display:grid;grid-template-columns:minmax(0,420px) 1fr;gap:clamp(24px,5vw,70px);align-items:center;margin-top:clamp(30px,5vw,60px)}
 .v2 .agx .plan .pr s{color:#a5a2bc}
 @media(max-width:860px){.v2 .agx{grid-template-columns:1fr}}
+.v2.mini{position:relative;min-height:100vh;overflow:clip}
+.v2.mini>.ribbon{opacity:.3;height:75%}
+.v2 .mini-in{position:relative;min-height:100vh}
+.v2 .cgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.v2 .cgrid>div{border:1px solid var(--line);border-radius:24px;padding:28px;background:var(--card);min-width:0;scroll-margin-top:100px}
+.v2 .cgrid h3{font-size:22px;letter-spacing:-.02em;line-height:1.15}
+.v2 .cgrid p{margin:10px 0 0;color:var(--mut);font-size:15.5px;line-height:1.55}
+.v2 .cgrid ul{list-style:none;margin:16px 0 0;padding:0;display:flex;flex-direction:column;gap:10px;font-size:15px}
+.v2 .cgrid li{display:flex;gap:10px}
+.v2 .cgrid li::before{content:"";width:18px;height:18px;flex:none;margin-top:2px;border-radius:50%;background:var(--wa) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Cpath d='M5 9.3l2.6 2.6L13 6.5' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+@media(max-width:820px){.v2 .cgrid{grid-template-columns:1fr}}
+.v2 .docs{display:grid;grid-template-columns:220px 1fr;gap:clamp(24px,5vw,70px);align-items:start}
+.v2 .docs aside{position:sticky;top:100px;display:flex;flex-direction:column;gap:10px;font-size:15px;color:var(--mut)}
+.v2 .docs aside a:hover{color:var(--fg)}
+.v2 .docs section{scroll-margin-top:100px;margin-bottom:56px}
+.v2 .docs h2{font-size:clamp(26px,3vw,38px);margin-bottom:20px}
+.v2 .docs .cgrid{grid-template-columns:1fr}
+@media(max-width:820px){.v2 .docs{grid-template-columns:1fr}.v2 .docs aside{position:static;flex-direction:row;flex-wrap:wrap}}
+.v2 .note{margin-top:28px;border:1px solid var(--line);border-radius:24px;padding:28px;background:var(--card)}
+.v2 .note p{margin:8px 0 0;color:var(--mut)}.v2 .note a{text-decoration:underline;text-underline-offset:3px}

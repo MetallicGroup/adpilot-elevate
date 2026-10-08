@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MarketingLayout, PageHero } from "@/components/marketing/MarketingLayout";
+import { Band, CardGrid } from "@/components/v2/kit";
 import { Check, ShieldCheck, Lock, Globe, Users } from "lucide-react";
 
 export const Route = createFileRoute("/security")({
@@ -24,34 +25,31 @@ function SecurityPage() {
   return (
     <MarketingLayout>
       <PageHero eyebrow="Securitate & Confidențialitate" title="Datele tale. Contul tău. Controlul tău." subtitle="Securitatea nu e o funcționalitate — e fundația AdPilot. Iată cum îți protejăm contul și datele clienților tăi." />
-      <section className="px-6 pb-12 max-w-5xl mx-auto w-full">
+      <Band tone="light">
         <h2 className="sr-only">Pilonii de securitate AdPilot</h2>
-        <div className="grid gap-5 md:grid-cols-2">
-        {pillars.map((p) => (
-          <div key={p.title} className="card-floating p-7">
-            <p.icon className="w-6 h-6 text-facebook" />
-            <h3 className="mt-4 font-semibold">{p.title}</h3>
-            <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{p.body}</p>
-          </div>
-        ))}
+        <CardGrid items={pillars.map((p) => ({ title: p.title, body: p.body }))} />
+      </Band>
+      <Band tone="dark">
+        <h2 className="d2" data-r>
+          Promisiunile noastre
+        </h2>
+        <div className="rows">
+          {PROMISES.map((t, i) => (
+            <div key={t} data-r>
+              <span className="k">0{i + 1}</span>
+              <p>{t}</p>
+            </div>
+          ))}
         </div>
-      </section>
-      <section className="px-6 pb-20 max-w-3xl mx-auto w-full">
-        <div className="card-floating-lg p-8">
-          <h2 className="font-semibold">Promisiunile noastre</h2>
-          <ul className="mt-5 space-y-3">
-            {[
-              "Nu vindem și nu împărtășim niciodată datele tale cu terți.",
-              "Nu rulăm campanii fără aprobarea ta explicită.",
-              "Poți revoca accesul AdPilot la contul tău oricând.",
-              "Poți solicita exportul complet sau ștergerea datelor scriindu-ne la support@adpilot.ro.",
-              "Datele personale sunt prelucrate doar așa cum este descris în Politica de confidențialitate.",
-            ].map((i) => (
-              <li key={i} className="flex items-start gap-3 text-sm"><Check className="w-4 h-4 text-success mt-0.5 shrink-0" />{i}</li>
-            ))}
-          </ul>
-        </div>
-      </section>
+      </Band>
     </MarketingLayout>
   );
 }
+
+const PROMISES = [
+  "Nu vindem și nu împărtășim niciodată datele tale cu terți.",
+  "Nu rulăm campanii fără aprobarea ta explicită.",
+  "Poți revoca accesul AdPilot la contul tău oricând.",
+  "Poți solicita exportul complet sau ștergerea datelor scriindu-ne la support@adpilot.ro.",
+  "Datele personale sunt prelucrate doar așa cum este descris în Politica de confidențialitate.",
+];

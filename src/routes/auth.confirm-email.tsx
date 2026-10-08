@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { MiniShell } from "@/components/v2/kit";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Loader2, Mail, MailCheck } from "lucide-react";
@@ -53,7 +54,7 @@ function ConfirmEmailPage() {
   const inboxLink = mailProviderUrl(provider);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <MiniShell className="flex flex-col">
       <header className="px-6 pt-6">
         <Link
           to="/auth"
@@ -130,7 +131,7 @@ function ConfirmEmailPage() {
           </p>
         </motion.div>
       </main>
-    </div>
+    </MiniShell>
   );
 }
 

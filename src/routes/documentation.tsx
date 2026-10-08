@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { MarketingLayout, PageHero } from "@/components/marketing/MarketingLayout";
+import { Band, CardGrid } from "@/components/v2/kit";
 
 export const Route = createFileRoute("/documentation")({
   head: () => ({ meta: [
@@ -58,39 +59,32 @@ function Documentation() {
   return (
     <MarketingLayout>
       <PageHero eyebrow="Documentație" title="Tot ce ai nevoie ca să livrezi." subtitle="Documentație produs, ghiduri pas-cu-pas și bune practici." />
-      <section className="px-6 pb-24 max-w-5xl mx-auto w-full grid gap-10 md:grid-cols-[220px_1fr]">
-        <aside className="md:sticky md:top-24 self-start">
-          <nav className="space-y-1 text-sm">
+      <Band tone="light">
+        <div className="docs">
+          <aside>
             {sections.map((s) => (
-              <a key={s.title} href={`#${slug(s.title)}`} className="block py-1.5 text-muted-foreground hover:text-foreground transition-colors">
+              <a key={s.title} href={`#${slug(s.title)}`}>
                 {s.title}
               </a>
             ))}
-          </nav>
-        </aside>
-        <div className="space-y-14">
-          {sections.map((s) => (
-            <section key={s.title} id={slug(s.title)}>
-              <h2 className="font-serif text-3xl font-semibold tracking-tight">{s.title}</h2>
-              <div className="mt-6 space-y-5">
-                {s.items.map((it) => (
-                  <div key={it.id} id={it.id} className="card-floating p-6">
-                    <h3 className="font-semibold">{it.h}</h3>
-                    <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{it.body}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-          ))}
-          <div className="card-floating-lg p-7">
-            <h3 className="font-semibold">Nu găsești ce ai nevoie?</h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Încearcă <Link to="/help-center" className="underline">Centrul de ajutor</Link> sau scrie-ne la{" "}
-              <a href="mailto:support@adpilot.ro" className="underline">support@adpilot.ro</a>.
-            </p>
+          </aside>
+          <div>
+            {sections.map((s) => (
+              <section key={s.title} id={slug(s.title)}>
+                <h2>{s.title}</h2>
+                <CardGrid items={s.items.map((it) => ({ title: it.h, body: it.body, id: it.id }))} />
+              </section>
+            ))}
+            <div className="note">
+              <h3 className="d3">Nu găsești ce ai nevoie?</h3>
+              <p>
+                Încearcă <Link to="/help-center">Centrul de ajutor</Link> sau scrie-ne la{" "}
+                <a href="mailto:support@adpilot.ro">support@adpilot.ro</a>.
+              </p>
+            </div>
           </div>
         </div>
-      </section>
+      </Band>
     </MarketingLayout>
   );
 }

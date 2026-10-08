@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { MiniShell } from "@/components/v2/kit";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
@@ -27,7 +28,7 @@ function WelcomePage() {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6">
+    <MiniShell className="flex items-center justify-center px-6">
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
@@ -51,6 +52,6 @@ function WelcomePage() {
           Continuă <ArrowRight className="w-4 h-4" />
         </button>
       </motion.div>
-    </div>
+    </MiniShell>
   );
 }

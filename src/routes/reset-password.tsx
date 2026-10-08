@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { MiniShell } from "@/components/v2/kit";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,7 +59,7 @@ function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <MiniShell className="flex flex-col">
       <header className="px-6 pt-6">
         <Link
           to="/auth"
@@ -113,6 +114,6 @@ function ResetPasswordPage() {
           )}
         </motion.div>
       </main>
-    </div>
+    </MiniShell>
   );
 }

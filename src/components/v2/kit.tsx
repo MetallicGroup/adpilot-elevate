@@ -329,3 +329,35 @@ export function ChatPhone({ lines }: { lines: ChatLine[] }) {
     </div>
   );
 }
+
+/** Backdrop for small standalone screens (password reset, email confirmation, payment return). */
+export function MiniShell({ className = "", children }: { className?: string; children: ReactNode }) {
+  return (
+    <div className="v2 mini">
+      <Ribbon />
+      <div className="grain" />
+      <div className={`mini-in ${className}`}>{children}</div>
+    </div>
+  );
+}
+
+/** Grid of plain cards: a title with either a paragraph or a checklist. */
+export function CardGrid({ items }: { items: { title: string; body?: string; list?: string[]; id?: string }[] }) {
+  return (
+    <div className="cgrid">
+      {items.map((it) => (
+        <div key={it.title} id={it.id} data-r>
+          <h3>{it.title}</h3>
+          {it.body && <p>{it.body}</p>}
+          {it.list && (
+            <ul>
+              {it.list.map((l) => (
+                <li key={l}>{l}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}

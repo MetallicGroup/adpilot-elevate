@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { MiniShell } from "@/components/v2/kit";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
@@ -31,7 +32,7 @@ function VerifiedPage() {
   }, [navigate, dest]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6">
+    <MiniShell className="flex items-center justify-center px-6">
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -53,6 +54,6 @@ function VerifiedPage() {
           Te ducem la {dest === "/dashboard" ? "dashboard" : "onboarding"} într-o clipă…
         </p>
       </motion.div>
-    </div>
+    </MiniShell>
   );
 }

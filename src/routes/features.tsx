@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { MarketingLayout, PageHero } from "@/components/marketing/MarketingLayout";
+import { Band, CardGrid, FinalCta } from "@/components/v2/kit";
 import { Check, Megaphone, Bot, Inbox, LineChart, MessageCircle, ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/features")({
@@ -26,25 +27,11 @@ function FeaturesPage() {
   return (
     <MarketingLayout>
       <PageHero eyebrow="Funcționalități" title="Tot ce ai nevoie pentru reclame care vând." subtitle="De la creare până la livrarea clienților, AdPilot acoperă tot ciclul unei campanii Facebook sau Instagram." />
-      <section className="px-6 pb-20 max-w-6xl mx-auto w-full">
+      <Band tone="light">
         <h2 className="sr-only">Funcționalitățile platformei AdPilot</h2>
-        <div className="grid gap-5 md:grid-cols-2">
-        {features.map((f) => (
-          <div key={f.title} className="card-floating p-7">
-            <f.icon className="w-5 h-5 text-primary" />
-            <h3 className="mt-4 font-semibold text-lg">{f.title}</h3>
-            <ul className="mt-4 space-y-2">
-              {f.items.map((i) => (
-                <li key={i} className="flex items-start gap-2 text-sm"><Check className="w-4 h-4 text-success mt-0.5 shrink-0" />{i}</li>
-              ))}
-            </ul>
-          </div>
-        ))}
-        </div>
-      </section>
-      <section className="px-6 py-16 max-w-3xl mx-auto w-full text-center">
-        <Link to="/auth" className="press inline-flex items-center px-8 py-4 bg-foreground text-background rounded-xl font-medium">Începe gratuit</Link>
-      </section>
+        <CardGrid items={features.map((f) => ({ title: f.title, list: f.items }))} />
+      </Band>
+      <FinalCta title={<>Prima reclamă,<br />în 5 minute.</>} />
     </MarketingLayout>
   );
 }

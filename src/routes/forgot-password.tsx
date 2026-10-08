@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { MiniShell } from "@/components/v2/kit";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Loader2, Mail, MailCheck } from "lucide-react";
@@ -38,7 +39,7 @@ function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <MiniShell className="flex flex-col">
       <header className="px-6 pt-6">
         <Link
           to="/auth"
@@ -108,6 +109,6 @@ function ForgotPasswordPage() {
           )}
         </motion.div>
       </main>
-    </div>
+    </MiniShell>
   );
 }
