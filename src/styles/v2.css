@@ -842,3 +842,16 @@ html:has(.v2){scroll-behavior:smooth}
   .v2 .phero .cta .btn,.v2 .hero .cta .btn{width:100%;justify-content:center}
   .v2 .auth .form{padding-inline:20px}
 }
+
+/* Safari on iOS does not clip animated children to a rounded overflow:hidden box
+   unless the box is its own compositing layer; without this the screen shows square corners. */
+.v2 .iph .scr{transform:translateZ(0);-webkit-mask-image:-webkit-radial-gradient(#fff,#000);mask-image:radial-gradient(#fff,#000)}
+.v2 .iph .bz{overflow:hidden}
+.v2 .wawin,.v2 .fbp,.v2 .aigen{transform:translateZ(0)}
+/* "Zoom" on the connect button: spotlight it instead of scaling the whole screen,
+   which pushed the heading and the button outside the phone. */
+.v2 .obz.zoom{transform:none}
+.v2 .obz>*{transition:opacity .6s var(--ease),transform .6s var(--ease),box-shadow .6s}
+.v2 .obz.zoom>*:not(.obb){opacity:.28}
+.v2 .obz.zoom .obb{transform:scale(1.06);box-shadow:0 0 0 7px rgba(24,119,242,.3),0 18px 40px -10px rgba(24,119,242,.8)}
+.v2 .obz.zoom .obb.hit{transform:scale(.98)}
