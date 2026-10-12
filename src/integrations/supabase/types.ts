@@ -1178,7 +1178,9 @@ export type Database = {
           full_name: string | null
           id: string
           onboarding_goal: string | null
+          phone: string | null
           plan: string
+          referral_code: string | null
           subscription_status: string
           suspended: boolean
           trial_ends_at: string | null
@@ -1190,7 +1192,9 @@ export type Database = {
           full_name?: string | null
           id: string
           onboarding_goal?: string | null
+          phone?: string | null
           plan?: string
+          referral_code?: string | null
           subscription_status?: string
           suspended?: boolean
           trial_ends_at?: string | null
@@ -1202,7 +1206,9 @@ export type Database = {
           full_name?: string | null
           id?: string
           onboarding_goal?: string | null
+          phone?: string | null
           plan?: string
+          referral_code?: string | null
           subscription_status?: string
           suspended?: boolean
           trial_ends_at?: string | null

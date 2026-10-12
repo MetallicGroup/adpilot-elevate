@@ -10,6 +10,7 @@ import { fbLead, fbCompleteRegistration } from "@/lib/meta-pixel";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { Ribbon } from "@/components/v2/Ribbon";
+import { getStoredReferral, referralFromSearch, storeReferral } from "@/lib/referral";
 
 type AuthSearch = {
   email?: string;
@@ -18,6 +19,10 @@ type AuthSearch = {
   redirect?: string;
   fb?: string;
   type?: "business" | "agency";
+  ref?: string;
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
 };
 
 const FB_NOTICE: Record<string, string> = {
@@ -45,6 +50,10 @@ export const Route = createFileRoute("/auth")({
     }
     if (typeof s.fb === "string") out.fb = s.fb;
     if (s.type === "agency" || s.type === "business") out.type = s.type;
+    if (typeof s.ref === "string") out.ref = s.ref;
+    if (typeof s.utm_source === "string") out.utm_source = s.utm_source;
+    if (typeof s.utm_medium === "string") out.utm_medium = s.utm_medium;
+    if (typeof s.utm_campaign === "string") out.utm_campaign = s.utm_campaign;
     return out;
   },
   head: () => ({ meta: [{ title: "Autentificare — AdPilot" }] }),
@@ -85,6 +94,12 @@ function AuthPage() {
     if (!search.goal) return;
     try { window.localStorage.setItem("adpilot:goal", search.goal); } catch { /* ignore */ }
   }, [search.goal]);
+
+  // Sales-agent referral (?ref=Cristian or utm_campaign) — keep across OAuth redirects.
+  useEffect(() => {
+    const code = referralFromSearch(search);
+    if (code) storeReferral(code);
+  }, [search.ref, search.utm_campaign, search.utm_source, search.utm_medium]);
 
   // Feedback după o revenire din signup-ul cu Facebook care nu a reușit.
   useEffect(() => {
@@ -174,12 +189,17 @@ function AuthPage() {
         // Alegere Afacere/Agenție → agenția merge pe fluxul de agenție (persistă și
         // prin confirmarea pe email).
         if (accountType === "agency") markAgencyIntent();
+        const referralCode = getStoredReferral();
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/auth/callback`,
-            data: { full_name: name, phone: phone.trim() },
+            data: {
+              full_name: name,
+              phone: phone.trim(),
+              ...(referralCode ? { referral_code: referralCode } : {}),
+            },
           },
         });
         if (error) throw error;
@@ -253,7 +273,8 @@ function AuthPage() {
           window.location.href = "/api/meta/signup/start";
           return;
         }
-        completeFb({ data: payload })
+        const referralCode = getStoredReferral();
+        completeFb({ data: { ...payload, referralCode: referralCode ?? undefined } })
           .then((res: any) => {
             if (res?.ok && res.redirect) {
               window.location.href = res.redirect; // magic link → sesiune → onboarding
@@ -269,7 +290,7 @@ function AuthPage() {
       }, opts);
       return;
     }
-    // Fallback: redirect server clasic (browser).
+    // Fallback: redirect server clasic (browser). Cookie already set by storeReferral.
     window.location.href = "/api/meta/signup/start";
   }
 

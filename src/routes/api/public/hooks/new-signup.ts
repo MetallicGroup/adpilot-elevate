@@ -31,15 +31,46 @@ export const Route = createFileRoute("/api/public/hooks/new-signup")({
         let email: string | null = null;
         let provider: string | null = null;
         let name: string | null = typeof body.full_name === "string" ? body.full_name : null;
-        let phone: string | null = null;
+        let phone: string | null = typeof body.phone === "string" ? body.phone : null;
+        let referral: string | null =
+          typeof body.referral_code === "string" ? body.referral_code.trim() || null : null;
         try {
           const { data } = await supabaseAdmin.auth.admin.getUserById(userId);
           email = data?.user?.email ?? null;
           provider = (data?.user?.app_metadata as any)?.provider ?? null;
           name = name ?? ((data?.user?.user_metadata as any)?.full_name ?? null);
-          phone = (data?.user?.user_metadata as any)?.phone ?? null;
+          phone = phone ?? ((data?.user?.user_metadata as any)?.phone ?? null);
+          if (!referral) {
+            referral = ((data?.user?.user_metadata as any)?.referral_code as string | undefined)?.trim() || null;
+          }
         } catch (e) {
           console.error("[new-signup] user lookup failed:", e);
+        }
+
+        const loadProfile = async () => {
+          const { data: profile } = await supabaseAdmin
+            .from("profiles")
+            .select("referral_code, phone, full_name")
+            .eq("id", userId)
+            .maybeSingle();
+          return profile as { referral_code?: string | null; phone?: string | null; full_name?: string | null } | null;
+        };
+
+        try {
+          let profile = await loadProfile();
+          referral = referral ?? profile?.referral_code ?? null;
+          phone = phone ?? profile?.phone ?? null;
+          name = name ?? profile?.full_name ?? null;
+          // Google/FB OAuth may claim referral a moment after profile insert.
+          if (!referral) {
+            await new Promise((r) => setTimeout(r, 3500));
+            profile = await loadProfile();
+            referral = profile?.referral_code ?? null;
+            phone = phone ?? profile?.phone ?? null;
+            name = name ?? profile?.full_name ?? null;
+          }
+        } catch (e) {
+          console.error("[new-signup] profile lookup failed:", e);
         }
 
         const { notifyAdminNewSignup } = await import("@/lib/whatsapp/admin-alerts.server");
@@ -49,6 +80,7 @@ export const Route = createFileRoute("/api/public/hooks/new-signup")({
           phone,
           provider,
           goal: body.onboarding_goal ?? null,
+          referral,
         });
         if (!alert.whatsapp.sent) {
           console.error("[new-signup] WhatsApp admin alert NOT sent:", alert.whatsapp.error);

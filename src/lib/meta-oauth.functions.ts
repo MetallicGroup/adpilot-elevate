@@ -68,15 +68,17 @@ export const getMetaPublicConfig = createServerFn({ method: "GET" }).handler(asy
  */
 export const completeFacebookSignup = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) => {
-    const d = (raw ?? {}) as { accessToken?: string; code?: string };
+    const d = (raw ?? {}) as { accessToken?: string; code?: string; referralCode?: string };
     const token = typeof d.accessToken === "string" ? d.accessToken.trim() : "";
     const code = typeof d.code === "string" ? d.code.trim() : "";
+    const referralCode =
+      typeof d.referralCode === "string" ? d.referralCode.trim().slice(0, 40) || null : null;
     if (code) {
       if (code.length < 10 || code.length > 4000) throw new Error("Invalid code");
-      return { code } as { code: string };
+      return { code, referralCode } as { code: string; referralCode: string | null };
     }
     if (token.length < 20 || token.length > 1000) throw new Error("Invalid token");
-    return { accessToken: token } as { accessToken: string };
+    return { accessToken: token, referralCode } as { accessToken: string; referralCode: string | null };
   })
   .handler(async ({ data }) => {
     const { metaAppId, metaAppSecret, exchangeForLongLivedToken, exchangeSdkCodeForToken } =
@@ -129,5 +131,10 @@ export const completeFacebookSignup = createServerFn({ method: "POST" })
       /* fallback pe domeniul prod */
     }
 
-    return finishFacebookSignup({ accessToken: token, expiresIn, origin });
+    return finishFacebookSignup({
+      accessToken: token,
+      expiresIn,
+      origin,
+      referralCode: data.referralCode,
+    });
   });

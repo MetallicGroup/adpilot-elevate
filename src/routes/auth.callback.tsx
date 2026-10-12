@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { postAuthDest } from "@/lib/post-auth";
 import { translateAuthError } from "@/lib/auth";
+import { clearStoredReferral, getStoredReferral } from "@/lib/referral";
+import { claimReferral } from "@/lib/referral.functions";
 
 export const Route = createFileRoute("/auth/callback")({
   ssr: false,
@@ -80,6 +82,17 @@ function AuthCallbackPage() {
           document.title,
           window.location.pathname,
         );
+
+        // OAuth (Google etc.): atribuie referral-ul din localStorage înainte de alertă.
+        const storedRef = getStoredReferral();
+        if (storedRef) {
+          try {
+            await claimReferral({ data: { referral_code: storedRef } });
+            clearStoredReferral();
+          } catch {
+            /* best-effort — email signup already has metadata */
+          }
+        }
 
         // Ruteză după tipul de link din email.
         if (type === "recovery") {

@@ -32,8 +32,12 @@ export async function finishFacebookSignup(params: {
   accessToken: string;
   expiresIn?: number | null;
   origin: string;
+  referralCode?: string | null;
 }): Promise<FinishResult> {
-  const { accessToken, expiresIn = null, origin } = params;
+  const { accessToken, expiresIn = null, origin, referralCode = null } = params;
+  const referralMeta = referralCode?.trim()
+    ? { referral_code: referralCode.trim().slice(0, 40) }
+    : {};
   const { fetchMetaUserProfile, fetchMetaPermissions } = await import("@/lib/meta.server");
   const { persistMetaConnection } = await import("@/lib/meta/persist.server");
 
@@ -49,6 +53,7 @@ export async function finishFacebookSignup(params: {
 
   let uid: string | null = null;
   let loginEmail: string | null = null;
+  let createdNew = false;
 
   if (email) {
     // ── Token de USER: dedupe după emailul real ──
@@ -60,13 +65,18 @@ export async function finishFacebookSignup(params: {
       const { data: created, error: cErr } = await supabaseAdmin.auth.admin.createUser({
         email,
         email_confirm: true,
-        user_metadata: { full_name: profile.name ?? null, signup_source: "facebook" },
+        user_metadata: {
+          full_name: profile.name ?? null,
+          signup_source: "facebook",
+          ...referralMeta,
+        },
       });
       if (cErr || !created?.user) {
         console.error("[fb-signup] createUser (email) failed", cErr);
         return { ok: false, reason: "create_failed" };
       }
       uid = created.user.id;
+      createdNew = true;
     }
     loginEmail = email;
   } else {
@@ -95,6 +105,7 @@ export async function finishFacebookSignup(params: {
             full_name: profile.name ?? null,
             signup_source: "facebook",
             pending_email: true,
+            ...referralMeta,
           },
         });
         if (cErr || !created?.user) {
@@ -102,12 +113,26 @@ export async function finishFacebookSignup(params: {
           return { ok: false, reason: "create_failed" };
         }
         uid = created.user.id;
+        createdNew = true;
       }
       loginEmail = placeholder;
     }
   }
 
   if (!uid || !loginEmail) return { ok: false, reason: "create_failed" };
+
+  // If referral arrived after profile insert (or createUser path missed it), set once.
+  if (createdNew && referralMeta.referral_code) {
+    try {
+      await supabaseAdmin
+        .from("profiles")
+        .update({ referral_code: referralMeta.referral_code })
+        .eq("id", uid)
+        .is("referral_code", null);
+    } catch (e) {
+      console.error("[fb-signup] referral claim failed", e);
+    }
+  }
 
   // Salvăm conexiunea (token + assets). Se face mereu, ca `meta_user_id` să existe
   // pentru dedupe (asset-urile pot fi goale dacă n-a dat acces, dar config-ul le cere).

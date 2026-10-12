@@ -68,7 +68,22 @@ export const Route = createFileRoute("/api/meta/auth/callback")({
           if (isSignup) {
             const { finishFacebookSignup } = await import("@/lib/facebook-signup.server");
             const origin = new URL(request.url).origin;
-            const res = await finishFacebookSignup({ accessToken, expiresIn, origin });
+            const rawRef = getCookie("adpilot_referral");
+            let referralCode: string | null = null;
+            if (rawRef) {
+              try {
+                referralCode = decodeURIComponent(rawRef).trim().slice(0, 40) || null;
+              } catch {
+                referralCode = rawRef.trim().slice(0, 40) || null;
+              }
+              deleteCookie("adpilot_referral", { path: "/" });
+            }
+            const res = await finishFacebookSignup({
+              accessToken,
+              expiresIn,
+              origin,
+              referralCode,
+            });
             return res.ok
               ? new Response(null, { status: 302, headers: { Location: res.redirect } })
               : toAuth(`fb=${res.reason}`);

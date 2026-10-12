@@ -420,7 +420,11 @@ function UsersTable({ users }: { users: AdminUserRow[] }) {
     if (statusFilter !== "all" && u.subscription_status !== statusFilter) return false;
     if (!q.trim()) return true;
     const s = q.toLowerCase();
-    return (u.email ?? "").toLowerCase().includes(s) || (u.full_name ?? "").toLowerCase().includes(s);
+    return (
+      (u.email ?? "").toLowerCase().includes(s) ||
+      (u.full_name ?? "").toLowerCase().includes(s) ||
+      (u.referral_code ?? "").toLowerCase().includes(s)
+    );
   }), [users, q, planFilter, statusFilter]);
 
   return (
@@ -428,7 +432,7 @@ function UsersTable({ users }: { users: AdminUserRow[] }) {
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Caută email, nume…" className="w-full h-9 pl-9 pr-3 rounded-md border border-border bg-secondary/40 text-sm" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Caută email, nume, referral…" className="w-full h-9 pl-9 pr-3 rounded-md border border-border bg-secondary/40 text-sm" />
         </div>
         <select value={planFilter} onChange={(e) => setPlanFilter(e.target.value)} className="h-9 rounded-md border border-border bg-secondary/40 text-sm px-2">
           <option value="all">Toate planurile</option>
@@ -452,6 +456,7 @@ function UsersTable({ users }: { users: AdminUserRow[] }) {
           <thead className="bg-secondary/40">
             <tr className="text-left">
               <th className="px-3 py-2 font-medium">User</th>
+              <th className="px-3 py-2 font-medium">Referral</th>
               <th className="px-3 py-2 font-medium">Plan</th>
               <th className="px-3 py-2 font-medium">Status</th>
               <th className="px-3 py-2 font-medium">Camp.</th>
@@ -478,6 +483,15 @@ function UsersTable({ users }: { users: AdminUserRow[] }) {
                     {u.phone && <div className="text-xs text-muted-foreground">📱 {u.phone}</div>}
                   </Link>
                 </td>
+                <td className="px-3 py-2 text-xs">
+                  {u.referral_code ? (
+                    <span className="rounded px-1.5 py-0.5 bg-sky-500/15 text-sky-600 dark:text-sky-400 font-medium">
+                      {u.referral_code}
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </td>
                 <td className="px-3 py-2 capitalize">{u.plan}</td>
                 <td className="px-3 py-2"><StatusBadge status={u.subscription_status} /></td>
                 <td className="px-3 py-2">{u.campaign_count} <span className="text-xs text-muted-foreground">({u.active_campaigns})</span></td>
@@ -487,7 +501,7 @@ function UsersTable({ users }: { users: AdminUserRow[] }) {
                 <td className="px-3 py-2">{u.open_tickets > 0 ? <span className="text-amber-500 font-medium">{u.open_tickets}</span> : "—"}</td>
               </tr>
             ))}
-            {filtered.length === 0 && (<tr><td colSpan={8} className="px-3 py-8 text-center text-muted-foreground">Niciun rezultat.</td></tr>)}
+            {filtered.length === 0 && (<tr><td colSpan={9} className="px-3 py-8 text-center text-muted-foreground">Niciun rezultat.</td></tr>)}
           </tbody>
         </table>
       </div>

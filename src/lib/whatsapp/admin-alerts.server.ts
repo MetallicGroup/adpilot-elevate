@@ -89,6 +89,7 @@ export async function notifyAdminNewSignup(p: {
   phone?: string | null;
   provider?: string | null;
   goal?: string | null;
+  referral?: string | null;
 }) {
   const details =
     line("Nume", p.name) +
@@ -96,13 +97,18 @@ export async function notifyAdminNewSignup(p: {
     line("Email", p.email) +
     line("Înregistrare", p.provider) +
     line("Obiectiv", p.goal) +
+    line("Referral", p.referral) +
     `\nData: ${new Date().toLocaleString("ro-RO", { timeZone: "Europe/Bucharest" })}`;
-  const waFallback = `🆕 *Cont nou AdPilot*\n\n` + details;
+  const refLabel = p.referral?.trim() ? ` · via ${p.referral.trim()}` : "";
+  const waFallback = `🆕 *Cont nou AdPilot*${refLabel}\n\n` + details;
   // WhatsApp + email în paralel (plasă de siguranță — email-ul e mai fiabil).
   // template cont_nou: {{1}} nume, {{2}} email, {{3}} înregistrare
   const [whatsapp, email] = await Promise.all([
     sendAdminTemplate("cont_nou", [v(p.name), v(p.email), v(p.provider)], waFallback),
-    sendAdminEmail(`🆕 Cont nou AdPilot — ${v(p.name)}`, "Cont nou AdPilot\n\n" + details),
+    sendAdminEmail(
+      `🆕 Cont nou AdPilot — ${v(p.name)}${refLabel}`,
+      "Cont nou AdPilot\n\n" + details,
+    ),
   ]);
   return { whatsapp, email };
 }

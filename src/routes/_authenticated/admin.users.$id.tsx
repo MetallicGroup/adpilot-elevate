@@ -131,6 +131,14 @@ function UserDetailPage() {
               {profile.is_test && <span className="px-2 py-0.5 rounded-full text-xs bg-amber-500/15 text-amber-500">TEST</span>}
             </div>
             <p className="text-sm text-muted-foreground">{profile.email}</p>
+            {profile.referral_code && (
+              <p className="text-sm mt-1">
+                Referral:{" "}
+                <span className="rounded px-1.5 py-0.5 bg-sky-500/15 text-sky-600 dark:text-sky-400 font-medium text-xs">
+                  {profile.referral_code}
+                </span>
+              </p>
+            )}
             <p className="text-xs text-muted-foreground mt-1">
               Creat: {new Date(profile.created_at).toLocaleString("ro-RO")}
               {profile.trial_ends_at && ` · Trial până: ${new Date(profile.trial_ends_at).toLocaleDateString("ro-RO")}`}

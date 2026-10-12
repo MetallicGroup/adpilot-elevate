@@ -54,6 +54,7 @@ export type AdminUserRow = {
   wa_connected: boolean;
   open_tickets: number;
   is_test: boolean;
+  referral_code: string | null;
 };
 
 export const listAdminUsers = createServerFn({ method: "GET" })
@@ -64,7 +65,7 @@ export const listAdminUsers = createServerFn({ method: "GET" })
 
     const { data: profiles } = await supabaseAdmin
       .from("profiles")
-      .select("id, full_name, phone, plan, subscription_status, trial_ends_at, created_at, is_test")
+      .select("id, full_name, phone, plan, subscription_status, trial_ends_at, created_at, is_test, referral_code")
       .order("created_at", { ascending: false })
       .limit(500);
 
@@ -141,6 +142,7 @@ export const listAdminUsers = createServerFn({ method: "GET" })
         wa_connected: waByUser.get(p.id) ?? false,
         open_tickets: tixByUser.get(p.id) ?? 0,
         is_test: (p as any).is_test ?? false,
+        referral_code: (p as any).referral_code ?? null,
       };
     });
 
