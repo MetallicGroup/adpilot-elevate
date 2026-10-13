@@ -7,16 +7,23 @@ import { toast } from "sonner";
 import { Facebook, RefreshCw, Trash2, CheckCircle2, User, Plug, Palette } from "lucide-react";
 import { resyncMetaConnection, selectMetaAdAccount, selectMetaPage } from "@/lib/meta.functions";
 import { startMetaOAuth } from "@/lib/meta-oauth.functions";
+import {
+  getTikTokStatus,
+  startTikTokOAuth,
+  selectTikTokAdvertiser,
+  disconnectTikTok,
+} from "@/lib/tiktok-oauth.functions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { applyAccent } from "@/components/AppHeader";
 import { SubscriptionBadge } from "@/components/SubscriptionBadge";
 import { BillingHistory } from "@/components/BillingHistory";
 
-type MetaSearch = { meta?: string; reason?: string; limited?: string };
+type MetaSearch = { meta?: string; tiktok?: string; reason?: string; limited?: string };
 
 export const Route = createFileRoute("/_authenticated/settings")({
   validateSearch: (s: Record<string, unknown>): MetaSearch => ({
     meta: typeof s.meta === "string" ? s.meta : undefined,
+    tiktok: typeof s.tiktok === "string" ? s.tiktok : undefined,
     reason: typeof s.reason === "string" ? s.reason : undefined,
     limited: typeof s.limited === "string" ? s.limited : undefined,
   }),
@@ -45,6 +52,23 @@ function Settings() {
       navigate({ to: "/settings", replace: true, search: {} as MetaSearch });
     }
   }, [search.meta, search.reason, navigate]);
+
+  useEffect(() => {
+    if (search.tiktok === "connected") {
+      toast.success("Cont TikTok conectat ✅");
+      qc.invalidateQueries({ queryKey: ["tiktok-status"] });
+      navigate({ to: "/settings", replace: true, search: {} as MetaSearch });
+    } else if (search.tiktok === "error") {
+      const reason =
+        search.reason === "bad_state"
+          ? "Sesiune expirată — încearcă din nou."
+          : search.reason === "missing_params"
+            ? "TikTok nu a returnat toate datele necesare."
+            : "Ceva a mers prost la finalizarea autorizării.";
+      toast.error(`Nu am putut conecta TikTok: ${reason}`);
+      navigate({ to: "/settings", replace: true, search: {} as MetaSearch });
+    }
+  }, [search.tiktok, search.reason, navigate, qc]);
 
   async function signOut() {
     await qc.cancelQueries();
@@ -97,6 +121,7 @@ function Settings() {
 
         <TabsContent value="integrari" className="mt-6 space-y-4">
           <MetaConnectionCard />
+          <TikTokConnectionCard />
         </TabsContent>
 
         <TabsContent value="aspect" className="mt-6 space-y-4">
@@ -173,6 +198,96 @@ function AccentPicker() {
           {active === a.hue && <CheckCircle2 className="absolute top-2 right-2 w-3.5 h-3.5 text-white" />}
         </button>
       ))}
+    </div>
+  );
+}
+
+function TikTokConnectionCard() {
+  const [busy, setBusy] = useState(false);
+  const getStatus = useServerFn(getTikTokStatus);
+  const startOAuth = useServerFn(startTikTokOAuth);
+  const selectAdvertiser = useServerFn(selectTikTokAdvertiser);
+  const disconnectFn = useServerFn(disconnectTikTok);
+
+  const { data, refetch, isLoading } = useQuery({
+    queryKey: ["tiktok-status"],
+    queryFn: () => getStatus(),
+  });
+
+  async function connect() {
+    setBusy(true);
+    try {
+      const { url } = await startOAuth();
+      window.location.href = url;
+    } catch (e: any) {
+      toast.error(e?.message ?? "Nu am putut porni conectarea TikTok");
+      setBusy(false);
+    }
+  }
+
+  async function disconnect() {
+    if (!confirm("Deconectezi contul TikTok?")) return;
+    await disconnectFn();
+    toast.success("Deconectat");
+    refetch();
+  }
+
+  async function pick(advertiserRowId: string) {
+    await selectAdvertiser({ data: { advertiserRowId } });
+    refetch();
+  }
+
+  // Până când aplicația TikTok e aprobată și cheile sunt în env, cardul nu apare.
+  if (isLoading || !data || (!data.configured && !data.connection)) return null;
+
+  return (
+    <div className="card-floating p-5">
+      <p className="text-xs text-muted-foreground">TikTok Ads</p>
+      {!data.connection ? (
+        <>
+          <p className="mt-1 text-sm">Niciun cont TikTok conectat încă.</p>
+          <button
+            onClick={connect}
+            disabled={busy}
+            className="press mt-4 w-full py-3 rounded-xl bg-foreground text-background text-sm font-medium disabled:opacity-60"
+          >
+            {busy ? "Redirecționare…" : "Conectează contul TikTok"}
+          </button>
+        </>
+      ) : (
+        <div className="mt-3 rounded-xl border border-border p-4">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <p className="font-medium text-sm">Cont TikTok conectat</p>
+            </div>
+            <button
+              onClick={disconnect}
+              className="press p-2 rounded-lg hover:bg-secondary text-muted-foreground"
+              title="Deconectează"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+          {data.advertisers.length === 0 ? (
+            <p className="mt-3 text-xs text-muted-foreground">Niciun cont de reclame găsit.</p>
+          ) : (
+            <div className="mt-3 space-y-1.5">
+              <p className="text-xs text-muted-foreground">Cont de reclame</p>
+              {data.advertisers.map((a) => (
+                <button
+                  key={a.id}
+                  onClick={() => pick(a.id)}
+                  className={`press w-full text-left text-sm px-3 py-2 rounded-lg border ${a.is_active ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-secondary"}`}
+                >
+                  {a.advertiser_name ?? a.advertiser_id}
+                  {a.currency ? ` · ${a.currency}` : ""}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

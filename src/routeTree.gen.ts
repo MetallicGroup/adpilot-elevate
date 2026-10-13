@@ -85,6 +85,8 @@ import { Route as ApiPublicMetaWebhookRouteImport } from './routes/api/public/me
 import { Route as ApiPublicPayTokenRouteImport } from './routes/api/public/pay.$token'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicWhatsappWebhookRouteImport } from './routes/api/public/whatsapp.webhook'
+import { Route as ApiTiktokAccountCallbackRouteImport } from './routes/api/tiktok.account.callback'
+import { Route as ApiTiktokAuthCallbackRouteImport } from './routes/api/tiktok.auth.callback'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 
 const IndexRoute = IndexRouteImport.update({
@@ -483,6 +485,17 @@ const ApiPublicWhatsappWebhookRoute =
     path: '/api/public/whatsapp/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiTiktokAccountCallbackRoute =
+  ApiTiktokAccountCallbackRouteImport.update({
+    id: '/api/tiktok/account/callback',
+    path: '/api/tiktok/account/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiTiktokAuthCallbackRoute = ApiTiktokAuthCallbackRouteImport.update({
+  id: '/api/tiktok/auth/callback',
+  path: '/api/tiktok/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LovableEmailQueueProcessRoute =
   LovableEmailQueueProcessRouteImport.update({
     id: '/lovable/email/queue/process',
@@ -566,6 +579,8 @@ export interface FileRoutesByFullPath {
   '/api/public/pay/$token': typeof ApiPublicPayTokenRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
+  '/api/tiktok/account/callback': typeof ApiTiktokAccountCallbackRoute
+  '/api/tiktok/auth/callback': typeof ApiTiktokAuthCallbackRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesByTo {
@@ -644,6 +659,8 @@ export interface FileRoutesByTo {
   '/api/public/pay/$token': typeof ApiPublicPayTokenRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
+  '/api/tiktok/account/callback': typeof ApiTiktokAccountCallbackRoute
+  '/api/tiktok/auth/callback': typeof ApiTiktokAuthCallbackRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesById {
@@ -724,6 +741,8 @@ export interface FileRoutesById {
   '/api/public/pay/$token': typeof ApiPublicPayTokenRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
+  '/api/tiktok/account/callback': typeof ApiTiktokAccountCallbackRoute
+  '/api/tiktok/auth/callback': typeof ApiTiktokAuthCallbackRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRouteTypes {
@@ -804,6 +823,8 @@ export interface FileRouteTypes {
     | '/api/public/pay/$token'
     | '/api/public/payments/webhook'
     | '/api/public/whatsapp/webhook'
+    | '/api/tiktok/account/callback'
+    | '/api/tiktok/auth/callback'
     | '/lovable/email/queue/process'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -882,6 +903,8 @@ export interface FileRouteTypes {
     | '/api/public/pay/$token'
     | '/api/public/payments/webhook'
     | '/api/public/whatsapp/webhook'
+    | '/api/tiktok/account/callback'
+    | '/api/tiktok/auth/callback'
     | '/lovable/email/queue/process'
   id:
     | '__root__'
@@ -961,6 +984,8 @@ export interface FileRouteTypes {
     | '/api/public/pay/$token'
     | '/api/public/payments/webhook'
     | '/api/public/whatsapp/webhook'
+    | '/api/tiktok/account/callback'
+    | '/api/tiktok/auth/callback'
     | '/lovable/email/queue/process'
   fileRoutesById: FileRoutesById
 }
@@ -1017,6 +1042,8 @@ export interface RootRouteChildren {
   ApiPublicPayTokenRoute: typeof ApiPublicPayTokenRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicWhatsappWebhookRoute: typeof ApiPublicWhatsappWebhookRoute
+  ApiTiktokAccountCallbackRoute: typeof ApiTiktokAccountCallbackRoute
+  ApiTiktokAuthCallbackRoute: typeof ApiTiktokAuthCallbackRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
 
@@ -1554,6 +1581,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWhatsappWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/tiktok/account/callback': {
+      id: '/api/tiktok/account/callback'
+      path: '/api/tiktok/account/callback'
+      fullPath: '/api/tiktok/account/callback'
+      preLoaderRoute: typeof ApiTiktokAccountCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tiktok/auth/callback': {
+      id: '/api/tiktok/auth/callback'
+      path: '/api/tiktok/auth/callback'
+      fullPath: '/api/tiktok/auth/callback'
+      preLoaderRoute: typeof ApiTiktokAuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/queue/process': {
       id: '/lovable/email/queue/process'
       path: '/lovable/email/queue/process'
@@ -1692,6 +1733,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPayTokenRoute: ApiPublicPayTokenRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicWhatsappWebhookRoute: ApiPublicWhatsappWebhookRoute,
+  ApiTiktokAccountCallbackRoute: ApiTiktokAccountCallbackRoute,
+  ApiTiktokAuthCallbackRoute: ApiTiktokAuthCallbackRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }
 export const routeTree = rootRouteImport
