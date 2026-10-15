@@ -131,6 +131,7 @@ export async function sendWhatsAppTemplate(
   templateName: string,
   langCode: string,
   bodyParams: string[],
+  header?: { type: "video" | "image"; link: string },
 ): Promise<{ id: string }> {
   const url = `${GRAPH}/${metaApiVersion()}/${phoneNumberId}/messages`;
   const parameters = bodyParams.map((p) => ({
@@ -145,7 +146,21 @@ export async function sendWhatsAppTemplate(
     template: {
       name: templateName,
       language: { code: langCode },
-      ...(parameters.length ? { components: [{ type: "body", parameters }] } : {}),
+      ...(parameters.length || header
+        ? {
+            components: [
+              ...(header
+                ? [
+                    {
+                      type: "header",
+                      parameters: [{ type: header.type, [header.type]: { link: header.link } }],
+                    },
+                  ]
+                : []),
+              ...(parameters.length ? [{ type: "body", parameters }] : []),
+            ],
+          }
+        : {}),
     },
   };
   const res = await fetch(url, {

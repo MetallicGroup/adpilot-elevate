@@ -774,11 +774,15 @@ function WaTemplateBroadcastCard({ onSent }: { onSent: () => void }) {
   );
 }
 
+const WA_CLIP_TEMPLATE = "clip_adpilot_7zile";
+const WA_CLIP_VIDEO = "https://www.adpilot.ro/media/clip-adpilot.mp4";
+
 function WebinarTestCard() {
   const send = useServerFn(sendWebinarTest);
   const [phone, setPhone] = useState("0733342513");
   const [name, setName] = useState("Daniel");
-  const [tpl, setTpl] = useState("webinar_adpilot");
+  const [tpl, setTpl] = useState(WA_CLIP_TEMPLATE);
+  const [video, setVideo] = useState(WA_CLIP_VIDEO);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<string | null>(null);
 
@@ -786,7 +790,9 @@ function WebinarTestCard() {
     setBusy(true);
     setResult(null);
     try {
-      const r = await send({ data: { phone: phone.trim(), name: name.trim(), template: tpl.trim() } });
+      const r = await send({
+        data: { phone: phone.trim(), name: name.trim(), template: tpl.trim(), videoUrl: video.trim() },
+      });
       setResult(`✅ Trimis către ${r.to} (id: ${r.id})`);
     } catch (e: any) {
       setResult(`Eroare: ${e.message}`);
@@ -799,13 +805,14 @@ function WebinarTestCard() {
     <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/[0.04] p-5 space-y-3">
       <div className="flex items-center gap-2">
         <MessageSquare className="w-4 h-4 text-emerald-500" />
-        <h3 className="font-semibold">Webinar — test template WhatsApp</h3>
+        <h3 className="font-semibold">Test template WhatsApp</h3>
       </div>
-      <p className="text-xs text-muted-foreground">Trimite template-ul aprobat către un singur număr (test). {"{{1}}"} = prenume.</p>
+      <p className="text-xs text-muted-foreground">Trimite template-ul aprobat către un singur număr (test). {"{{1}}"} = prenume. Video header: lasă gol dacă template-ul nu are video.</p>
       <div className="flex flex-wrap items-center gap-2">
         <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="07..." className="h-9 w-40 rounded-md border border-border bg-secondary/40 text-sm px-2" />
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nume" className="h-9 w-32 rounded-md border border-border bg-secondary/40 text-sm px-2" />
         <input value={tpl} onChange={(e) => setTpl(e.target.value)} placeholder="nume_template" className="h-9 w-48 rounded-md border border-border bg-secondary/40 text-sm px-2 font-mono" />
+        <input value={video} onChange={(e) => setVideo(e.target.value)} placeholder="https://… .mp4 (opțional)" className="h-9 w-80 rounded-md border border-border bg-secondary/40 text-sm px-2 font-mono" />
         <button onClick={submit} disabled={busy || !phone.trim()} className="px-4 h-9 rounded-lg text-white disabled:opacity-50 inline-flex items-center gap-2" style={{ background: "var(--gradient-primary)" }}>
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageSquare className="w-4 h-4" />} Trimite test
         </button>
@@ -819,6 +826,8 @@ function WebinarBlastCard() {
   const loadStatus = useServerFn(getWebinarStatus);
   const blast = useServerFn(sendWebinarBlast);
   const [st, setSt] = useState<any>(null);
+  const [tpl, setTpl] = useState(WA_CLIP_TEMPLATE);
+  const [video, setVideo] = useState(WA_CLIP_VIDEO);
   const [running, setRunning] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -827,13 +836,13 @@ function WebinarBlastCard() {
 
   const runAll = async () => {
     if (!st) return;
-    if (!confirm(`Trimit invitația la webinar către ${st.pending} contacte rămase? Acțiune reală, către oameni reali.`)) return;
+    if (!confirm(`Trimit template-ul „${tpl.trim()}" către ${st.pending} contacte rămase? Acțiune reală, către oameni reali.`)) return;
     setRunning(true);
     setMsg(null);
     let sent = 0, failed = 0, guard = 0;
     try {
       while (guard++ < 60) {
-        const r = await blast({ data: { limit: 100 } });
+        const r = await blast({ data: { limit: 100, template: tpl.trim(), videoUrl: video.trim() } });
         sent += r.sent; failed += r.failed;
         setMsg(`Trimise: ${sent} · eșuate: ${failed} · rămase: ${r.remaining}`);
         await refresh();
@@ -852,7 +861,11 @@ function WebinarBlastCard() {
     <div className="rounded-xl border border-primary/30 bg-primary/[0.05] p-5 space-y-3">
       <div className="flex items-center gap-2">
         <Megaphone className="w-4 h-4 text-primary" />
-        <h3 className="font-semibold">Webinar — trimite la toți (lista importată)</h3>
+        <h3 className="font-semibold">WhatsApp — trimite la toți (lista importată)</h3>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <input value={tpl} onChange={(e) => setTpl(e.target.value)} placeholder="nume_template" className="h-9 w-48 rounded-md border border-border bg-secondary/40 text-sm px-2 font-mono" />
+        <input value={video} onChange={(e) => setVideo(e.target.value)} placeholder="https://… .mp4 (opțional)" className="h-9 w-80 rounded-md border border-border bg-secondary/40 text-sm px-2 font-mono" />
       </div>
       {st && (
         <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
@@ -869,7 +882,7 @@ function WebinarBlastCard() {
         </button>
         <button onClick={refresh} disabled={running} className="text-xs text-muted-foreground hover:text-foreground">Reîmprospătează</button>
       </div>
-      <p className="text-xs text-muted-foreground">Rulează în loturi (nu închide pagina până termină). Template: <code className="font-mono">webinar_adpilot</code>.</p>
+      <p className="text-xs text-muted-foreground">Rulează în loturi (nu închide pagina până termină).</p>
       {msg && <p className="text-sm">{msg}</p>}
     </div>
   );

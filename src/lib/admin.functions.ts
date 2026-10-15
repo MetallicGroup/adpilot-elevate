@@ -991,6 +991,7 @@ const WebinarTestInput = z.object({
   phone: z.string().trim().min(9).max(20),
   name: z.string().trim().max(80).optional(),
   template: z.string().trim().min(1).max(100).default("webinar_adpilot"),
+  videoUrl: z.string().trim().url().startsWith("https://").optional().or(z.literal("")),
 });
 
 export const sendWebinarTest = createServerFn({ method: "POST" })
@@ -1017,6 +1018,7 @@ export const sendWebinarTest = createServerFn({ method: "POST" })
       data.template,
       "ro",
       [first],
+      data.videoUrl ? { type: "video", link: data.videoUrl } : undefined,
     );
     await logAudit(context.userId, "webinar.test_sent", "phone", to, { template: data.template });
     return { ok: true as const, to, id };
@@ -1046,6 +1048,7 @@ export const getWebinarStatus = createServerFn({ method: "GET" })
 const WebinarBlastInput = z.object({
   template: z.string().trim().min(1).max(100).default("webinar_adpilot"),
   limit: z.number().int().min(1).max(300).default(100),
+  videoUrl: z.string().trim().url().startsWith("https://").optional().or(z.literal("")),
 });
 
 export const sendWebinarBlast = createServerFn({ method: "POST" })
@@ -1076,6 +1079,7 @@ export const sendWebinarBlast = createServerFn({ method: "POST" })
           data.template,
           "ro",
           [first],
+          data.videoUrl ? { type: "video", link: data.videoUrl } : undefined,
         );
         await supabaseAdmin
           .from("webinar_contacts")
