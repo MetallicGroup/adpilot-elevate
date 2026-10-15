@@ -1025,13 +1025,21 @@ export const sendWebinarTest = createServerFn({ method: "POST" })
   });
 
 // ====== WEBINAR — STATUS + BLAST ======
+const WaCampaignInput = z.object({
+  campaign: z.string().trim().min(1).max(60).default("webinar"),
+});
+
 export const getWebinarStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((d: unknown) => WaCampaignInput.parse(d ?? {}))
+  .handler(async ({ context, data }) => {
     await assertAdmin(context);
     const { supabaseAdmin: __sa } = await import("@/integrations/supabase/client.server"); const supabaseAdmin: any = __sa;
     const count = async (status?: string) => {
-      let q = supabaseAdmin.from("webinar_contacts").select("id", { count: "exact", head: true });
+      let q = supabaseAdmin
+        .from("webinar_contacts")
+        .select("id", { count: "exact", head: true })
+        .eq("campaign", data.campaign);
       if (status) q = q.eq("status", status);
       const { count: c } = await q;
       return c ?? 0;
@@ -1048,6 +1056,7 @@ export const getWebinarStatus = createServerFn({ method: "GET" })
 const WebinarBlastInput = z.object({
   template: z.string().trim().min(1).max(100).default("webinar_adpilot"),
   limit: z.number().int().min(1).max(300).default(100),
+  campaign: z.string().trim().min(1).max(60).default("webinar"),
   videoUrl: z.string().trim().url().startsWith("https://").optional().or(z.literal("")),
 });
 
@@ -1064,13 +1073,18 @@ export const sendWebinarBlast = createServerFn({ method: "POST" })
     const { data: batch } = await supabaseAdmin
       .from("webinar_contacts")
       .select("id, phone, name")
+      .eq("campaign", data.campaign)
       .eq("status", "pending")
       .limit(data.limit);
 
     let sent = 0;
     let failed = 0;
     for (const c of batch ?? []) {
-      const first = String(c.name ?? "").trim().split(/\s+/)[0] || "acolo";
+      // Webinar: prenume din numele complet. Alte campanii: `name` e deja salutul curățat la import.
+      const first =
+        data.campaign === "webinar"
+          ? String(c.name ?? "").trim().split(/\s+/)[0] || "acolo"
+          : String(c.name ?? "").trim() || "acolo";
       try {
         const { id } = await sendWhatsAppTemplate(
           wa.phoneNumberId,
@@ -1098,9 +1112,15 @@ export const sendWebinarBlast = createServerFn({ method: "POST" })
     const { count: remaining } = await supabaseAdmin
       .from("webinar_contacts")
       .select("id", { count: "exact", head: true })
+      .eq("campaign", data.campaign)
       .eq("status", "pending");
     if ((batch ?? []).length) {
-      await logAudit(context.userId, "webinar.blast_batch", null, null, { sent, failed, remaining: remaining ?? 0 });
+      await logAudit(context.userId, "webinar.blast_batch", null, null, {
+        campaign: data.campaign,
+        sent,
+        failed,
+        remaining: remaining ?? 0,
+      });
     }
     return { sent, failed, remaining: remaining ?? 0 };
   });

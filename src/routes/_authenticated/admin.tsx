@@ -776,6 +776,7 @@ function WaTemplateBroadcastCard({ onSent }: { onSent: () => void }) {
 
 const WA_CLIP_TEMPLATE = "clip_adpilot_7zile";
 const WA_CLIP_VIDEO = "https://www.adpilot.ro/media/clip-adpilot.mp4";
+const WA_CLIP_CAMPAIGN = "clip_7zile";
 
 function WebinarTestCard() {
   const send = useServerFn(sendWebinarTest);
@@ -826,13 +827,14 @@ function WebinarBlastCard() {
   const loadStatus = useServerFn(getWebinarStatus);
   const blast = useServerFn(sendWebinarBlast);
   const [st, setSt] = useState<any>(null);
+  const [campaign, setCampaign] = useState(WA_CLIP_CAMPAIGN);
   const [tpl, setTpl] = useState(WA_CLIP_TEMPLATE);
   const [video, setVideo] = useState(WA_CLIP_VIDEO);
   const [running, setRunning] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
-  const refresh = () => loadStatus().then(setSt).catch(() => {});
-  useEffect(() => { refresh(); }, []);
+  const refresh = () => loadStatus({ data: { campaign: campaign.trim() } }).then(setSt).catch(() => setSt(null));
+  useEffect(() => { refresh(); }, [campaign]);
 
   const runAll = async () => {
     if (!st) return;
@@ -842,7 +844,9 @@ function WebinarBlastCard() {
     let sent = 0, failed = 0, guard = 0;
     try {
       while (guard++ < 60) {
-        const r = await blast({ data: { limit: 100, template: tpl.trim(), videoUrl: video.trim() } });
+        const r = await blast({
+          data: { limit: 100, campaign: campaign.trim(), template: tpl.trim(), videoUrl: video.trim() },
+        });
         sent += r.sent; failed += r.failed;
         setMsg(`Trimise: ${sent} · eșuate: ${failed} · rămase: ${r.remaining}`);
         await refresh();
@@ -864,6 +868,7 @@ function WebinarBlastCard() {
         <h3 className="font-semibold">WhatsApp — trimite la toți (lista importată)</h3>
       </div>
       <div className="flex flex-wrap items-center gap-2">
+        <input value={campaign} onChange={(e) => setCampaign(e.target.value)} placeholder="campanie" title="Campanie (listă importată)" className="h-9 w-32 rounded-md border border-border bg-secondary/40 text-sm px-2 font-mono" />
         <input value={tpl} onChange={(e) => setTpl(e.target.value)} placeholder="nume_template" className="h-9 w-48 rounded-md border border-border bg-secondary/40 text-sm px-2 font-mono" />
         <input value={video} onChange={(e) => setVideo(e.target.value)} placeholder="https://… .mp4 (opțional)" className="h-9 w-80 rounded-md border border-border bg-secondary/40 text-sm px-2 font-mono" />
       </div>
