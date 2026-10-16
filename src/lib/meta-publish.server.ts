@@ -88,6 +88,16 @@ async function metaPOST(path: string, accessToken: string, body: Record<string, 
   return json;
 }
 
+/** „0725…", „40725…", „+40 725…" → „+40725…" (formatul acceptat de Meta cu country_code RO). */
+function normalizeThankYouPhone(raw?: string | null): string | null {
+  const digits = String(raw ?? "").replace(/\D/g, "");
+  if (!digits) return null;
+  if (digits.startsWith("40") && digits.length === 11) return `+${digits}`;
+  if (digits.startsWith("0") && digits.length === 10) return `+4${digits}`;
+  if (digits.length === 9 && digits.startsWith("7")) return `+40${digits}`;
+  return null;
+}
+
 export async function createLeadForm(
   pageId: string,
   pageAccessToken: string,
@@ -97,6 +107,8 @@ export async function createLeadForm(
     fields: string[];
     privacy_url: string;
     follow_up_url?: string;
+    /** Butonul de la finalul formularului: site-ul clientului, altfel „Sună acum" pe numărul lui. */
+    thank_you?: { website?: string | null; phone?: string | null };
     custom_questions?: Array<
       | string
       | {
@@ -108,7 +120,8 @@ export async function createLeadForm(
     >;
   },
 ) {
-  const formName = spec.name.slice(0, 256);
+  // Sufixul „(RO)" ține separat formularele vechi (create în engleză) de cele noi.
+  const formName = `${spec.name.slice(0, 250)} (RO)`;
   // Reuse existing form with same name (Meta enforces unique names per page)
   try {
     const listUrl = `${GRAPH}/${metaApiVersion()}/${pageId}/leadgen_forms?fields=id,name&limit=200&access_token=${encodeURIComponent(pageAccessToken)}`;
@@ -146,13 +159,31 @@ export async function createLeadForm(
   }
   if (!questions.length) questions.push({ type: "PHONE" });
 
+  const website = (spec.thank_you?.website ?? "").trim();
+  const hasWebsite = /^https?:\/\//i.test(website) && !/(^|\.)adpilot\.ro/i.test(website);
+  const phone = normalizeThankYouPhone(spec.thank_you?.phone);
+  const thankYou = hasWebsite
+    ? { button_type: "VIEW_WEBSITE", button_text: "Vizitează site-ul", website_url: website }
+    : phone
+      ? { button_type: "CALL_BUSINESS", button_text: "Sună acum", business_phone_number: phone, country_code: "RO" }
+      : null;
+
   try {
     return await metaPOST(`/${pageId}/leadgen_forms`, pageAccessToken, {
       name: formName,
       questions,
-      privacy_policy: { url: spec.privacy_url, link_text: "Privacy policy" },
-      follow_up_action_url: spec.follow_up_url || spec.privacy_url,
-      locale: "EN_US",
+      privacy_policy: { url: spec.privacy_url, link_text: "Politica de confidențialitate" },
+      locale: "RO_RO",
+      ...(thankYou
+        ? {
+            thank_you_page: {
+              title: "Mulțumim!",
+              body: "Te contactăm în cel mai scurt timp.",
+              ...thankYou,
+            },
+          }
+        : // Fără site și fără telefon: butonul duce pe pagina de Facebook a afacerii, nu pe AdPilot.
+          { follow_up_action_url: `https://www.facebook.com/${pageId}` }),
     });
   } catch (e: any) {
     const msg = String(e?.message ?? "");

@@ -137,7 +137,7 @@ Pași conversaționali (mesaje scurte, unul câte unul — nu bombarda cu 10 în
    • Mai mulți → arată lista + care e activ, întreabă pe care.
    • Zero / toți inactivi → explică riscul; fără pixel cade pe trafic.
 
-7) Dacă leads: propune TU 2–3 întrebări de calificare pe nișă (sau lasă sistemul să le completeze din business_type). Confirmă lista.
+7) Dacă leads: propune TU 2–3 întrebări de calificare pe nișă (sau lasă sistemul să le completeze din business_type). Confirmă lista. Întreabă și dacă are site: îl punem pe butonul de la finalul formularului (câmpul website). Dacă nu are, butonul devine „Sună acum" cu numărul lui de WhatsApp — spune-i asta.
 
 8) Mesaj de confirmare final (înainte de tool): obiectiv, locație, vârstă, buget, *N creative*, ofertă, cele 3 unghiuri pe scurt, formular, așteptări → „Confirmi? Da/Nu".
    La Da → create_campaign cu creatives[3] + business_type.

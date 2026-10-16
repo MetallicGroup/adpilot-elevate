@@ -363,6 +363,13 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
           .max(30)
           .optional()
           .describe("Doar pentru calls: numărul de apel."),
+        website: z
+          .string()
+          .url()
+          .optional()
+          .describe(
+            "Doar pentru leads: site-ul afacerii (https://...), pus pe butonul de la finalul formularului. Întreabă userul dacă are site; dacă nu are, lasă gol — butonul devine „Sună acum” cu numărul lui de WhatsApp.",
+          ),
         custom_questions: z
           .array(
             z.object({
@@ -1304,6 +1311,7 @@ async function publishCampaignToMeta(
       description?: string;
       cta: string;
       landing_url?: string;
+      website?: string;
       custom_questions?: Array<{ label: string; type?: "short" | "choice"; options?: string[] }>;
       countries: string[];
       age_min: number;
@@ -1378,6 +1386,10 @@ async function publishCampaignToMeta(
           fields: ["Name", "Phone"],
           privacy_url: "https://adpilot.ro/privacy-policy",
           custom_questions: input.args.custom_questions,
+          thank_you: {
+            website: input.args.website ?? null,
+            phone: await getClickToCallPhone(supabaseAdmin, input.userId),
+          },
         });
         await supabaseAdmin.from("campaigns").update({ meta_lead_form_id: form?.id ?? null }).eq("id", input.campaignRowId);
       } catch (e: any) {

@@ -244,6 +244,7 @@ export const publishMetaCampaign = createServerFn({ method: "POST" })
       custom_questions: Array.isArray(leadForm.custom_questions) ? leadForm.custom_questions : [],
       privacy_url: leadForm.privacy_url || creative.landing_url || "https://adpilot.ro/privacy-policy",
       follow_up_url: creative.landing_url,
+      thank_you: { website: creative.landing_url ?? null },
     });
 
     // 6. Create Campaign
