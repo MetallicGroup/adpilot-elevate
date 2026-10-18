@@ -44,10 +44,9 @@ export type AgentPublishSnapshot = {
 };
 
 /** How many ads to launch in one ad set for a given daily budget (RON). */
-export function creativeCountForBudget(dailyBudgetRon: number): number {
-  if (dailyBudgetRon >= 200) return 6;
-  if (dailyBudgetRon >= 100) return 4;
-  return 3;
+/** Fiecare set de reclame pornește cu o singură reclamă, indiferent de buget. */
+export function creativeCountForBudget(_dailyBudgetRon: number): number {
+  return 1;
 }
 
 /**
@@ -252,7 +251,7 @@ export function normalizeCreatives(
     }))
     .filter((v) => v.headline && v.primary_text);
 
-  if (fromVariants.length >= 2) {
+  if (fromVariants.length >= 1) {
     // Dedupe near-identical headlines
     const seen = new Set<string>();
     const unique: CreativeVariant[] = [];
@@ -263,7 +262,7 @@ export function normalizeCreatives(
       unique.push(v);
       if (unique.length >= maxCount) break;
     }
-    if (unique.length >= 2) return unique;
+    if (unique.length >= Math.min(2, maxCount)) return unique;
   }
 
   // Fallback: single primary creative

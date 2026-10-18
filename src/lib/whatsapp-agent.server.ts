@@ -251,7 +251,7 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
 
     generate_copy: tool({
       description:
-        "Generează 3 variante de copy pe unghiuri DISTINCTE (durere / beneficiu / social proof): headline (max 40), primary text, description (max 30), CTA. Folosește pentru orice nișă — trimite un brief complet (afacere, ofertă, oraș, obiectiv).",
+        "Generează 3 variante de copy pe unghiuri DISTINCTE (durere / beneficiu / social proof): headline (max 40), primary text, description (max 30), CTA. Folosește pentru orice nișă — trimite un brief complet (afacere, ofertă, oraș, obiectiv). Din cele 3, lansezi doar una.",
       inputSchema: z.object({
         product_description: z
           .string()
@@ -318,7 +318,7 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
 
     create_campaign: tool({
       description:
-        "Creează și lansează o campanie Meta (1 ad set + mai multe creative pe unghiuri). Necesită imagine/video (latestMedia). Confirmă mereu cu userul ÎNAINTE (obiectiv, locație, vârstă, buget, copy, formular).",
+        "Creează și lansează o campanie Meta (1 ad set cu o singură reclamă). Necesită imagine/video (latestMedia). Confirmă mereu cu userul ÎNAINTE (obiectiv, locație, vârstă, buget, copy, formular).",
       inputSchema: z.object({
         name: z.string().max(80),
         daily_budget: z.number().positive().describe("Buget zilnic în RON (comun pe ad set — Meta împarte pe creative)"),
@@ -347,11 +347,11 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
               cta: z.enum(["Learn More", "Sign Up", "Shop Now", "Book Now", "Apply Now", "Call Now"]).optional(),
             }),
           )
-          .min(2)
+          .min(1)
           .max(6)
           .optional()
           .describe(
-            "OBLIGATORIU pentru rezultate bune: 3 variante pe unghiuri DISTINCTE (pain/benefit/social_proof). Același buget pe ad set — Meta alocă. Dacă lipsește, se lansează doar copy-ul principal.",
+            "O singură reclamă pe set: trimite UN element, cu unghiul ales (pain/benefit/social_proof). Dacă trimiți mai multe, se folosește doar primul.",
           ),
         landing_url: z
           .string()
@@ -1627,7 +1627,7 @@ async function publishCampaignToMeta(
     const primaryAdId = adIds[0]!;
     fallbackNote =
       (fallbackNote ? fallbackNote + " · " : "") +
-      `${creatives.length} creative în același ad set (Advantage+ placements)`;
+      `${creatives.length === 1 ? "o reclamă" : `${creatives.length} reclame`} în setul de reclame (Advantage+ placements)`;
 
     const { data: existingRow } = await supabaseAdmin
       .from("campaigns")
@@ -1665,12 +1665,12 @@ async function publishCampaignToMeta(
 
     const baseMsg =
       objective === "sales"
-        ? "Campanie de *vânzări* LIVE ✅ — Pixel + mai multe creative."
+        ? "Campanie de *vânzări* LIVE ✅ — Pixel + o reclamă."
         : objective === "signups"
-          ? "Campanie de *înscrieri* LIVE ✅ — Pixel + mai multe creative."
+          ? "Campanie de *înscrieri* LIVE ✅ — Pixel + o reclamă."
           : objective === "traffic"
             ? `Campanie LIVE ✅${fallbackNote ? " — " + fallbackNote : ""}`
-            : `Campanie LIVE (lead form) ✅ — ${creatives.length} creative.`;
+            : `Campanie LIVE (lead form) ✅ — o reclamă.`;
 
     return {
       ok: true,
