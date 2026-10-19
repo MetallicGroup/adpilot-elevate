@@ -105,27 +105,18 @@ export const Route = createFileRoute("/api/public/meta/webhook")({
             };
 
             // Dedup: ignore conflict on external_lead_id or email/phone+campaign
-            const { error } = await supabaseAdmin
+            const { data: insertedRows, error } = await supabaseAdmin
               .from("leads")
-              .upsert(insert, { onConflict: "platform,external_lead_id", ignoreDuplicates: true });
+              .upsert(insert, { onConflict: "platform,external_lead_id", ignoreDuplicates: true })
+              .select("id");
             if (error) console.error("[meta webhook] insert error", error.message);
 
-            // Notify on WhatsApp if user has a connection
-            try {
-              const { data: waConn } = await supabaseAdmin
-                .from("whatsapp_connections")
-                .select("user_phone")
-                .eq("user_id", page.user_id)
-                .eq("status", "active")
-                .maybeSingle();
-              const { getCentralWhatsApp, sendWhatsAppMessage } = await import(
-                "@/lib/whatsapp.server"
-              );
-              const central = getCentralWhatsApp();
-              if (waConn?.user_phone && central) {
+            // Notificăm doar lead-urile noi (sincronizarea periodică poate să-l fi inserat deja).
+            if (insertedRows?.length) {
+              try {
                 const campName = campaign_id
                   ? (await supabaseAdmin.from("campaigns").select("name").eq("id", campaign_id).maybeSingle()).data?.name
-                  : "—";
+                  : null;
                 const lines = [
                   "🎯 *Lead nou*",
                   campName ? `📣 Campania: ${campName}` : "",
@@ -136,16 +127,18 @@ export const Route = createFileRoute("/api/public/meta/webhook")({
                   "",
                   "Scrie *lead-uri* să vezi ultimele sau întreabă-mă orice 🚀",
                 ].filter(Boolean).join("\n");
-                const toPhone = waConn.user_phone.replace(/\D/g, "");
-                if (toPhone) {
-                  await sendWhatsAppMessage(central.phoneNumberId, central.accessToken, toPhone, {
-                    type: "text",
-                    text: lines,
-                  });
-                }
+                const { notifyOwner, WA_TEMPLATES } = await import("@/lib/wa-notify.server");
+                await notifyOwner(supabaseAdmin, page.user_id, {
+                  text: lines,
+                  template: {
+                    name: WA_TEMPLATES.leadNew,
+                    params: [campName || "ta", mapped.full_name || "—", mapped.phone || mapped.email || "—"],
+                  },
+                  kind: "lead_notify",
+                });
+              } catch (e) {
+                console.error("[meta webhook] WA notify failed", e);
               }
-            } catch (e) {
-              console.error("[meta webhook] WA notify failed", e);
             }
           }
         }

@@ -36,18 +36,8 @@ export async function syncMetaLeadsForUser(
     .eq("is_active", true);
   if (!pages?.length) return result;
 
-  // Notificare WhatsApp la lead NOU: central number → telefonul userului.
+  // Notificare WhatsApp la lead NOU (wa-notify alege mesaj liber sau template).
   // Doar pentru lead-uri proaspete (fereastră), ca să nu-l inundăm la un backfill.
-  const { getCentralWhatsApp, sendWhatsAppMessage } = await import("./whatsapp.server");
-  const central = getCentralWhatsApp();
-  const { data: waConn } = await supabaseAdmin
-    .from("whatsapp_connections")
-    .select("id, user_phone")
-    .eq("user_id", userId)
-    .eq("status", "active")
-    .maybeSingle();
-  const notifyPhone =
-    central && waConn?.user_phone ? waConn.user_phone.replace(/\D/g, "") : null;
   const LEAD_FRESH_MS = 3 * 60 * 60 * 1000;
 
   for (const p of pages) {
@@ -149,7 +139,7 @@ export async function syncMetaLeadsForUser(
               const createdMs = row.created_time
                 ? new Date(row.created_time).getTime()
                 : Date.now();
-              if (notifyPhone && central && Date.now() - createdMs < LEAD_FRESH_MS) {
+              if (Date.now() - createdMs < LEAD_FRESH_MS) {
                 const questions = extractLeadQuestions(row.field_data || [], storedQuestions);
                 const lines = [
                   "🎯 *Lead nou!*",
@@ -165,25 +155,15 @@ export async function syncMetaLeadsForUser(
                 ]
                   .filter(Boolean)
                   .join("\n");
-                try {
-                  const { id: waId } = await sendWhatsAppMessage(
-                    central.phoneNumberId,
-                    central.accessToken,
-                    notifyPhone,
-                    { type: "text", text: lines },
-                  );
-                  await supabaseAdmin.from("whatsapp_messages").insert({
-                    user_id: userId,
-                    connection_id: waConn?.id ?? null,
-                    wa_message_id: waId,
-                    direction: "out",
-                    msg_type: "text",
-                    text: lines,
-                    meta: { kind: "lead_notify" },
-                  });
-                } catch (e) {
-                  console.error("[leads-sync] lead notify failed", e);
-                }
+                const { notifyOwner, WA_TEMPLATES } = await import("./wa-notify.server");
+                await notifyOwner(supabaseAdmin, userId, {
+                  text: lines,
+                  template: {
+                    name: WA_TEMPLATES.leadNew,
+                    params: [campaignName || "ta", mapped.full_name || "—", mapped.phone || mapped.email || "—"],
+                  },
+                  kind: "lead_notify",
+                });
               }
             }
           }

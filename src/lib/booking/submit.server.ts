@@ -1,7 +1,6 @@
 // @ts-nocheck
 import { slotsForDay } from "./availability";
 import { sendCapiEvent } from "./capi.server";
-import { sendWhatsAppMessage } from "@/lib/whatsapp/sendMessage";
 import type { AvailabilityRule } from "./types";
 
 type SubmitInput = {
@@ -226,30 +225,26 @@ export async function submitBookingCore(supabaseAdmin: any, input: SubmitInput) 
     }
   }
 
-  // Notificare WhatsApp către proprietar
+  // Notificare WhatsApp către proprietar (mesaj liber în fereastra de 24h, altfel template)
   try {
-    const { data: wa } = await supabaseAdmin
-      .from("whatsapp_connections")
-      .select("user_phone, status")
-      .eq("user_id", page.user_id)
-      .maybeSingle();
-    if (wa?.user_phone && (wa.status === "active" || wa.status === "connected")) {
-      const when = start.toLocaleString("ro-RO", { dateStyle: "full", timeStyle: "short", timeZone: "Europe/Bucharest" });
-      const extras = (questions ?? [])
-        .map((q: any) => {
-          const v = input.answers[q.key];
-          if (v === undefined || v === null || String(v).trim() === "") return null;
-          return `• ${q.label}: ${Array.isArray(v) ? v.join(", ") : v}`;
-        })
-        .filter(Boolean)
-        .join("\n");
-      await sendWhatsAppMessage(
-        wa.user_phone,
-        needsSlot
-          ? `📅 Programare nouă${tier === "hot" ? " 🔥" : ""}\n\n${input.full_name} — ${input.phone}\n${service?.name ?? page.service}\n${when}${extras ? `\n\n${extras}` : ""}\n\nScor calificare: ${score}/100 (${tier})`
-          : `📝 Client nou${(attribution as any).ttclid ? " din TikTok" : ""}${tier === "hot" ? " 🔥" : ""}\n\n${input.full_name} — ${input.phone}\n${service?.name ?? page.service}${extras ? `\n\n${extras}` : ""}\n\nSună-l cât mai repede.`,
-      );
-    }
+    const when = start.toLocaleString("ro-RO", { dateStyle: "full", timeStyle: "short", timeZone: "Europe/Bucharest" });
+    const extras = (questions ?? [])
+      .map((q: any) => {
+        const v = input.answers[q.key];
+        if (v === undefined || v === null || String(v).trim() === "") return null;
+        return `• ${q.label}: ${Array.isArray(v) ? v.join(", ") : v}`;
+      })
+      .filter(Boolean)
+      .join("\n");
+    const text = needsSlot
+      ? `📅 Programare nouă${tier === "hot" ? " 🔥" : ""}\n\n${input.full_name} — ${input.phone}\n${service?.name ?? page.service}\n${when}${extras ? `\n\n${extras}` : ""}\n\nScor calificare: ${score}/100 (${tier})`
+      : `📝 Client nou${(attribution as any).ttclid ? " din TikTok" : ""}${tier === "hot" ? " 🔥" : ""}\n\n${input.full_name} — ${input.phone}\n${service?.name ?? page.service}${extras ? `\n\n${extras}` : ""}\n\nSună-l cât mai repede.`;
+    const { notifyOwner, WA_TEMPLATES } = await import("@/lib/wa-notify.server");
+    await notifyOwner(supabaseAdmin, page.user_id, {
+      text,
+      template: { name: WA_TEMPLATES.leadNew, params: [page.service || "ta", input.full_name, input.phone] },
+      kind: needsSlot ? "booking_notify" : "lead_notify",
+    });
   } catch (e) {
     console.error("[booking] WhatsApp notify failed", e);
   }

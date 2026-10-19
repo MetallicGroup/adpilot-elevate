@@ -5,7 +5,7 @@
  * automat când reclama e pusă pe pauză / respinsă / cu probleme.
  */
 import { fetchCampaignInsights, fetchCampaignDailyInsights } from "./meta-insights.server";
-import { getCentralWhatsApp, sendWhatsAppMessage } from "./whatsapp.server";
+import { getCentralWhatsApp } from "./whatsapp.server";
 import { syncMetaCampaignStatuses, isMetaCampaignActive } from "./campaign-control.server";
 
 type Camp = {
@@ -100,6 +100,9 @@ export async function runPeriodicUpdates(): Promise<{ sent: number; errors: numb
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const central = getCentralWhatsApp();
   if (!central) return { sent: 0, errors: 0 };
+  // Fără actualizări de rutină noaptea (21:00–09:00, ora României).
+  const { isQuietHours } = await import("./wa-notify.server");
+  if (isQuietHours()) return { sent: 0, errors: 0 };
 
   const { data: conns } = await supabaseAdmin
     .from("whatsapp_connections")
@@ -159,20 +162,14 @@ export async function runPeriodicUpdates(): Promise<{ sent: number; errors: numb
             .filter(Boolean)
             .join("\n");
 
-          const { id } = await sendWhatsAppMessage(
-            central.phoneNumberId,
-            central.accessToken,
-            phone,
-            { type: "text", text: lines },
-          );
-          await supabaseAdmin.from("whatsapp_messages").insert({
-            user_id: conn.user_id,
-            connection_id: conn.id,
-            wa_message_id: id,
-            direction: "out",
-            msg_type: "text",
+          // Rutină: fără mesaje noaptea și fără mesaje care oricum n-ar ajunge (în afara ferestrei de 24h).
+          const { notifyOwner } = await import("./wa-notify.server");
+          const r = await notifyOwner(supabaseAdmin, conn.user_id, {
             text: lines,
+            respectQuietHours: true,
+            kind: "periodic_update",
           });
+          if (!("sent" in r)) continue;
           await supabaseAdmin
             .from("campaigns")
             .update({ last_periodic_update_at: new Date().toISOString() })

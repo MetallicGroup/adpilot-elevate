@@ -74,6 +74,7 @@ import { Route as ApiMetaAuthCallbackRouteImport } from './routes/api/meta.auth.
 import { Route as ApiMetaSignupStartRouteImport } from './routes/api/meta.signup.start'
 import { Route as ApiPublicHooksActivationRemindersRouteImport } from './routes/api/public/hooks/activation-reminders'
 import { Route as ApiPublicHooksAnomalyScanRouteImport } from './routes/api/public/hooks/anomaly-scan'
+import { Route as ApiPublicHooksCampaignLifecycleRouteImport } from './routes/api/public/hooks/campaign-lifecycle'
 import { Route as ApiPublicHooksDailyReportRouteImport } from './routes/api/public/hooks/daily-report'
 import { Route as ApiPublicHooksFreePlanExpiryRouteImport } from './routes/api/public/hooks/free-plan-expiry'
 import { Route as ApiPublicHooksNewSignupRouteImport } from './routes/api/public/hooks/new-signup'
@@ -422,6 +423,12 @@ const ApiPublicHooksAnomalyScanRoute =
     path: '/api/public/hooks/anomaly-scan',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksCampaignLifecycleRoute =
+  ApiPublicHooksCampaignLifecycleRouteImport.update({
+    id: '/api/public/hooks/campaign-lifecycle',
+    path: '/api/public/hooks/campaign-lifecycle',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksDailyReportRoute =
   ApiPublicHooksDailyReportRouteImport.update({
     id: '/api/public/hooks/daily-report',
@@ -568,6 +575,7 @@ export interface FileRoutesByFullPath {
   '/api/meta/signup/start': typeof ApiMetaSignupStartRoute
   '/api/public/hooks/activation-reminders': typeof ApiPublicHooksActivationRemindersRoute
   '/api/public/hooks/anomaly-scan': typeof ApiPublicHooksAnomalyScanRoute
+  '/api/public/hooks/campaign-lifecycle': typeof ApiPublicHooksCampaignLifecycleRoute
   '/api/public/hooks/daily-report': typeof ApiPublicHooksDailyReportRoute
   '/api/public/hooks/free-plan-expiry': typeof ApiPublicHooksFreePlanExpiryRoute
   '/api/public/hooks/new-signup': typeof ApiPublicHooksNewSignupRoute
@@ -648,6 +656,7 @@ export interface FileRoutesByTo {
   '/api/meta/signup/start': typeof ApiMetaSignupStartRoute
   '/api/public/hooks/activation-reminders': typeof ApiPublicHooksActivationRemindersRoute
   '/api/public/hooks/anomaly-scan': typeof ApiPublicHooksAnomalyScanRoute
+  '/api/public/hooks/campaign-lifecycle': typeof ApiPublicHooksCampaignLifecycleRoute
   '/api/public/hooks/daily-report': typeof ApiPublicHooksDailyReportRoute
   '/api/public/hooks/free-plan-expiry': typeof ApiPublicHooksFreePlanExpiryRoute
   '/api/public/hooks/new-signup': typeof ApiPublicHooksNewSignupRoute
@@ -730,6 +739,7 @@ export interface FileRoutesById {
   '/api/meta/signup/start': typeof ApiMetaSignupStartRoute
   '/api/public/hooks/activation-reminders': typeof ApiPublicHooksActivationRemindersRoute
   '/api/public/hooks/anomaly-scan': typeof ApiPublicHooksAnomalyScanRoute
+  '/api/public/hooks/campaign-lifecycle': typeof ApiPublicHooksCampaignLifecycleRoute
   '/api/public/hooks/daily-report': typeof ApiPublicHooksDailyReportRoute
   '/api/public/hooks/free-plan-expiry': typeof ApiPublicHooksFreePlanExpiryRoute
   '/api/public/hooks/new-signup': typeof ApiPublicHooksNewSignupRoute
@@ -812,6 +822,7 @@ export interface FileRouteTypes {
     | '/api/meta/signup/start'
     | '/api/public/hooks/activation-reminders'
     | '/api/public/hooks/anomaly-scan'
+    | '/api/public/hooks/campaign-lifecycle'
     | '/api/public/hooks/daily-report'
     | '/api/public/hooks/free-plan-expiry'
     | '/api/public/hooks/new-signup'
@@ -892,6 +903,7 @@ export interface FileRouteTypes {
     | '/api/meta/signup/start'
     | '/api/public/hooks/activation-reminders'
     | '/api/public/hooks/anomaly-scan'
+    | '/api/public/hooks/campaign-lifecycle'
     | '/api/public/hooks/daily-report'
     | '/api/public/hooks/free-plan-expiry'
     | '/api/public/hooks/new-signup'
@@ -973,6 +985,7 @@ export interface FileRouteTypes {
     | '/api/meta/signup/start'
     | '/api/public/hooks/activation-reminders'
     | '/api/public/hooks/anomaly-scan'
+    | '/api/public/hooks/campaign-lifecycle'
     | '/api/public/hooks/daily-report'
     | '/api/public/hooks/free-plan-expiry'
     | '/api/public/hooks/new-signup'
@@ -1031,6 +1044,7 @@ export interface RootRouteChildren {
   ApiMetaSignupStartRoute: typeof ApiMetaSignupStartRoute
   ApiPublicHooksActivationRemindersRoute: typeof ApiPublicHooksActivationRemindersRoute
   ApiPublicHooksAnomalyScanRoute: typeof ApiPublicHooksAnomalyScanRoute
+  ApiPublicHooksCampaignLifecycleRoute: typeof ApiPublicHooksCampaignLifecycleRoute
   ApiPublicHooksDailyReportRoute: typeof ApiPublicHooksDailyReportRoute
   ApiPublicHooksFreePlanExpiryRoute: typeof ApiPublicHooksFreePlanExpiryRoute
   ApiPublicHooksNewSignupRoute: typeof ApiPublicHooksNewSignupRoute
@@ -1504,6 +1518,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksAnomalyScanRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/campaign-lifecycle': {
+      id: '/api/public/hooks/campaign-lifecycle'
+      path: '/api/public/hooks/campaign-lifecycle'
+      fullPath: '/api/public/hooks/campaign-lifecycle'
+      preLoaderRoute: typeof ApiPublicHooksCampaignLifecycleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/daily-report': {
       id: '/api/public/hooks/daily-report'
       path: '/api/public/hooks/daily-report'
@@ -1722,6 +1743,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksActivationRemindersRoute:
     ApiPublicHooksActivationRemindersRoute,
   ApiPublicHooksAnomalyScanRoute: ApiPublicHooksAnomalyScanRoute,
+  ApiPublicHooksCampaignLifecycleRoute: ApiPublicHooksCampaignLifecycleRoute,
   ApiPublicHooksDailyReportRoute: ApiPublicHooksDailyReportRoute,
   ApiPublicHooksFreePlanExpiryRoute: ApiPublicHooksFreePlanExpiryRoute,
   ApiPublicHooksNewSignupRoute: ApiPublicHooksNewSignupRoute,
