@@ -155,13 +155,10 @@ export async function syncMetaLeadsForUser(
                 ]
                   .filter(Boolean)
                   .join("\n");
-                const { notifyOwner, WA_TEMPLATES } = await import("./wa-notify.server");
+                const { notifyOwner } = await import("./wa-notify.server");
                 await notifyOwner(supabaseAdmin, userId, {
                   text: lines,
-                  template: {
-                    name: WA_TEMPLATES.leadNew,
-                    params: [campaignName || "ta", mapped.full_name || "—", mapped.phone || mapped.email || "—"],
-                  },
+                  holdIfClosed: true,
                   kind: "lead_notify",
                 });
               }

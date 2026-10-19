@@ -2,26 +2,17 @@
  * Trimiterea notificărilor către patron pe WhatsApp, prin numărul central AdPilot.
  *
  * WhatsApp livrează mesaje libere doar în 24 de ore de la ultimul mesaj scris de om.
- * În afara ferestrei, trimitem template-ul aprobat (dacă notificarea are unul) sau nimic —
- * un mesaj liber ar fi acceptat de API, dar nu ar ajunge niciodată.
+ * Nu folosim template-uri: în afara ferestrei, mesajele importante se păstrează și pleacă
+ * imediat ce patronul scrie ceva; reamintirile din wa-keepalive țin fereastra deschisă.
  * Notificările de rutină respectă orele de liniște (21:00–09:00, ora României).
  */
-import { getCentralWhatsApp, sendWhatsAppMessage, sendWhatsAppTemplate } from "./whatsapp.server";
+import { getCentralWhatsApp, sendWhatsAppMessage } from "./whatsapp.server";
 
 const WINDOW_MS = 23.5 * 60 * 60 * 1000;
 
-/** Template-uri Utility (WhatsApp Manager), în română. Corpul exact e în comentariu. */
-export const WA_TEMPLATES = {
-  /** „🎯 Ai un client nou din campania {{1}}: {{2}}, {{3}}. Apasă „Vezi detaliile” ca să-ți trimit răspunsurile lui.” + buton rapid „Vezi detaliile” */
-  leadNew: "lead_nou",
-  /** „✅ Reclama ta „{{1}}” a fost aprobată de {{2}} și a început să ruleze.” */
-  adLive: "reclama_live",
-  /** „⚠️ {{2}} a respins reclama „{{1}}”. Scrie-mi aici și o refacem împreună.” */
-  adRejected: "reclama_respinsa",
-} as const;
-
 export type NotifyResult =
-  | { sent: "text" | "template"; id: string }
+  | { sent: "text"; id: string }
+  | { held: true }
   | { skipped: "no_whatsapp" | "quiet_hours" | "outside_window" }
   | { error: string };
 
@@ -98,8 +89,8 @@ export async function notifyOwner(
   userId: string,
   msg: {
     text: string;
-    /** Template folosit în afara ferestrei de 24h; fără el, mesajul se sare. */
-    template?: { name: string; params: string[] };
+    /** true = important (lead, aprobare, respingere): dacă fereastra e închisă, îl păstrăm până scrie. */
+    holdIfClosed?: boolean;
     /** true = rutină (rapoarte): nu trimite între 21:00 și 09:00. */
     respectQuietHours?: boolean;
     kind: string;
@@ -118,45 +109,33 @@ export async function notifyOwner(
 
   const last = await lastInboundAt(supabaseAdmin, userId);
   const inWindow = last !== null && Date.now() - last < WINDOW_MS;
+  if (!inWindow) {
+    // Fără template-uri: mesajul așteaptă până patronul scrie ceva (vezi flushPendingNotifications).
+    if (!msg.holdIfClosed) return { skipped: "outside_window" };
+    await supabaseAdmin.from("wa_pending_notifications").insert({ user_id: userId, kind: msg.kind, text: msg.text });
+    return { held: true };
+  }
   try {
-    let id: string;
-    let sent: "text" | "template";
-    let logged: string;
-    if (inWindow) {
-      ({ id } = await sendWhatsAppMessage(central.phoneNumberId, central.accessToken, phone, {
-        type: "text",
-        text: msg.text,
-      }));
-      sent = "text";
-      logged = msg.text;
-    } else if (msg.template) {
-      ({ id } = await sendWhatsAppTemplate(
-        central.phoneNumberId,
-        central.accessToken,
-        phone,
-        msg.template.name,
-        "ro",
-        msg.template.params,
-      ));
-      sent = "template";
-      logged = `[template ${msg.template.name}] ${msg.template.params.join(" · ")}`;
-      // Mesajul complet (cu toate răspunsurile) pleacă de îndată ce patronul răspunde.
-      await supabaseAdmin.from("wa_pending_notifications").insert({ user_id: userId, kind: msg.kind, text: msg.text });
-    } else {
-      return { skipped: "outside_window" };
-    }
+    const { id } = await sendWhatsAppMessage(central.phoneNumberId, central.accessToken, phone, {
+      type: "text",
+      text: msg.text,
+    });
     await supabaseAdmin.from("whatsapp_messages").insert({
       user_id: userId,
       connection_id: wa.id,
       wa_message_id: id,
       direction: "out",
-      msg_type: sent === "text" ? "text" : "template",
-      text: logged,
+      msg_type: "text",
+      text: msg.text,
       meta: { kind: msg.kind },
     });
-    return { sent, id };
+    return { sent: "text", id };
   } catch (e) {
     console.error(`[wa-notify] ${msg.kind} failed`, (e as Error).message);
+    if (msg.holdIfClosed) {
+      await supabaseAdmin.from("wa_pending_notifications").insert({ user_id: userId, kind: msg.kind, text: msg.text });
+      return { held: true };
+    }
     return { error: (e as Error).message };
   }
 }

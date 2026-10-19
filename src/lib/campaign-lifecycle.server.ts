@@ -4,7 +4,7 @@
  * dar nu rulează (de obicei lipsește cardul la Facebook). Rulează din cron la ~10 minute.
  */
 import { metaApiVersion } from "./meta.server";
-import { notifyOwner, WA_TEMPLATES } from "./wa-notify.server";
+import { notifyOwner } from "./wa-notify.server";
 
 const GRAPH = "https://graph.facebook.com";
 const WATCH_DAYS = 14;
@@ -73,10 +73,10 @@ export async function runCampaignLifecycle(): Promise<{ checked: number; notifie
         update.review_reason = reason;
         const r = await notifyOwner(supabaseAdmin, c.user_id, {
           text: `⚠️ Facebook a respins reclama *${c.name}*.${reason ? `\n\nMotivul dat de Facebook: _${reason}_` : ""}\n\nScrie-mi aici și o refacem împreună, cu un text care trece de verificare.`,
-          template: { name: WA_TEMPLATES.adRejected, params: [c.name, "Facebook"] },
+          holdIfClosed: true,
           kind: "ad_rejected",
         });
-        if ("sent" in r) {
+        if ("sent" in r || "held" in r) {
           update.rejected_notified_at = new Date().toISOString();
           notified++;
         }
@@ -89,10 +89,10 @@ export async function runCampaignLifecycle(): Promise<{ checked: number; notifie
           update.review_state = "delivering";
           const r = await notifyOwner(supabaseAdmin, c.user_id, {
             text: `✅ Facebook a aprobat reclama *${c.name}* și a început să ruleze (${impressions} afișări până acum).\n\nÎți scriu imediat ce vine primul client.`,
-            template: { name: WA_TEMPLATES.adLive, params: [c.name, "Facebook"] },
+            holdIfClosed: true,
             kind: "ad_live",
           });
-          if ("sent" in r) {
+          if ("sent" in r || "held" in r) {
             update.live_notified_at = new Date().toISOString();
             notified++;
           }
@@ -110,8 +110,8 @@ export async function runCampaignLifecycle(): Promise<{ checked: number; notifie
             const text = hasCard
               ? `ℹ️ Reclama *${c.name}* e aprobată, dar Facebook încă n-a început s-o afișeze. Uneori durează câteva ore; dacă vrei, mă uit împreună cu tine la buget și public.`
               : `ℹ️ Reclama *${c.name}* e aprobată, dar nu rulează pentru că lipsește cardul în contul de reclame Facebook. Adaugă-l aici și pornește singură:\nhttps://business.facebook.com/ads/manager/account_settings/account_billing/?act=${accountId}`;
-            const r = await notifyOwner(supabaseAdmin, c.user_id, { text, kind: "ad_stalled" });
-            if ("sent" in r) {
+            const r = await notifyOwner(supabaseAdmin, c.user_id, { text, holdIfClosed: true, kind: "ad_stalled" });
+            if ("sent" in r || "held" in r) {
               update.stalled_notified_at = new Date().toISOString();
               notified++;
             }

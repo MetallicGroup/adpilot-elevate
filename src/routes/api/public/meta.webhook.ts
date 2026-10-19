@@ -127,13 +127,10 @@ export const Route = createFileRoute("/api/public/meta/webhook")({
                   "",
                   "Scrie *lead-uri* să vezi ultimele sau întreabă-mă orice 🚀",
                 ].filter(Boolean).join("\n");
-                const { notifyOwner, WA_TEMPLATES } = await import("@/lib/wa-notify.server");
+                const { notifyOwner } = await import("@/lib/wa-notify.server");
                 await notifyOwner(supabaseAdmin, page.user_id, {
                   text: lines,
-                  template: {
-                    name: WA_TEMPLATES.leadNew,
-                    params: [campName || "ta", mapped.full_name || "—", mapped.phone || mapped.email || "—"],
-                  },
+                  holdIfClosed: true,
                   kind: "lead_notify",
                 });
               } catch (e) {

@@ -239,10 +239,10 @@ export async function submitBookingCore(supabaseAdmin: any, input: SubmitInput) 
     const text = needsSlot
       ? `📅 Programare nouă${tier === "hot" ? " 🔥" : ""}\n\n${input.full_name} — ${input.phone}\n${service?.name ?? page.service}\n${when}${extras ? `\n\n${extras}` : ""}\n\nScor calificare: ${score}/100 (${tier})`
       : `📝 Client nou${(attribution as any).ttclid ? " din TikTok" : ""}${tier === "hot" ? " 🔥" : ""}\n\n${input.full_name} — ${input.phone}\n${service?.name ?? page.service}${extras ? `\n\n${extras}` : ""}\n\nSună-l cât mai repede.`;
-    const { notifyOwner, WA_TEMPLATES } = await import("@/lib/wa-notify.server");
+    const { notifyOwner } = await import("@/lib/wa-notify.server");
     await notifyOwner(supabaseAdmin, page.user_id, {
       text,
-      template: { name: WA_TEMPLATES.leadNew, params: [page.service || "ta", input.full_name, input.phone] },
+      holdIfClosed: true,
       kind: needsSlot ? "booking_notify" : "lead_notify",
     });
   } catch (e) {

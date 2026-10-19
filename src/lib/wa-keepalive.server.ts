@@ -1,32 +1,37 @@
 /**
- * Keep the WhatsApp 24h customer service window open.
+ * Ține deschisă fereastra WhatsApp de 24h (nu folosim template-uri).
  *
- * Meta's rules let us reply freely for 24h after the client's last inbound
- * message. If the client goes silent and the window is about to close, we
- * proactively ask for feedback about the ad / the app — this both keeps the
- * conversation open (no template needed) and gathers useful signal.
- *
- * Run this hourly. It picks users whose last inbound is between ~22h and
- * ~23h40m old, and where we haven't already sent them a keep-alive nudge
- * after that inbound.
+ * WhatsApp ne lasă să scriem liber doar 24h după ultimul mesaj al omului. Când tace,
+ * îi trimitem o reamintire după 8h și încă una după 20h (max. 2 pe perioadă de tăcere),
+ * ca să răspundă și să primească în continuare clienții noi și alertele pe loc.
+ * Rulează la fiecare oră. Nu scrie noaptea (21:00–09:00, ora României).
  */
 import { getCentralWhatsApp, sendWhatsAppMessage } from "./whatsapp.server";
+import { isQuietHours } from "./wa-notify.server";
 
 const NUDGES = [
-  "Salut! 👋 Vroiam să te întreb — ce părere ai despre reclama pe care ți-am pornit-o? A adus clienți așa cum te așteptai?",
-  "Bună! 🙂 Cum ți se pare AdPilot până acum? E ceva ce ți-ar plăcea să funcționeze diferit?",
-  "Hei! Vreo idee sau feedback despre reclamele tale? Orice sugestie ne ajută să facem treaba mai bună pentru tine. 🙌",
-  "Salut! Vrei să dăm un mic upgrade la reclamă (text nou, poză nouă, alt oraș)? Zi-mi doar ce ai vrea diferit.",
+  "👋 Sunt aici dacă ai nevoie de ceva. Scrie-mi orice, chiar și un „ok”, ca să-ți pot trimite pe loc clienții noi și rezultatele reclamelor.",
+  "Ca să-ți trimit imediat fiecare client nou, WhatsApp îmi cere să-mi scrii măcar o dată pe zi. Un simplu „👍” e suficient.",
+  "Vrei să vezi cum merg reclamele azi? Scrie „raport” și îți trimit cifrele pe loc. 📊",
+  "Ai vorbit deja cu clienții veniți din reclame? Spune-mi cum a mers — mă ajută să-ți îmbunătățesc reclama.",
+  "Mă uit în continuare la reclamele tale. Răspunde-mi cu orice ca să rămâi conectat la notificări: clienți noi, aprobări, alerte.",
+  "Întrebare rapidă: vrei să schimbăm ceva la reclamă — textul, poza sau bugetul? Scrie-mi și mă ocup.",
 ];
 
-function pickNudge() {
-  return NUDGES[Math.floor(Math.random() * NUDGES.length)];
+const FIRST_NUDGE_MS = 8 * 60 * 60 * 1000;
+const SECOND_NUDGE_MS = 20 * 60 * 60 * 1000;
+const WINDOW_END_MS = 23.5 * 60 * 60 * 1000;
+
+/** Altă variantă decât ultima trimisă acestui om. */
+function pickNudge(lastText: string | null): string {
+  const pool = NUDGES.filter((n) => n !== lastText);
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 export async function runWhatsAppKeepalive(): Promise<{ sent: number; skipped: number; errors: number }> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const central = getCentralWhatsApp();
-  if (!central) return { sent: 0, skipped: 0, errors: 0 };
+  if (!central || isQuietHours()) return { sent: 0, skipped: 0, errors: 0 };
 
   const { data: conns } = await supabaseAdmin
     .from("whatsapp_connections")
@@ -37,19 +42,15 @@ export async function runWhatsAppKeepalive(): Promise<{ sent: number; skipped: n
   if (!conns?.length) return { sent: 0, skipped: 0, errors: 0 };
 
   const now = Date.now();
-  const MIN_AGE_MS = 22 * 60 * 60 * 1000; // 22h
-  const MAX_AGE_MS = 23 * 60 * 60 * 1000 + 40 * 60 * 1000; // 23h40m
-
   let sent = 0;
   let skipped = 0;
   let errors = 0;
 
   for (const conn of conns) {
     try {
-      // Latest inbound
       const { data: lastIn } = await supabaseAdmin
         .from("whatsapp_messages")
-        .select("id, created_at")
+        .select("created_at")
         .eq("user_id", conn.user_id)
         .eq("direction", "in")
         .order("created_at", { ascending: false })
@@ -59,40 +60,49 @@ export async function runWhatsAppKeepalive(): Promise<{ sent: number; skipped: n
         skipped++;
         continue;
       }
-      const age = now - new Date(lastIn.created_at).getTime();
-      if (age < MIN_AGE_MS || age > MAX_AGE_MS) {
+      const silentFor = now - new Date(lastIn.created_at).getTime();
+      if (silentFor < FIRST_NUDGE_MS || silentFor > WINDOW_END_MS) {
         skipped++;
         continue;
       }
 
-      // Skip if we already sent a keep-alive after this inbound
-      const { data: existingNudge } = await supabaseAdmin
+      // Câte reamintiri am trimis de la ultimul lui mesaj (max. 2: la 8h și la 20h).
+      const { data: nudges } = await supabaseAdmin
         .from("whatsapp_messages")
-        .select("id")
+        .select("text, created_at")
         .eq("user_id", conn.user_id)
         .eq("direction", "out")
         .gt("created_at", lastIn.created_at)
         .contains("meta", { kind: "keepalive" })
-        .limit(1)
-        .maybeSingle();
-      if (existingNudge) {
+        .order("created_at", { ascending: false });
+      const count = nudges?.length ?? 0;
+      const due = count === 0 || (count === 1 && silentFor >= SECOND_NUDGE_MS);
+      if (!due) {
         skipped++;
         continue;
       }
+
+      // Ultima variantă trimisă vreodată, ca să n-o repetăm.
+      const { data: prev } = await supabaseAdmin
+        .from("whatsapp_messages")
+        .select("text")
+        .eq("user_id", conn.user_id)
+        .eq("direction", "out")
+        .contains("meta", { kind: "keepalive" })
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
       const phone = conn.user_phone!.replace(/\D/g, "");
       if (!phone) {
         skipped++;
         continue;
       }
-
-      const text = pickNudge();
-      const { id } = await sendWhatsAppMessage(
-        central.phoneNumberId,
-        central.accessToken,
-        phone,
-        { type: "text", text },
-      );
+      const text = pickNudge(prev?.text ?? null);
+      const { id } = await sendWhatsAppMessage(central.phoneNumberId, central.accessToken, phone, {
+        type: "text",
+        text,
+      });
       await supabaseAdmin.from("whatsapp_messages").insert({
         user_id: conn.user_id,
         connection_id: conn.id,
