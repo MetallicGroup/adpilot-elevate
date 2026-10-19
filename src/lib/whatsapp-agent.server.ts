@@ -924,7 +924,7 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
 
     create_tiktok_campaign: tool({
       description:
-        "Creează și lansează o campanie TikTok de clienți potențiali (o singură reclamă). Destinația e o pagină AdPilot cu formular, creată automat, cu pixel TikTok. Necesită contul TikTok conectat în Setări și un VIDEO vertical trimis de user (latestMedia). Confirmă cu userul ÎNAINTE (oraș/județ, vârstă, buget, textul reclamei).",
+        "Creează și lansează o campanie TikTok de clienți potențiali (o singură reclamă). Destinația e o pagină AdPilot cu formular, creată automat, cu pixel TikTok. Necesită contul TikTok conectat în Setări și un video vertical SAU o poză (latestMedia; din poză facem o reclamă carusel cu muzică — video-ul merge de obicei mai bine pe TikTok). Confirmă cu userul ÎNAINTE (oraș/județ, vârstă, buget, textul reclamei).",
       inputSchema: z.object({
         name: z.string().min(2).max(120).describe("Numele campaniei"),
         business_name: z.string().min(2).max(80),
@@ -949,10 +949,13 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
               "Contul TikTok nu e conectat. Spune-i userului să intre în AdPilot → Setări → Integrări → Conectează contul TikTok.",
           };
         }
-        if (!ctx.latestMedia || !ctx.latestMedia.mime.toLowerCase().startsWith("video/")) {
+        const mime = ctx.latestMedia?.mime.toLowerCase() ?? "";
+        const isVideo = mime.startsWith("video/");
+        const isImage = mime.startsWith("image/");
+        if (!ctx.latestMedia || (!isVideo && !isImage)) {
           return {
             error:
-              "TikTok cere un video vertical (9:16). Cere-i userului să trimită un clip pe WhatsApp; o poză nu ajunge pentru TikTok.",
+              "Pentru TikTok am nevoie de un video vertical sau de o poză. Cere-i userului să trimită una pe WhatsApp (sau generează o poză cu AI).",
           };
         }
 
@@ -985,14 +988,25 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
           const { data: signed } = await supabaseAdmin.storage
             .from("wa-media")
             .createSignedUrl(ctx.latestMedia.path, 60 * 60);
-          const videoUrl = signed?.signedUrl ?? ctx.latestMedia.signedUrl;
-          const videoId = await tt.uploadVideoByUrl(tctx, videoUrl, args.name);
-          const coverImageId = await tt.suggestVideoCover(tctx, videoId, 12);
-          if (!coverImageId) {
-            return {
-              error:
-                "TikTok încă procesează clipul. Spune-i userului că mai încercăm peste un minut (apelează din nou tool-ul cu aceleași date).",
-            };
+          const mediaUrl = signed?.signedUrl ?? ctx.latestMedia.signedUrl;
+          let creative:
+            | { kind: "video"; videoId: string; coverImageId: string }
+            | { kind: "carousel"; imageIds: string[]; musicId?: string };
+          let videoId: string | null = null;
+          if (isVideo) {
+            videoId = await tt.uploadVideoByUrl(tctx, mediaUrl, args.name);
+            const coverImageId = await tt.suggestVideoCover(tctx, videoId, 12);
+            if (!coverImageId) {
+              return {
+                error:
+                  "TikTok încă procesează clipul. Spune-i userului că mai încercăm peste un minut (apelează din nou tool-ul cu aceleași date).",
+              };
+            }
+            creative = { kind: "video", videoId, coverImageId };
+          } else {
+            const up = await tt.uploadCarouselImages(tctx, [mediaUrl], args.name);
+            const musicId = await tt.pickCarouselMusic(tctx, up.tiktokUrls);
+            creative = { kind: "carousel", imageIds: up.ids, ...(musicId ? { musicId } : {}) };
           }
           const callToActionId = await tt.createCtaPortfolio(tctx);
 
@@ -1005,7 +1019,7 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
             locationIds: tt.tiktokLocationIds(args.cities),
             ageGroups: tt.tiktokAgeGroups(args.age_min, args.age_max),
             adText: args.ad_text,
-            creative: { kind: "video", videoId, coverImageId },
+            creative,
             identity,
             callToActionId,
             status: "ENABLE",
@@ -1029,7 +1043,13 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
               booking_campaign_id: page.id,
               pixel_id: pixel.pixelId,
               targeting: { cities: args.cities ?? [], age_min: args.age_min, age_max: args.age_max },
-              creative: { ad_text: args.ad_text, video_id: videoId, media_path: ctx.latestMedia.path, landing_url: landingUrl },
+              creative: {
+                ad_text: args.ad_text,
+                format: creative.kind,
+                video_id: videoId,
+                media_path: ctx.latestMedia.path,
+                landing_url: landingUrl,
+              },
             })
             .select("id")
             .single();

@@ -601,3 +601,55 @@ export async function getTikTokAdReviewStatus(ctx: TikTokAdContext, campaignId: 
     return null;
   }
 }
+
+/**
+ * Muzică pentru reclame carusel (obligatorie la CAROUSEL_ADS). Cu ≥2 imagini cerem recomandări
+ * potrivite imaginilor; altfel căutăm după cuvânt cheie. Întoarce music_id sau null.
+ */
+export async function pickCarouselMusic(ctx: TikTokAdContext, imageUrls: string[]) {
+  const attempts: Array<Record<string, unknown>> = [];
+  if (imageUrls.length >= 2) {
+    attempts.push({ search_type: "SEARCH_BY_RECOMMEND", filtering: { image_urls: imageUrls.slice(0, 35) } });
+  }
+  attempts.push({ search_type: "SEARCH_BY_KEYWORD", filtering: { keyword: "upbeat" } });
+  for (const a of attempts) {
+    try {
+      const data = await ttRequest<{ musics?: Array<{ music_id: string }> }>(
+        ctx.token,
+        "GET",
+        "/file/music/get/",
+        { advertiser_id: ctx.advertiserId, music_scene: "CAROUSEL_ADS", page_size: 10, ...a },
+        "muzică",
+      );
+      const m = data.musics?.[0];
+      if (m?.music_id) return String(m.music_id);
+    } catch {
+      /* încercăm varianta următoare */
+    }
+  }
+  return null;
+}
+
+/** Încarcă poze pentru carusel; întoarce image_id-urile și URL-urile TikTok (pentru recomandarea de muzică). */
+export async function uploadCarouselImages(ctx: TikTokAdContext, imageUrls: string[], baseName: string) {
+  const ids: string[] = [];
+  const tiktokUrls: string[] = [];
+  for (const [i, url] of imageUrls.slice(0, 35).entries()) {
+    const data = await ttRequest<any>(
+      ctx.token,
+      "POST",
+      "/file/image/ad/upload/",
+      {
+        advertiser_id: ctx.advertiserId,
+        upload_type: "UPLOAD_BY_URL",
+        image_url: url,
+        file_name: `${baseName.slice(0, 60)}-${i}-${Date.now()}`,
+      },
+      "încărcare imagine",
+    );
+    if (!data?.image_id) throw new TikTokApiError("TikTok nu a întors image_id.", -1, "încărcare imagine");
+    ids.push(String(data.image_id));
+    if (data.image_url) tiktokUrls.push(String(data.image_url));
+  }
+  return { ids, tiktokUrls };
+}
