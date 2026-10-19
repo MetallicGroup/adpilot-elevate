@@ -40,7 +40,7 @@ export function scoreBooking(args: {
 export async function submitBookingCore(supabaseAdmin: any, input: SubmitInput) {
   const { data: page } = await supabaseAdmin
     .from("booking_campaigns")
-    .select("id, user_id, business_id, service, slug, pixel_id, campaign_id, meta_campaign_id, objective")
+    .select("id, user_id, business_id, service, slug, pixel_id, tiktok_pixel_code, campaign_id, meta_campaign_id, objective")
     .eq("slug", input.slug)
     .eq("status", "published")
     .maybeSingle();
@@ -113,7 +113,7 @@ export async function submitBookingCore(supabaseAdmin: any, input: SubmitInput) 
     questions: (questions ?? []).map((q: any) => ({ key: q.key, required: !!q.required })),
     price: service?.price ?? null,
     hasEmail: !!input.email,
-    fromAd: !!(attribution as any).fbclid || !!(attribution as any).ad_id,
+    fromAd: !!(attribution as any).fbclid || !!(attribution as any).ttclid || !!(attribution as any).ad_id,
   });
 
   const eventId = `bk_${crypto.randomUUID()}`;
@@ -149,7 +149,7 @@ export async function submitBookingCore(supabaseAdmin: any, input: SubmitInput) 
       .from("leads")
       .insert({
         user_id: page.user_id,
-        platform: "meta",
+        platform: (attribution as any).ttclid ? "tiktok" : "meta",
         campaign_id: page.campaign_id ?? null,
         external_lead_id: `booking_${booking.id}`,
         external_ad_id: (attribution as any).ad_id ?? null,
@@ -209,6 +209,23 @@ export async function submitBookingCore(supabaseAdmin: any, input: SubmitInput) 
     }
   }
 
+  // TikTok Events API — Lead pe pixelul campaniei TikTok (deduplicat cu ttq prin event_id)
+  if (page.tiktok_pixel_code) {
+    try {
+      const { sendClientTikTokFormEvent } = await import("@/lib/tiktok-ads.server");
+      await sendClientTikTokFormEvent(supabaseAdmin, page.user_id, page.tiktok_pixel_code, {
+        eventId,
+        url: (attribution as any).landing_url ?? null,
+        phone: input.phone,
+        email: input.email ?? null,
+        ttclid: (attribution as any).ttclid ?? null,
+        ttp: (attribution as any).ttp ?? null,
+      });
+    } catch (e) {
+      console.error("[booking] TikTok event failed", e);
+    }
+  }
+
   // Notificare WhatsApp către proprietar
   try {
     const { data: wa } = await supabaseAdmin
@@ -216,8 +233,8 @@ export async function submitBookingCore(supabaseAdmin: any, input: SubmitInput) 
       .select("user_phone, status")
       .eq("user_id", page.user_id)
       .maybeSingle();
-    if (wa?.user_phone && wa.status === "connected") {
-      const when = start.toLocaleString("ro-RO", { dateStyle: "full", timeStyle: "short" });
+    if (wa?.user_phone && (wa.status === "active" || wa.status === "connected")) {
+      const when = start.toLocaleString("ro-RO", { dateStyle: "full", timeStyle: "short", timeZone: "Europe/Bucharest" });
       const extras = (questions ?? [])
         .map((q: any) => {
           const v = input.answers[q.key];
@@ -228,7 +245,9 @@ export async function submitBookingCore(supabaseAdmin: any, input: SubmitInput) 
         .join("\n");
       await sendWhatsAppMessage(
         wa.user_phone,
-        `📅 Programare nouă${tier === "hot" ? " 🔥" : ""}\n\n${input.full_name} — ${input.phone}\n${service?.name ?? page.service}\n${when}${extras ? `\n\n${extras}` : ""}\n\nScor calificare: ${score}/100 (${tier})`,
+        needsSlot
+          ? `📅 Programare nouă${tier === "hot" ? " 🔥" : ""}\n\n${input.full_name} — ${input.phone}\n${service?.name ?? page.service}\n${when}${extras ? `\n\n${extras}` : ""}\n\nScor calificare: ${score}/100 (${tier})`
+          : `📝 Client nou${(attribution as any).ttclid ? " din TikTok" : ""}${tier === "hot" ? " 🔥" : ""}\n\n${input.full_name} — ${input.phone}\n${service?.name ?? page.service}${extras ? `\n\n${extras}` : ""}\n\nSună-l cât mai repede.`,
       );
     }
   } catch (e) {

@@ -215,6 +215,8 @@ export type Database = {
           objective: string
           offer: string | null
           pixel_id: string | null
+          tiktok_pixel_code: string | null
+          tiktok_pixel_id: string | null
           service: string
           slug: string
           status: string
@@ -235,6 +237,8 @@ export type Database = {
           objective?: string
           offer?: string | null
           pixel_id?: string | null
+          tiktok_pixel_code?: string | null
+          tiktok_pixel_id?: string | null
           service: string
           slug: string
           status?: string
@@ -255,6 +259,8 @@ export type Database = {
           objective?: string
           offer?: string | null
           pixel_id?: string | null
+          tiktok_pixel_code?: string | null
+          tiktok_pixel_id?: string | null
           service?: string
           slug?: string
           status?: string

@@ -877,6 +877,141 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
       },
     }),
 
+    create_tiktok_campaign: tool({
+      description:
+        "Creează și lansează o campanie TikTok de clienți potențiali (o singură reclamă). Destinația e o pagină AdPilot cu formular, creată automat, cu pixel TikTok. Necesită contul TikTok conectat în Setări și un VIDEO vertical trimis de user (latestMedia). Confirmă cu userul ÎNAINTE (oraș/județ, vârstă, buget, textul reclamei).",
+      inputSchema: z.object({
+        name: z.string().min(2).max(120).describe("Numele campaniei"),
+        business_name: z.string().min(2).max(80),
+        service: z.string().min(2).max(120).describe("Ce serviciu/ofertă promovează"),
+        offer: z.string().max(200).nullable().default(null),
+        cities: z
+          .array(z.string().max(60))
+          .max(10)
+          .optional()
+          .describe("Orașe sau județe din România (ex. ['Cluj', 'București']). Gol = toată țara."),
+        age_min: z.number().int().min(18).max(65).default(18),
+        age_max: z.number().int().min(18).max(65).default(65),
+        daily_budget: z.number().min(50).max(1000).describe("Buget zilnic în lei; TikTok cere minimum 50."),
+        ad_text: z.string().min(5).max(100).describe("Textul reclamei, max 100 de caractere, fără emoji excesive."),
+      }),
+      execute: async (args) => {
+        const tt = await import("@/lib/tiktok-ads.server");
+        const tctx = await tt.getTikTokAdContext(supabaseAdmin, ctx.userId);
+        if (!tctx) {
+          return {
+            error:
+              "Contul TikTok nu e conectat. Spune-i userului să intre în AdPilot → Setări → Integrări → Conectează contul TikTok.",
+          };
+        }
+        if (!ctx.latestMedia || !ctx.latestMedia.mime.toLowerCase().startsWith("video/")) {
+          return {
+            error:
+              "TikTok cere un video vertical (9:16). Cere-i userului să trimită un clip pe WhatsApp; o poză nu ajunge pentru TikTok.",
+          };
+        }
+
+        let campaignId: string | null = null;
+        try {
+          const identity = await tt.getPushIdentity(tctx);
+          if (!identity) {
+            return {
+              error:
+                "Contul de reclame TikTok nu are legat un cont TikTok de pe care să ruleze reclama. Userul trebuie să-și lege contul TikTok al afacerii în TikTok Ads Manager (Tools → Identities / conturi TikTok), apoi reîncercăm.",
+            };
+          }
+          const pixel = await tt.ensureLeadPixel(tctx);
+
+          const { buildLandingDraftCore, saveLandingCore } = await import("@/lib/goal-setup.server");
+          const draft = await buildLandingDraftCore(ctx.userId, {
+            objective: "leads",
+            business_name: args.business_name,
+            service: args.service,
+            city: args.cities?.[0] ?? null,
+            offer: args.offer,
+            phone: null,
+          });
+          const page = await saveLandingCore(ctx.userId, draft);
+          await supabaseAdmin
+            .from("booking_campaigns")
+            .update({ tiktok_pixel_code: pixel.pixelCode, tiktok_pixel_id: pixel.pixelId })
+            .eq("id", page.id);
+
+          const { data: signed } = await supabaseAdmin.storage
+            .from("wa-media")
+            .createSignedUrl(ctx.latestMedia.path, 60 * 60);
+          const videoUrl = signed?.signedUrl ?? ctx.latestMedia.signedUrl;
+          const videoId = await tt.uploadVideoByUrl(tctx, videoUrl, args.name);
+          const coverImageId = await tt.suggestVideoCover(tctx, videoId, 12);
+          if (!coverImageId) {
+            return {
+              error:
+                "TikTok încă procesează clipul. Spune-i userului că mai încercăm peste un minut (apelează din nou tool-ul cu aceleași date).",
+            };
+          }
+          const callToActionId = await tt.createCtaPortfolio(tctx);
+
+          const landingUrl = `${page.url}?utm_source=tiktok&utm_medium=paid`;
+          const res = await tt.createTikTokLeadCampaign(tctx, {
+            name: args.name,
+            dailyBudget: args.daily_budget,
+            pixelId: pixel.pixelId,
+            landingUrl,
+            locationIds: tt.tiktokLocationIds(args.cities),
+            ageGroups: tt.tiktokAgeGroups(args.age_min, args.age_max),
+            adText: args.ad_text,
+            creative: { kind: "video", videoId, coverImageId },
+            identity,
+            callToActionId,
+            status: "ENABLE",
+          });
+          campaignId = res.campaignId;
+
+          const { data: row } = await supabaseAdmin
+            .from("campaigns")
+            .insert({
+              user_id: ctx.userId,
+              platform: "tiktok",
+              name: args.name,
+              objective: "LEAD_GENERATION",
+              campaign_type: "leads",
+              status: "active",
+              budget: args.daily_budget,
+              budget_mode: "BUDGET_MODE_DYNAMIC_DAILY_BUDGET",
+              tiktok_campaign_id: res.campaignId,
+              tiktok_adgroup_id: res.adgroupId,
+              tiktok_ad_id: res.adId,
+              booking_campaign_id: page.id,
+              pixel_id: pixel.pixelId,
+              targeting: { cities: args.cities ?? [], age_min: args.age_min, age_max: args.age_max },
+              creative: { ad_text: args.ad_text, video_id: videoId, media_path: ctx.latestMedia.path, landing_url: landingUrl },
+            })
+            .select("id")
+            .single();
+          if (row?.id) {
+            await supabaseAdmin.from("booking_campaigns").update({ campaign_id: row.id }).eq("id", page.id);
+          }
+
+          return {
+            ok: true,
+            status: "trimisă spre aprobare la TikTok",
+            identity: identity.name,
+            landing_url: page.url,
+            note: "Reclama pornește singură după ce TikTok o aprobă. Formularul e pe pagina AdPilot; lead-urile intră în AdPilot și îi vin userului pe WhatsApp.",
+          };
+        } catch (e: any) {
+          if (campaignId) {
+            try {
+              await tt.deleteTikTokCampaign(tctx, campaignId);
+            } catch {
+              /* ignore */
+            }
+          }
+          return { error: e?.message ?? "Nu am putut crea campania TikTok." };
+        }
+      },
+    }),
+
     create_landing_page: tool({
       description:
         "Creează o pagină de prezentare AdPilot (landing page) pentru obiectivul ales și returnează link-ul public. Folosește-o când userul vrea programări, clienți potențiali sau apeluri și nu are site.",

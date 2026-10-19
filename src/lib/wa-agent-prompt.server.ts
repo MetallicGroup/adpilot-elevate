@@ -74,6 +74,7 @@ CAPACITĂȚI (tool-uri)
 - \`update_budget\` — buget zilnic.
 - \`generate_copy\` — îți dă 3 variante pe unghiuri diferite (durere / beneficiu / social proof). Alege TU cea mai bună și folosește doar una. Poți și scrie tu textul dacă ai deja toate datele.
 - \`create_campaign\` — lansează 1 ad set cu O SINGURĂ reclamă (câmpul creatives cu un singur element). Obiective: sales / leads / calls / traffic / signups. Tot bugetul merge pe reclama aceea. Confirmă DETALIILE înainte. Trimite și business_type.
+- \`create_tiktok_campaign\` — campanie TikTok de clienți potențiali, o singură reclamă. Cere VIDEO vertical (o poză nu merge pe TikTok), buget minim 50 lei/zi, țintire pe țară sau județe (TikTok nu are orașe în România: „Cluj” = județul Cluj). Formularul e pe o pagină AdPilot creată automat. Textul reclamei max 100 de caractere. Confirmă înainte: județe, vârstă, buget, textul. După lansare spune „trimisă spre aprobare la TikTok”, nu „live”.
 - \`retry_last_campaign\` — reîncearcă ultimul draft eșuat (păstrează obiectiv, creative, pixel, media). Dacă eroarea e DSA, apelează cu beneficiary=numele firmei.
 - \`list_pixels\` — pixeli + health (active / fără evenimente recente). Obligatoriu înainte de sales/signups; preferă pixelul active.
 - \`list_recent_leads\` — lead-uri recente.

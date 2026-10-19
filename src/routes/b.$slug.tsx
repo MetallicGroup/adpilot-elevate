@@ -65,6 +65,8 @@ function useAttribution() {
     const fbclid = p.get("fbclid");
     setAttr({
       fbclid,
+      ttclid: p.get("ttclid"),
+      ttp: readCookie("_ttp"),
       fbc: readCookie("_fbc") ?? (fbclid ? `fb.1.${Date.now()}.${fbclid}` : null),
       fbp: readCookie("_fbp"),
       utm_source: p.get("utm_source"),
@@ -156,6 +158,47 @@ function BookingLandingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data.page.pixel_id]);
 
+  // TikTok Pixel — pentru campaniile TikTok care trimit pe această pagină.
+  // Evenimentul Lead (browser + server, același event_id) = FORM, pe care optimizează campania.
+  useEffect(() => {
+    const code = data.page.tiktok_pixel_code;
+    if (!code || typeof window === "undefined") return;
+    const w = window as any;
+    if (!w.ttq) {
+      (function (win: any, doc: any, t: string) {
+        win.TiktokAnalyticsObject = t;
+        const q: any = (win[t] = win[t] || []);
+        q.methods = ["page", "track", "identify", "instances", "debug", "on", "off", "once", "ready", "alias", "group", "enableCookie", "disableCookie", "holdConsent", "revokeConsent", "grantConsent"];
+        q.setAndDefer = function (o: any, m: string) {
+          o[m] = function (...args: any[]) {
+            o.push([m, ...args]);
+          };
+        };
+        for (const m of q.methods) q.setAndDefer(q, m);
+        q.load = function (id: string) {
+          const url = "https://analytics.tiktok.com/i18n/pixel/events.js";
+          q._i = q._i || {};
+          q._i[id] = [];
+          q._t = q._t || {};
+          q._t[id] = +new Date();
+          q._o = q._o || {};
+          const s = doc.createElement("script");
+          s.type = "text/javascript";
+          s.async = true;
+          s.src = `${url}?sdkid=${id}&lib=${t}`;
+          const first = doc.getElementsByTagName("script")[0];
+          first.parentNode.insertBefore(s, first);
+        };
+      })(w, document, "ttq");
+    }
+    if (w.__adpilotTtPixel !== code) {
+      w.ttq.load(code);
+      w.__adpilotTtPixel = code;
+    }
+    w.ttq.page();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.page.tiktok_pixel_code]);
+
   useEffect(() => {
     if (!needsSlot) return;
     let cancelled = false;
@@ -198,6 +241,10 @@ function BookingLandingPage() {
         const eventName = (r as any).event_name ?? (needsSlot ? "Schedule" : "Lead");
         const eventId = (r as any).event_id;
         (window as any).fbq("track", eventName, {}, eventId ? { eventID: eventId } : undefined);
+      }
+      if (data.page.tiktok_pixel_code && typeof (window as any).ttq?.track === "function") {
+        const eventId = (r as any).event_id;
+        (window as any).ttq.track("Lead", {}, eventId ? { event_id: eventId } : undefined);
       }
     } catch (err: any) {
       setError(err?.message ?? "Nu am putut trimite programarea. Încearcă din nou.");

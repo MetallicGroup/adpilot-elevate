@@ -8,6 +8,8 @@ const AttributionSchema = z
     fbclid: z.string().max(500).nullable().optional(),
     fbc: z.string().max(500).nullable().optional(),
     fbp: z.string().max(500).nullable().optional(),
+    ttclid: z.string().max(500).nullable().optional(),
+    ttp: z.string().max(500).nullable().optional(),
     utm_source: z.string().max(120).nullable().optional(),
     utm_medium: z.string().max(120).nullable().optional(),
     utm_campaign: z.string().max(160).nullable().optional(),
@@ -26,7 +28,7 @@ export const getBookingLanding = createServerFn({ method: "GET" })
 
     const { data: page } = await supabaseAdmin
       .from("booking_campaigns")
-      .select("id, slug, service, offer, landing_copy, hero_image_url, business_id, status, pixel_id, objective, call_phone")
+      .select("id, slug, service, offer, landing_copy, hero_image_url, business_id, status, pixel_id, tiktok_pixel_code, objective, call_phone")
       .eq("slug", data.slug)
       .eq("status", "published")
       .maybeSingle();
@@ -59,6 +61,7 @@ export const getBookingLanding = createServerFn({ method: "GET" })
         landing_copy: page.landing_copy,
         hero_image_url: page.hero_image_url,
         pixel_id: page.pixel_id,
+        tiktok_pixel_code: (page as { tiktok_pixel_code?: string | null }).tiktok_pixel_code ?? null,
         objective: (page as { objective?: string }).objective ?? "bookings",
         call_phone: (page as { call_phone?: string | null }).call_phone ?? null,
       },
