@@ -168,7 +168,7 @@ async function sendChunked(ctx: AgentCtx, text: string) {
 function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
   return {
     list_campaigns: tool({
-      description: "Listează campaniile userului cu nume, status, buget zilnic, platform.",
+      description: "Listează campaniile userului (Meta și TikTok) cu nume, status, buget zilnic, platformă.",
       inputSchema: z.object({}),
       execute: async () => {
         const { data, error } = await supabaseAdmin
@@ -191,6 +191,7 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
       execute: async ({ campaign_id, days }) => {
         const camp = await getCampaign(supabaseAdmin, ctx.userId, campaign_id);
         if (!camp) return { error: "Campanie negăsită" };
+        if (camp.platform === "tiktok") return tiktokInsights(supabaseAdmin, ctx.userId, camp, days);
         if (!camp.meta_campaign_id) return { error: "Campania nu e publicată pe Meta încă" };
         const token = await getMetaToken(supabaseAdmin, ctx.userId);
         if (!token) return { error: "Nu există conexiune Meta activă" };
@@ -220,17 +221,23 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
     }),
 
     pause_campaign: tool({
-      description: "Pune pe pauză o campanie Meta. Execută direct, fără confirmare suplimentară.",
+      description: "Pune pe pauză o campanie (Meta sau TikTok). Execută direct, fără confirmare suplimentară.",
       inputSchema: z.object({ campaign_id: z.string() }),
-      execute: async ({ campaign_id }) =>
-        setMetaCampaignStatus({ userId: ctx.userId, campaignId: campaign_id, next: "PAUSED" }),
+      execute: async ({ campaign_id }) => {
+        const camp = await getCampaign(supabaseAdmin, ctx.userId, campaign_id);
+        if (camp?.platform === "tiktok") return tiktokSetStatus(supabaseAdmin, ctx.userId, camp, "DISABLE");
+        return setMetaCampaignStatus({ userId: ctx.userId, campaignId: campaign_id, next: "PAUSED" });
+      },
     }),
 
     resume_campaign: tool({
-      description: "Pornește/reactivează o campanie Meta.",
+      description: "Pornește/reactivează o campanie (Meta sau TikTok).",
       inputSchema: z.object({ campaign_id: z.string() }),
-      execute: async ({ campaign_id }) =>
-        setMetaCampaignStatus({ userId: ctx.userId, campaignId: campaign_id, next: "ACTIVE" }),
+      execute: async ({ campaign_id }) => {
+        const camp = await getCampaign(supabaseAdmin, ctx.userId, campaign_id);
+        if (camp?.platform === "tiktok") return tiktokSetStatus(supabaseAdmin, ctx.userId, camp, "ENABLE");
+        return setMetaCampaignStatus({ userId: ctx.userId, campaignId: campaign_id, next: "ACTIVE" });
+      },
     }),
 
     update_budget: tool({
@@ -247,6 +254,15 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
         }
         const camp = await getCampaign(supabaseAdmin, ctx.userId, campaign_id);
         if (!camp) return { error: "Campanie negăsită" };
+        if (camp.platform === "tiktok") {
+          if (new_daily_budget < 50) return { error: "TikTok cere un buget zilnic de minimum 50 lei." };
+          const tt = await import("@/lib/tiktok-ads.server");
+          const tctx = await tt.getTikTokAdContext(supabaseAdmin, ctx.userId);
+          if (!tctx || !camp.tiktok_campaign_id) return { error: "Contul TikTok nu e conectat sau campania nu e pe TikTok." };
+          await tt.updateTikTokCampaignBudget(tctx, camp.tiktok_campaign_id, new_daily_budget);
+          await supabaseAdmin.from("campaigns").update({ budget: new_daily_budget }).eq("id", campaign_id);
+          return { ok: true, platform: "tiktok", new_daily_budget };
+        }
         if (!camp.meta_adset_id) return { error: "AdSet Meta lipsă" };
         const token = await getMetaToken(supabaseAdmin, ctx.userId);
         if (!token) return { error: "Fără conexiune Meta" };
@@ -1185,6 +1201,52 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
       },
     }),
   };
+}
+
+/** Rezultatele unei campanii TikTok: cheltuieli/afișări/click-uri din TikTok, lead-urile din AdPilot (pagina cu formular). */
+async function tiktokInsights(supabaseAdmin: any, userId: string, camp: any, days: number) {
+  try {
+    const tt = await import("@/lib/tiktok-ads.server");
+    const tctx = await tt.getTikTokAdContext(supabaseAdmin, userId);
+    if (!tctx || !camp.tiktok_campaign_id) return { error: "Contul TikTok nu e conectat sau campania nu e pe TikTok." };
+    const stats = await tt.getTikTokCampaignStats(tctx, camp.tiktok_campaign_id, days);
+    const since = new Date(Date.now() - days * 86400_000).toISOString();
+    const { count } = await supabaseAdmin
+      .from("leads")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("campaign_id", camp.id)
+      .gte("created_at", since);
+    const leads = count ?? 0;
+    return {
+      campaign: camp.name,
+      platform: "tiktok",
+      period_days: days,
+      spend: stats.spend,
+      impressions: stats.impressions,
+      clicks: stats.clicks,
+      leads,
+      cpl: leads > 0 ? stats.spend / leads : null,
+    };
+  } catch (e: any) {
+    return { error: e?.message ?? "Nu am putut citi rezultatele de pe TikTok." };
+  }
+}
+
+async function tiktokSetStatus(supabaseAdmin: any, userId: string, camp: any, status: "ENABLE" | "DISABLE") {
+  try {
+    const tt = await import("@/lib/tiktok-ads.server");
+    const tctx = await tt.getTikTokAdContext(supabaseAdmin, userId);
+    if (!tctx || !camp.tiktok_campaign_id) return { error: "Contul TikTok nu e conectat sau campania nu e pe TikTok." };
+    await tt.setTikTokCampaignStatus(tctx, camp.tiktok_campaign_id, status);
+    await supabaseAdmin
+      .from("campaigns")
+      .update({ status: status === "ENABLE" ? "active" : "paused" })
+      .eq("id", camp.id);
+    return { ok: true, platform: "tiktok", status: status === "ENABLE" ? "ACTIVE" : "PAUSED" };
+  } catch (e: any) {
+    return { error: e?.message ?? "Nu am putut schimba starea campaniei pe TikTok." };
+  }
 }
 
 async function getCampaign(supabaseAdmin: any, userId: string, id: string) {

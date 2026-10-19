@@ -27,6 +27,12 @@ export function isQuietHours(d = new Date()): boolean {
   return h >= 21 || h < 9;
 }
 
+/** true dacă omul a scris în ultimele ~24h (putem trimite mesaje libere). */
+export async function isWindowOpen(supabaseAdmin: any, userId: string): Promise<boolean> {
+  const last = await lastInboundAt(supabaseAdmin, userId);
+  return last !== null && Date.now() - last < WINDOW_MS;
+}
+
 async function lastInboundAt(supabaseAdmin: any, userId: string): Promise<number | null> {
   const { data } = await supabaseAdmin
     .from("whatsapp_messages")

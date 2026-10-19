@@ -499,3 +499,85 @@ export function tiktokAgeGroups(min = 18, max = 65): string[] | undefined {
   const groups = AGE_GROUPS.filter(([, a, b]) => b >= min && a <= max).map(([g]) => g);
   return groups.length === AGE_GROUPS.length ? undefined : groups;
 }
+
+/** Pornește / oprește o campanie Smart+ (ENABLE / DISABLE). */
+export async function setTikTokCampaignStatus(
+  ctx: TikTokAdContext,
+  campaignId: string,
+  status: "ENABLE" | "DISABLE",
+) {
+  await ttRequest(
+    ctx.token,
+    "POST",
+    "/smart_plus/campaign/status/update/",
+    { advertiser_id: ctx.advertiserId, campaign_ids: [campaignId], operation_status: status },
+    status === "ENABLE" ? "pornire campanie" : "pauză campanie",
+  );
+}
+
+/** Bugetul zilnic al campaniei (bugetul e la nivel de campanie, CBO). TikTok cere minimum 50 lei. */
+export async function updateTikTokCampaignBudget(ctx: TikTokAdContext, campaignId: string, dailyBudget: number) {
+  await ttRequest(
+    ctx.token,
+    "POST",
+    "/smart_plus/campaign/update/",
+    { advertiser_id: ctx.advertiserId, campaign_id: campaignId, budget: dailyBudget },
+    "buget campanie",
+  );
+}
+
+function ymd(d: Date) {
+  return d.toISOString().slice(0, 10);
+}
+
+/** Cheltuieli, afișări, click-uri pe ultimele `days` zile (inclusiv azi), sau pe un interval dat. */
+export async function getTikTokCampaignStats(
+  ctx: TikTokAdContext,
+  campaignId: string,
+  days: number,
+  range?: { start: Date; end: Date },
+) {
+  const end = range?.end ?? new Date();
+  const start = range?.start ?? new Date(Date.now() - (Math.max(1, days) - 1) * 86400_000);
+  const data = await ttRequest<{ list?: Array<{ metrics?: Record<string, string> }> }>(
+    ctx.token,
+    "GET",
+    "/report/integrated/get/",
+    {
+      advertiser_id: ctx.advertiserId,
+      report_type: "BASIC",
+      data_level: "AUCTION_CAMPAIGN",
+      dimensions: ["campaign_id"],
+      metrics: ["spend", "impressions", "clicks"],
+      start_date: ymd(start),
+      end_date: ymd(end),
+      filtering: [{ field_name: "campaign_ids", filter_type: "IN", filter_value: JSON.stringify([campaignId]) }],
+      page_size: 10,
+    },
+    "raport",
+  );
+  const m = data.list?.[0]?.metrics ?? {};
+  return {
+    spend: Number(m.spend ?? 0),
+    impressions: Number(m.impressions ?? 0),
+    clicks: Number(m.clicks ?? 0),
+  };
+}
+
+/** Starea campaniei pe TikTok (operation_status + secondary_status). */
+export async function getTikTokCampaignState(ctx: TikTokAdContext, campaignId: string) {
+  const data = await ttRequest<{ list?: any[] }>(
+    ctx.token,
+    "GET",
+    "/smart_plus/campaign/get/",
+    {
+      advertiser_id: ctx.advertiserId,
+      filtering: { campaign_ids: [campaignId] },
+    },
+    "stare campanie",
+  );
+  const c = data.list?.[0];
+  return c
+    ? { operationStatus: String(c.operation_status ?? ""), secondaryStatus: String(c.secondary_status ?? ""), budget: Number(c.budget ?? 0) }
+    : null;
+}

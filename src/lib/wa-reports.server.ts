@@ -43,14 +43,17 @@ async function persistOut(
 ) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const central = getCentralWhatsApp();
-  if (!central) return;
+  if (!central) return false;
+  // În afara ferestrei de 24h WhatsApp nu livrează mesajul — nu-l mai trimitem degeaba.
+  const { isWindowOpen } = await import("./wa-notify.server");
+  if (!(await isWindowOpen(supabaseAdmin, userId))) return false;
   const conn = await supabaseAdmin
     .from("whatsapp_connections")
     .select("user_phone")
     .eq("id", connectionId)
     .maybeSingle();
   const phone = conn.data?.user_phone?.replace(/\D/g, "");
-  if (!phone) return;
+  if (!phone) return false;
   const { id } = await sendWhatsAppMessage(central.phoneNumberId, central.accessToken, phone, {
     type: "text",
     text,
@@ -64,6 +67,7 @@ async function persistOut(
     text,
     meta: (metaPayload as any) ?? null,
   });
+  return true;
 }
 
 function fmtMoney(n: number) {
@@ -90,22 +94,61 @@ export async function runDailyReports(): Promise<{ sent: number; errors: number 
         : 0;
       if (Date.now() - last < 20 * 60 * 60 * 1000) continue;
 
-      const token = await metaTokenFor(conn.user_id);
-      if (!token) continue;
-      const { data: camps } = await supabaseAdmin
-        .from("campaigns")
-        .select("id, name, meta_campaign_id, status")
-        .eq("user_id", conn.user_id)
-        .eq("platform", "meta")
-        .eq("status", "active")
-        .not("meta_campaign_id", "is", null);
-      if (!camps || !camps.length) continue;
+      const token = (await metaTokenFor(conn.user_id)) ?? "";
+      const { data: camps } = token
+        ? await supabaseAdmin
+            .from("campaigns")
+            .select("id, name, meta_campaign_id, status")
+            .eq("user_id", conn.user_id)
+            .eq("platform", "meta")
+            .eq("status", "active")
+            .not("meta_campaign_id", "is", null)
+        : { data: [] as any[] };
 
       let totalSpend = 0;
       let totalLeads = 0;
       let totalClicks = 0;
       const perCamp: Array<{ name: string; spend: number; leads: number }> = [];
-      for (const c of camps) {
+
+      // TikTok: cheltuieli/click-uri din TikTok pe ziua de ieri, clienții din AdPilot (pagina cu formular).
+      try {
+        const { data: ttCamps } = await supabaseAdmin
+          .from("campaigns")
+          .select("id, name, tiktok_campaign_id")
+          .eq("user_id", conn.user_id)
+          .eq("platform", "tiktok")
+          .eq("status", "active")
+          .not("tiktok_campaign_id", "is", null);
+        const tt = ttCamps?.length ? await import("./tiktok-ads.server") : null;
+        const tctx = tt ? await tt.getTikTokAdContext(supabaseAdmin, conn.user_id) : null;
+        if (tt && tctx) {
+          const y = new Date(Date.now() - 86400_000);
+          const dayStart = new Date(`${y.toISOString().slice(0, 10)}T00:00:00Z`);
+          const dayEnd = new Date(dayStart.getTime() + 86400_000);
+          for (const c of ttCamps ?? []) {
+            try {
+              const st = await tt.getTikTokCampaignStats(tctx, c.tiktok_campaign_id!, 1, { start: y, end: y });
+              const { count } = await supabaseAdmin
+                .from("leads")
+                .select("id", { count: "exact", head: true })
+                .eq("campaign_id", c.id)
+                .gte("created_at", dayStart.toISOString())
+                .lt("created_at", dayEnd.toISOString());
+              const leads = count ?? 0;
+              totalSpend += st.spend;
+              totalLeads += leads;
+              totalClicks += st.clicks;
+              if (st.spend > 0 || leads > 0) perCamp.push({ name: `${c.name} (TikTok)`, spend: st.spend, leads });
+            } catch {
+              /* ignore one campaign */
+            }
+          }
+        }
+      } catch (e) {
+        console.error("[daily-report] tiktok", conn.user_id, e);
+      }
+
+      for (const c of camps ?? []) {
         try {
           if (!(await isMetaCampaignActive(c.meta_campaign_id!, token))) continue;
           const url = new URL(`${GRAPH}/v23.0/${c.meta_campaign_id}/insights`);
@@ -167,7 +210,8 @@ export async function runDailyReports(): Promise<{ sent: number; errors: number 
         );
       }
 
-      await persistOut(conn.user_id, conn.id, lines.join("\n"));
+      const delivered = await persistOut(conn.user_id, conn.id, lines.join("\n"));
+      if (!delivered) continue;
       await supabaseAdmin
         .from("whatsapp_connections")
         .update({ last_daily_report_at: new Date().toISOString() })
