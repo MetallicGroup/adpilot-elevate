@@ -76,8 +76,25 @@ export async function runWhatsAppAgent(
       ? (lastOut.meta as any).anomaly_action
       : null;
 
+  // Diagnosticul contului (din cache, max 6h): segmentul, ce lipsește, istoricul pe 90 de zile.
+  let accountHint = "";
+  try {
+    const { getDiagnosis, diagnosisForAgent, nextStepLinks } = await import("./account-diagnosis.server");
+    const diag = await Promise.race([
+      getDiagnosis(supabaseAdmin, ctx.userId),
+      new Promise<null>((r) => setTimeout(() => r(null), 6000)),
+    ]);
+    if (diag) {
+      const links = nextStepLinks(diag);
+      accountHint = `\n\n[Context cont]\n${diagnosisForAgent(diag)}${links.length ? `\nLinkuri pentru pașii lipsă:\n${links.join("\n")}` : ""}`;
+    }
+  } catch {
+    /* fără diagnostic, agentul merge ca înainte */
+  }
+
   const dynamicHint =
     mediaHint(ctx) +
+    accountHint +
     (pendingAction
       ? `\n\n[Acțiune sugerată în așteptare] ${JSON.stringify(pendingAction)}. Dacă userul răspunde afirmativ (da/ok/yes/rezolvă/fă), execută-o direct prin tool-ul corespunzător (pause_campaign pentru kind=pause, generate_copy pentru regen_copy, generate_image+create_campaign sau update creative pentru regen_image) și confirmă scurt. Dacă userul refuză, lasă-o.`
       : "");
@@ -874,6 +891,18 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
                 ? "Cel puțin un Pixel e activ (evenimente în ultimele 30 zile)."
                 : "Niciun Pixel pe cont — pentru Sales/Signups trebuie instalat.",
         };
+      },
+    }),
+
+    check_account: tool({
+      description:
+        "Verifică din nou contul userului (pagină Facebook, cont de reclame, card, WhatsApp, TikTok, istoric pe 90 de zile). Folosește-l când userul spune că a rezolvat un pas (a creat pagina, a adăugat cardul) sau înainte de lansare dacă [Context cont] arată pași lipsă.",
+      inputSchema: z.object({}),
+      execute: async () => {
+        const { getDiagnosis, diagnosisForAgent, nextStepLinks } = await import("./account-diagnosis.server");
+        const d = await getDiagnosis(supabaseAdmin, ctx.userId, { force: true });
+        if (!d) return { error: "Nu am putut verifica acum contul. Încearcă din nou peste un minut." };
+        return { segment: d.segment, missing: d.missing, summary: diagnosisForAgent(d), links: nextStepLinks(d) };
       },
     }),
 
