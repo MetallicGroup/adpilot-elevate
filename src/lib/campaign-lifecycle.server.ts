@@ -129,5 +129,81 @@ export async function runCampaignLifecycle(): Promise<{ checked: number; notifie
       console.error("[lifecycle] campaign", c.id, (e as Error).message);
     }
   }
+  const tk = await runTikTokLifecycle(supabaseAdmin);
+  return { checked: checked + tk.checked, notified: notified + tk.notified, errors: errors + tk.errors };
+}
+
+const TIKTOK_STALL_AFTER_MS = 12 * 60 * 60 * 1000;
+
+/** Același ciclu pentru TikTok: afișări reale → „rulează”; respinsă → motiv; 12h fără afișări → soldul. */
+async function runTikTokLifecycle(supabaseAdmin: any) {
+  const since = new Date(Date.now() - WATCH_DAYS * 86400_000).toISOString();
+  const { data: camps } = await supabaseAdmin
+    .from("campaigns")
+    .select("id, user_id, name, created_at, tiktok_campaign_id, stalled_notified_at")
+    .eq("platform", "tiktok")
+    .gte("created_at", since)
+    .not("tiktok_campaign_id", "is", null)
+    .is("live_notified_at", null)
+    .is("rejected_notified_at", null);
+
+  let checked = 0;
+  let notified = 0;
+  let errors = 0;
+  const tt = await import("./tiktok-ads.server");
+  for (const c of (camps ?? []) as any[]) {
+    try {
+      const tctx = await tt.getTikTokAdContext(supabaseAdmin, c.user_id);
+      if (!tctx) continue;
+      checked++;
+      const update: Record<string, unknown> = {};
+      const statuses = (await tt.getTikTokAdReviewStatus(tctx, c.tiktok_campaign_id)) ?? [];
+      const rejected = statuses.find((st) => /DENY|REJECT/.test(st));
+      const stats = await tt.getTikTokCampaignStats(tctx, c.tiktok_campaign_id, WATCH_DAYS);
+
+      if (rejected) {
+        update.review_state = "rejected";
+        update.review_reason = rejected;
+        const r = await notifyOwner(supabaseAdmin, c.user_id, {
+          text: `⚠️ TikTok a respins reclama *${c.name}*${/PRIVACY/.test(rejected) ? " (din cauza politicii de confidențialitate de pe pagină)" : ""}.\n\nScrie-mi aici și o refacem împreună.`,
+          holdIfClosed: true,
+          kind: "ad_rejected",
+        });
+        if ("sent" in r || "held" in r) {
+          update.rejected_notified_at = new Date().toISOString();
+          notified++;
+        }
+      } else if (stats.impressions > 0) {
+        update.review_state = "delivering";
+        const r = await notifyOwner(supabaseAdmin, c.user_id, {
+          text: `✅ TikTok a aprobat reclama *${c.name}* și a început să ruleze (${stats.impressions} afișări până acum).\n\nÎți scriu imediat ce vine primul client.`,
+          holdIfClosed: true,
+          kind: "ad_live",
+        });
+        if ("sent" in r || "held" in r) {
+          update.live_notified_at = new Date().toISOString();
+          notified++;
+        }
+      } else {
+        update.review_state = statuses.some((st) => /AUDIT/.test(st)) ? "in_review" : (statuses[0] ?? "pending").toLowerCase();
+        const age = Date.now() - new Date(c.created_at).getTime();
+        if (age > TIKTOK_STALL_AFTER_MS && !c.stalled_notified_at && !statuses.some((st) => /AUDIT/.test(st))) {
+          const r = await notifyOwner(supabaseAdmin, c.user_id, {
+            text: `ℹ️ Reclama TikTok *${c.name}* încă nu are afișări. Cel mai des, contul de reclame TikTok nu are sold sau metodă de plată: verifică în TikTok Ads Manager → Payment. Dacă totul e în regulă acolo, scrie-mi și mă uit împreună cu tine.`,
+            holdIfClosed: true,
+            kind: "ad_stalled",
+          });
+          if ("sent" in r || "held" in r) {
+            update.stalled_notified_at = new Date().toISOString();
+            notified++;
+          }
+        }
+      }
+      await supabaseAdmin.from("campaigns").update(update).eq("id", c.id);
+    } catch (e) {
+      errors++;
+      console.error("[lifecycle] tiktok campaign", c.id, (e as Error).message);
+    }
+  }
   return { checked, notified, errors };
 }

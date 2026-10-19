@@ -581,3 +581,23 @@ export async function getTikTokCampaignState(ctx: TikTokAdContext, campaignId: s
     ? { operationStatus: String(c.operation_status ?? ""), secondaryStatus: String(c.secondary_status ?? ""), budget: Number(c.budget ?? 0) }
     : null;
 }
+
+/**
+ * Starea de revizuire a reclamelor Smart+ dintr-o campanie (secondary_status, ex. AD_STATUS_AUDIT).
+ * TikTok poate întoarce lista goală pentru reclame oprite sau abia create — atunci întoarcem null.
+ */
+export async function getTikTokAdReviewStatus(ctx: TikTokAdContext, campaignId: string) {
+  try {
+    const data = await ttRequest<{ list?: any[] }>(
+      ctx.token,
+      "GET",
+      "/smart_plus/ad/get/",
+      { advertiser_id: ctx.advertiserId, filtering: { campaign_ids: [campaignId] } },
+      "stare reclamă",
+    );
+    const statuses = (data.list ?? []).map((a) => String(a.secondary_status ?? ""));
+    return statuses.length ? statuses : null;
+  } catch {
+    return null;
+  }
+}
