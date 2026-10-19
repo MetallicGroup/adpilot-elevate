@@ -110,6 +110,11 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
 
               if (type === "text") {
                 text = m.text?.body ?? "";
+              } else if (type === "button") {
+                // Buton rapid dintr-un template (ex. „Vezi detaliile”)
+                text = m.button?.text ?? m.button?.payload ?? "";
+              } else if (type === "interactive") {
+                text = m.interactive?.button_reply?.title ?? m.interactive?.list_reply?.title ?? "";
               } else if (
                 type === "image" ||
                 type === "video" ||
@@ -440,6 +445,19 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
                     };
                   }
                 }
+              }
+
+              // Fereastra de 24h s-a deschis: întâi trimitem mesajele complete păstrate (ex. lead-uri cu toate răspunsurile).
+              try {
+                const { flushPendingNotifications } = await import("@/lib/wa-notify.server");
+                const flushed = await flushPendingNotifications(supabaseAdmin, conn.user_id, {
+                  id: conn.id,
+                  phone: fromPhone,
+                });
+                // A apăsat doar butonul din template → detaliile ajung, agentul nu mai răspunde separat.
+                if (flushed > 0 && type === "button") continue;
+              } catch (e) {
+                console.error("[wa] pending flush failed", e);
               }
 
               try {

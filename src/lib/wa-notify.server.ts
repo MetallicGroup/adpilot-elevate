@@ -12,7 +12,7 @@ const WINDOW_MS = 23.5 * 60 * 60 * 1000;
 
 /** Template-uri Utility (WhatsApp Manager), în română. Corpul exact e în comentariu. */
 export const WA_TEMPLATES = {
-  /** „🎯 Client nou din campania {{1}}: {{2}}, {{3}}. Scrie-mi aici ca să vezi răspunsurile lui.” */
+  /** „🎯 Ai un client nou din campania {{1}}: {{2}}, {{3}}. Apasă „Vezi detaliile” ca să-ți trimit răspunsurile lui.” + buton rapid „Vezi detaliile” */
   leadNew: "lead_nou",
   /** „✅ Reclama ta „{{1}}” a fost aprobată de {{2}} și a început să ruleze.” */
   adLive: "reclama_live",
@@ -46,6 +46,51 @@ async function lastInboundAt(supabaseAdmin: any, userId: string): Promise<number
     .limit(1)
     .maybeSingle();
   return data?.created_at ? new Date(data.created_at).getTime() : null;
+}
+
+/**
+ * La primul mesaj al patronului (fereastra s-a deschis), trimite mesajele complete păstrate
+ * din ultimele 7 zile, în ordine. Întoarce câte a trimis.
+ */
+export async function flushPendingNotifications(
+  supabaseAdmin: any,
+  userId: string,
+  conn: { id: string; phone: string },
+): Promise<number> {
+  const central = getCentralWhatsApp();
+  if (!central) return 0;
+  const since = new Date(Date.now() - 7 * 86400_000).toISOString();
+  const { data: rows } = await supabaseAdmin
+    .from("wa_pending_notifications")
+    .select("id, kind, text")
+    .eq("user_id", userId)
+    .is("delivered_at", null)
+    .gte("created_at", since)
+    .order("created_at", { ascending: true })
+    .limit(20);
+  let sent = 0;
+  for (const r of rows ?? []) {
+    try {
+      const { id } = await sendWhatsAppMessage(central.phoneNumberId, central.accessToken, conn.phone, {
+        type: "text",
+        text: r.text,
+      });
+      await supabaseAdmin.from("wa_pending_notifications").update({ delivered_at: new Date().toISOString() }).eq("id", r.id);
+      await supabaseAdmin.from("whatsapp_messages").insert({
+        user_id: userId,
+        connection_id: conn.id,
+        wa_message_id: id,
+        direction: "out",
+        msg_type: "text",
+        text: r.text,
+        meta: { kind: `${r.kind}_details` },
+      });
+      sent++;
+    } catch (e) {
+      console.error("[wa-notify] flush failed", (e as Error).message);
+    }
+  }
+  return sent;
 }
 
 export async function notifyOwner(
@@ -95,6 +140,8 @@ export async function notifyOwner(
       ));
       sent = "template";
       logged = `[template ${msg.template.name}] ${msg.template.params.join(" · ")}`;
+      // Mesajul complet (cu toate răspunsurile) pleacă de îndată ce patronul răspunde.
+      await supabaseAdmin.from("wa_pending_notifications").insert({ user_id: userId, kind: msg.kind, text: msg.text });
     } else {
       return { skipped: "outside_window" };
     }
