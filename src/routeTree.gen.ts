@@ -61,6 +61,7 @@ import { Route as AuthWelcomeRouteImport } from './routes/auth.welcome'
 import { Route as BSlugRouteImport } from './routes/b.$slug'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as ConnectSlugRouteImport } from './routes/connect.$slug'
+import { Route as PCodeRouteImport } from './routes/p.$code'
 import { Route as AuthenticatedAgencyDashboardRouteImport } from './routes/_authenticated/agency.dashboard'
 import { Route as AuthenticatedAgencySettingsRouteImport } from './routes/_authenticated/agency.settings'
 import { Route as AuthenticatedAgencySetupRouteImport } from './routes/_authenticated/agency.setup'
@@ -349,6 +350,11 @@ const ConnectSlugRoute = ConnectSlugRouteImport.update({
   path: '/connect/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PCodeRoute = PCodeRouteImport.update({
+  id: '/p/$code',
+  path: '/p/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAgencyDashboardRoute =
   AuthenticatedAgencyDashboardRouteImport.update({
     id: '/agency/dashboard',
@@ -562,6 +568,7 @@ export interface FileRoutesByFullPath {
   '/b/$slug': typeof BSlugRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/connect/$slug': typeof ConnectSlugRoute
+  '/p/$code': typeof PCodeRoute
   '/agency/dashboard': typeof AuthenticatedAgencyDashboardRoute
   '/agency/settings': typeof AuthenticatedAgencySettingsRoute
   '/agency/setup': typeof AuthenticatedAgencySetupRoute
@@ -643,6 +650,7 @@ export interface FileRoutesByTo {
   '/b/$slug': typeof BSlugRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/connect/$slug': typeof ConnectSlugRoute
+  '/p/$code': typeof PCodeRoute
   '/agency/dashboard': typeof AuthenticatedAgencyDashboardRoute
   '/agency/settings': typeof AuthenticatedAgencySettingsRoute
   '/agency/setup': typeof AuthenticatedAgencySetupRoute
@@ -726,6 +734,7 @@ export interface FileRoutesById {
   '/b/$slug': typeof BSlugRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/connect/$slug': typeof ConnectSlugRoute
+  '/p/$code': typeof PCodeRoute
   '/_authenticated/agency/dashboard': typeof AuthenticatedAgencyDashboardRoute
   '/_authenticated/agency/settings': typeof AuthenticatedAgencySettingsRoute
   '/_authenticated/agency/setup': typeof AuthenticatedAgencySetupRoute
@@ -809,6 +818,7 @@ export interface FileRouteTypes {
     | '/b/$slug'
     | '/checkout/return'
     | '/connect/$slug'
+    | '/p/$code'
     | '/agency/dashboard'
     | '/agency/settings'
     | '/agency/setup'
@@ -890,6 +900,7 @@ export interface FileRouteTypes {
     | '/b/$slug'
     | '/checkout/return'
     | '/connect/$slug'
+    | '/p/$code'
     | '/agency/dashboard'
     | '/agency/settings'
     | '/agency/setup'
@@ -972,6 +983,7 @@ export interface FileRouteTypes {
     | '/b/$slug'
     | '/checkout/return'
     | '/connect/$slug'
+    | '/p/$code'
     | '/_authenticated/agency/dashboard'
     | '/_authenticated/agency/settings'
     | '/_authenticated/agency/setup'
@@ -1039,6 +1051,7 @@ export interface RootRouteChildren {
   BSlugRoute: typeof BSlugRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   ConnectSlugRoute: typeof ConnectSlugRoute
+  PCodeRoute: typeof PCodeRoute
   ApiAgencyConnectStartRoute: typeof ApiAgencyConnectStartRoute
   ApiMetaAuthCallbackRoute: typeof ApiMetaAuthCallbackRoute
   ApiMetaSignupStartRoute: typeof ApiMetaSignupStartRoute
@@ -1427,6 +1440,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConnectSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/p/$code': {
+      id: '/p/$code'
+      path: '/p/$code'
+      fullPath: '/p/$code'
+      preLoaderRoute: typeof PCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/agency/dashboard': {
       id: '/_authenticated/agency/dashboard'
       path: '/agency/dashboard'
@@ -1737,6 +1757,7 @@ const rootRouteChildren: RootRouteChildren = {
   BSlugRoute: BSlugRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   ConnectSlugRoute: ConnectSlugRoute,
+  PCodeRoute: PCodeRoute,
   ApiAgencyConnectStartRoute: ApiAgencyConnectStartRoute,
   ApiMetaAuthCallbackRoute: ApiMetaAuthCallbackRoute,
   ApiMetaSignupStartRoute: ApiMetaSignupStartRoute,

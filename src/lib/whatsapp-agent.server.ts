@@ -165,6 +165,171 @@ async function sendChunked(ctx: AgentCtx, text: string) {
   }
 }
 
+const campaignArgsSchema = z.object({
+        name: z.string().max(80),
+        daily_budget: z.number().positive().describe("Buget zilnic în RON (comun pe ad set — Meta împarte pe creative)"),
+        objective: z
+          .enum(["leads", "sales", "calls", "traffic", "signups"])
+          .default("leads")
+          .describe(
+            "'leads' = formular FB/IG · 'sales' = vânzări + Pixel · 'signups' = înscrieri CompleteRegistration · 'calls' = Sună acum · 'traffic' = vizite site",
+          ),
+        business_type: z
+          .string()
+          .max(80)
+          .optional()
+          .describe("Tip afacere (ex: cabinet stomatologic, salon, ecom) — pentru formular + buget dinamic."),
+        headline: z.string().max(40).describe("Headline principal (sau al unghiului 1)"),
+        primary_text: z.string().max(500).describe("Text principal (sau al unghiului 1)"),
+        description: z.string().max(50).optional(),
+        cta: z.enum(["Learn More", "Sign Up", "Shop Now", "Book Now", "Apply Now", "Call Now"]).default("Learn More"),
+        creatives: z
+          .array(
+            z.object({
+              angle: z.enum(["pain", "benefit", "social_proof"]).optional(),
+              headline: z.string().max(40),
+              primary_text: z.string().max(500),
+              description: z.string().max(30).optional(),
+              cta: z.enum(["Learn More", "Sign Up", "Shop Now", "Book Now", "Apply Now", "Call Now"]).optional(),
+            }),
+          )
+          .min(1)
+          .max(6)
+          .optional()
+          .describe(
+            "O singură reclamă pe set: trimite UN element, cu unghiul ales (pain/benefit/social_proof). Dacă trimiți mai multe, se folosește doar primul.",
+          ),
+        landing_url: z
+          .string()
+          .url()
+          .optional()
+          .describe("Obligatoriu pentru sales/signups/traffic. Pentru leads/calls lasă gol."),
+        call_phone: z
+          .string()
+          .max(30)
+          .optional()
+          .describe("Doar pentru calls: numărul de apel."),
+        website: z
+          .string()
+          .url()
+          .optional()
+          .describe(
+            "Doar pentru leads: site-ul afacerii (https://...), pus pe butonul de la finalul formularului. Întreabă userul dacă are site; dacă nu are, lasă gol — butonul devine „Sună acum” cu numărul lui de WhatsApp.",
+          ),
+        custom_questions: z
+          .array(
+            z.object({
+              label: z.string().max(90),
+              type: z.enum(["short", "choice"]).default("short"),
+              options: z.array(z.string().max(60)).max(6).optional(),
+            }),
+          )
+          .max(8)
+          .optional()
+          .describe("Întrebări calificare pe nișă (leads). Dacă goale, sistemul sugerează automat pe business_type."),
+        countries: z.array(z.string()).default(["RO"]).describe("Coduri ISO, ex ['RO']"),
+        cities: z
+          .array(z.string())
+          .optional()
+          .describe("Orașe locale (ex ['Bucharest']). Dacă e setat, countries e ignorat la geo."),
+        city_radius_km: z.number().int().min(10).max(80).default(25),
+        interests: z
+          .array(z.string().max(60))
+          .max(10)
+          .optional()
+          .describe("Sugestii interese EN. Default GOL (Advantage+). Max 1–3."),
+        age_min: z.number().int().min(13).max(65).default(18),
+        age_max: z.number().int().min(13).max(65).default(65),
+        gender: z
+          .enum(["all", "female", "male"])
+          .default("all")
+          .describe("Genul publicului. Pune „female”/„male” DOAR dacă userul cere explicit (ex. „doar femei”) — atunci e respectat strict."),
+        pixel_id: z
+          .string()
+          .max(40)
+          .optional()
+          .describe("Pixel ales când sunt mai mulți (din list_pixels)."),
+        beneficiary: z.string().max(100).optional().describe("DSA: nume firmă/persoană promovată."),
+      });
+type CampaignArgs = z.infer<typeof campaignArgsSchema>;
+type PreparedCampaign = Omit<CampaignArgs, "creatives" | "objective"> & {
+  objective: "leads" | "sales" | "calls" | "traffic" | "signups";
+  creatives: CreativeVariant[];
+};
+
+/** Media deja încărcată la Meta pentru o ciornă (refolosită la publicare, fără re-upload). */
+type PreUploadedMedia = {
+  kind: "video" | "image";
+  video_id?: string;
+  image_hash?: string;
+  thumbnail_url?: string | null;
+  mime: string;
+  media_path: string;
+};
+
+/** Validări + normalizare comune pentru create_campaign și preview_campaign (aceleași reguli). */
+function prepareCampaignArgs(
+  ctx: AgentCtx,
+  args: CampaignArgs,
+):
+  | { error: string }
+  | { prepared: PreparedCampaign; budgetNote: string | null; creativesCount: number } {
+  if (args.daily_budget < MIN_AGENT_DAILY_BUDGET_RON || args.daily_budget > MAX_AGENT_DAILY_BUDGET_RON) {
+    return {
+      error: `Bugetul zilnic trebuie să fie între ${MIN_AGENT_DAILY_BUDGET_RON} și ${MAX_AGENT_DAILY_BUDGET_RON} RON. Pentru sume mai mari, lansează campania din aplicație.`,
+    };
+  }
+  if (!ctx.latestMedia) {
+    return { error: "Userul nu a trimis imagine. Cere-i să trimită o poză pentru reclamă." };
+  }
+  if (
+    (args.objective === "sales" || args.objective === "signups" || args.objective === "traffic") &&
+    (!args.landing_url || !/^https?:\/\//i.test(args.landing_url))
+  ) {
+    return {
+      error: `Pentru '${args.objective}' am nevoie de link-ul ${
+        args.objective === "sales"
+          ? "magazinului/categoriei/produsului"
+          : args.objective === "signups"
+            ? "paginii de înscriere (ex: pagina unde se fac cont)"
+            : "site-ului"
+      } (https://...). Cere-l userului.`,
+    };
+  }
+  const creatives = normalizeCreatives(
+    { headline: args.headline, primary_text: args.primary_text, description: args.description, cta: args.cta },
+    args.creatives as CreativeVariant[] | undefined,
+    creativeCountForBudget(args.daily_budget),
+  );
+  let custom_questions = args.custom_questions;
+  if (args.objective === "leads" && (!custom_questions || custom_questions.length === 0)) {
+    custom_questions = suggestNicheFormQuestions(args.business_type || args.name, args.primary_text).map((q) => ({
+      label: q.label,
+      type: (q.type ?? "short") as "short" | "choice",
+      options: q.options,
+    }));
+  }
+  const budgetNote = budgetLearningWarning(
+    args.daily_budget,
+    args.objective === "calls" ? "calls" : args.objective,
+    args.business_type,
+    args.cities?.[0],
+  );
+  if (args.objective === "calls") {
+    const raw = (args.call_phone || "").replace(/[^\d+]/g, "");
+    if (!raw) {
+      return { error: "Pentru campania de apeluri am nevoie de numărul pe care vrei să primești apelurile. Cere-l userului." };
+    }
+    const tel = raw.startsWith("+") ? raw : `+40${raw.replace(/^0/, "")}`;
+    return {
+      prepared: { ...args, objective: "traffic", landing_url: `tel:${tel}`, cta: "Call Now", creatives, custom_questions },
+      budgetNote,
+      creativesCount: creatives.length,
+    };
+  }
+  return { prepared: { ...args, creatives, custom_questions }, budgetNote, creativesCount: creatives.length };
+}
+
 function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
   return {
     list_campaigns: tool({
@@ -352,178 +517,38 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
     create_campaign: tool({
       description:
         "Creează și lansează o campanie Meta (1 ad set cu o singură reclamă). Necesită imagine/video (latestMedia). Confirmă mereu cu userul ÎNAINTE (obiectiv, locație, vârstă, buget, copy, formular).",
-      inputSchema: z.object({
-        name: z.string().max(80),
-        daily_budget: z.number().positive().describe("Buget zilnic în RON (comun pe ad set — Meta împarte pe creative)"),
-        objective: z
-          .enum(["leads", "sales", "calls", "traffic", "signups"])
-          .default("leads")
-          .describe(
-            "'leads' = formular FB/IG · 'sales' = vânzări + Pixel · 'signups' = înscrieri CompleteRegistration · 'calls' = Sună acum · 'traffic' = vizite site",
-          ),
-        business_type: z
-          .string()
-          .max(80)
-          .optional()
-          .describe("Tip afacere (ex: cabinet stomatologic, salon, ecom) — pentru formular + buget dinamic."),
-        headline: z.string().max(40).describe("Headline principal (sau al unghiului 1)"),
-        primary_text: z.string().max(500).describe("Text principal (sau al unghiului 1)"),
-        description: z.string().max(50).optional(),
-        cta: z.enum(["Learn More", "Sign Up", "Shop Now", "Book Now", "Apply Now", "Call Now"]).default("Learn More"),
-        creatives: z
-          .array(
-            z.object({
-              angle: z.enum(["pain", "benefit", "social_proof"]).optional(),
-              headline: z.string().max(40),
-              primary_text: z.string().max(500),
-              description: z.string().max(30).optional(),
-              cta: z.enum(["Learn More", "Sign Up", "Shop Now", "Book Now", "Apply Now", "Call Now"]).optional(),
-            }),
-          )
-          .min(1)
-          .max(6)
-          .optional()
-          .describe(
-            "O singură reclamă pe set: trimite UN element, cu unghiul ales (pain/benefit/social_proof). Dacă trimiți mai multe, se folosește doar primul.",
-          ),
-        landing_url: z
-          .string()
-          .url()
-          .optional()
-          .describe("Obligatoriu pentru sales/signups/traffic. Pentru leads/calls lasă gol."),
-        call_phone: z
-          .string()
-          .max(30)
-          .optional()
-          .describe("Doar pentru calls: numărul de apel."),
-        website: z
-          .string()
-          .url()
-          .optional()
-          .describe(
-            "Doar pentru leads: site-ul afacerii (https://...), pus pe butonul de la finalul formularului. Întreabă userul dacă are site; dacă nu are, lasă gol — butonul devine „Sună acum” cu numărul lui de WhatsApp.",
-          ),
-        custom_questions: z
-          .array(
-            z.object({
-              label: z.string().max(90),
-              type: z.enum(["short", "choice"]).default("short"),
-              options: z.array(z.string().max(60)).max(6).optional(),
-            }),
-          )
-          .max(8)
-          .optional()
-          .describe("Întrebări calificare pe nișă (leads). Dacă goale, sistemul sugerează automat pe business_type."),
-        countries: z.array(z.string()).default(["RO"]).describe("Coduri ISO, ex ['RO']"),
-        cities: z
-          .array(z.string())
-          .optional()
-          .describe("Orașe locale (ex ['Bucharest']). Dacă e setat, countries e ignorat la geo."),
-        city_radius_km: z.number().int().min(10).max(80).default(25),
-        interests: z
-          .array(z.string().max(60))
-          .max(10)
-          .optional()
-          .describe("Sugestii interese EN. Default GOL (Advantage+). Max 1–3."),
-        age_min: z.number().int().min(13).max(65).default(18),
-        age_max: z.number().int().min(13).max(65).default(65),
-        pixel_id: z
-          .string()
-          .max(40)
-          .optional()
-          .describe("Pixel ales când sunt mai mulți (din list_pixels)."),
-        beneficiary: z.string().max(100).optional().describe("DSA: nume firmă/persoană promovată."),
-      }),
+      inputSchema: campaignArgsSchema,
       execute: async (args) => {
-        if (args.daily_budget < MIN_AGENT_DAILY_BUDGET_RON || args.daily_budget > MAX_AGENT_DAILY_BUDGET_RON) {
-          return {
-            error: `Bugetul zilnic trebuie să fie între ${MIN_AGENT_DAILY_BUDGET_RON} și ${MAX_AGENT_DAILY_BUDGET_RON} RON. Pentru sume mai mari, lansează campania din aplicație.`,
-          };
-        }
-        if (!ctx.latestMedia) {
-          return { error: "Userul nu a trimis imagine. Cere-i să trimită o poză pentru reclamă." };
-        }
-        if (
-          (args.objective === "sales" ||
-            args.objective === "signups" ||
-            args.objective === "traffic") &&
-          (!args.landing_url || !/^https?:\/\//i.test(args.landing_url))
-        ) {
-          return {
-            error: `Pentru '${args.objective}' am nevoie de link-ul ${
-              args.objective === "sales"
-                ? "magazinului/categoriei/produsului"
-                : args.objective === "signups"
-                  ? "paginii de înscriere (ex: pagina unde se fac cont)"
-                  : "site-ului"
-            } (https://...). Cere-l userului.`,
-          };
-        }
-
-        const maxCreatives = creativeCountForBudget(args.daily_budget);
-        const creatives = normalizeCreatives(
-          {
-            headline: args.headline,
-            primary_text: args.primary_text,
-            description: args.description,
-            cta: args.cta,
-          },
-          args.creatives as CreativeVariant[] | undefined,
-          maxCreatives,
-        );
-
-        let custom_questions = args.custom_questions;
-        if (args.objective === "leads" && (!custom_questions || custom_questions.length === 0)) {
-          custom_questions = suggestNicheFormQuestions(
-            args.business_type || args.name,
-            args.primary_text,
-          ).map((q) => ({
-            label: q.label,
-            type: (q.type ?? "short") as "short" | "choice",
-            options: q.options,
-          }));
-        }
-
-        const budgetNote = budgetLearningWarning(
-          args.daily_budget,
-          args.objective === "calls" ? "calls" : args.objective,
-          args.business_type,
-          args.cities?.[0],
-        );
-
-        if (args.objective === "calls") {
-          const raw = (args.call_phone || "").replace(/[^\d+]/g, "");
-          if (!raw) {
-            return {
-              error:
-                "Pentru campania de apeluri am nevoie de numărul pe care vrei să primești apelurile. Cere-l userului.",
-            };
-          }
-          const tel = raw.startsWith("+") ? raw : `+40${raw.replace(/^0/, "")}`;
-          const result = await createMetaCampaignFromAgent(supabaseAdmin, ctx, {
-            ...args,
-            objective: "traffic",
-            landing_url: `tel:${tel}`,
-            cta: "Call Now",
-            creatives,
-            custom_questions,
-          });
-          if (budgetNote && !("error" in result && result.error)) {
-            return { ...result, budget_note: budgetNote, creatives_launched: creatives.length };
-          }
-          return result;
-        }
-
-        const result = await createMetaCampaignFromAgent(supabaseAdmin, ctx, {
-          ...args,
-          creatives,
-          custom_questions,
-        });
-        if (budgetNote && !("error" in result && result.error)) {
-          return { ...result, budget_note: budgetNote, creatives_launched: creatives.length };
-        }
-        return { ...result, creatives_launched: creatives.length };
+        const prep = prepareCampaignArgs(ctx, args);
+        if ("error" in prep) return prep;
+        const result = await createMetaCampaignFromAgent(supabaseAdmin, ctx, prep.prepared);
+        if ("error" in result && result.error) return result;
+        return {
+          ...result,
+          ...(prep.budgetNote ? { budget_note: prep.budgetNote } : {}),
+          creatives_launched: prep.creativesCount,
+        };
       },
+    }),
+
+    preview_campaign: tool({
+      description:
+        "Pregătește campania ca CIORNĂ și întoarce un link de previzualizare (reclama exact cum apare în feed + formularul). Apelează-l ÎNTOTDEAUNA înainte de „Confirmi? Da/Nu” și când userul cere să vadă reclama — cu exact aceleași date pe care le-ai da la create_campaign. Dacă userul schimbă ceva, apelează-l din nou cu datele noi.",
+      inputSchema: campaignArgsSchema,
+      execute: async (args) => {
+        const prep = prepareCampaignArgs(ctx, args);
+        if ("error" in prep) return prep;
+        const res = await buildCampaignPreview(supabaseAdmin, ctx, prep.prepared);
+        if ("error" in res) return res;
+        return { ...res, ...(prep.budgetNote ? { budget_note: prep.budgetNote } : {}) };
+      },
+    }),
+
+    publish_preview: tool({
+      description:
+        "Publică exact ultima ciornă din preview_campaign (aceleași setări, aceeași media deja încărcată), fără să refaci nimic. Folosește-l când userul confirmă („da”, „pornește”, „publică”) după o previzualizare.",
+      inputSchema: z.object({}),
+      execute: async () => publishLatestPreview(supabaseAdmin, ctx),
     }),
 
     retry_last_campaign: tool({
@@ -1549,6 +1574,7 @@ async function publishCampaignToMeta(
     pageAccessToken: string;
     bytes: Uint8Array;
     mediaMime: string;
+    preUploaded?: PreUploadedMedia;
     args: {
       name: string;
       daily_budget: number;
@@ -1562,6 +1588,7 @@ async function publishCampaignToMeta(
       countries: string[];
       age_min: number;
       age_max: number;
+      gender?: "all" | "female" | "male";
       beneficiary?: string;
       interests?: string[];
       pixel_id?: string;
@@ -1615,7 +1642,7 @@ async function publishCampaignToMeta(
         return {
           error:
             `Pagina de Facebook n-a acceptat încă Condițiile Meta pentru reclame cu formular. ` +
-            `Trimite-i userului linkul ${leadTermsUrl(input.pageId)} (îl deschide logat pe Facebook, ca administrator al paginii, și apasă „Accept”) ` +
+            `E un singur „Accept” pe care Facebook îl cere administratorului paginii (noi nu-l putem da). Trimite-i: 1) linkul direct https://www.facebook.com/ads/leadgen/tos?page_id=${input.pageId} — deschis de pe calculator, logat pe contul care administrează pagina; 2) dacă dă eroare, varianta ${leadTermsUrl(input.pageId)} → apasă „Creează formular”, apare fereastra cu condițiile → „Accept” → închide, fără să completeze nimic (formularul lui îl facem noi). ` +
             `și roagă-l să-ți scrie „gata” după ce acceptă. Când scrie „gata”, apelează retry_last_campaign: campania e salvată cu toate setările, NU relua întrebările.`,
           needs_lead_terms: true,
           link: leadTermsUrl(input.pageId),
@@ -1792,6 +1819,7 @@ async function publishCampaignToMeta(
           countries: input.args.countries,
           age_min: input.args.age_min,
           age_max: input.args.age_max,
+          genders: input.args.gender === "female" ? [2] : input.args.gender === "male" ? [1] : undefined,
           cities: input.cityKeys.length ? input.cityKeys : undefined,
           interests: detailed?.interests,
           behaviors: detailed?.behaviors,
@@ -1833,7 +1861,12 @@ async function publishCampaignToMeta(
     let image_hash: string | undefined;
     let video_id: string | undefined;
     let thumbnail_url: string | null | undefined;
-    if (isVideo) {
+    if (input.preUploaded) {
+      // Ciornă din preview_campaign: media e deja la Meta — publicăm exact ce a văzut userul.
+      video_id = input.preUploaded.video_id;
+      image_hash = input.preUploaded.image_hash;
+      thumbnail_url = input.preUploaded.thumbnail_url;
+    } else if (isVideo) {
       const { uploadAdVideoFromBytes } = await import("./meta-publish.server");
       const ext = (input.mediaMime.split("/")[1] || "mp4").split(";")[0];
       const v = await uploadAdVideoFromBytes(
@@ -1970,11 +2003,13 @@ async function createMetaCampaignFromAgent(
     city_radius_km?: number;
     age_min: number;
     age_max: number;
+    gender?: "all" | "female" | "male";
     beneficiary?: string;
     interests?: string[];
     pixel_id?: string;
     creatives?: CreativeVariant[];
   },
+  opts: { preUploaded?: PreUploadedMedia } = {},
 ) {
   const objective: "leads" | "traffic" | "sales" | "signups" =
     args.objective === "calls" ? "traffic" : (args.objective ?? "leads");
@@ -2010,11 +2045,14 @@ async function createMetaCampaignFromAgent(
     .maybeSingle();
   if (!page?.page_id || !page.page_access_token) return { error: "Conectează o Pagină în Settings." };
 
-  const { data: file, error: dlErr } = await supabaseAdmin.storage
-    .from("wa-media")
-    .download(ctx.latestMedia!.path);
-  if (dlErr || !file) return { error: `Nu pot citi imaginea: ${dlErr?.message}` };
-  const bytes = new Uint8Array(await file.arrayBuffer());
+  let bytes = new Uint8Array(0);
+  if (!opts.preUploaded) {
+    const { data: file, error: dlErr } = await supabaseAdmin.storage
+      .from("wa-media")
+      .download(ctx.latestMedia!.path);
+    if (dlErr || !file) return { error: `Nu pot citi imaginea: ${dlErr?.message}` };
+    bytes = new Uint8Array(await file.arrayBuffer());
+  }
 
   const { findCityKey } = await import("./meta-publish.server");
   const cityKeys: Array<{ key: string; radius?: number }> = [];
@@ -2106,7 +2144,7 @@ async function createMetaCampaignFromAgent(
       targeting: {
         locations: resolvedCityNames.length ? resolvedCityNames : args.countries,
         age_groups: [`${args.age_min}-${args.age_max}`],
-        genders: ["All"],
+        genders: [args.gender === "female" ? "Femei" : args.gender === "male" ? "Bărbați" : "All"],
       },
     })
     .select("id")
@@ -2125,5 +2163,125 @@ async function createMetaCampaignFromAgent(
     objective,
     cityKeys,
     userId: ctx.userId,
+    preUploaded: opts.preUploaded,
   });
+}
+
+const PREVIEW_SITE = "https://www.adpilot.ro";
+const PREVIEW_MAX_AGE_MS = 48 * 60 * 60 * 1000;
+
+/**
+ * Ciorna de campanie: încarcă media o singură dată la Meta, cere previzualizarea reală a reclamei
+ * (fără să creeze nimic în cont) și salvează setările confirmate. Linkul /p/<code> arată reclama + formularul.
+ */
+async function buildCampaignPreview(supabaseAdmin: any, ctx: AgentCtx, prepared: PreparedCampaign) {
+  try {
+    const { data: conn } = await supabaseAdmin
+      .from("meta_connections")
+      .select("id, access_token")
+      .eq("user_id", ctx.userId)
+      .eq("is_active", true)
+      .maybeSingle();
+    if (!conn?.access_token) return { error: "Conectează Meta din Settings înainte." };
+    const { data: adAcc } = await supabaseAdmin
+      .from("meta_ad_accounts")
+      .select("ad_account_id")
+      .eq("connection_id", conn.id)
+      .eq("is_active", true)
+      .limit(1)
+      .maybeSingle();
+    const { data: page } = await supabaseAdmin
+      .from("meta_pages")
+      .select("page_id, page_name, page_access_token")
+      .eq("connection_id", conn.id)
+      .eq("is_active", true)
+      .limit(1)
+      .maybeSingle();
+    if (!adAcc?.ad_account_id || !page?.page_id) {
+      return { error: "Lipsește contul de reclame sau pagina — verifică cu check_account." };
+    }
+    const { data: file, error: dlErr } = await supabaseAdmin.storage.from("wa-media").download(ctx.latestMedia!.path);
+    if (dlErr || !file) return { error: `Nu pot citi poza/clipul: ${dlErr?.message}` };
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const mime = ctx.latestMedia!.mime || "image/jpeg";
+
+    const mp = await import("./meta-publish.server");
+    const media: PreUploadedMedia = { kind: "image", mime, media_path: ctx.latestMedia!.path };
+    if (mime.toLowerCase().startsWith("video/")) {
+      const ext = (mime.split("/")[1] || "mp4").split(";")[0];
+      const v = await mp.uploadAdVideoFromBytes(adAcc.ad_account_id, conn.access_token, bytes, `ad.${ext}`, mime);
+      Object.assign(media, { kind: "video", video_id: v.video_id, thumbnail_url: v.thumbnail_url });
+    } else {
+      media.image_hash = await mp.uploadAdImageFromBytes(adAcc.ad_account_id, conn.access_token, bytes, "ad.jpg", mime);
+    }
+
+    const igId =
+      (page.page_access_token && (await mp.fetchPageInstagramId(page.page_id, page.page_access_token))) ||
+      (await mp.fetchPageInstagramId(page.page_id, conn.access_token));
+    const first = prepared.creatives[0]!;
+    const previewUrl = await mp.generateAdPreviewUrl(adAcc.ad_account_id, conn.access_token, {
+      page_id: page.page_id,
+      instagram_user_id: igId,
+      image_hash: media.image_hash,
+      video_id: media.video_id,
+      thumbnail_url: media.thumbnail_url,
+      headline: first.headline,
+      description: first.primary_text,
+      cta: (first.cta as string) || prepared.cta,
+      landing_url: prepared.landing_url ?? PREVIEW_SITE,
+      // doar ca butonul să fie unul acceptat la formulare; previzualizarea nu are nevoie de formular real
+      lead_gen_form_id: prepared.objective === "leads" ? "preview" : undefined,
+    });
+
+    const code = Math.random().toString(36).slice(2, 10);
+    await supabaseAdmin
+      .from("campaign_previews")
+      .update({ status: "superseded" })
+      .eq("user_id", ctx.userId)
+      .eq("status", "ready");
+    const { error } = await supabaseAdmin.from("campaign_previews").insert({
+      code,
+      user_id: ctx.userId,
+      payload: prepared,
+      media,
+      preview_url: previewUrl,
+      page_name: page.page_name ?? null,
+    });
+    if (error) return { error: error.message };
+    return {
+      ok: true,
+      preview_link: `${PREVIEW_SITE}/p/${code}`,
+      note:
+        "Trimite-i linkul (arată reclama exact ca în feed și formularul). Întreabă dacă vrea să schimbe ceva (text, buget, public) sau o pornim. La „da” → publish_preview; la modificări → preview_campaign din nou cu datele noi.",
+    };
+  } catch (e: any) {
+    return { error: e?.message ?? "Nu am putut pregăti previzualizarea." };
+  }
+}
+
+/** Publică exact ultima ciornă (aceleași setări, media deja încărcată) — fără re-upload, fără întrebări. */
+async function publishLatestPreview(supabaseAdmin: any, ctx: AgentCtx) {
+  const { data: draft } = await supabaseAdmin
+    .from("campaign_previews")
+    .select("id, payload, media, created_at")
+    .eq("user_id", ctx.userId)
+    .eq("status", "ready")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!draft || Date.now() - new Date(draft.created_at).getTime() > PREVIEW_MAX_AGE_MS) {
+    return { error: "Nu am o previzualizare recentă. Apelează preview_campaign cu datele confirmate, apoi publish_preview." };
+  }
+  const media = draft.media as PreUploadedMedia;
+  const draftCtx: AgentCtx = {
+    ...ctx,
+    latestMedia: { path: media.media_path, mime: media.mime, signedUrl: "" },
+  };
+  const result = await createMetaCampaignFromAgent(supabaseAdmin, draftCtx, draft.payload as PreparedCampaign, {
+    preUploaded: media,
+  });
+  if (!("error" in result && result.error)) {
+    await supabaseAdmin.from("campaign_previews").update({ status: "published" }).eq("id", draft.id);
+  }
+  return result;
 }

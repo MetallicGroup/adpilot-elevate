@@ -306,7 +306,7 @@ export function nextStepLinks(d: AccountDiagnosis): string[] {
   const out: string[] = [];
   if (d.missing.includes("facebook_page")) out.push("Creare pagină Facebook: https://www.facebook.com/pages/create");
   if (d.missing.includes("lead_terms") && d.meta.leadTerms) {
-    out.push(`Acceptare condiții formulare Meta: https://www.facebook.com/ads/leadgen/tos?page_id=${d.meta.leadTerms.pageId}`);
+    out.push(`Acceptare condiții formulare Meta (deschide, apasă „Creează formular”, apoi „Accept”): https://business.facebook.com/latest/instant_forms?asset_id=${d.meta.leadTerms.pageId}`);
   }
   if (d.missing.includes("payment_method") && d.meta.adAccount) {
     out.push(

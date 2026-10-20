@@ -90,7 +90,9 @@ async function metaPOST(path: string, accessToken: string, body: Record<string, 
 
 /** Linkul unde administratorul paginii acceptă Condițiile Meta pentru reclame cu formular. */
 export function leadTermsUrl(pageId: string) {
-  return `https://www.facebook.com/ads/leadgen/tos?page_id=${pageId}`;
+  // Linkul direct /ads/leadgen/tos dă des „Something went wrong” (mai ales pe telefon);
+  // prin Business Suite → Formulare instant → „Creează formular”, Facebook cere singur acceptarea.
+  return `https://business.facebook.com/latest/instant_forms?asset_id=${pageId}`;
 }
 
 /**
@@ -503,6 +505,8 @@ export async function createAdSet(
   }
   if (args.targeting.genders && args.targeting.genders.length) {
     targeting.genders = args.targeting.genders;
+    // Cu Advantage+ audience, genul e doar o sugestie — când clientul cere explicit un gen, îl respectăm strict.
+    targeting.targeting_automation = { advantage_audience: 0 };
   }
   // Interese + comportamente (targetare detaliată) — OR în cadrul unui grup
   // flexible_spec. Ex B2B: „Small business owners" + „Beauty salon"; B2C: „Makeup".
@@ -622,33 +626,40 @@ export async function findCityKey(
   return { key: String(preferred.key), name: preferred.name, country_code: preferred.country_code };
 }
 
-export async function createAdCreative(
-  adAccountId: string,
-  accessToken: string,
-  args: {
-    name: string;
-    page_id: string;
-    image_hash?: string;
-    video_id?: string;
-    thumbnail_url?: string | null;
-    headline: string;
-    description: string;
-    cta: string;
-    landing_url: string;
-    lead_gen_form_id?: string;
-    instagram_user_id?: string | null;
-  },
-) {
-  const cta_type = CTA_MAP[args.cta] || "LEARN_MORE";
+/** Butoanele pe care Meta le acceptă la reclamele cu formular de clienți. */
+const LEAD_FORM_CTAS = new Set(["SIGN_UP", "LEARN_MORE", "APPLY_NOW", "GET_QUOTE", "SUBSCRIBE", "DOWNLOAD"]);
+
+export type AdStoryArgs = {
+  page_id: string;
+  image_hash?: string;
+  video_id?: string;
+  thumbnail_url?: string | null;
+  headline: string;
+  description: string;
+  cta: string;
+  landing_url: string;
+  lead_gen_form_id?: string;
+  instagram_user_id?: string | null;
+};
+
+/** object_story_spec pentru o reclamă (imagine sau video), folosit la creare și la previzualizare. */
+export function buildAdStorySpec(args: AdStoryArgs, opts: { previewOnly?: boolean } = {}) {
+  let cta_type = CTA_MAP[args.cta] || "LEARN_MORE";
+  // Formularele nu acceptă „Book Now” & co. — Meta respinge creativul; „Înscrie-te” e cel mai apropiat.
+  if (args.lead_gen_form_id && !LEAD_FORM_CTAS.has(cta_type)) cta_type = "SIGN_UP";
   const isTel = args.landing_url && /^tel:/i.test(args.landing_url);
   const isHttp = args.landing_url && /^https?:\/\//i.test(args.landing_url) && !/facebook\.com/i.test(args.landing_url);
   const link = isTel || isHttp ? args.landing_url : "https://adpilot.ro";
   const call_to_action: Record<string, unknown> = { type: cta_type };
-  if (args.lead_gen_form_id) {
+  if (args.lead_gen_form_id && !opts.previewOnly) {
     call_to_action.value = { lead_gen_form_id: args.lead_gen_form_id };
   } else {
-    call_to_action.value = { link };
+    call_to_action.value = { link: isTel ? "https://adpilot.ro" : link };
   }
+  const base = {
+    page_id: args.page_id,
+    ...(args.instagram_user_id ? { instagram_user_id: args.instagram_user_id } : {}),
+  };
   if (args.video_id) {
     const video_data: Record<string, unknown> = {
       video_id: args.video_id,
@@ -657,32 +668,47 @@ export async function createAdCreative(
       call_to_action,
     };
     if (args.thumbnail_url) video_data.image_url = args.thumbnail_url;
-    return metaPOST(`/act_${adAccountId}/adcreatives`, accessToken, {
-      name: args.name.slice(0, 200),
-      object_story_spec: {
-        page_id: args.page_id,
-        ...(args.instagram_user_id ? { instagram_user_id: args.instagram_user_id } : {}),
-        video_data,
-      },
-    });
+    return { ...base, video_data };
   }
-  if (!args.image_hash) {
-    throw new Error("createAdCreative needs image_hash or video_id");
-  }
+  if (!args.image_hash) throw new Error("Reclama are nevoie de image_hash sau video_id");
+  return {
+    ...base,
+    link_data: { image_hash: args.image_hash, link, message: args.description, name: args.headline, call_to_action },
+  };
+}
+
+export async function createAdCreative(
+  adAccountId: string,
+  accessToken: string,
+  args: AdStoryArgs & { name: string },
+) {
   return metaPOST(`/act_${adAccountId}/adcreatives`, accessToken, {
     name: args.name.slice(0, 200),
-    object_story_spec: {
-      page_id: args.page_id,
-      ...(args.instagram_user_id ? { instagram_user_id: args.instagram_user_id } : {}),
-      link_data: {
-        image_hash: args.image_hash,
-        link,
-        message: args.description,
-        name: args.headline,
-        call_to_action,
-      },
-    },
+    object_story_spec: buildAdStorySpec(args),
   });
+}
+
+/**
+ * Previzualizare reală Meta (feed mobil) pentru o reclamă care încă nu există — nu creează nimic în cont.
+ * Întoarce URL-ul iframe-ului Meta (valabil câteva ore) sau null.
+ */
+export async function generateAdPreviewUrl(
+  adAccountId: string,
+  accessToken: string,
+  args: AdStoryArgs,
+  adFormat = "MOBILE_FEED_STANDARD",
+): Promise<string | null> {
+  const spec = buildAdStorySpec(args, { previewOnly: true });
+  const qs = new URLSearchParams({
+    creative: JSON.stringify({ object_story_spec: spec }),
+    ad_format: adFormat,
+    access_token: accessToken,
+  });
+  const res = await fetch(`${GRAPH}/${metaApiVersion()}/act_${adAccountId}/generatepreviews?${qs.toString()}`);
+  const json: any = await res.json().catch(() => null);
+  const body: string | undefined = json?.data?.[0]?.body;
+  const m = body?.match(/src="([^"]+)"/);
+  return m ? m[1].replace(/&amp;/g, "&") : null;
 }
 
 export async function createAd(
