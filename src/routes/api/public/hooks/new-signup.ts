@@ -89,6 +89,23 @@ export const Route = createFileRoute("/api/public/hooks/new-signup")({
           console.error("[new-signup] Email admin alert NOT sent:", alert.email.error);
         }
 
+        // Meta Conversions API — „CompleteRegistration” pentru ORICE înscriere (Facebook, Google, email).
+        // Același event_id ca în browser (reg_<userId>) → Meta îl numără o singură dată.
+        let capi: { sent: boolean; error?: string } = { sent: false };
+        try {
+          const { sendMetaCapiEvent } = await import("@/lib/meta-capi.server");
+          capi = await sendMetaCapiEvent("CompleteRegistration", {
+            eventId: `reg_${userId}`,
+            eventSourceUrl: "https://www.adpilot.ro/auth",
+            email,
+            phone,
+            externalId: userId,
+          });
+          if (!capi.sent) console.error("[new-signup] Meta CAPI not sent:", capi.error);
+        } catch (e) {
+          console.error("[new-signup] meta capi failed", e);
+        }
+
         // TikTok Events API — conversie „CompleteRegistration" pentru reclamele AdPilot pe TikTok.
         try {
           const { sendTikTokEvent } = await import("@/lib/tiktok-events.server");
@@ -101,7 +118,7 @@ export const Route = createFileRoute("/api/public/hooks/new-signup")({
           console.error("[new-signup] tiktok event failed", e);
         }
 
-        return Response.json({ ok: true, alert });
+        return Response.json({ ok: true, alert, capi });
       },
     },
   },

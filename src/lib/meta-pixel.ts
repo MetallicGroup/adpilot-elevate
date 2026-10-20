@@ -28,8 +28,15 @@ export function fbLead(name?: string): void {
   fbTrack("Lead", name ? { content_name: name } : undefined);
 }
 
-export function fbCompleteRegistration(): void {
-  fbTrack("CompleteRegistration");
+/** eventId = același ca pe server (reg_<userId>), ca Meta să numere înscrierea o singură dată. */
+export function fbCompleteRegistration(eventId?: string): void {
+  const f = fbq();
+  if (!f) return;
+  try {
+    f("track", "CompleteRegistration", {}, eventId ? { eventID: eventId } : undefined);
+  } catch {
+    /* no-op */
+  }
 }
 
 /** Eveniment custom (nume liber) — pentru audiențe custom de retargeting. */

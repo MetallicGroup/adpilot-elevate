@@ -20,6 +20,8 @@ export async function sendMetaCapiEvent(
   opts: {
     email?: string | null;
     phone?: string | null;
+    /** ID-ul userului AdPilot (hash-uit) — îmbunătățește potrivirea cu persoana din Meta. */
+    externalId?: string | null;
     eventId?: string;
     eventSourceUrl?: string;
   } = {},
@@ -30,7 +32,13 @@ export async function sendMetaCapiEvent(
   try {
     const user_data: Record<string, unknown> = {};
     if (opts.email) user_data.em = [sha256(opts.email)];
-    if (opts.phone) user_data.ph = [sha256(opts.phone.replace(/[^\d+]/g, ""))];
+    if (opts.phone) {
+      // Meta cere telefonul doar cu cifre, cu prefixul țării (40…), apoi hash.
+      const d = opts.phone.replace(/\D/g, "");
+      const e164 = d.startsWith("0") && d.length === 10 ? `4${d}` : d;
+      user_data.ph = [sha256(e164)];
+    }
+    if (opts.externalId) user_data.external_id = [sha256(opts.externalId)];
 
     const body = {
       data: [

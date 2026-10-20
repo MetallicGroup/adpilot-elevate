@@ -216,7 +216,7 @@ function AuthPage() {
         // NU la confirmarea emailului. event_id = reg_<userId> → dedup cu server-side.
         if (data.user) {
           void tkCompleteRegistration({ userId: data.user.id, email: data.user.email ?? email });
-          fbCompleteRegistration();
+          fbCompleteRegistration(`reg_${data.user.id}`);
         }
 
         if (!data.session) {
