@@ -74,21 +74,6 @@ export const Route = createFileRoute("/api/public/hooks/new-signup")({
         }
 
         const { notifyAdminNewSignup } = await import("@/lib/whatsapp/admin-alerts.server");
-        const alert = await notifyAdminNewSignup({
-          email,
-          name,
-          phone,
-          provider,
-          goal: body.onboarding_goal ?? null,
-          referral,
-        });
-        if (!alert.whatsapp.sent) {
-          console.error("[new-signup] WhatsApp admin alert NOT sent:", alert.whatsapp.error);
-        }
-        if (!alert.email.sent) {
-          console.error("[new-signup] Email admin alert NOT sent:", alert.email.error);
-        }
-
         // Meta Conversions API — „CompleteRegistration” pentru ORICE înscriere (Facebook, Google, email).
         // Același event_id ca în browser (reg_<userId>) → Meta îl numără o singură dată.
         let capi: { sent: boolean; error?: string } = { sent: false };
@@ -104,6 +89,21 @@ export const Route = createFileRoute("/api/public/hooks/new-signup")({
           if (!capi.sent) console.error("[new-signup] Meta CAPI not sent:", capi.error);
         } catch (e) {
           console.error("[new-signup] meta capi failed", e);
+        }
+
+        const alert = await notifyAdminNewSignup({
+          email,
+          name,
+          phone,
+          provider,
+          goal: body.onboarding_goal ?? null,
+          referral,
+        });
+        if (!alert.whatsapp.sent) {
+          console.error("[new-signup] WhatsApp admin alert NOT sent:", alert.whatsapp.error);
+        }
+        if (!alert.email.sent) {
+          console.error("[new-signup] Email admin alert NOT sent:", alert.email.error);
         }
 
         // TikTok Events API — conversie „CompleteRegistration" pentru reclamele AdPilot pe TikTok.
