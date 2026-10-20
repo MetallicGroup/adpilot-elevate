@@ -16,6 +16,7 @@ export type MissingStep =
   | "facebook_page"
   | "ad_account"
   | "payment_method"
+  | "lead_terms"
   | "whatsapp";
 
 export type AdHistory = {
@@ -36,6 +37,8 @@ export type AccountDiagnosis = {
   meta: {
     connected: boolean;
     pages: Array<{ id: string; name: string | null }>;
+    /** Pagina activă a acceptat Condițiile Meta pentru formulare? null = necunoscut. */
+    leadTerms: { pageId: string; accepted: boolean | null } | null;
     adAccount: { id: string; name: string | null; status: number | null; currency: string | null } | null;
     hasPaymentMethod: boolean;
     pixel: { id: string; name: string | null; lastFired: string | null } | null;
@@ -143,6 +146,7 @@ export async function diagnoseAccount(supabaseAdmin: any, userId: string): Promi
   const meta: AccountDiagnosis["meta"] = {
     connected: !!conn?.access_token,
     pages: [],
+    leadTerms: null,
     adAccount: null,
     hasPaymentMethod: false,
     pixel: null,
@@ -152,13 +156,21 @@ export async function diagnoseAccount(supabaseAdmin: any, userId: string): Promi
   if (conn?.access_token) {
     const token = conn.access_token as string;
     const [{ data: pages }, { data: accts }] = await Promise.all([
-      supabaseAdmin.from("meta_pages").select("page_id, page_name").eq("connection_id", conn.id),
+      supabaseAdmin.from("meta_pages").select("page_id, page_name, page_access_token, is_active").eq("connection_id", conn.id),
       supabaseAdmin
         .from("meta_ad_accounts")
         .select("ad_account_id, account_name, currency, is_active")
         .eq("connection_id", conn.id),
     ]);
     meta.pages = (pages ?? []).map((p: any) => ({ id: p.page_id, name: p.page_name ?? null }));
+    const activePage = (pages ?? []).find((p: any) => p.is_active) ?? (pages ?? [])[0];
+    if (activePage?.page_access_token) {
+      const { pageLeadTermsAccepted } = await import("./meta-publish.server");
+      meta.leadTerms = {
+        pageId: activePage.page_id,
+        accepted: await pageLeadTermsAccepted(activePage.page_id, activePage.page_access_token),
+      };
+    }
 
     const chosen = (accts ?? []).find((a: any) => a.is_active) ?? (accts ?? [])[0];
     if (chosen) {
@@ -195,6 +207,7 @@ export async function diagnoseAccount(supabaseAdmin: any, userId: string): Promi
     if (!meta.pages.length) missing.push("facebook_page");
     if (!meta.adAccount || meta.adAccount.status !== 1) missing.push("ad_account");
     else if (!meta.hasPaymentMethod) missing.push("payment_method");
+    if (meta.leadTerms?.accepted === false) missing.push("lead_terms");
   }
   const waActive = wa?.status === "active";
   if (!waActive) missing.push("whatsapp");
@@ -236,6 +249,7 @@ export function diagnosisForAgent(d: AccountDiagnosis): string {
     facebook_page: "nu are pagină de Facebook",
     ad_account: "nu are cont de reclame activ",
     payment_method: "nu are card adăugat în contul de reclame Facebook",
+    lead_terms: "pagina n-a acceptat Condițiile Meta pentru reclame cu formular (necesar doar pentru campanii cu formular)",
     whatsapp: "WhatsApp nu e activ",
   };
   if (d.missing.length) lines.push(`Lipsește: ${d.missing.map((m) => missingText[m]).join("; ")}.`);
@@ -291,6 +305,9 @@ export async function getDiagnosis(
 export function nextStepLinks(d: AccountDiagnosis): string[] {
   const out: string[] = [];
   if (d.missing.includes("facebook_page")) out.push("Creare pagină Facebook: https://www.facebook.com/pages/create");
+  if (d.missing.includes("lead_terms") && d.meta.leadTerms) {
+    out.push(`Acceptare condiții formulare Meta: https://www.facebook.com/ads/leadgen/tos?page_id=${d.meta.leadTerms.pageId}`);
+  }
   if (d.missing.includes("payment_method") && d.meta.adAccount) {
     out.push(
       `Adăugare card în contul de reclame: https://business.facebook.com/ads/manager/account_settings/account_billing/?act=${d.meta.adAccount.id}`,

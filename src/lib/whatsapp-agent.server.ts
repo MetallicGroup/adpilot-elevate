@@ -1607,6 +1607,22 @@ async function publishCampaignToMeta(
       return { error: runnable.message ?? "Contul de reclame nu este activ pe Facebook." };
     }
 
+    // Formular de clienți: pagina trebuie să fi acceptat Condițiile Meta pentru lead ads (o singură dată).
+    if (input.objective === "leads") {
+      const { pageLeadTermsAccepted, leadTermsUrl } = await import("./meta-publish.server");
+      if ((await pageLeadTermsAccepted(input.pageId, input.pageAccessToken)) === false) {
+        await supabaseAdmin.from("campaigns").update({ status: "draft" }).eq("id", input.campaignRowId);
+        return {
+          error:
+            `Pagina de Facebook n-a acceptat încă Condițiile Meta pentru reclame cu formular. ` +
+            `Trimite-i userului linkul ${leadTermsUrl(input.pageId)} (îl deschide logat pe Facebook, ca administrator al paginii, și apasă „Accept”) ` +
+            `și roagă-l să-ți scrie „gata” după ce acceptă. Când scrie „gata”, apelează retry_last_campaign: campania e salvată cu toate setările, NU relua întrebările.`,
+          needs_lead_terms: true,
+          link: leadTermsUrl(input.pageId),
+        };
+      }
+    }
+
     let form: { id: string } | null = null;
     let objective: "leads" | "traffic" | "sales" | "signups" = input.objective;
     let landing_url = input.args.landing_url ?? "https://adpilot.ro";

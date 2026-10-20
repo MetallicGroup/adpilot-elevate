@@ -88,6 +88,28 @@ async function metaPOST(path: string, accessToken: string, body: Record<string, 
   return json;
 }
 
+/** Linkul unde administratorul paginii acceptă Condițiile Meta pentru reclame cu formular. */
+export function leadTermsUrl(pageId: string) {
+  return `https://www.facebook.com/ads/leadgen/tos?page_id=${pageId}`;
+}
+
+/**
+ * A acceptat pagina Condițiile Meta pentru formulare (lead ads)? Fără ele, Meta refuză setul de reclame.
+ * null = nu am putut verifica (nu blocăm din cauza asta).
+ */
+export async function pageLeadTermsAccepted(pageId: string, pageAccessToken: string): Promise<boolean | null> {
+  try {
+    const res = await fetch(
+      `${GRAPH}/${metaApiVersion()}/${pageId}?fields=leadgen_tos_accepted&access_token=${encodeURIComponent(pageAccessToken)}`,
+    );
+    const json: any = await res.json();
+    if (!res.ok || typeof json?.leadgen_tos_accepted !== "boolean") return null;
+    return json.leadgen_tos_accepted;
+  } catch {
+    return null;
+  }
+}
+
 /** „0725…", „40725…", „+40 725…" → „+40725…" (formatul acceptat de Meta cu country_code RO). */
 function normalizeThankYouPhone(raw?: string | null): string | null {
   const digits = String(raw ?? "").replace(/\D/g, "");
