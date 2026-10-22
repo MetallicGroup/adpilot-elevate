@@ -53,7 +53,10 @@ export function generateActivationCode(): string {
 export type WAMessageContent =
   | { type: "text"; text: string }
   | { type: "image"; mediaId: string; caption?: string }
-  | { type: "image_link"; url: string; caption?: string };
+  | { type: "image_link"; url: string; caption?: string }
+  | { type: "video_link"; url: string; caption?: string }
+  /** Mesaj cu până la 3 butoane de răspuns (doar în fereastra de 24h). */
+  | { type: "buttons"; text: string; buttons: Array<{ id: string; title: string }> };
 
 /**
  * Marchează mesajul primit ca CITIT și afișează indicatorul „typing…" (bulele).
@@ -104,6 +107,21 @@ export async function sendWhatsAppMessage(
   } else if (content.type === "image_link") {
     body.type = "image";
     body.image = { link: content.url, ...(content.caption ? { caption: content.caption } : {}) };
+  } else if (content.type === "video_link") {
+    body.type = "video";
+    body.video = { link: content.url, ...(content.caption ? { caption: content.caption } : {}) };
+  } else if (content.type === "buttons") {
+    body.type = "interactive";
+    body.interactive = {
+      type: "button",
+      body: { text: content.text.slice(0, 1024) },
+      action: {
+        buttons: content.buttons.slice(0, 3).map((b) => ({
+          type: "reply",
+          reply: { id: b.id.slice(0, 256), title: b.title.slice(0, 20) },
+        })),
+      },
+    };
   }
   const res = await fetch(url, {
     method: "POST",
@@ -120,6 +138,17 @@ export async function sendWhatsAppMessage(
 }
 
 /**
+ * Parametrul unui buton dintr-un template:
+ *  - autentificare „Copiază codul” → subType "url", index 0, { type: "text", text: cod };
+ *  - răspuns rapid → subType "quick_reply", { type: "payload", payload } (îl primim înapoi în webhook).
+ */
+export type TemplateButtonParam = {
+  subType: "url" | "quick_reply";
+  index: number;
+  param: { type: "text"; text: string } | { type: "payload"; payload: string };
+};
+
+/**
  * Trimite un mesaj pe bază de TEMPLATE aprobat — merge și în afara ferestrei de
  * 24h (spre deosebire de textul liber). Parametrii de body nu pot conține
  * newline / spații multiple (le sanitizăm) și nu pot fi goi (fallback „—").
@@ -132,6 +161,7 @@ export async function sendWhatsAppTemplate(
   langCode: string,
   bodyParams: string[],
   header?: { type: "video" | "image"; link: string },
+  buttons?: TemplateButtonParam[],
 ): Promise<{ id: string }> {
   const url = `${GRAPH}/${metaApiVersion()}/${phoneNumberId}/messages`;
   const parameters = bodyParams.map((p) => ({
@@ -146,7 +176,7 @@ export async function sendWhatsAppTemplate(
     template: {
       name: templateName,
       language: { code: langCode },
-      ...(parameters.length || header
+      ...(parameters.length || header || buttons?.length
         ? {
             components: [
               ...(header
@@ -158,6 +188,12 @@ export async function sendWhatsAppTemplate(
                   ]
                 : []),
               ...(parameters.length ? [{ type: "body", parameters }] : []),
+              ...(buttons ?? []).map((b) => ({
+                type: "button",
+                sub_type: b.subType,
+                index: String(b.index),
+                parameters: [b.param],
+              })),
             ],
           }
         : {}),

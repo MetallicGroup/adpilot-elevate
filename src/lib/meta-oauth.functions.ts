@@ -3,7 +3,7 @@ import { setCookie, getRequest } from "@tanstack/react-start/server";
 import { randomBytes } from "node:crypto";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const ALLOWED_RETURN = new Set(["/settings", "/onboarding"]);
+const ALLOWED_RETURN = new Set(["/settings", "/onboarding", "/start"]);
 
 /**
  * Returns the Meta authorize URL for the currently authenticated user and

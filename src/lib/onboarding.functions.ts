@@ -28,6 +28,10 @@ export type OnboardingStatus = {
     state: "none" | "eligible" | "active" | "consumed";
     endsAt: string | null;
   };
+  /** Onboarding-ul nou (/start): început, dar neterminat (fără cont conectat + clip pornit). */
+  startPending: boolean;
+  /** Onboarding-ul nou (/start) terminat — înlocuiește verificările vechi (FB + plan). */
+  startCompleted: boolean;
 };
 
 export const getOnboardingStatus = createServerFn({ method: "POST" })
@@ -105,6 +109,12 @@ export const getOnboardingStatus = createServerFn({ method: "POST" })
       isPendingEmail(authEmail) ||
       (authUser?.user?.user_metadata as any)?.pending_email === true;
 
+    const { data: startSession } = await (supabaseAdmin as any)
+      .from("onboarding_sessions")
+      .select("completed_at")
+      .eq("user_id", userId)
+      .maybeSingle();
+
     return {
       needsEmail,
       hasPhone: !!(profile?.phone && String(profile.phone).trim()),
@@ -121,6 +131,8 @@ export const getOnboardingStatus = createServerFn({ method: "POST" })
       chosenPlan: access.chosenPlan,
       signupTrial: { active: access.signupTrial.active, endsAt: access.signupTrial.endsAt },
       freeStarter: { state: access.freeStarter.state, endsAt: access.freeStarter.endsAt },
+      startPending: !!startSession && !startSession.completed_at,
+      startCompleted: !!startSession?.completed_at,
     };
   });
 

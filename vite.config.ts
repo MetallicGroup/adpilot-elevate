@@ -8,7 +8,9 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
   // Force Nitro Vercel preset for self-hosted deploy (OAuth /api routes need serverless).
-  nitro: { preset: "vercel" },
+  // maxDuration 300 s: montajul clipului demo (ffmpeg) și agentul WhatsApp au nevoie de timp.
+  // ffmpeg-static: pachetul întreg (cu binarul ffmpeg) copiat lângă funcție, nu inclus în bundle.
+  nitro: { preset: "vercel", vercel: { functions: { maxDuration: 300 } }, traceDeps: ["ffmpeg-static*"] },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     server: { entry: "server" },

@@ -12,8 +12,10 @@ export const Route = createFileRoute("/api/tiktok/auth/callback")({
         const url = new URL(request.url);
         const authCode = url.searchParams.get("auth_code") ?? url.searchParams.get("code");
         const state = url.searchParams.get("state");
+        const returnTo = getCookie("tiktok_oauth_return") === "/start" ? "/start" : "/settings";
+        deleteCookie("tiktok_oauth_return", { path: "/" });
         const back = (q: string) =>
-          new Response(null, { status: 302, headers: { Location: `/settings?${q}` } });
+          new Response(null, { status: 302, headers: { Location: `${returnTo}?${q}` } });
 
         if (!authCode || !state) return back("tiktok=error&reason=missing_params");
 

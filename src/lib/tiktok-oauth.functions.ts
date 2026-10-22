@@ -45,9 +45,20 @@ export const getTikTokStatus = createServerFn({ method: "GET" })
  */
 export const startTikTokOAuth = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<{ url: string }> => {
+  .inputValidator((raw: unknown) => {
+    const d = (raw ?? {}) as { returnTo?: string };
+    return { returnTo: d.returnTo === "/start" ? "/start" : "/settings" };
+  })
+  .handler(async ({ context, data }): Promise<{ url: string }> => {
     const { buildTikTokAuthorizeUrl } = await import("@/lib/tiktok.server");
     const state = `${context.userId}.${randomBytes(16).toString("hex")}`;
+    setCookie("tiktok_oauth_return", data.returnTo, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 10,
+    });
     setCookie("tiktok_oauth_state", state, {
       httpOnly: true,
       secure: true,

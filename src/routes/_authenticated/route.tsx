@@ -17,10 +17,13 @@ export const Route = createFileRoute("/_authenticated")({
     const p = location.pathname;
     if (!p.startsWith("/onboarding") && !p.startsWith("/checkout") && !p.startsWith("/agency")) {
       let complete = true;
+      let target: "/onboarding" | "/start" = "/onboarding";
       try {
         const { getOnboardingStatus } = await import("@/lib/onboarding.functions");
         const { getStripeEnvironment } = await import("@/lib/stripe");
         const status = await getOnboardingStatus({ data: { environment: getStripeEnvironment() } });
+        // Conturile din onboarding-ul nou (telefon) își termină pașii pe /start.
+        if (status.startPending) target = "/start";
         // Clienții cu abonament activ (și adminii) NU mai trec prin onboarding —
         // sunt deja instalați. Gate-ul complet (FB + plan + WhatsApp) rămâne DOAR
         // pentru conturile fără abonament plătit.
@@ -28,6 +31,7 @@ export const Route = createFileRoute("/_authenticated")({
           status.isAdmin ||
           status.accountType === "agency" ||
           status.hasActiveSubscription ||
+          status.startCompleted ||
           !!(
             !status.needsEmail &&
             status.hasMetaConnection &&
@@ -37,7 +41,7 @@ export const Route = createFileRoute("/_authenticated")({
       } catch {
         complete = true; // eroare de verificare → lăsăm userul să treacă
       }
-      if (!complete) throw redirect({ to: "/onboarding" });
+      if (!complete) throw redirect({ to: target });
     }
 
     return { user: session.user };

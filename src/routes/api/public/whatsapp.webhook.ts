@@ -447,6 +447,34 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
                 }
               }
 
+              // Materialele demo din onboarding: butonul din șablonul `materiale_gata`.
+              if (
+                type === "button" &&
+                (m.button?.payload === "materiale" || /trimite-mi materialele/i.test(text ?? ""))
+              ) {
+                try {
+                  const { deliverDemoMaterials } = await import("@/lib/demo-video.server");
+                  const sent = await deliverDemoMaterials(supabaseAdmin, {
+                    userId: conn.user_id,
+                    connectionId: conn.id,
+                    toPhone: fromPhone,
+                  });
+                  if (sent) continue;
+                } catch (e) {
+                  console.error("[wa] demo delivery failed", e);
+                }
+              }
+
+              // Fără media recentă de la om: clipul (sau poza, dacă cere poze) din materialele demo.
+              if (!effectiveMedia) {
+                try {
+                  const { demoCreativeMedia } = await import("@/lib/demo-video.server");
+                  effectiveMedia = await demoCreativeMedia(supabaseAdmin, conn.user_id, /poz|imagin|foto/i.test(text ?? ""));
+                } catch {
+                  /* opțional */
+                }
+              }
+
               // Fereastra de 24h s-a deschis: întâi trimitem mesajele complete păstrate (ex. lead-uri cu toate răspunsurile).
               try {
                 const { flushPendingNotifications } = await import("@/lib/wa-notify.server");

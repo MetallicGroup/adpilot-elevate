@@ -41,6 +41,7 @@ import { Route as ScoliRouteImport } from './routes/scoli'
 import { Route as SecurityRouteImport } from './routes/security'
 import { Route as ServiceAutoRouteImport } from './routes/service-auto'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as StartRouteImport } from './routes/start'
 import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticated/bookings'
@@ -77,6 +78,7 @@ import { Route as ApiPublicHooksActivationRemindersRouteImport } from './routes/
 import { Route as ApiPublicHooksAnomalyScanRouteImport } from './routes/api/public/hooks/anomaly-scan'
 import { Route as ApiPublicHooksCampaignLifecycleRouteImport } from './routes/api/public/hooks/campaign-lifecycle'
 import { Route as ApiPublicHooksDailyReportRouteImport } from './routes/api/public/hooks/daily-report'
+import { Route as ApiPublicHooksDemoTickRouteImport } from './routes/api/public/hooks/demo-tick'
 import { Route as ApiPublicHooksFreePlanExpiryRouteImport } from './routes/api/public/hooks/free-plan-expiry'
 import { Route as ApiPublicHooksNewSignupRouteImport } from './routes/api/public/hooks/new-signup'
 import { Route as ApiPublicHooksPeriodicUpdateRouteImport } from './routes/api/public/hooks/periodic-update'
@@ -248,6 +250,11 @@ const ServiceAutoRoute = ServiceAutoRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StartRoute = StartRouteImport.update({
+  id: '/start',
+  path: '/start',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
@@ -441,6 +448,11 @@ const ApiPublicHooksDailyReportRoute =
     path: '/api/public/hooks/daily-report',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksDemoTickRoute = ApiPublicHooksDemoTickRouteImport.update({
+  id: '/api/public/hooks/demo-tick',
+  path: '/api/public/hooks/demo-tick',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksFreePlanExpiryRoute =
   ApiPublicHooksFreePlanExpiryRouteImport.update({
     id: '/api/public/hooks/free-plan-expiry',
@@ -548,6 +560,7 @@ export interface FileRoutesByFullPath {
   '/security': typeof SecurityRoute
   '/service-auto': typeof ServiceAutoRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/start': typeof StartRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/bookings': typeof AuthenticatedBookingsRoute
@@ -584,6 +597,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/anomaly-scan': typeof ApiPublicHooksAnomalyScanRoute
   '/api/public/hooks/campaign-lifecycle': typeof ApiPublicHooksCampaignLifecycleRoute
   '/api/public/hooks/daily-report': typeof ApiPublicHooksDailyReportRoute
+  '/api/public/hooks/demo-tick': typeof ApiPublicHooksDemoTickRoute
   '/api/public/hooks/free-plan-expiry': typeof ApiPublicHooksFreePlanExpiryRoute
   '/api/public/hooks/new-signup': typeof ApiPublicHooksNewSignupRoute
   '/api/public/hooks/periodic-update': typeof ApiPublicHooksPeriodicUpdateRoute
@@ -630,6 +644,7 @@ export interface FileRoutesByTo {
   '/security': typeof SecurityRoute
   '/service-auto': typeof ServiceAutoRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/start': typeof StartRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/bookings': typeof AuthenticatedBookingsRoute
@@ -666,6 +681,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/anomaly-scan': typeof ApiPublicHooksAnomalyScanRoute
   '/api/public/hooks/campaign-lifecycle': typeof ApiPublicHooksCampaignLifecycleRoute
   '/api/public/hooks/daily-report': typeof ApiPublicHooksDailyReportRoute
+  '/api/public/hooks/demo-tick': typeof ApiPublicHooksDemoTickRoute
   '/api/public/hooks/free-plan-expiry': typeof ApiPublicHooksFreePlanExpiryRoute
   '/api/public/hooks/new-signup': typeof ApiPublicHooksNewSignupRoute
   '/api/public/hooks/periodic-update': typeof ApiPublicHooksPeriodicUpdateRoute
@@ -714,6 +730,7 @@ export interface FileRoutesById {
   '/security': typeof SecurityRoute
   '/service-auto': typeof ServiceAutoRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/start': typeof StartRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/bookings': typeof AuthenticatedBookingsRoute
@@ -750,6 +767,7 @@ export interface FileRoutesById {
   '/api/public/hooks/anomaly-scan': typeof ApiPublicHooksAnomalyScanRoute
   '/api/public/hooks/campaign-lifecycle': typeof ApiPublicHooksCampaignLifecycleRoute
   '/api/public/hooks/daily-report': typeof ApiPublicHooksDailyReportRoute
+  '/api/public/hooks/demo-tick': typeof ApiPublicHooksDemoTickRoute
   '/api/public/hooks/free-plan-expiry': typeof ApiPublicHooksFreePlanExpiryRoute
   '/api/public/hooks/new-signup': typeof ApiPublicHooksNewSignupRoute
   '/api/public/hooks/periodic-update': typeof ApiPublicHooksPeriodicUpdateRoute
@@ -798,6 +816,7 @@ export interface FileRouteTypes {
     | '/security'
     | '/service-auto'
     | '/sitemap.xml'
+    | '/start'
     | '/terms-of-service'
     | '/admin'
     | '/bookings'
@@ -834,6 +853,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/anomaly-scan'
     | '/api/public/hooks/campaign-lifecycle'
     | '/api/public/hooks/daily-report'
+    | '/api/public/hooks/demo-tick'
     | '/api/public/hooks/free-plan-expiry'
     | '/api/public/hooks/new-signup'
     | '/api/public/hooks/periodic-update'
@@ -880,6 +900,7 @@ export interface FileRouteTypes {
     | '/security'
     | '/service-auto'
     | '/sitemap.xml'
+    | '/start'
     | '/terms-of-service'
     | '/admin'
     | '/bookings'
@@ -916,6 +937,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/anomaly-scan'
     | '/api/public/hooks/campaign-lifecycle'
     | '/api/public/hooks/daily-report'
+    | '/api/public/hooks/demo-tick'
     | '/api/public/hooks/free-plan-expiry'
     | '/api/public/hooks/new-signup'
     | '/api/public/hooks/periodic-update'
@@ -963,6 +985,7 @@ export interface FileRouteTypes {
     | '/security'
     | '/service-auto'
     | '/sitemap.xml'
+    | '/start'
     | '/terms-of-service'
     | '/_authenticated/admin'
     | '/_authenticated/bookings'
@@ -999,6 +1022,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/anomaly-scan'
     | '/api/public/hooks/campaign-lifecycle'
     | '/api/public/hooks/daily-report'
+    | '/api/public/hooks/demo-tick'
     | '/api/public/hooks/free-plan-expiry'
     | '/api/public/hooks/new-signup'
     | '/api/public/hooks/periodic-update'
@@ -1047,6 +1071,7 @@ export interface RootRouteChildren {
   SecurityRoute: typeof SecurityRoute
   ServiceAutoRoute: typeof ServiceAutoRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  StartRoute: typeof StartRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
   BSlugRoute: typeof BSlugRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
@@ -1059,6 +1084,7 @@ export interface RootRouteChildren {
   ApiPublicHooksAnomalyScanRoute: typeof ApiPublicHooksAnomalyScanRoute
   ApiPublicHooksCampaignLifecycleRoute: typeof ApiPublicHooksCampaignLifecycleRoute
   ApiPublicHooksDailyReportRoute: typeof ApiPublicHooksDailyReportRoute
+  ApiPublicHooksDemoTickRoute: typeof ApiPublicHooksDemoTickRoute
   ApiPublicHooksFreePlanExpiryRoute: typeof ApiPublicHooksFreePlanExpiryRoute
   ApiPublicHooksNewSignupRoute: typeof ApiPublicHooksNewSignupRoute
   ApiPublicHooksPeriodicUpdateRoute: typeof ApiPublicHooksPeriodicUpdateRoute
@@ -1298,6 +1324,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/start': {
+      id: '/start'
+      path: '/start'
+      fullPath: '/start'
+      preLoaderRoute: typeof StartRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms-of-service': {
@@ -1552,6 +1585,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksDailyReportRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/demo-tick': {
+      id: '/api/public/hooks/demo-tick'
+      path: '/api/public/hooks/demo-tick'
+      fullPath: '/api/public/hooks/demo-tick'
+      preLoaderRoute: typeof ApiPublicHooksDemoTickRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/free-plan-expiry': {
       id: '/api/public/hooks/free-plan-expiry'
       path: '/api/public/hooks/free-plan-expiry'
@@ -1753,6 +1793,7 @@ const rootRouteChildren: RootRouteChildren = {
   SecurityRoute: SecurityRoute,
   ServiceAutoRoute: ServiceAutoRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  StartRoute: StartRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
   BSlugRoute: BSlugRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
@@ -1766,6 +1807,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksAnomalyScanRoute: ApiPublicHooksAnomalyScanRoute,
   ApiPublicHooksCampaignLifecycleRoute: ApiPublicHooksCampaignLifecycleRoute,
   ApiPublicHooksDailyReportRoute: ApiPublicHooksDailyReportRoute,
+  ApiPublicHooksDemoTickRoute: ApiPublicHooksDemoTickRoute,
   ApiPublicHooksFreePlanExpiryRoute: ApiPublicHooksFreePlanExpiryRoute,
   ApiPublicHooksNewSignupRoute: ApiPublicHooksNewSignupRoute,
   ApiPublicHooksPeriodicUpdateRoute: ApiPublicHooksPeriodicUpdateRoute,

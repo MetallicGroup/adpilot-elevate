@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate, Outlet, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, Outlet, useRouterState, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,6 +39,23 @@ const FB_NOTICE: Record<string, string> = {
 export const Route = createFileRoute("/auth")({
   ssr: false,
   component: AuthPage,
+  // Înscrierea pentru afaceri pornește acum din onboarding-ul pe telefon (/start).
+  // Agențiile, revenirile cu `redirect` și mesajele de eroare Facebook rămân aici.
+  beforeLoad: ({ search }) => {
+    const sp = search as AuthSearch;
+    if (sp.mode === "signup" && sp.type !== "agency" && !sp.redirect && !sp.fb) {
+      throw redirect({
+        to: "/start",
+        search: {
+          ...(sp.ref ? { ref: sp.ref } : {}),
+          ...(sp.goal ? { goal: sp.goal } : {}),
+          ...(sp.utm_source ? { utm_source: sp.utm_source } : {}),
+          ...(sp.utm_medium ? { utm_medium: sp.utm_medium } : {}),
+          ...(sp.utm_campaign ? { utm_campaign: sp.utm_campaign } : {}),
+        } as never,
+      });
+    }
+  },
   validateSearch: (s: Record<string, unknown>): AuthSearch => {
     const out: AuthSearch = {};
     if (typeof s.email === "string") out.email = s.email;
@@ -331,6 +348,9 @@ function AuthPage() {
       <button type="button" className="sso gg" onClick={() => oauth("google")} disabled={loading}>
         Continuă cu Google
       </button>
+      <Link to="/start" search={{ login: "1" } as never} className="sso gg" style={{ textDecoration: "none" }}>
+        Intră cu numărul de telefon
+      </Link>
     </>
   );
 

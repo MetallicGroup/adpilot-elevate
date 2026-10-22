@@ -92,9 +92,20 @@ export async function runWhatsAppAgent(
     /* fără diagnostic, agentul merge ca înainte */
   }
 
+  // Datele date la onboarding (/start): afacerea, obiectivul, platformele, clipul demo.
+  let onboardingCtx = "";
+  try {
+    const { onboardingHint } = await import("./demo-video.server");
+    const h = await onboardingHint(supabaseAdmin, ctx.userId);
+    if (h) onboardingCtx = `\n\n[${h}]`;
+  } catch {
+    /* opțional */
+  }
+
   const dynamicHint =
     mediaHint(ctx) +
     accountHint +
+    onboardingCtx +
     (pendingAction
       ? `\n\n[Acțiune sugerată în așteptare] ${JSON.stringify(pendingAction)}. Dacă userul răspunde afirmativ (da/ok/yes/rezolvă/fă), execută-o direct prin tool-ul corespunzător (pause_campaign pentru kind=pause, generate_copy pentru regen_copy, generate_image+create_campaign sau update creative pentru regen_image) și confirmă scurt. Dacă userul refuză, lasă-o.`
       : "");
