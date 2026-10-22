@@ -1,15 +1,22 @@
 /**
  * Clipul demo gratuit din onboarding (/start), generat din pozele clientului.
  *
- *   script  → Claude scrie vocea în română (≈16 s) și prompturile, uitându-se la poze
- *   assets  → Nano Banana Pro: prezentatorul în spațiul clientului + 3 poze 4:5;
- *             ElevenLabs: vocea, cu momentul fiecărui cuvânt; Kling Turbo: 2 cadre cinematice
- *   clips   → Kling AI Avatar: prezentatorul vorbește pe voce (buzele urmează audio-ul)
- *   render  → ffmpeg: cadrele cinematice peste avatar + subtitrări cuvânt cu cuvânt
+ * Structura (20–25 s, tăieturi la 2–4 s, ca un Reel UGC):
+ *   SELFIE (cârligul) │ CAMERA largă │ PLAN MEDIU │ ÎN ACȚIUNE │ PRIM-PLAN │ DETALIU │ SELFIE (îndemnul)
+ * Prezentatorul vorbește în 3 unghiuri; unghiurile pornesc din selfie, deci e aceeași persoană.
+ * Fiecare unghi primește bucata lui din voce, ca buzele să se potrivească. Vocea întreagă
+ * rămâne pe tot clipul, iar tăieturile cad doar între cuvinte.
+ *
+ *   script  → Claude: textul în română (50–60 de cuvinte) și prompturile, uitându-se la poze;
+ *             ElevenLabs: vocea (20–25 s) cu momentul fiecărui cuvânt → planul tăieturilor;
+ *             pornesc: selfie-ul (Nano Banana Pro), 3 poze 4:5, 2 cadre din poză (Kling Turbo)
+ *   clips   → după selfie: planul mediu, prim-planul și ipostaza în acțiune (selfie-ul ca referință);
+ *             pe fiecare cadru gata: Kling AI Avatar pe bucata lui din voce; ipostaza → Kling Turbo
+ *   render  → ffmpeg: cadrele lipite pe tăieturi, vocea întreagă, subtitrări cuvânt cu cuvânt
  *   deliver → șablonul `materiale_gata`; materialele pleacă la apăsarea butonului
  *
  * Totul e pas cu pas: `advanceDemo` face ce se poate acum și iese; cronul `demo-tick`
- * îl cheamă în fiecare minut. Starea stă în `onboarding_sessions.demo_job`.
+ * (și pagina deschisă) îl cheamă des. Starea stă în `onboarding_sessions.demo_job`.
  */
 import { spawn } from "node:child_process";
 import { chmod, copyFile, mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
@@ -26,28 +33,92 @@ export const DELIVERY_TEMPLATE = "materiale_gata";
 export const DELIVERY_PAYLOAD = "materiale";
 
 type Word = { w: string; s: number; e: number };
-type Task = { id: string; url?: string | null; failed?: boolean; startedAt: number; retries?: number };
+type Task = { id: string; url?: string | null; failed?: boolean; startedAt: number; retries?: number; fallback?: boolean };
+type Angle = "selfie" | "medium" | "close";
+type BrollSrc = "wide" | "action" | "detail";
+type Shot =
+  | { kind: "talk"; angle: Angle; t0: number; t1: number; audio?: string }
+  | { kind: "broll"; src: BrollSrc; t0: number; t1: number };
 type DemoScript = {
   voiceover: string;
   presenter: "female" | "male";
   presenterLook: string;
   avatarPrompt: string;
+  actionPrompt: string;
+  actionMotion: string;
+  /** [cadrul larg, detaliul] — mișcări de cameră prin poza clientului */
   brollPrompts: string[];
   imagePrompts: string[];
+  keywords: string[];
 };
 type Job = {
   phase?: "script" | "clips" | "render" | "deliver" | "done";
   script?: DemoScript;
   photoUrls?: string[];
   crops?: string[];
-  talkFrame?: Task;
-  images?: Task[];
-  broll?: Task[];
+  cropPaths?: string[];
   voice?: { path: string; duration: number; words: Word[] };
-  avatar?: Task;
+  plan?: Shot[];
+  frames?: Partial<Record<Angle | "action", Task>>;
+  /** cheia = indexul cadrului din plan */
+  avatars?: Record<string, Task>;
+  broll?: Partial<Record<BrollSrc, Task>>;
+  images?: Task[];
   errors?: number;
   lastError?: string;
 };
+
+// ───────────────────────────── planul tăieturilor ─────────────────────────────
+
+const ORDER: Array<{ kind: "talk"; angle: Angle; w: number } | { kind: "broll"; src: BrollSrc }> = [
+  { kind: "talk", angle: "selfie", w: 1 },
+  { kind: "broll", src: "wide" },
+  { kind: "talk", angle: "medium", w: 1.1 },
+  { kind: "broll", src: "action" },
+  { kind: "talk", angle: "close", w: 1.1 },
+  { kind: "broll", src: "detail" },
+  { kind: "talk", angle: "selfie", w: 0.9 },
+];
+const BROLL_SEC = 2.4;
+
+/** Împarte vocea în cadre; tăieturile cad în pauzele dintre cuvinte. */
+export function planShots(words: Word[], duration: number): Shot[] {
+  const D = duration;
+  const talkTotal = Math.max(D - BROLL_SEC * 3, 6);
+  const wsum = ORDER.reduce((n, o) => n + (o.kind === "talk" ? o.w : 0), 0);
+  let t = 0;
+  let ends = ORDER.map((o) => (t += o.kind === "broll" ? BROLL_SEC : (talkTotal * o.w) / wsum));
+  ends = ends.map((e) => (e * D) / t);
+
+  const gaps = words.slice(0, -1).map((w, i) => (w.e + words[i + 1].s) / 2);
+  // Cârligul se termină la sfârșitul primei propoziții, dacă pică între 2,2 și 4,8 s.
+  const firstEnd = words.findIndex((w) => /[?.!]$/.test(w.w));
+  if (firstEnd >= 0 && gaps[firstEnd] !== undefined && gaps[firstEnd] >= 2.2 && gaps[firstEnd] <= 4.8) {
+    ends[0] = gaps[firstEnd];
+  }
+  for (let i = 1; i < ends.length - 1; i++) {
+    let best = ends[i];
+    let dist = 0.7;
+    for (const g of gaps) {
+      if (Math.abs(g - ends[i]) < dist) {
+        dist = Math.abs(g - ends[i]);
+        best = g;
+      }
+    }
+    ends[i] = best;
+  }
+  ends[ends.length - 1] = D;
+  for (let i = 0; i < ends.length; i++) {
+    const prev = i ? ends[i - 1] : 0;
+    if (ends[i] < prev + 1.2) ends[i] = Math.min(prev + 1.2, D);
+  }
+
+  return ORDER.map((o, i) => {
+    const t0 = +(i ? ends[i - 1] : 0).toFixed(2);
+    const t1 = +ends[i].toFixed(2);
+    return o.kind === "talk" ? { kind: "talk", angle: o.angle, t0, t1 } : { kind: "broll", src: o.src, t0, t1 };
+  });
+}
 
 // ───────────────────────────── progres pentru ecran ─────────────────────────────
 
@@ -57,12 +128,22 @@ export function demoProgress(status: string, job: Job): { progress: number; step
   const phase = job?.phase ?? "script";
   if (phase === "script") return { progress: 6, step: "Scriu scenariul și textul în română" };
   if (phase === "clips") {
-    if (!job.talkFrame?.url) return { progress: 22, step: "Creez cadrele din pozele tale" };
-    if (!job.avatar?.url) {
-      const t = job.avatar ? Math.min(1, (Date.now() - job.avatar.startedAt) / (4 * 60 * 1000)) : 0;
-      return { progress: Math.round(40 + t * 40), step: "Înregistrez vocea și sincronizez buzele" };
-    }
-    return { progress: 82, step: "Animez cadrele" };
+    const settled = (x?: Task) => !!x && (!!x.url || !!x.failed);
+    const talks = (job.plan ?? []).filter((s) => s.kind === "talk").length || 4;
+    const parts = [
+      ...(["selfie", "medium", "close", "action"] as const).map((k) => settled(job.frames?.[k])),
+      ...Object.values(job.avatars ?? {}).map(settled),
+      ...Array.from({ length: Math.max(0, talks - Object.keys(job.avatars ?? {}).length) }, () => false),
+      ...(["wide", "detail", "action"] as const).map((k) => settled(job.broll?.[k])),
+      ...(job.images ?? []).map(settled),
+    ];
+    const done = parts.filter(Boolean).length / Math.max(parts.length, 1);
+    const step = !job.frames?.selfie?.url
+      ? "Creez cadrele din pozele tale"
+      : Object.values(job.avatars ?? {}).filter((a) => a.url).length < talks
+        ? "Înregistrez vocea și sincronizez buzele"
+        : "Animez cadrele";
+    return { progress: Math.round(15 + done * 72), step };
   }
   return { progress: 92, step: "Montez subtitrările și efectele" };
 }
@@ -112,16 +193,38 @@ async function kiePoll(t: Task | undefined): Promise<Task | undefined> {
   return t;
 }
 
-const KEEP_ROOM =
-  "Use the reference photo as the exact location: keep the same room, walls, colors, furniture, equipment and light. " +
-  "Do not change the layout. Photorealistic, natural light, shot on a modern smartphone. No text, no logos, no watermark.";
+const ROOM_RULE =
+  "Keep the room exactly as in the business photo: same walls, colors, furniture, equipment and light; do not change the layout. " +
+  "Photorealistic, natural light, shot on a modern smartphone. No text, no logos, no watermark.";
 
-function talkFrameInput(script: DemoScript, photoUrls: string[]) {
+function selfieInput(script: DemoScript, photoUrls: string[]) {
   return {
     prompt:
-      `${KEEP_ROOM} Add ${script.presenterLook}. The person stands in the room, facing the camera at eye level, ` +
-      "medium shot from the waist up, friendly natural smile, mouth closed, hands relaxed. Vertical 9:16 smartphone video frame.",
+      `The attached photos show the real business location. ${ROOM_RULE} Add ${script.presenterLook}. ` +
+      "Selfie video frame: the person holds the phone at arm's length (the phone is not visible), face and shoulders in frame, " +
+      "camera slightly above eye level, friendly natural smile, mouth closed, the room clearly visible behind. Handheld UGC look, vertical 9:16.",
     image_input: photoUrls.slice(0, 3),
+    aspect_ratio: "9:16",
+    resolution: "1K",
+    output_format: "jpg",
+  };
+}
+
+const ANGLE_DESC: Record<"medium" | "close", string> = {
+  medium:
+    "Medium shot from the waist up: the person stands in the room facing the camera at eye level, mouth closed, relaxed hands, camera on a tripod, the room's main equipment visible.",
+  close:
+    "Close-up from the chest up at a three-quarter angle: the person looks into the camera with a warm expression, mouth closed, the room softly blurred behind.",
+};
+
+function angleInput(kind: "medium" | "close" | "action", script: DemoScript, selfieUrl: string, photoUrls: string[]) {
+  const desc = kind === "action" ? `Candid moment, the person does not look at the camera: ${script.actionPrompt}.` : ANGLE_DESC[kind];
+  return {
+    prompt:
+      "Image 1 shows the presenter; the other images show the real business location. " +
+      "Use the SAME person as in image 1: identical face, hair, skin tone, body and clothing. " +
+      `${ROOM_RULE} ${desc} Vertical 9:16.`,
+    image_input: [selfieUrl, ...photoUrls.slice(0, 2)],
     aspect_ratio: "9:16",
     resolution: "1K",
     output_format: "jpg",
@@ -130,7 +233,7 @@ function talkFrameInput(script: DemoScript, photoUrls: string[]) {
 
 function imageInput(prompt: string, photoUrl: string) {
   return {
-    prompt: `${KEEP_ROOM} ${prompt} Professional advertising photo, 4:5 vertical.`,
+    prompt: `The attached photo shows the real business location. ${ROOM_RULE} ${prompt} Professional advertising photo, 4:5 vertical.`,
     image_input: [photoUrl],
     aspect_ratio: "4:5",
     resolution: "1K",
@@ -138,17 +241,20 @@ function imageInput(prompt: string, photoUrl: string) {
   };
 }
 
-function brollInput(prompt: string, cropUrl: string) {
+function brollInput(prompt: string, imageUrl: string, withPerson: boolean) {
   return {
-    prompt: `${prompt} Smooth cinematic camera move, the room stays exactly the same, realistic, no people appear, no text.`,
-    image_urls: [cropUrl],
-    duration: "5",
+    prompt: withPerson
+      ? `${prompt} Subtle natural movement, the same person, the room stays exactly the same, realistic, no text.`
+      : `${prompt} Smooth cinematic camera move, the room stays exactly the same, realistic, no people appear, no text.`,
+    image_urls: [imageUrl],
+    duration: "3",
     resolution: "720p",
   };
 }
 
-function avatarInput(script: DemoScript, imageUrl: string, audioUrl: string) {
-  return { image_url: imageUrl, audio_url: audioUrl, prompt: script.avatarPrompt };
+function avatarInput(script: DemoScript, angle: Angle, imageUrl: string, audioUrl: string) {
+  const cam = angle === "selfie" ? "Handheld selfie video with slight natural camera shake; the person talks to the phone camera." : "Static camera.";
+  return { image_url: imageUrl, audio_url: audioUrl, prompt: `${script.avatarPrompt} ${cam}` };
 }
 
 // ───────────────────────────── storage ─────────────────────────────
@@ -176,8 +282,8 @@ let ffmpegBin: string | null = null;
 async function ffmpeg(): Promise<string> {
   if (ffmpegBin) return ffmpegBin;
   // Binarul vine din pachetul `ffmpeg-static`, copiat lângă funcție (traceDeps în vite.config).
-  // Îl găsim prin rezolvarea pachetului la rulare, nu printr-un import (bundle-ul ar strica __dirname).
-  await import("ffmpeg-static"); // ține pachetul în build (calea din bundle nu e bună, o rezolvăm mai jos)
+  // Îl găsim prin rezolvarea pachetului la rulare, nu prin calea din import (bundle-ul strică __dirname).
+  await import("ffmpeg-static"); // ține pachetul în build
   const req = createRequire(import.meta.url);
   const src = join(dirname(req.resolve("ffmpeg-static/package.json")), process.platform === "win32" ? "ffmpeg.exe" : "ffmpeg");
   try {
@@ -237,31 +343,37 @@ function assEscape(s: string): string {
   return s.replace(/[{}\\]/g, "").toUpperCase();
 }
 
-/** Grupuri de 2–3 cuvinte; cuvântul rostit e galben și puțin mai mare. */
-export function buildAss(words: Word[]): string {
+const bare = (w: string) => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
+
+/**
+ * Grupuri de 1–3 cuvinte. Cuvântul rostit e galben și puțin mai mare; cuvintele-cheie
+ * (valorile din reclamă) apar mari, roz când nu sunt rostite.
+ */
+export function buildAss(words: Word[], keywords: string[] = []): string {
+  const keys = new Set(keywords.flatMap((k) => k.split(/\s+/)).map(bare).filter((k) => k.length > 2));
   const chunks: Word[][] = [];
   let cur: Word[] = [];
   for (const w of words) {
     cur.push(w);
     const chars = cur.reduce((n, x) => n + x.w.length, 0);
-    if (cur.length >= 3 || chars >= 16 || /[.,!?;:]$/.test(w.w)) {
+    if (cur.length >= 3 || chars >= 15 || /[.,!?;:]$/.test(w.w) || keys.has(bare(w.w))) {
       chunks.push(cur);
       cur = [];
     }
   }
   if (cur.length) chunks.push(cur);
 
+  const fmt = (x: Word, current: boolean) => {
+    const key = keys.has(bare(x.w));
+    const color = current ? "&H003DD9FF&" : key ? "&H00D25FFF&" : "&H00FFFFFF&";
+    const size = key ? "\\fs86" : current ? "\\fscx112\\fscy112" : "";
+    return `{\\c${color}${size}}${assEscape(x.w)}{\\c&H00FFFFFF&\\fs64\\fscx100\\fscy100}`;
+  };
   const lines: string[] = [];
   for (const chunk of chunks) {
     chunk.forEach((w, i) => {
       const end = i < chunk.length - 1 ? chunk[i + 1].s : w.e + 0.08;
-      const text = chunk
-        .map((x, j) =>
-          j === i
-            ? `{\\c&H003DD9FF&\\fscx112\\fscy112}${assEscape(x.w)}{\\c&H00FFFFFF&\\fscx100\\fscy100}`
-            : assEscape(x.w),
-        )
-        .join(" ");
+      const text = chunk.map((x, j) => fmt(x, j === i)).join(" ");
       lines.push(`Dialogue: 0,${assTime(w.s)},${assTime(Math.max(end, w.s + 0.12))},Cap,,0,0,0,,${text}`);
     });
   }
@@ -286,7 +398,11 @@ export function buildAss(words: Word[]): string {
 
 // ───────────────────────────── ElevenLabs ─────────────────────────────
 
-export async function synthesizeVoice(text: string, presenter: "female" | "male"): Promise<{ mp3: Uint8Array; words: Word[]; duration: number }> {
+export async function synthesizeVoice(
+  text: string,
+  presenter: "female" | "male",
+  speed = 1,
+): Promise<{ mp3: Uint8Array; words: Word[]; duration: number }> {
   const key = process.env.ELEVENLABS_API_KEY;
   if (!key) throw new Error("ELEVENLABS_API_KEY lipsește");
   const voice =
@@ -301,7 +417,7 @@ export async function synthesizeVoice(text: string, presenter: "female" | "male"
       body: JSON.stringify({
         text,
         model_id: process.env.ELEVENLABS_MODEL || "eleven_multilingual_v2",
-        voice_settings: { stability: 0.45, similarity_boost: 0.8, style: 0.25, use_speaker_boost: true },
+        voice_settings: { stability: 0.45, similarity_boost: 0.8, style: 0.25, use_speaker_boost: true, speed },
       }),
     },
   );
@@ -331,6 +447,14 @@ export async function synthesizeVoice(text: string, presenter: "female" | "male"
   return { mp3: Uint8Array.from(Buffer.from(json.audio_base64, "base64")), words, duration };
 }
 
+/** Vocea între 20 și 25 de secunde: dacă iese în afară, o refacem cu altă viteză. */
+async function voiceInRange(text: string, presenter: "female" | "male") {
+  let v = await synthesizeVoice(text, presenter);
+  if (v.duration > 25.3) v = await synthesizeVoice(text, presenter, Math.min(1.15, v.duration / 24.3));
+  else if (v.duration < 19.7) v = await synthesizeVoice(text, presenter, Math.max(0.88, v.duration / 20.6));
+  return v;
+}
+
 // ───────────────────────────── scenariul ─────────────────────────────
 
 const GOAL_CTA: Record<string, string> = {
@@ -340,29 +464,37 @@ const GOAL_CTA: Record<string, string> = {
   shop: "îndeamnă omul să comande online",
 };
 
-async function writeScript(niche: string, goal: string | null, photoUrls: string[]): Promise<DemoScript> {
+async function writeScript(niche: string, goal: string | null, photoUrls: string[], fix?: string): Promise<DemoScript> {
   const { generateText } = await import("ai");
   const { chatModel } = await import("@/lib/llm.server");
   const instructions = `Ești copywriter de reclame video scurte (Reels/TikTok) pentru afaceri locale din România.
 Afacerea: ${niche}. Pozele atașate sunt din locul real al afacerii.
 
-Scrie scenariul unui clip vertical de ~16 secunde în care UN prezentator vorbește direct la cameră, în spațiul din poze.
+Clipul are 20–25 de secunde și e montat din cadre scurte: prezentatorul vorbește la cameră din mai multe unghiuri,
+iar între ele apar cadre cu spațiul din poze. Vocea lui se aude pe tot clipul.
+
 Reguli pentru „voiceover” (textul rostit, în română):
-- 34–42 de cuvinte, cu diacritice corecte (ă, â, î, ș, ț), fără emoji, fără hashtag-uri, numerele scrise în litere;
-- prima propoziție e o întrebare care oprește scroll-ul, legată de problema clientului;
+- ÎNTRE 50 ȘI 58 DE CUVINTE (≈22 de secunde), cu diacritice corecte (ă, â, î, ș, ț), fără emoji, fără hashtag-uri, numerele în litere;
+- structura: 1) o întrebare scurtă (max. 9 cuvinte) care oprește scroll-ul, legată de problema clientului;
+  2) o propoziție de empatie; 3) DOUĂ-TREI valori puternice, concrete, ale afacerii (ce câștigă clientul), deduse din poze și din domeniu;
+  4) îndemnul final;
 - vorbește la persoana întâi plural („la noi”), cald și natural, ca un om, nu ca o reclamă la radio;
-- nu inventa nume de firmă, prețuri, reduceri sau garanții; fără promisiuni medicale sau „cel mai bun”;
+- nu inventa nume de firmă, prețuri, reduceri, ani de experiență sau garanții; fără promisiuni medicale sau „cel mai bun”;
 - ultima propoziție ${goal ? GOAL_CTA[goal] ?? "îndeamnă omul să ne contacteze" : "îndeamnă omul să ne contacteze"}.
+${fix ? `\nATENȚIE: ${fix}\n` : ""}
+- keywords: 3–5 cuvinte din voiceover (exact cum apar), care poartă valorile — apar mari în subtitrări.
 
 Restul câmpurilor sunt în ENGLEZĂ (pentru modelele de imagine/video):
 - presenter: "female" sau "male", ce se potrivește afacerii;
-- presenterLook: descrierea prezentatorului (vârstă 25–40, ținută potrivită afacerii, ex. "a friendly Romanian woman in her early 30s wearing teal medical scrubs");
-- avatarPrompt: cum vorbește prezentatorul (expresii, gesturi mici, cameră fixă);
-- brollPrompts: 2 mișcări de cameră cinematice prin spațiul din poze, fără oameni;
+- presenterLook: descrierea prezentatorului (vârstă 25–40, ținută potrivită afacerii, ex. "a friendly Romanian woman in her early 30s with long brown hair, wearing teal medical scrubs");
+- avatarPrompt: cum vorbește (expresii calde, gesturi mici cu mâinile);
+- actionPrompt: ce face prezentatorul în spațiu fără să vorbească (ex. "sits relaxed in the dental chair, eyes closed, smiling");
+- actionMotion: mișcarea subtilă din acel cadru (ex. "she slowly leans back and smiles, gentle push-in");
+- brollPrompts: exact 2 mișcări de cameră prin spațiul din poze, fără oameni: [cadru larg cu mișcare lentă, apropiere pe cel mai interesant detaliu (numește obiectul)];
 - imagePrompts: 3 idei de poze publicitare în acest spațiu (ex. specialistul lucrând, un detaliu de aproape, clientul mulțumit).
 
 Răspunde DOAR cu JSON valid:
-{"voiceover":"...","presenter":"female","presenterLook":"...","avatarPrompt":"...","brollPrompts":["...","..."],"imagePrompts":["...","...","..."]}`;
+{"voiceover":"...","keywords":["..."],"presenter":"female","presenterLook":"...","avatarPrompt":"...","actionPrompt":"...","actionMotion":"...","brollPrompts":["...","..."],"imagePrompts":["...","...","..."]}`;
 
   const { text } = await generateText({
     model: chatModel(),
@@ -387,36 +519,39 @@ Răspunde DOAR cu JSON valid:
     presenterLook: String(j.presenterLook ?? "a friendly person in their early 30s in work clothes"),
     avatarPrompt:
       String(j.avatarPrompt ?? "").trim() ||
-      "The person talks warmly to the camera with natural expressions and small hand gestures. Static camera.",
+      "The person talks warmly to the camera with natural expressions and small hand gestures.",
+    actionPrompt: String(j.actionPrompt ?? "").trim() || "works calmly in the space, focused and smiling",
+    actionMotion: String(j.actionMotion ?? "").trim() || "gentle natural movement, slow push-in",
     brollPrompts: arr(j.brollPrompts, 2),
     imagePrompts: arr(j.imagePrompts, 3),
+    keywords: arr(j.keywords, 5),
   };
-  if (script.voiceover.split(" ").length < 15) throw new Error("script: voiceover too short");
-  while (script.brollPrompts.length < 2) script.brollPrompts.push("Slow dolly-in through the room.");
+  while (script.brollPrompts.length < 2) script.brollPrompts.push("Slow cinematic dolly-in through the room.");
   while (script.imagePrompts.length < 3) script.imagePrompts.push("A specialist working in this space, smiling.");
   return script;
 }
 
+const wordCount = (t: string) => t.split(/\s+/).filter(Boolean).length;
+
 // ───────────────────────────── pașii ─────────────────────────────
 
-/** Taie poza la 9:16 (720×1280) pentru cadrele Kling. */
+/** Taie poza la 9:16 (720×1280) pentru cadrele din spațiu. */
 async function cropVertical(bytes: Uint8Array, work: string, i: number): Promise<Uint8Array> {
   const bin = await ffmpeg();
   const inp = join(work, `p${i}`);
   const out = join(work, `c${i}.jpg`);
   await writeFile(inp, bytes);
-  await run(bin, [
-    "-y",
-    "-i",
-    inp,
-    "-vf",
-    "scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280",
-    "-frames:v",
-    "1",
-    "-q:v",
-    "3",
-    out,
-  ]);
+  await run(bin, ["-y", "-i", inp, "-vf", "scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280", "-frames:v", "1", "-q:v", "3", out]);
+  return new Uint8Array(await readFile(out));
+}
+
+/** Taie bucata de voce [t0, t1] pentru un cadru vorbit. */
+async function cutAudio(voice: Uint8Array, t0: number, t1: number, work: string, i: number): Promise<Uint8Array> {
+  const bin = await ffmpeg();
+  const inp = join(work, "voice.mp3");
+  await writeFile(inp, voice);
+  const out = join(work, `seg${i}.mp3`);
+  await run(bin, ["-y", "-i", inp, "-ss", t0.toFixed(3), "-to", t1.toFixed(3), "-c:a", "libmp3lame", "-q:a", "2", out]);
   return new Uint8Array(await readFile(out));
 }
 
@@ -424,76 +559,153 @@ async function stepScript(db: any, s: any, job: Job): Promise<void> {
   const uid = s.user_id as string;
   const photoPaths: string[] = (s.photo_paths ?? []).slice(0, 3);
   const photoUrls = await Promise.all(photoPaths.map((p) => signedUrl(db, p)));
-  const script = job.script ?? (await writeScript(s.niche ?? "afacere locală", s.goal, photoUrls));
-  job.script = script;
   job.photoUrls = photoUrls;
+
+  if (!job.script) {
+    let script = await writeScript(s.niche ?? "afacere locală", s.goal, photoUrls);
+    const n = wordCount(script.voiceover);
+    if (n < 46 || n > 64) {
+      script = await writeScript(
+        s.niche ?? "afacere locală",
+        s.goal,
+        photoUrls,
+        `textul anterior avea ${n} cuvinte; scrie între 50 și 58 de cuvinte.`,
+      );
+    }
+    if (wordCount(script.voiceover) < 30) throw new Error("script: voiceover too short");
+    job.script = script;
+  }
+  const script = job.script;
 
   const work = await mkdtemp(join(tmpdir(), "demo-"));
   try {
     const crops: string[] = [];
+    const cropPaths: string[] = [];
     for (let i = 0; i < Math.min(2, photoUrls.length); i++) {
       const c = await cropVertical(await download(photoUrls[i]), work, i);
       const path = `${uid}/demo/crop_${i}.jpg`;
       await upload(db, path, c, "image/jpeg");
+      cropPaths.push(path);
       crops.push(await signedUrl(db, path));
     }
     job.crops = crops;
+    job.cropPaths = cropPaths;
+
+    const voice = await voiceInRange(script.voiceover, script.presenter);
+    const voicePath = `${uid}/demo/voice.mp3`;
+    await upload(db, voicePath, voice.mp3, "audio/mpeg");
+    job.voice = { path: voicePath, duration: voice.duration, words: voice.words };
+
+    const plan = planShots(voice.words, voice.duration);
+    for (const [i, shot] of plan.entries()) {
+      if (shot.kind !== "talk") continue;
+      const seg = await cutAudio(voice.mp3, shot.t0, shot.t1, work, i);
+      shot.audio = `${uid}/demo/seg_${i}.mp3`;
+      await upload(db, shot.audio, seg, "audio/mpeg");
+    }
+    job.plan = plan;
   } finally {
     await rm(work, { recursive: true, force: true });
   }
 
-  const voice = await synthesizeVoice(script.voiceover, script.presenter);
-  const voicePath = `${uid}/demo/voice.mp3`;
-  await upload(db, voicePath, voice.mp3, "audio/mpeg");
-  job.voice = { path: voicePath, duration: voice.duration, words: voice.words };
-
-  job.talkFrame = await kieCreate("nano-banana-pro", talkFrameInput(script, photoUrls));
+  const crops = job.crops!;
+  job.frames = { selfie: await kieCreate("nano-banana-pro", selfieInput(script, photoUrls)) };
   job.images = await Promise.all(
     script.imagePrompts.map((p, i) => kieCreate("nano-banana-pro", imageInput(p, photoUrls[i % photoUrls.length]))),
   );
-  const crops = job.crops!;
-  job.broll = await Promise.all(
-    script.brollPrompts.map((p, i) => kieCreate("kling/v3-turbo-image-to-video", brollInput(p, crops[i % crops.length]))),
-  );
+  job.broll = {
+    wide: await kieCreate("kling/v3-turbo-image-to-video", brollInput(script.brollPrompts[0], crops[0], false)),
+    detail: await kieCreate("kling/v3-turbo-image-to-video", brollInput(script.brollPrompts[1], crops[1 % crops.length], false)),
+  };
+  job.avatars = {};
   job.phase = "clips";
+}
+
+/** Repornește o dată un task eșuat; a doua oară întoarce null. */
+async function retryOnce(t: Task, make: () => Promise<Task>): Promise<Task | null> {
+  if ((t.retries ?? 0) >= 1) return null;
+  return { ...(await make()), retries: 1 };
 }
 
 async function stepClips(db: any, s: any, job: Job): Promise<void> {
   const script = job.script!;
-  job.talkFrame = await kiePoll(job.talkFrame);
-  if (job.talkFrame?.failed) {
-    if ((job.talkFrame.retries ?? 0) >= 1) throw new Error("talk frame failed");
-    job.talkFrame = { ...(await kieCreate("nano-banana-pro", talkFrameInput(script, job.photoUrls!))), retries: 1 };
+  const photoUrls = job.photoUrls!;
+  const frames = (job.frames ??= {});
+  const avatars = (job.avatars ??= {});
+  const broll = (job.broll ??= {});
+
+  // 1) Selfie-ul: fără el nu avem prezentator.
+  frames.selfie = await kiePoll(frames.selfie);
+  if (frames.selfie?.failed) {
+    const r = await retryOnce(frames.selfie, () => kieCreate("nano-banana-pro", selfieInput(script, photoUrls)));
+    if (!r) throw new Error("selfie frame failed");
+    frames.selfie = r;
   }
-  if (job.talkFrame?.url && !job.avatar) {
-    const audio = await signedUrl(db, job.voice!.path);
-    job.avatar = await kieCreate("kling/ai-avatar-standard", avatarInput(script, job.talkFrame.url, audio));
+  const selfie = frames.selfie?.url ?? null;
+
+  // 2) Celelalte unghiuri pornesc din selfie (aceeași persoană). Dacă eșuează de două ori, folosim selfie-ul.
+  if (selfie) {
+    for (const k of ["medium", "close", "action"] as const) {
+      if (!frames[k]) frames[k] = await kieCreate("nano-banana-pro", angleInput(k, script, selfie, photoUrls));
+      frames[k] = await kiePoll(frames[k]);
+      if (frames[k]?.failed && !frames[k]?.fallback) {
+        const r = await retryOnce(frames[k]!, () => kieCreate("nano-banana-pro", angleInput(k, script, selfie, photoUrls)));
+        frames[k] = r ?? { ...frames[k]!, failed: false, url: k === "action" ? null : selfie, fallback: true };
+      }
+    }
   }
-  job.avatar = await kiePoll(job.avatar);
-  if (job.avatar?.failed) {
-    if ((job.avatar.retries ?? 0) >= 1) throw new Error("avatar failed");
-    const audio = await signedUrl(db, job.voice!.path);
-    job.avatar = { ...(await kieCreate("kling/ai-avatar-standard", avatarInput(script, job.talkFrame!.url!, audio))), retries: 1 };
+
+  // 3) Câte un avatar pe fiecare cadru vorbit, cu bucata lui de voce.
+  for (const [i, shot] of (job.plan ?? []).entries()) {
+    if (shot.kind !== "talk") continue;
+    const frame = frames[shot.angle]?.url;
+    const key = String(i);
+    if (frame && !avatars[key]) {
+      avatars[key] = await kieCreate("kling/ai-avatar-standard", avatarInput(script, shot.angle, frame, await signedUrl(db, shot.audio!)));
+    }
+    avatars[key] = (await kiePoll(avatars[key]))!;
+    if (avatars[key]?.failed) {
+      const r = await retryOnce(avatars[key], async () =>
+        kieCreate("kling/ai-avatar-standard", avatarInput(script, shot.angle, frame!, await signedUrl(db, shot.audio!))),
+      );
+      if (!r) throw new Error(`avatar ${i} failed`);
+      avatars[key] = r;
+    }
+    if (!avatars[key]) delete avatars[key];
   }
-  job.images = await Promise.all((job.images ?? []).map((t) => kiePoll(t))) as Task[];
-  job.broll = await Promise.all((job.broll ?? []).map((t) => kiePoll(t))) as Task[];
+
+  // 4) Cadrele fără vorbă: ipostaza în acțiune (din cadrul ei) și cele două din poza clientului.
+  if (frames.action?.url && !broll.action) {
+    broll.action = await kieCreate("kling/v3-turbo-image-to-video", brollInput(script.actionMotion, frames.action.url, true));
+  }
+  for (const k of ["wide", "detail", "action"] as const) broll[k] = await kiePoll(broll[k]);
+  job.images = (await Promise.all((job.images ?? []).map((t) => kiePoll(t)))) as Task[];
 
   const settled = (t?: Task) => !!t && (!!t.url || !!t.failed);
-  if (job.avatar?.url && (job.images ?? []).every(settled) && (job.broll ?? []).every(settled)) job.phase = "render";
+  const talks = (job.plan ?? []).filter((x) => x.kind === "talk").length;
+  const avatarsDone = Object.values(avatars).filter((a) => a.url).length === talks;
+  const actionDone = settled(broll.action) || !!frames.action?.fallback || !!frames.action?.failed;
+  if (avatarsDone && settled(broll.wide) && settled(broll.detail) && actionDone && (job.images ?? []).every(settled)) {
+    job.phase = "render";
+  }
 }
 
+/** Un cadru din montaj: clip video, sau o poză cu zoom lent dacă clipul lipsește. */
+type RenderShot = { file: string; image: boolean; dur: number };
+
 /**
- * Montajul: avatarul (cu vocea) ca bază, cadrele cinematice peste el câte 3 s,
+ * Montajul: cadrele lipite pe tăieturi (video fără sunet), vocea întreagă dedesubt,
  * subtitrări cuvânt cu cuvânt. Întoarce calea fișierului mp4 din `work`.
  */
 export async function renderDemoVideo(params: {
   work: string;
-  avatarFile: string;
-  brollFiles: string[];
+  shots: RenderShot[];
+  voiceFile: string;
   words: Word[];
+  keywords?: string[];
   duration: number;
 }): Promise<string> {
-  const { work } = params;
+  const { work, shots } = params;
   const bin = await ffmpeg();
   const fontDir = join(work, "fonts");
   await mkdir(fontDir, { recursive: true });
@@ -504,52 +716,56 @@ export async function renderDemoVideo(params: {
     `<?xml version="1.0"?><!DOCTYPE fontconfig SYSTEM "fonts.dtd"><fontconfig><dir>${fontDir}</dir><cachedir>${join(work, "fc")}</cachedir></fontconfig>`,
   );
   const assFile = join(work, "caps.ass");
-  await writeFile(assFile, buildAss(params.words));
+  await writeFile(assFile, buildAss(params.words, params.keywords));
 
-  // Cadrele cinematice acoperă avatarul câte 3 s, după cârlig și înainte de final; vocea continuă.
-  const dur = Math.max(params.duration, 6);
-  const slots = params.brollFiles.length >= 2 && dur >= 12 ? [0.3, 0.58] : params.brollFiles.length ? [0.45] : [];
   const norm = "scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280,setsar=1";
-  const filters: string[] = [`[0:v]${norm},fps=30[v0]`];
-  let last = "v0";
-  slots.forEach((frac, i) => {
-    const t0 = +(dur * frac).toFixed(2);
-    filters.push(`[${i + 1}:v]${norm},fps=30,trim=0:3,setpts=PTS-STARTPTS+${t0}/TB[b${i}]`);
-    filters.push(`[${last}][b${i}]overlay=enable='between(t,${t0},${+(t0 + 3).toFixed(2)})':eof_action=pass[v${i + 1}]`);
-    last = `v${i + 1}`;
+  const inputs: string[] = [];
+  const filters: string[] = [];
+  shots.forEach((sh, i) => {
+    const d = sh.dur.toFixed(3);
+    if (sh.image) {
+      inputs.push("-loop", "1", "-framerate", "30", "-t", (sh.dur + 0.5).toFixed(2), "-i", sh.file);
+      filters.push(
+        `[${i}:v]${norm},zoompan=z='min(zoom+0.0015,1.15)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=720x1280:fps=30,trim=0:${d},setpts=PTS-STARTPTS[s${i}]`,
+      );
+    } else {
+      inputs.push("-i", sh.file);
+      filters.push(`[${i}:v]${norm},fps=30,tpad=stop_mode=clone:stop_duration=3,trim=0:${d},setpts=PTS-STARTPTS[s${i}]`);
+    }
   });
-  filters.push(`[${last}]ass=${assFile}:fontsdir=${fontDir}[vout]`);
+  filters.push(`${shots.map((_, i) => `[s${i}]`).join("")}concat=n=${shots.length}:v=1:a=0[vc]`);
+  filters.push(`[vc]ass=${assFile}:fontsdir=${fontDir}[vout]`);
 
   const out = join(work, "clip.mp4");
   await run(
     bin,
     [
       "-y",
+      ...inputs,
       "-i",
-      params.avatarFile,
-      ...params.brollFiles.slice(0, slots.length).flatMap((f) => ["-i", f]),
+      params.voiceFile,
       "-filter_complex",
       filters.join(";"),
       "-map",
       "[vout]",
       "-map",
-      "0:a?",
+      `${shots.length}:a`,
       "-c:v",
       "libx264",
       "-preset",
       "veryfast",
       "-crf",
-      "22",
+      "21",
       "-pix_fmt",
       "yuv420p",
       "-c:a",
       "aac",
       "-b:a",
-      "128k",
+      "160k",
       "-movflags",
       "+faststart",
       "-t",
-      (dur + 0.4).toFixed(2),
+      (params.duration + 0.3).toFixed(2),
       out,
     ],
     { FONTCONFIG_FILE: fcConf },
@@ -561,19 +777,46 @@ async function stepRender(db: any, s: any, job: Job): Promise<void> {
   const uid = s.user_id as string;
   const work = await mkdtemp(join(tmpdir(), "render-"));
   try {
-    const avatarFile = join(work, "avatar.mp4");
-    await writeFile(avatarFile, await download(job.avatar!.url!));
-    const brollFiles: string[] = [];
-    for (const [i, t] of (job.broll ?? []).filter((x) => x.url).entries()) {
-      const f = join(work, `b${i}.mp4`);
-      await writeFile(f, await download(t.url!));
-      brollFiles.push(f);
+    const voiceFile = join(work, "voice.mp3");
+    await writeFile(voiceFile, await download(await signedUrl(db, job.voice!.path)));
+
+    const fallbackImage = async (name: string, path: string | undefined, url?: string | null) => {
+      const f = join(work, `${name}.jpg`);
+      await writeFile(f, await download(url ?? (await signedUrl(db, path!))));
+      return f;
+    };
+
+    const shots: RenderShot[] = [];
+    for (const [i, shot] of job.plan!.entries()) {
+      const dur = Math.max(0.4, shot.t1 - shot.t0);
+      if (shot.kind === "talk") {
+        const f = join(work, `t${i}.mp4`);
+        await writeFile(f, await download(job.avatars![String(i)].url!));
+        shots.push({ file: f, image: false, dur });
+        continue;
+      }
+      const clip = job.broll?.[shot.src]?.url;
+      if (clip) {
+        const f = join(work, `b${i}.mp4`);
+        await writeFile(f, await download(clip));
+        shots.push({ file: f, image: false, dur });
+      } else {
+        // Fără clip: poza (sau cadrul cu prezentatorul) cu zoom lent.
+        const crops = job.cropPaths ?? [];
+        const img =
+          shot.src === "action" && job.frames?.action?.url
+            ? await fallbackImage(`a${i}`, undefined, job.frames.action.url)
+            : await fallbackImage(`c${i}`, crops[shot.src === "detail" ? 1 % crops.length : 0]);
+        shots.push({ file: img, image: true, dur });
+      }
     }
+
     const out = await renderDemoVideo({
       work,
-      avatarFile,
-      brollFiles,
+      shots,
+      voiceFile,
       words: job.voice!.words,
+      keywords: job.script?.keywords,
       duration: job.voice!.duration,
     });
     const videoPath = `${uid}/demo/clip.mp4`;
