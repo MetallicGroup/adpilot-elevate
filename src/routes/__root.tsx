@@ -17,6 +17,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { runOAuthConfigCheck } from "@/lib/oauth-config-check";
+import { referralFromSearch, storeReferral } from "@/lib/referral";
 import { CookieConsent } from "@/components/CookieConsent";
 import { WowBackground } from "@/components/wow/WowBackground";
 // Nota: stack-ul e TanStack Start (React), deci entry-point-ul corect e
@@ -191,6 +192,19 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
+
+  // Codul de recomandare (?ref=… sau utm de vânzări) se reține pe ORICE pagină de intrare,
+  // ca să ajungă în cont chiar dacă omul se înscrie mai târziu, din altă pagină.
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    const code = referralFromSearch({
+      ref: sp.get("ref") ?? undefined,
+      utm_source: sp.get("utm_source") ?? undefined,
+      utm_medium: sp.get("utm_medium") ?? undefined,
+      utm_campaign: sp.get("utm_campaign") ?? undefined,
+    });
+    if (code) storeReferral(code);
+  }, []);
 
   useEffect(() => {
     runOAuthConfigCheck();
