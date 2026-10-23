@@ -23,17 +23,16 @@ import { chmod, copyFile, mkdir, mkdtemp, readFile, rm, stat, writeFile } from "
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { kieCreate, kiePoll } from "./kie.server";
 
 const BUCKET = "onboarding";
-const KIE = "https://api.kie.ai/api/v1/jobs";
 const LOCK_MS = 4 * 60 * 1000;
-const TASK_TIMEOUT_MS = 20 * 60 * 1000;
 const MAX_ERRORS = 4;
 export const DELIVERY_TEMPLATE = "materiale_gata";
 export const DELIVERY_PAYLOAD = "materiale";
 
 type Word = { w: string; s: number; e: number };
-type Task = { id: string; url?: string | null; failed?: boolean; startedAt: number; retries?: number; fallback?: boolean };
+type Task = import("./kie.server").KieTask;
 type Angle = "selfie" | "medium" | "close";
 type BrollSrc = "wide" | "action" | "detail";
 type Shot =
@@ -148,50 +147,7 @@ export function demoProgress(status: string, job: Job): { progress: number; step
   return { progress: 92, step: "Montez subtitrările și efectele" };
 }
 
-// ───────────────────────────── kie.ai ─────────────────────────────
-
-function kieKey(): string {
-  const k = process.env.KIE_API_KEY;
-  if (!k) throw new Error("KIE_API_KEY lipsește");
-  return k;
-}
-
-async function kieCreate(model: string, input: Record<string, unknown>): Promise<Task> {
-  const res = await fetch(`${KIE}/createTask`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${kieKey()}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model, input }),
-  });
-  const json: any = await res.json().catch(() => null);
-  const id = json?.data?.taskId;
-  if (json?.code !== 200 || !id) throw new Error(`kie ${model}: ${json?.msg ?? res.status}`);
-  return { id, startedAt: Date.now() };
-}
-
-/** Actualizează un task: url la succes, failed la eșec sau timeout. */
-async function kiePoll(t: Task | undefined): Promise<Task | undefined> {
-  if (!t || t.url || t.failed) return t;
-  const res = await fetch(`${KIE}/recordInfo?taskId=${encodeURIComponent(t.id)}`, {
-    headers: { Authorization: `Bearer ${kieKey()}` },
-  });
-  const json: any = await res.json().catch(() => null);
-  const d = json?.data;
-  if (d?.state === "success") {
-    let url: string | null = null;
-    try {
-      url = JSON.parse(d.resultJson ?? "{}")?.resultUrls?.[0] ?? null;
-    } catch {
-      /* ignore */
-    }
-    return url ? { ...t, url } : { ...t, failed: true };
-  }
-  if (d?.state === "fail") {
-    console.error("[demo] kie task failed", t.id, d.failMsg);
-    return { ...t, failed: true };
-  }
-  if (Date.now() - t.startedAt > TASK_TIMEOUT_MS) return { ...t, failed: true };
-  return t;
-}
+// ───────────────────────────── kie.ai: prompturi ─────────────────────────────
 
 const ROOM_RULE =
   "Keep the room exactly as in the business photo: same walls, colors, furniture, equipment and light; do not change the layout. " +
@@ -555,18 +511,41 @@ async function cutAudio(voice: Uint8Array, t0: number, t1: number, work: string,
   return new Uint8Array(await readFile(out));
 }
 
-async function stepScript(db: any, s: any, job: Job): Promise<void> {
+// ───────────────────────────── ce clip procesăm ─────────────────────────────
+
+/** Clipul de la înscriere (onboarding_sessions, cheie user_id) sau un clip nou (ai_clip_jobs, cheie id). */
+export type JobRef = { table: "onboarding_sessions" | "ai_clip_jobs"; key: "user_id" | "id"; id: string };
+const ONB = (userId: string): JobRef => ({ table: "onboarding_sessions", key: "user_id", id: userId });
+const CLIP = (jobId: string): JobRef => ({ table: "ai_clip_jobs", key: "id", id: jobId });
+const isOnb = (ref: JobRef) => ref.table === "onboarding_sessions";
+const upd = (db: any, ref: JobRef, patch: Record<string, unknown>) => db.from(ref.table).update(patch).eq(ref.key, ref.id);
+/** Unde salvăm fișierele: demo-ul în <user>/demo, clipurile noi fiecare în folderul lor. */
+const prefixOf = (ref: JobRef, uid: string) => (isOnb(ref) ? `${uid}/demo` : `${uid}/clips/${ref.id}`);
+/** Pozele de pornire: la onboarding sunt în bucket-ul nostru; la clipurile noi pot fi și în wa-media. */
+function photoRefsOf(s: any): Array<{ bucket: string; path: string }> {
+  if (Array.isArray(s.photo_refs) && s.photo_refs.length) return s.photo_refs;
+  return (s.photo_paths ?? []).map((p: string) => ({ bucket: BUCKET, path: p }));
+}
+async function signedFrom(db: any, bucket: string, path: string, seconds = 60 * 60 * 24): Promise<string> {
+  const { data, error } = await db.storage.from(bucket).createSignedUrl(path, seconds);
+  if (error || !data?.signedUrl) throw new Error(`signed url ${bucket}/${path}: ${error?.message}`);
+  return data.signedUrl;
+}
+
+async function stepScript(db: any, s: any, job: Job, ref: JobRef): Promise<void> {
   const uid = s.user_id as string;
-  const photoPaths: string[] = (s.photo_paths ?? []).slice(0, 3);
-  const photoUrls = await Promise.all(photoPaths.map((p) => signedUrl(db, p)));
+  const pre = prefixOf(ref, uid);
+  const photoUrls = await Promise.all(photoRefsOf(s).slice(0, 3).map((r) => signedFrom(db, r.bucket, r.path)));
+  if (!photoUrls.length) throw new Error("fără poze");
   job.photoUrls = photoUrls;
+  const niche = [s.niche ?? "afacere locală", s.brief ? `(ce vrea clientul în acest clip: ${s.brief})` : ""].filter(Boolean).join(" ");
 
   if (!job.script) {
-    let script = await writeScript(s.niche ?? "afacere locală", s.goal, photoUrls);
+    let script = await writeScript(niche, s.goal, photoUrls);
     const n = wordCount(script.voiceover);
     if (n < 46 || n > 64) {
       script = await writeScript(
-        s.niche ?? "afacere locală",
+        niche,
         s.goal,
         photoUrls,
         `textul anterior avea ${n} cuvinte; scrie între 50 și 58 de cuvinte.`,
@@ -583,7 +562,7 @@ async function stepScript(db: any, s: any, job: Job): Promise<void> {
     const cropPaths: string[] = [];
     for (let i = 0; i < Math.min(2, photoUrls.length); i++) {
       const c = await cropVertical(await download(photoUrls[i]), work, i);
-      const path = `${uid}/demo/crop_${i}.jpg`;
+      const path = `${pre}/crop_${i}.jpg`;
       await upload(db, path, c, "image/jpeg");
       cropPaths.push(path);
       crops.push(await signedUrl(db, path));
@@ -592,7 +571,7 @@ async function stepScript(db: any, s: any, job: Job): Promise<void> {
     job.cropPaths = cropPaths;
 
     const voice = await voiceInRange(script.voiceover, script.presenter);
-    const voicePath = `${uid}/demo/voice.mp3`;
+    const voicePath = `${pre}/voice.mp3`;
     await upload(db, voicePath, voice.mp3, "audio/mpeg");
     job.voice = { path: voicePath, duration: voice.duration, words: voice.words };
 
@@ -600,7 +579,7 @@ async function stepScript(db: any, s: any, job: Job): Promise<void> {
     for (const [i, shot] of plan.entries()) {
       if (shot.kind !== "talk") continue;
       const seg = await cutAudio(voice.mp3, shot.t0, shot.t1, work, i);
-      shot.audio = `${uid}/demo/seg_${i}.mp3`;
+      shot.audio = `${pre}/seg_${i}.mp3`;
       await upload(db, shot.audio, seg, "audio/mpeg");
     }
     job.plan = plan;
@@ -773,8 +752,9 @@ export async function renderDemoVideo(params: {
   return out;
 }
 
-async function stepRender(db: any, s: any, job: Job): Promise<void> {
+async function stepRender(db: any, s: any, job: Job, ref: JobRef): Promise<void> {
   const uid = s.user_id as string;
+  const pre = prefixOf(ref, uid);
   const work = await mkdtemp(join(tmpdir(), "render-"));
   try {
     const voiceFile = join(work, "voice.mp3");
@@ -819,22 +799,26 @@ async function stepRender(db: any, s: any, job: Job): Promise<void> {
       keywords: job.script?.keywords,
       duration: job.voice!.duration,
     });
-    const videoPath = `${uid}/demo/clip.mp4`;
+    const videoPath = `${pre}/clip.mp4`;
     await upload(db, videoPath, new Uint8Array(await readFile(out)), "video/mp4");
 
     const imagePaths: string[] = [];
     for (const [i, t] of (job.images ?? []).entries()) {
       if (!t.url) continue;
-      const p = `${uid}/demo/image_${i}.jpg`;
+      const p = `${pre}/image_${i}.jpg`;
       await upload(db, p, await download(t.url), "image/jpeg");
       imagePaths.push(p);
     }
 
     const now = new Date().toISOString();
-    await db
-      .from("onboarding_sessions")
-      .update({ demo_video_path: videoPath, demo_image_paths: imagePaths, demo_status: "ready", demo_ready_at: now })
-      .eq("user_id", uid);
+    await upd(db, ref, { demo_video_path: videoPath, demo_image_paths: imagePaths, demo_status: "ready", demo_ready_at: now });
+    // Istoricul din pagina „Materiale”.
+    const source = isOnb(ref) ? "onboarding" : (s.source ?? "whatsapp");
+    const jobId = isOnb(ref) ? null : ref.id;
+    await db.from("ai_assets").insert([
+      { user_id: uid, kind: "video", bucket: BUCKET, path: videoPath, source, job_id: jobId },
+      ...imagePaths.map((p) => ({ user_id: uid, kind: "image", bucket: BUCKET, path: p, source, job_id: jobId })),
+    ]);
     s.demo_status = "ready";
     job.phase = "deliver";
   } finally {
@@ -842,18 +826,28 @@ async function stepRender(db: any, s: any, job: Job): Promise<void> {
   }
 }
 
-async function stepDeliver(db: any, s: any, job: Job): Promise<void> {
+async function stepDeliver(db: any, s: any, job: Job, ref: JobRef): Promise<void> {
   const { getCentralWhatsApp, sendWhatsAppTemplate } = await import("./whatsapp.server");
   const central = getCentralWhatsApp();
   if (!central) throw new Error("WhatsApp central lipsește");
   const { data: wa } = await db
     .from("whatsapp_connections")
-    .select("user_phone")
+    .select("id, user_phone")
     .eq("user_id", s.user_id)
     .eq("status", "active")
     .maybeSingle();
   const phone = String(wa?.user_phone ?? "").replace(/\D/g, "");
   if (!phone) throw new Error("fără număr WhatsApp");
+
+  // Clip nou cerut din conversație: dacă fereastra de 24h e încă deschisă, îl trimitem direct.
+  if (!isOnb(ref)) {
+    const { isWindowOpen } = await import("./wa-notify.server");
+    if (await isWindowOpen(db, s.user_id)) {
+      await deliverMaterials(db, ref, { userId: s.user_id, connectionId: wa!.id, toPhone: phone });
+      job.phase = "done";
+      return;
+    }
+  }
   await sendWhatsAppTemplate(
     central.phoneNumberId,
     central.accessToken,
@@ -862,28 +856,28 @@ async function stepDeliver(db: any, s: any, job: Job): Promise<void> {
     "ro",
     [String(s.niche ?? "afacerea ta").toLowerCase()],
     undefined,
-    [{ subType: "quick_reply", index: 0, param: { type: "payload", payload: DELIVERY_PAYLOAD } }],
+    [{ subType: "quick_reply", index: 0, param: { type: "payload", payload: isOnb(ref) ? DELIVERY_PAYLOAD : `${DELIVERY_PAYLOAD}:${ref.id}` } }],
   );
-  await db.from("onboarding_sessions").update({ template_sent_at: new Date().toISOString() }).eq("user_id", s.user_id);
+  await upd(db, ref, { template_sent_at: new Date().toISOString() });
   job.phase = "done";
 }
 
 /**
- * Avansează clipul unui user cât se poate acum. Sigur la apeluri simultane (lock în DB).
+ * Avansează un clip cât se poate acum. Sigur la apeluri simultane (lock în DB).
  */
-export async function advanceDemo(db: any, userId: string): Promise<void> {
+async function advanceJob(db: any, ref: JobRef): Promise<void> {
   const nowIso = new Date().toISOString();
   const { data: locked } = await db
-    .from("onboarding_sessions")
+    .from(ref.table)
     .update({ demo_lock_until: new Date(Date.now() + LOCK_MS).toISOString() })
-    .eq("user_id", userId)
+    .eq(ref.key, ref.id)
     .in("demo_status", ["queued", "running", "ready"])
     .or(`demo_lock_until.is.null,demo_lock_until.lt.${nowIso}`)
     .select("*");
   const s = locked?.[0];
   if (!s) return;
   if (s.demo_status === "ready" && s.template_sent_at) {
-    await db.from("onboarding_sessions").update({ demo_lock_until: null }).eq("user_id", userId);
+    await upd(db, ref, { demo_lock_until: null });
     return;
   }
 
@@ -892,44 +886,104 @@ export async function advanceDemo(db: any, userId: string): Promise<void> {
   let failed = false;
   try {
     if (s.demo_status === "queued") {
-      await db.from("onboarding_sessions").update({ demo_status: "running" }).eq("user_id", userId);
+      await upd(db, ref, { demo_status: "running" });
       s.demo_status = "running";
     }
-    if (job.phase === "script") await stepScript(db, s, job);
+    if (job.phase === "script") await stepScript(db, s, job, ref);
     if (job.phase === "clips") await stepClips(db, s, job);
-    if (job.phase === "render") await stepRender(db, s, job);
-    if (job.phase === "deliver") await stepDeliver(db, s, job);
+    if (job.phase === "render") await stepRender(db, s, job, ref);
+    if (job.phase === "deliver") await stepDeliver(db, s, job, ref);
   } catch (e) {
     job.errors = (job.errors ?? 0) + 1;
     job.lastError = (e as Error).message.slice(0, 500);
-    console.error("[demo]", userId, job.phase, job.lastError);
+    console.error("[clip]", ref.table, ref.id, job.phase, job.lastError);
     failed = job.errors >= MAX_ERRORS && job.phase !== "deliver";
   } finally {
-    await db
-      .from("onboarding_sessions")
-      .update({
-        demo_job: job,
-        demo_lock_until: null,
-        ...(failed ? { demo_status: "failed", demo_error: job.lastError } : {}),
-        updated_at: new Date().toISOString(),
-      })
-      .eq("user_id", userId);
+    await upd(db, ref, {
+      demo_job: job,
+      demo_lock_until: null,
+      ...(failed ? { demo_status: "failed", demo_error: job.lastError } : {}),
+      updated_at: new Date().toISOString(),
+    });
   }
+}
+
+/** Clipul gratuit de la înscriere. */
+export async function advanceDemo(db: any, userId: string): Promise<void> {
+  return advanceJob(db, ONB(userId));
+}
+
+/** Un clip nou (cerut pe WhatsApp sau din aplicație). */
+export async function advanceClipJob(db: any, jobId: string): Promise<void> {
+  return advanceJob(db, CLIP(jobId));
 }
 
 /** Cron: avansează toate clipurile în lucru (și trimite șablonul celor gata). */
 export async function tickDemos(): Promise<{ processed: number }> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const db = supabaseAdmin as any;
+  const pending = (r: any) => r.demo_status !== "ready" || !r.template_sent_at;
+  const [{ data: onb }, { data: jobs }] = await Promise.all([
+    db
+      .from("onboarding_sessions")
+      .select("user_id, demo_status, template_sent_at")
+      .in("demo_status", ["queued", "running", "ready"])
+      .order("demo_started_at", { ascending: true })
+      .limit(10),
+    db
+      .from("ai_clip_jobs")
+      .select("id, demo_status, template_sent_at")
+      .in("demo_status", ["queued", "running", "ready"])
+      .order("demo_started_at", { ascending: true })
+      .limit(10),
+  ]);
+  const a = (onb ?? []).filter(pending);
+  const b = (jobs ?? []).filter(pending);
+  for (const r of a) await advanceDemo(db, r.user_id);
+  for (const r of b) await advanceClipJob(db, r.id);
+  return { processed: a.length + b.length };
+}
+
+/** Creează un clip nou (după verificarea limitei lunare, făcută de cel care cheamă). */
+export async function createClipJob(
+  db: any,
+  params: { userId: string; source: "whatsapp" | "web"; brief?: string | null; photoRefs: Array<{ bucket: string; path: string }> },
+): Promise<string> {
+  const { data: onb } = await db.from("onboarding_sessions").select("niche, goal").eq("user_id", params.userId).maybeSingle();
+  const { data, error } = await db
+    .from("ai_clip_jobs")
+    .insert({
+      user_id: params.userId,
+      source: params.source,
+      niche: onb?.niche ?? null,
+      goal: onb?.goal ?? null,
+      brief: (params.brief ?? "").trim().slice(0, 300) || null,
+      photo_refs: params.photoRefs.slice(0, 3),
+    })
+    .select("id")
+    .single();
+  if (error || !data) throw new Error(error?.message ?? "Nu am putut porni clipul.");
+  return data.id as string;
+}
+
+/** Ultimele poze reale trimise pe WhatsApp (nu cele generate), apoi cele de la înscriere. */
+export async function latestClientPhotos(db: any, userId: string): Promise<Array<{ bucket: string; path: string }>> {
+  const since = new Date(Date.now() - 30 * 86400_000).toISOString();
   const { data: rows } = await db
-    .from("onboarding_sessions")
-    .select("user_id, demo_status, template_sent_at")
-    .in("demo_status", ["queued", "running", "ready"])
-    .order("demo_started_at", { ascending: true })
-    .limit(10);
-  const todo = (rows ?? []).filter((r: any) => r.demo_status !== "ready" || !r.template_sent_at);
-  for (const r of todo) await advanceDemo(db, r.user_id);
-  return { processed: todo.length };
+    .from("whatsapp_messages")
+    .select("media_path")
+    .eq("user_id", userId)
+    .eq("direction", "in")
+    .like("media_mime", "image/%")
+    .not("media_path", "is", null)
+    .not("wa_message_id", "like", "ai-gen-%")
+    .gte("created_at", since)
+    .order("created_at", { ascending: false })
+    .limit(3);
+  const wa = (rows ?? []).map((r: any) => ({ bucket: "wa-media", path: r.media_path as string }));
+  if (wa.length) return wa;
+  const { data: s } = await db.from("onboarding_sessions").select("photo_paths").eq("user_id", userId).maybeSingle();
+  return (s?.photo_paths ?? []).slice(0, 3).map((p: string) => ({ bucket: BUCKET, path: p }));
 }
 
 // ───────────────────────────── livrarea pe WhatsApp ─────────────────────────────
@@ -942,9 +996,31 @@ const TARGET_NAMES: Record<string, string> = { fb: "Facebook și Instagram", tt:
  */
 export async function deliverDemoMaterials(
   db: any,
+  params: { userId: string; connectionId: string; toPhone: string; payload?: string | null },
+): Promise<boolean> {
+  // Buton dintr-un șablon pentru un clip nou: „materiale:<id>”.
+  const jobId = params.payload?.startsWith(`${DELIVERY_PAYLOAD}:`) ? params.payload.slice(DELIVERY_PAYLOAD.length + 1) : null;
+  if (jobId) return deliverMaterials(db, CLIP(jobId), params);
+  if (await deliverMaterials(db, ONB(params.userId), params)) return true;
+  // Fără payload: cel mai recent clip nou gata și nelivrat.
+  const { data: j } = await db
+    .from("ai_clip_jobs")
+    .select("id")
+    .eq("user_id", params.userId)
+    .eq("demo_status", "ready")
+    .order("demo_ready_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return j ? deliverMaterials(db, CLIP(j.id), params) : false;
+}
+
+async function deliverMaterials(
+  db: any,
+  ref: JobRef,
   params: { userId: string; connectionId: string; toPhone: string },
 ): Promise<boolean> {
-  const { data: s } = await db.from("onboarding_sessions").select("*").eq("user_id", params.userId).maybeSingle();
+  const { data: s } = await db.from(ref.table).select("*").eq(ref.key, ref.id).maybeSingle();
+  if (!s || s.user_id !== params.userId) return false;
   if (!s?.demo_video_path || !["ready", "delivered"].includes(s.demo_status)) return false;
   const { getCentralWhatsApp, sendWhatsAppMessage } = await import("./whatsapp.server");
   const central = getCentralWhatsApp();
@@ -975,9 +1051,9 @@ export async function deliverDemoMaterials(
   const v = await sendWhatsAppMessage(central.phoneNumberId, central.accessToken, params.toPhone, {
     type: "video_link",
     url: video,
-    caption: "🎬 Clipul tău",
+    caption: isOnb(ref) ? "🎬 Clipul tău" : "🎬 Clipul tău nou",
   });
-  await log(v.id, "video", "Clipul tău (demo)");
+  await log(v.id, "video", isOnb(ref) ? "Clipul tău (demo)" : "Clip nou");
   for (const p of s.demo_image_paths ?? []) {
     const r = await sendWhatsAppMessage(central.phoneNumberId, central.accessToken, params.toPhone, {
       type: "image_link",
@@ -991,7 +1067,7 @@ export async function deliverDemoMaterials(
     targets.length === 2
       ? "Conturile tale de Facebook, Instagram și TikTok sunt deja conectate."
       : `Contul tău de ${TARGET_NAMES[targets[0]] ?? "Facebook"} e deja conectat.`;
-  const q = `Vrei să pornesc și o reclamă cu ele? ${conn}`;
+  const q = isOnb(ref) ? `Vrei să pornesc și o reclamă cu ele? ${conn}` : "Vrei să pornesc o reclamă cu clipul ăsta?";
   const b = await sendWhatsAppMessage(central.phoneNumberId, central.accessToken, params.toPhone, {
     type: "buttons",
     text: q,
@@ -1001,10 +1077,7 @@ export async function deliverDemoMaterials(
     ],
   });
   await log(b.id, "interactive", q);
-  await db
-    .from("onboarding_sessions")
-    .update({ demo_status: "delivered", delivered_at: new Date().toISOString() })
-    .eq("user_id", params.userId);
+  await upd(db, ref, { demo_status: "delivered", delivered_at: new Date().toISOString() });
   return true;
 }
 
@@ -1055,12 +1128,21 @@ export async function demoCreativeMedia(
   userId: string,
   preferImage: boolean,
 ): Promise<{ path: string; mime: string; signedUrl: string } | null> {
-  const { data: s } = await db
-    .from("onboarding_sessions")
-    .select("demo_status, delivered_at, demo_image_paths")
-    .eq("user_id", userId)
-    .maybeSingle();
-  if (s?.demo_status !== "delivered" || !s.delivered_at) return null;
+  const [{ data: onb }, { data: job }] = await Promise.all([
+    db.from("onboarding_sessions").select("demo_status, delivered_at, demo_image_paths").eq("user_id", userId).maybeSingle(),
+    db
+      .from("ai_clip_jobs")
+      .select("demo_status, delivered_at, demo_image_paths")
+      .eq("user_id", userId)
+      .eq("demo_status", "delivered")
+      .order("delivered_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+  const cands = [onb, job].filter((x: any) => x?.demo_status === "delivered" && x.delivered_at);
+  cands.sort((x: any, y: any) => String(y.delivered_at).localeCompare(String(x.delivered_at)));
+  const s: any = cands[0];
+  if (!s) return null;
   if (Date.now() - new Date(s.delivered_at).getTime() > 7 * 86400_000) return null;
   const image = preferImage && (s.demo_image_paths ?? []).length > 0;
   const path = demoWaPath(userId, image ? "image_0.jpg" : "clip.mp4");

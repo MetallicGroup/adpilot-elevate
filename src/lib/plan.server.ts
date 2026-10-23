@@ -94,6 +94,55 @@ export async function checkAiPhotoQuota(
   return { allowed: used < limit, limit, used, tier };
 }
 
+/** Clipuri AI noi pe lună, după abonare. Clipul de la înscriere nu intră în limită. */
+export function aiClipMonthlyLimit(tier: PlanTier): number {
+  if (tier === "premium") return 15;
+  if (tier === "pro") return 4;
+  return 0;
+}
+
+/** Mai poate face un clip nou luna aceasta? (0 în perioada de probă și pe Starter). */
+export async function checkAiClipQuota(
+  supabaseAdmin: any,
+  userId: string,
+): Promise<{ allowed: boolean; limit: number; used: number; tier: PlanTier; trial: boolean }> {
+  const tier = await getUserPlanTier(supabaseAdmin, userId);
+  const { data: sub } = await supabaseAdmin
+    .from("subscriptions")
+    .select("status")
+    .eq("user_id", userId)
+    .eq("environment", serverPaymentsEnv())
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const trial = sub?.status === "trialing";
+  const limit = trial ? 0 : aiClipMonthlyLimit(tier);
+  if (limit === 0) return { allowed: false, limit, used: 0, tier, trial };
+  const start = new Date();
+  start.setUTCDate(1);
+  start.setUTCHours(0, 0, 0, 0);
+  const { count } = await supabaseAdmin
+    .from("ai_clip_jobs")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .neq("demo_status", "failed")
+    .gte("created_at", start.toISOString());
+  const used = count ?? 0;
+  return { allowed: used < limit, limit, used, tier, trial };
+}
+
+/** Mesajul pentru om când nu mai poate face clipuri noi luna aceasta. */
+export function clipQuotaMessage(q: { limit: number; tier: PlanTier; trial: boolean }): string {
+  if (q.limit === 0) {
+    return q.trial || q.tier === "pro" || q.tier === "premium"
+      ? "Clipurile noi se deblochează după plata abonamentului: 4 pe lună pe Pro, 15 pe Premium. Până atunci ai clipul și pozele de la înscriere. 🎬"
+      : "Clipurile noi cu AI sunt în planurile Pro (4 pe lună) și Premium (15 pe lună). Până atunci ai clipul și pozele de la înscriere. 🎬";
+  }
+  return q.tier === "pro"
+    ? `Ai folosit cele ${q.limit} clipuri din luna asta. Pe Premium ai 15 pe lună; altfel, limita se reîncarcă la începutul lunii viitoare. 🎬`
+    : `Ai folosit cele ${q.limit} clipuri din luna asta. Limita se reîncarcă la începutul lunii viitoare. 🎬`;
+}
+
 /** Înregistrează o poză AI generată (contor lunar). */
 export async function recordAiPhoto(supabaseAdmin: any, userId: string): Promise<void> {
   await supabaseAdmin.from("ai_image_usage").insert({ user_id: userId });

@@ -83,6 +83,7 @@ import { Route as ApiPublicHooksFreePlanExpiryRouteImport } from './routes/api/p
 import { Route as ApiPublicHooksNewSignupRouteImport } from './routes/api/public/hooks/new-signup'
 import { Route as ApiPublicHooksPeriodicUpdateRouteImport } from './routes/api/public/hooks/periodic-update'
 import { Route as ApiPublicHooksRefreshInsightsRouteImport } from './routes/api/public/hooks/refresh-insights'
+import { Route as ApiPublicHooksStartRemindersRouteImport } from './routes/api/public/hooks/start-reminders'
 import { Route as ApiPublicHooksSyncMetaLeadsRouteImport } from './routes/api/public/hooks/sync-meta-leads'
 import { Route as ApiPublicHooksWaKeepaliveRouteImport } from './routes/api/public/hooks/wa-keepalive'
 import { Route as ApiPublicMetaWebhookRouteImport } from './routes/api/public/meta.webhook'
@@ -476,6 +477,12 @@ const ApiPublicHooksRefreshInsightsRoute =
     path: '/api/public/hooks/refresh-insights',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksStartRemindersRoute =
+  ApiPublicHooksStartRemindersRouteImport.update({
+    id: '/api/public/hooks/start-reminders',
+    path: '/api/public/hooks/start-reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksSyncMetaLeadsRoute =
   ApiPublicHooksSyncMetaLeadsRouteImport.update({
     id: '/api/public/hooks/sync-meta-leads',
@@ -602,6 +609,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/new-signup': typeof ApiPublicHooksNewSignupRoute
   '/api/public/hooks/periodic-update': typeof ApiPublicHooksPeriodicUpdateRoute
   '/api/public/hooks/refresh-insights': typeof ApiPublicHooksRefreshInsightsRoute
+  '/api/public/hooks/start-reminders': typeof ApiPublicHooksStartRemindersRoute
   '/api/public/hooks/sync-meta-leads': typeof ApiPublicHooksSyncMetaLeadsRoute
   '/api/public/hooks/wa-keepalive': typeof ApiPublicHooksWaKeepaliveRoute
   '/api/public/meta/webhook': typeof ApiPublicMetaWebhookRoute
@@ -686,6 +694,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/new-signup': typeof ApiPublicHooksNewSignupRoute
   '/api/public/hooks/periodic-update': typeof ApiPublicHooksPeriodicUpdateRoute
   '/api/public/hooks/refresh-insights': typeof ApiPublicHooksRefreshInsightsRoute
+  '/api/public/hooks/start-reminders': typeof ApiPublicHooksStartRemindersRoute
   '/api/public/hooks/sync-meta-leads': typeof ApiPublicHooksSyncMetaLeadsRoute
   '/api/public/hooks/wa-keepalive': typeof ApiPublicHooksWaKeepaliveRoute
   '/api/public/meta/webhook': typeof ApiPublicMetaWebhookRoute
@@ -772,6 +781,7 @@ export interface FileRoutesById {
   '/api/public/hooks/new-signup': typeof ApiPublicHooksNewSignupRoute
   '/api/public/hooks/periodic-update': typeof ApiPublicHooksPeriodicUpdateRoute
   '/api/public/hooks/refresh-insights': typeof ApiPublicHooksRefreshInsightsRoute
+  '/api/public/hooks/start-reminders': typeof ApiPublicHooksStartRemindersRoute
   '/api/public/hooks/sync-meta-leads': typeof ApiPublicHooksSyncMetaLeadsRoute
   '/api/public/hooks/wa-keepalive': typeof ApiPublicHooksWaKeepaliveRoute
   '/api/public/meta/webhook': typeof ApiPublicMetaWebhookRoute
@@ -858,6 +868,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/new-signup'
     | '/api/public/hooks/periodic-update'
     | '/api/public/hooks/refresh-insights'
+    | '/api/public/hooks/start-reminders'
     | '/api/public/hooks/sync-meta-leads'
     | '/api/public/hooks/wa-keepalive'
     | '/api/public/meta/webhook'
@@ -942,6 +953,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/new-signup'
     | '/api/public/hooks/periodic-update'
     | '/api/public/hooks/refresh-insights'
+    | '/api/public/hooks/start-reminders'
     | '/api/public/hooks/sync-meta-leads'
     | '/api/public/hooks/wa-keepalive'
     | '/api/public/meta/webhook'
@@ -1027,6 +1039,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/new-signup'
     | '/api/public/hooks/periodic-update'
     | '/api/public/hooks/refresh-insights'
+    | '/api/public/hooks/start-reminders'
     | '/api/public/hooks/sync-meta-leads'
     | '/api/public/hooks/wa-keepalive'
     | '/api/public/meta/webhook'
@@ -1089,6 +1102,7 @@ export interface RootRouteChildren {
   ApiPublicHooksNewSignupRoute: typeof ApiPublicHooksNewSignupRoute
   ApiPublicHooksPeriodicUpdateRoute: typeof ApiPublicHooksPeriodicUpdateRoute
   ApiPublicHooksRefreshInsightsRoute: typeof ApiPublicHooksRefreshInsightsRoute
+  ApiPublicHooksStartRemindersRoute: typeof ApiPublicHooksStartRemindersRoute
   ApiPublicHooksSyncMetaLeadsRoute: typeof ApiPublicHooksSyncMetaLeadsRoute
   ApiPublicHooksWaKeepaliveRoute: typeof ApiPublicHooksWaKeepaliveRoute
   ApiPublicMetaWebhookRoute: typeof ApiPublicMetaWebhookRoute
@@ -1620,6 +1634,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksRefreshInsightsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/start-reminders': {
+      id: '/api/public/hooks/start-reminders'
+      path: '/api/public/hooks/start-reminders'
+      fullPath: '/api/public/hooks/start-reminders'
+      preLoaderRoute: typeof ApiPublicHooksStartRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/sync-meta-leads': {
       id: '/api/public/hooks/sync-meta-leads'
       path: '/api/public/hooks/sync-meta-leads'
@@ -1812,6 +1833,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksNewSignupRoute: ApiPublicHooksNewSignupRoute,
   ApiPublicHooksPeriodicUpdateRoute: ApiPublicHooksPeriodicUpdateRoute,
   ApiPublicHooksRefreshInsightsRoute: ApiPublicHooksRefreshInsightsRoute,
+  ApiPublicHooksStartRemindersRoute: ApiPublicHooksStartRemindersRoute,
   ApiPublicHooksSyncMetaLeadsRoute: ApiPublicHooksSyncMetaLeadsRoute,
   ApiPublicHooksWaKeepaliveRoute: ApiPublicHooksWaKeepaliveRoute,
   ApiPublicMetaWebhookRoute: ApiPublicMetaWebhookRoute,

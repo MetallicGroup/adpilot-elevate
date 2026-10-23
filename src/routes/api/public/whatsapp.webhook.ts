@@ -450,7 +450,7 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
               // Materialele demo din onboarding: butonul din șablonul `materiale_gata`.
               if (
                 type === "button" &&
-                (m.button?.payload === "materiale" || /trimite-mi materialele/i.test(text ?? ""))
+                (String(m.button?.payload ?? "").startsWith("materiale") || /trimite-mi materialele/i.test(text ?? ""))
               ) {
                 try {
                   const { deliverDemoMaterials } = await import("@/lib/demo-video.server");
@@ -458,6 +458,7 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
                     userId: conn.user_id,
                     connectionId: conn.id,
                     toPhone: fromPhone,
+                    payload: m.button?.payload ?? null,
                   });
                   if (sent) continue;
                 } catch (e) {

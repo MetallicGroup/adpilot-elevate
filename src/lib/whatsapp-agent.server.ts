@@ -577,9 +577,51 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
       },
     }),
 
+    create_ai_clip: tool({
+      description:
+        "Creează un CLIP video nou cu AI (20–25 s, vertical, prezentator în spațiul clientului, voce în română, subtitrări, plus 2 poze), pornind de la pozele lui reale (ultimele trimise pe WhatsApp sau cele de la înscriere). Folosește când cere un clip / video nou. Limită lunară după abonare: Pro 4, Premium 15; în perioada de probă are doar clipul de la înscriere. Durează 3–5 minute, iar clipul îl trimit automat aici când e gata.",
+      inputSchema: z.object({
+        brief: z
+          .string()
+          .max(300)
+          .optional()
+          .describe("Ce vrea să scoată în evidență în clip: o ofertă, un serviciu, un mesaj. Opțional."),
+      }),
+      execute: async ({ brief }) => {
+        try {
+          const { checkAiClipQuota, clipQuotaMessage } = await import("./plan.server");
+          const q = await checkAiClipQuota(supabaseAdmin, ctx.userId);
+          if (!q.allowed) return { error: clipQuotaMessage(q) };
+          const { latestClientPhotos, createClipJob } = await import("./demo-video.server");
+          const photos = await latestClientPhotos(supabaseAdmin, ctx.userId);
+          if (!photos.length) {
+            return {
+              error:
+                "Am nevoie de 2–3 poze reale cu afacerea ta (locul, echipa sau ce lucrezi). Trimite-le aici și fac clipul imediat. 📸",
+            };
+          }
+          const jobId = await createClipJob(supabaseAdmin, {
+            userId: ctx.userId,
+            source: "whatsapp",
+            brief,
+            photoRefs: photos,
+          });
+          return {
+            ok: true,
+            job_id: jobId,
+            used_this_month: q.used + 1,
+            monthly_limit: q.limit,
+            message: "Clipul a pornit. Spune-i că durează 3–5 minute și că i-l trimiți aici, automat, când e gata.",
+          };
+        } catch (e: any) {
+          return { error: e?.message ?? "Nu am putut porni clipul." };
+        }
+      },
+    }),
+
     generate_image: tool({
       description:
-        "Generează o imagine pentru reclamă cu AI (gpt-image-1, calitate maximă, 1024x1024). Folosește când userul nu are poză proprie. Promptul trebuie să fie mobile-first, legat de ofertă, cu text scurt pe imagine (max ~5–6 cuvinte) dacă e cazul. Dacă userul a trimis o poză de REFERINȚĂ și vrea ca AI-ul să plece de la ea, apelează cu use_reference=true. După generare imaginea devine 'latestMedia', se salvează în storage și rămâne disponibilă pentru create_campaign la mesajele următoare (userul NU trebuie să o retrimită). Tool-ul trimite SINGUR userului mesajul despre timpul de asteptare la start — nu-l anunta tu inainte.",
+        "Generează o poză pentru reclamă cu AI (Nano Banana Pro), pornind MEREU de la o poză reală a clientului: ultima trimisă pe WhatsApp sau cele de la înscriere. Locul, produsele și oamenii rămân recognoscibili. Dacă nu are nicio poză, cere-i una. Promptul descrie scena, stilul și eventual un text scurt pe imagine, legat de ofertă.",
       inputSchema: z.object({
         prompt: z
           .string()
@@ -591,7 +633,7 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
         use_reference: z
           .boolean()
           .optional()
-          .describe("true dacă userul a trimis o poză de referință pe WhatsApp și vrea ca imaginea AI să plece de la ea (latestMedia trebuie să fie o imagine)."),
+          .describe("Ignorat: pornim mereu de la o poză a clientului (ultima trimisă sau cele de la înscriere)."),
       }),
       execute: async ({ prompt, use_reference }) => {
         try {
@@ -611,12 +653,13 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
                 };
           }
 
-          // Imagine de referință (opțional): doar dacă userul a trimis o IMAGINE.
+          // Poza de pornire: ultima imagine trimisă (dacă e în conversație); altfel o caută generatorul.
+          void use_reference;
           let reference: { bytes: Uint8Array; mime: string } | null = null;
           if (
-            use_reference &&
             ctx.latestMedia &&
-            ctx.latestMedia.mime.toLowerCase().startsWith("image/")
+            ctx.latestMedia.mime.toLowerCase().startsWith("image/") &&
+            !ctx.latestMedia.path.startsWith("generated/")
           ) {
             try {
               const { data: refFile } = await supabaseAdmin.storage
@@ -641,9 +684,7 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
               ctx.toPhone,
               {
                 type: "text",
-                text: reference
-                  ? "🎨 Am început să creez imaginea plecând de la poza ta... durează un minut, maxim două. Ți-o trimit imediat ce e gata. ⏳"
-                  : "🎨 Am început să-ți creez imaginea cu AI... durează un minut, maxim două. Ți-o trimit imediat ce e gata. ⏳",
+                text: "🎨 Am început să creez poza plecând de la poza ta... durează un minut, maxim două. Ți-o trimit imediat ce e gata. ⏳",
               },
             );
           } catch (e) {

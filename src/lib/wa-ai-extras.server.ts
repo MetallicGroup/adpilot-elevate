@@ -1,6 +1,6 @@
 /**
- * Server-only helpers for the WhatsApp agent — OpenAI (Claude nu face imagini/audio):
- *  - generateCreativeImage: text → 1024x1024 JPG salvat în bucket wa-media (gpt-image-1)
+ * Server-only helpers for the WhatsApp agent (Claude nu face imagini/audio):
+ *  - generateCreativeImage: poză 4:5 cu Nano Banana Pro (kie.ai), pornind de la o poză a clientului
  *  - transcribeWaAudio: notă vocală (ogg/mp3/wav) → text românesc (Whisper)
  */
 
@@ -12,78 +12,78 @@ function openaiKey(): string {
   return key;
 }
 
+/** Mesajul pentru om când nu avem nicio poză de-a lui de la care să pornim. */
+export const NEED_REFERENCE_MESSAGE =
+  "Ca să-ți fac o poză cu AI, am nevoie de o poză reală cu afacerea ta ca punct de plecare (locul, produsul sau echipa). Trimite-mi una aici și o fac imediat. 📸";
+
+/** Poza de pornire: cea dată explicit, apoi ultima poză trimisă pe WhatsApp, apoi pozele de la înscriere. */
+async function referenceUrl(db: any, userId: string, reference?: { bytes: Uint8Array; mime: string } | null): Promise<string | null> {
+  const sign = async (bucket: string, path: string) =>
+    (await db.storage.from(bucket).createSignedUrl(path, 60 * 60)).data?.signedUrl ?? null;
+  if (reference?.bytes?.length) {
+    const path = `refs/${userId}/${Date.now()}.jpg`;
+    const { error } = await db.storage.from("wa-media").upload(path, reference.bytes, { contentType: reference.mime || "image/jpeg" });
+    if (!error) return sign("wa-media", path);
+  }
+  const since = new Date(Date.now() - 60 * 86400_000).toISOString();
+  const { data: wa } = await db
+    .from("whatsapp_messages")
+    .select("media_path, media_mime")
+    .eq("user_id", userId)
+    .eq("direction", "in")
+    .like("media_mime", "image/%")
+    .not("media_path", "is", null)
+    // doar poze reale trimise de om, nu pozele generate anterior (salvate tot ca „in”)
+    .not("wa_message_id", "like", "ai-gen-%")
+    .gte("created_at", since)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (wa?.media_path) return sign("wa-media", wa.media_path);
+  const { data: s } = await db.from("onboarding_sessions").select("photo_paths").eq("user_id", userId).maybeSingle();
+  if (s?.photo_paths?.[0]) return sign("onboarding", s.photo_paths[0]);
+  return null;
+}
+
 /**
- * Generate a square 1024 image and save bytes to wa-media. Returns { path, mime, signedUrl }.
- * Folosim gpt-image-1 la calitate MAXIMĂ (cel mai performant model de imagine OpenAI).
- * Dacă `reference` e dat (o poză proprie trimisă de user), folosim /images/edits ca să
- * generăm plecând de la acea imagine de referință; altfel /images/generations (text → imagine).
+ * Poză pentru reclamă cu Nano Banana Pro (kie.ai), pornind MEREU de la o poză reală a clientului,
+ * ca locul, produsele și oamenii să rămână recognoscibili. 4:5 vertical, salvată în `wa-media`
+ * și în istoricul de materiale. Aruncă `NEED_REFERENCE_MESSAGE` dacă nu are nicio poză.
  */
 export async function generateCreativeImage(
   userId: string,
   prompt: string,
   reference?: { bytes: Uint8Array; mime: string } | null,
+  opts: { source?: "whatsapp" | "web" } = {},
 ): Promise<{ path: string; mime: string; signedUrl: string }> {
-  let j: any;
-  if (reference && reference.bytes?.length) {
-    // Image-to-image cu imagine de referință (gpt-image-1 /images/edits).
-    const ct = (reference.mime || "image/jpeg").split(";")[0]?.trim() || "image/jpeg";
-    const ext = ct.includes("png") ? "png" : ct.includes("webp") ? "webp" : "jpg";
-    const form = new FormData();
-    form.append("model", "gpt-image-1");
-    form.append(
-      "image",
-      new Blob([reference.bytes as BlobPart], { type: ct }),
-      `reference.${ext}`,
-    );
-    form.append("prompt", prompt);
-    form.append("size", "1024x1024");
-    form.append("quality", "high");
-    const r = await fetch(`${OPENAI}/images/edits`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${openaiKey()}` },
-      body: form,
-    });
-    j = await r.json();
-    if (!r.ok) {
-      throw new Error(j?.error?.message || `image edit failed (${r.status})`);
-    }
-  } else {
-    const r = await fetch(`${OPENAI}/images/generations`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${openaiKey()}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-image-1",
-        prompt,
-        n: 1,
-        size: "1024x1024",
-        quality: "high",
-      }),
-    });
-    j = await r.json();
-    if (!r.ok) {
-      throw new Error(j?.error?.message || `image gen failed (${r.status})`);
-    }
-  }
-  const b64: string | undefined = j?.data?.[0]?.b64_json;
-  if (!b64) throw new Error("AI nu a returnat o imagine.");
-  const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
-
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const db = supabaseAdmin as any;
+  const ref = await referenceUrl(db, userId, reference);
+  if (!ref) throw new Error(NEED_REFERENCE_MESSAGE);
+
+  const { kieCreate, kieWait } = await import("./kie.server");
+  const task = await kieCreate("nano-banana-pro", {
+    prompt:
+      "The attached photo shows the client's real business: keep the place, products and people recognizable and photorealistic. " +
+      `${prompt} Advertising photo for social media, natural light, vertical 4:5. No watermark.`,
+    image_input: [ref],
+    aspect_ratio: "4:5",
+    resolution: "2K",
+    output_format: "jpg",
+  });
+  const url = await kieWait(task, 150_000);
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Nu am putut descărca imaginea generată.");
+  const bytes = new Uint8Array(await res.arrayBuffer());
+
   const path = `generated/${userId}/${Date.now()}.jpg`;
-  const { error } = await supabaseAdmin.storage
-    .from("wa-media")
-    .upload(path, bytes, { contentType: "image/jpeg", upsert: false });
+  const { error } = await db.storage.from("wa-media").upload(path, bytes, { contentType: "image/jpeg", upsert: false });
   if (error) throw new Error(`Salvare imagine: ${error.message}`);
-  const { data: signed } = await supabaseAdmin.storage
-    .from("wa-media")
-    .createSignedUrl(path, 60 * 60 * 24 * 7);
+  await db.from("ai_assets").insert({ user_id: userId, kind: "image", bucket: "wa-media", path, source: opts.source ?? "whatsapp", prompt });
+  const { data: signed } = await db.storage.from("wa-media").createSignedUrl(path, 60 * 60 * 24 * 7);
   return { path, mime: "image/jpeg", signedUrl: signed?.signedUrl ?? "" };
 }
 
-/** Transcribe a WhatsApp voice note with OpenAI Whisper. `mime` din WA (ex. "audio/ogg; codecs=opus"). */
 export async function transcribeWaAudio(bytes: Uint8Array, mime: string): Promise<string> {
   const raw = mime.toLowerCase();
   let ext = "ogg";
