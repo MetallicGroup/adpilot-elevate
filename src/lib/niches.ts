@@ -1,8 +1,8 @@
 /**
  * Config pentru landing-urile de nișă (/beauty, /dentist, ...). Client-safe.
  * Fiecare nișă e o intrare aici; ruta (ex. src/routes/beauty.tsx) doar randează
- * <NicheLanding niche={NICHES.beauty} />. IMPORTANT: doar Facebook & Instagram
- * (fără Google — nu e în produs).
+ * <NicheLanding niche={NICHES.beauty} />. IMPORTANT: doar Facebook, Instagram & TikTok
+ * (fără Google — nu e în produs). TikTok e în produs (reclame video, Smart+).
  */
 
 export type ChatLine = { from: "me" | "bot"; text: string };
@@ -33,7 +33,7 @@ export const NICHES: Record<string, NicheConfig> = {
     meta: {
       title: "Mai multe cliente la salon — AdPilot",
       description:
-        "AdPilot trimite programări noi direct pe WhatsApp-ul tău — reclame Facebook și Instagram automate pentru salonul tău. Fără agenție, fără experiență. Începe gratuit.",
+        "AdPilot trimite programări noi direct pe WhatsApp-ul tău — reclame Facebook, Instagram și TikTok automate pentru salonul tău. Fără agenție, fără experiență. Începe gratuit.",
     },
     hero: {
       badge: "Pentru saloane · coafor · unghii · beauty",
@@ -41,7 +41,7 @@ export const NICHES: Record<string, NicheConfig> = {
       titleHighlight: "cliente la salon",
       titlePost: ".",
       subtitle:
-        "AdPilot trimite programări noi direct pe WhatsApp-ul tău — automat, în fiecare zi. Reclame pe Facebook și Instagram, fără agenție și fără experiență.",
+        "AdPilot trimite programări noi direct pe WhatsApp-ul tău — automat, în fiecare zi. Reclame pe Facebook, Instagram și TikTok, fără agenție și fără experiență.",
       ctaLabel: "Vreau mai multe programări",
     },
     socialProof: "Alătură-te saloanelor din România care pornesc reclame cu AdPilot 🇷🇴",
@@ -57,21 +57,21 @@ export const NICHES: Record<string, NicheConfig> = {
       title: "Așa pornești o reclamă — dintr-o conversație pe WhatsApp",
       lines: [
         { from: "me", text: "Vreau mai multe cliente la salon" },
-        { from: "bot", text: "Perfect! Pornesc o reclamă pentru salonul tău pe Facebook și Instagram. Ce buget zilnic pui?" },
+        { from: "bot", text: "Perfect! Pornesc o reclamă pentru salonul tău pe Facebook, Instagram și TikTok. Ce buget zilnic pui?" },
         { from: "me", text: "50 lei pe zi" },
         { from: "bot", text: "Gata, reclama e live! 🎉 Îți trimit aici fiecare programare nouă." },
         { from: "bot", text: "📩 Programare nouă: Andreea, 0722… — vrea manichiură sâmbătă la 14:00" },
       ],
     },
     steps: [
-      { title: "Conectezi Facebook", desc: "Legi pagina salonului în câteva secunde." },
-      { title: "Spui ce vrei", desc: "„Vreau mai multe cliente la salon” — atât, în română." },
+      { title: "Conectezi Facebook sau TikTok", desc: "Legi pagina salonului în câteva secunde." },
+      { title: "Spui ce vrei", desc: "„Vreau mai multe cliente la salon” — atât, în română. AdPilot face singur pozele și clipul cu AI." },
       { title: "Primești programări", desc: "Fiecare clientă interesată îți vine direct pe WhatsApp." },
     ],
     faq: [
       { q: "Trebuie să știu ceva despre reclame?", a: "Nu. Îi spui pe WhatsApp ce vrei („mai multe cliente”), iar AdPilot creează, lansează și optimizează reclama singur." },
-      { q: "Cât costă reclamele?", a: "Bugetul de reclame îl alegi tu (ex. 30–100 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 7 zile ca să testezi, apoi de la un plan lunar." },
-      { q: "Pe ce apar reclamele?", a: "Pe Facebook și Instagram — exact unde sunt clientele tale, targetate pe orașul și zona ta." },
+      { q: "Cât costă reclamele?", a: "Bugetul de reclame îl alegi tu (ex. 30–100 lei/zi) și e plătit direct către Facebook sau TikTok. AdPilot e gratuit 7 zile ca să testezi, apoi de la un plan lunar." },
+      { q: "Pe ce apar reclamele?", a: "Pe Facebook, Instagram și TikTok — exact unde sunt clientele tale, targetate pe orașul și zona ta." },
       { q: "Cum primesc programările?", a: "Fiecare persoană interesată îți vine ca lead direct pe WhatsApp, cu nume și telefon, gata de contactat." },
       { q: "Pot să mă opresc oricând?", a: "Da. Pornești și oprești reclama când vrei, direct din WhatsApp. Fără contracte, fără bătăi de cap." },
     ],
@@ -83,7 +83,7 @@ export const NICHES: Record<string, NicheConfig> = {
     meta: {
       title: "Mai mulți pacienți la clinica ta — AdPilot",
       description:
-        "AdPilot aduce pacienți noi la clinica ta stomatologică sau de estetică — reclame Facebook și Instagram automate, cu fiecare pacient interesat direct pe WhatsApp. Începe gratuit.",
+        "AdPilot aduce pacienți noi la clinica ta stomatologică sau de estetică — reclame Facebook, Instagram și TikTok automate, cu fiecare pacient interesat direct pe WhatsApp. Începe gratuit.",
     },
     hero: {
       badge: "Pentru clinici stomatologice · estetică · medicale",
@@ -91,7 +91,7 @@ export const NICHES: Record<string, NicheConfig> = {
       titleHighlight: "pacienți noi",
       titlePost: ". Lunar.",
       subtitle:
-        "Reclame Facebook și Instagram gestionate cu AI. Fiecare pacient interesat vine direct pe WhatsApp — fără agenție, fără bătăi de cap.",
+        "Reclame Facebook, Instagram și TikTok gestionate cu AI. Fiecare pacient interesat vine direct pe WhatsApp — fără agenție, fără bătăi de cap.",
       ctaLabel: "Vreau mai mulți pacienți",
     },
     socialProof: "Alătură-te clinicilor din România care aduc pacienți noi cu AdPilot 🇷🇴",
@@ -107,20 +107,20 @@ export const NICHES: Record<string, NicheConfig> = {
       title: "Așa aduci pacienți noi — dintr-o conversație pe WhatsApp",
       lines: [
         { from: "me", text: "Vreau mai mulți pacienți la clinică" },
-        { from: "bot", text: "Perfect! Pornesc o reclamă pe Facebook și Instagram. Ce serviciu vrei să promovezi?" },
+        { from: "bot", text: "Perfect! Pornesc o reclamă pe Facebook, Instagram și TikTok. Ce serviciu vrei să promovezi?" },
         { from: "me", text: "Implant dentar, buget 150 lei/zi" },
         { from: "bot", text: "Gata, reclama e live! 🎉 Îți trimit aici fiecare pacient interesat." },
         { from: "bot", text: "📩 Pacient nou: Mihai, 0733… — vrea o consultație pentru implant" },
       ],
     },
     steps: [
-      { title: "Conectezi Facebook", desc: "Legi pagina clinicii în câteva secunde." },
-      { title: "Spui ce promovezi", desc: "„Implant”, „albire”, „consultație gratuită” — în română." },
+      { title: "Conectezi Facebook sau TikTok", desc: "Legi pagina clinicii în câteva secunde." },
+      { title: "Spui ce promovezi", desc: "„Implant”, „albire”, „consultație gratuită” — în română. AdPilot face singur pozele și clipul cu AI." },
       { title: "Primești pacienți", desc: "Fiecare pacient interesat îți vine direct pe WhatsApp." },
     ],
     faq: [
       { q: "E permis să faci reclame la servicii medicale?", a: "Da, cu mesaje corecte. AdPilot construiește reclame conforme cu regulile Meta pentru domeniul medical." },
-      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 100–300 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 7 zile, apoi de la un plan lunar." },
+      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 100–300 lei/zi) și e plătit direct către Facebook sau TikTok. AdPilot e gratuit 7 zile, apoi de la un plan lunar." },
       { q: "Cum primesc pacienții?", a: "Fiecare persoană interesată îți vine ca lead pe WhatsApp, cu nume și telefon, gata de programat." },
       { q: "Funcționează pentru orice specialitate?", a: "Da — stomatologie, estetică, dermatologie, clinici generale. Targetăm exact zona și publicul tău." },
       { q: "Pot opri oricând?", a: "Da, pornești și oprești reclama din WhatsApp, fără contracte." },
@@ -133,7 +133,7 @@ export const NICHES: Record<string, NicheConfig> = {
     meta: {
       title: "Sala ta plină tot anul — AdPilot",
       description:
-        "AdPilot aduce membri noi la sala ta constant, nu doar în ianuarie — reclame Facebook și Instagram automate, cu fiecare lead direct pe WhatsApp. Începe gratuit.",
+        "AdPilot aduce membri noi la sala ta constant, nu doar în ianuarie — reclame Facebook, Instagram și TikTok automate, cu fiecare lead direct pe WhatsApp. Începe gratuit.",
     },
     hero: {
       badge: "Pentru săli de sport · personal traineri · fitness",
@@ -157,20 +157,20 @@ export const NICHES: Record<string, NicheConfig> = {
       title: "Așa aduci membri noi — dintr-o conversație pe WhatsApp",
       lines: [
         { from: "me", text: "Vreau mai mulți membri la sală" },
-        { from: "bot", text: "Perfect! Pornesc o reclamă pe Facebook și Instagram. Ce oferi — abonament, clase, personal training?" },
+        { from: "bot", text: "Perfect! Pornesc o reclamă pe Facebook, Instagram și TikTok. Ce oferi — abonament, clase, personal training?" },
         { from: "me", text: "Abonament lunar, buget 70 lei/zi" },
         { from: "bot", text: "Gata, reclama e live! 🎉 Îți trimit aici fiecare persoană interesată." },
         { from: "bot", text: "📩 Lead nou: Alex, 0744… — vrea un abonament lunar cu acces la sală" },
       ],
     },
     steps: [
-      { title: "Conectezi Facebook", desc: "Legi pagina sălii în câteva secunde." },
-      { title: "Spui ce oferi", desc: "„Abonament”, „clase de grup”, „personal training” — în română." },
+      { title: "Conectezi Facebook sau TikTok", desc: "Legi pagina sălii în câteva secunde." },
+      { title: "Spui ce oferi", desc: "„Abonament”, „clase de grup”, „personal training” — în română. AdPilot face singur pozele și clipul cu AI." },
       { title: "Primești membri", desc: "Fiecare persoană interesată îți vine direct pe WhatsApp." },
     ],
     faq: [
       { q: "Trebuie să știu ceva despre reclame?", a: "Nu. Îi spui pe WhatsApp ce oferi, iar AdPilot creează, lansează și optimizează reclama singur." },
-      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 50–150 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 7 zile, apoi de la un plan lunar." },
+      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 50–150 lei/zi) și e plătit direct către Facebook sau TikTok. AdPilot e gratuit 7 zile, apoi de la un plan lunar." },
       { q: "Funcționează și pentru personal traineri?", a: "Da — pentru săli, studiouri și traineri individuali. Targetăm exact orașul și publicul tău." },
       { q: "Cum primesc clienții?", a: "Fiecare persoană interesată îți vine ca lead pe WhatsApp, cu nume și telefon." },
       { q: "Pot opri oricând?", a: "Da, pornești și oprești reclama din WhatsApp, fără contracte." },
@@ -183,7 +183,7 @@ export const NICHES: Record<string, NicheConfig> = {
     meta: {
       title: "Restaurant plin în fiecare weekend — AdPilot",
       description:
-        "AdPilot aduce rezervări și clienți noi la restaurantul tău — reclame locale Facebook și Instagram automate, cu fiecare persoană interesată direct pe WhatsApp. Începe gratuit.",
+        "AdPilot aduce rezervări și clienți noi la restaurantul tău — reclame locale Facebook, Instagram și TikTok automate, cu fiecare persoană interesată direct pe WhatsApp. Începe gratuit.",
     },
     hero: {
       badge: "Pentru restaurante · cafenele · baruri",
@@ -207,20 +207,20 @@ export const NICHES: Record<string, NicheConfig> = {
       title: "Așa umpli mesele — dintr-o conversație pe WhatsApp",
       lines: [
         { from: "me", text: "Vreau mai multe rezervări la restaurant" },
-        { from: "bot", text: "Perfect! Pornesc o reclamă locală pe Facebook și Instagram. Ce vrei să promovezi — meniul, o ofertă, weekendul?" },
+        { from: "bot", text: "Perfect! Pornesc o reclamă locală pe Facebook, Instagram și TikTok. Ce vrei să promovezi — meniul, o ofertă, weekendul?" },
         { from: "me", text: "Ofertă de weekend, buget 60 lei/zi" },
         { from: "bot", text: "Gata, reclama e live! 🎉 Îți trimit aici fiecare persoană interesată." },
         { from: "bot", text: "📩 Client nou: Ioana, 0755… — vrea o rezervare pentru 4 persoane sâmbătă seara" },
       ],
     },
     steps: [
-      { title: "Conectezi Facebook", desc: "Legi pagina localului în câteva secunde." },
-      { title: "Spui ce promovezi", desc: "Meniul, o ofertă sau weekendul — în română." },
+      { title: "Conectezi Facebook sau TikTok", desc: "Legi pagina localului în câteva secunde." },
+      { title: "Spui ce promovezi", desc: "Meniul, o ofertă sau weekendul — în română. AdPilot face singur pozele și clipul cu AI." },
       { title: "Primești rezervări", desc: "Fiecare persoană interesată îți vine direct pe WhatsApp." },
     ],
     faq: [
       { q: "Reclamele apar în zona mea?", a: "Da. Targetăm exact orașul și zona din jurul localului tău, ca să vină clienți care chiar pot ajunge." },
-      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 40–100 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 7 zile, apoi de la un plan lunar." },
+      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 40–100 lei/zi) și e plătit direct către Facebook sau TikTok. AdPilot e gratuit 7 zile, apoi de la un plan lunar." },
       { q: "Cum primesc rezervările?", a: "Fiecare persoană interesată îți vine ca lead pe WhatsApp, cu nume și telefon." },
       { q: "Funcționează și pentru cafenele sau baruri?", a: "Da — pentru orice local. Adaptăm mesajul la ce oferi tu." },
       { q: "Pot opri oricând?", a: "Da, pornești și oprești reclama din WhatsApp, fără contracte." },
@@ -233,7 +233,7 @@ export const NICHES: Record<string, NicheConfig> = {
     meta: {
       title: "Mai mulți clienți calificați pentru imobiliare — AdPilot",
       description:
-        "AdPilot generează lead-uri calificate pentru proprietățile tale și le livrează instant pe WhatsApp — reclame Facebook și Instagram automate. Începe gratuit.",
+        "AdPilot generează lead-uri calificate pentru proprietățile tale și le livrează instant pe WhatsApp — reclame Facebook, Instagram și TikTok automate. Începe gratuit.",
     },
     hero: {
       badge: "Pentru agenți și agenții imobiliare",
@@ -257,20 +257,20 @@ export const NICHES: Record<string, NicheConfig> = {
       title: "Așa aduci clienți — dintr-o conversație pe WhatsApp",
       lines: [
         { from: "me", text: "Vreau clienți pentru un apartament de vânzare" },
-        { from: "bot", text: "Perfect! Pornesc o reclamă pe Facebook și Instagram. Ce proprietate promovezi?" },
+        { from: "bot", text: "Perfect! Pornesc o reclamă pe Facebook, Instagram și TikTok. Ce proprietate promovezi?" },
         { from: "me", text: "Apartament 3 camere, 85.000 €, buget 80 lei/zi" },
         { from: "bot", text: "Gata, reclama e live! 🎉 Îți trimit aici fiecare persoană interesată." },
         { from: "bot", text: "📩 Lead nou: Radu, 0766… — vrea o vizionare pentru apartamentul cu 3 camere" },
       ],
     },
     steps: [
-      { title: "Conectezi Facebook", desc: "Legi pagina de agent în câteva secunde." },
-      { title: "Adaugi proprietatea", desc: "Îi spui ce vinzi sau închiriezi — în română." },
+      { title: "Conectezi Facebook sau TikTok", desc: "Legi pagina de agent în câteva secunde." },
+      { title: "Adaugi proprietatea", desc: "Îi spui ce vinzi sau închiriezi — în română. AdPilot face singur pozele și clipul cu AI." },
       { title: "Primești clienți", desc: "Fiecare persoană interesată îți vine direct pe WhatsApp." },
     ],
     faq: [
       { q: "Lead-urile sunt calificate?", a: "Da. Targetăm oameni cu intenție reală pentru zona și tipul proprietății, ca să pierzi mai puțin timp." },
-      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 50–150 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 7 zile, apoi de la un plan lunar." },
+      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 50–150 lei/zi) și e plătit direct către Facebook sau TikTok. AdPilot e gratuit 7 zile, apoi de la un plan lunar." },
       { q: "Funcționează pentru vânzare și închiriere?", a: "Da — pentru orice tip de proprietate, rezidențial sau comercial." },
       { q: "Cum primesc clienții?", a: "Fiecare persoană interesată îți vine ca lead pe WhatsApp, cu nume și telefon." },
       { q: "Pot opri oricând?", a: "Da, pornești și oprești reclama din WhatsApp, fără contracte." },
@@ -283,7 +283,7 @@ export const NICHES: Record<string, NicheConfig> = {
     meta: {
       title: "Mai mulți cursanți la cursurile tale — AdPilot",
       description:
-        "AdPilot aduce înscrieri la cursurile și programele tale — reclame Facebook și Instagram automate, cu fiecare persoană interesată direct pe WhatsApp. Începe gratuit.",
+        "AdPilot aduce înscrieri la cursurile și programele tale — reclame Facebook, Instagram și TikTok automate, cu fiecare persoană interesată direct pe WhatsApp. Începe gratuit.",
     },
     hero: {
       badge: "Pentru cursuri online · coaching · training",
@@ -307,20 +307,20 @@ export const NICHES: Record<string, NicheConfig> = {
       title: "Așa aduci înscrieri — dintr-o conversație pe WhatsApp",
       lines: [
         { from: "me", text: "Vreau înscrieri la cursul meu online" },
-        { from: "bot", text: "Perfect! Pornesc o reclamă pe Facebook și Instagram. Ce curs promovezi?" },
+        { from: "bot", text: "Perfect! Pornesc o reclamă pe Facebook, Instagram și TikTok. Ce curs promovezi?" },
         { from: "me", text: "Curs de engleză online, buget 50 lei/zi" },
         { from: "bot", text: "Gata, reclama e live! 🎉 Îți trimit aici fiecare persoană interesată." },
         { from: "bot", text: "📩 Lead nou: Elena, 0777… — vrea detalii despre cursul de engleză" },
       ],
     },
     steps: [
-      { title: "Conectezi Facebook", desc: "Legi pagina în câteva secunde." },
-      { title: "Spui ce curs oferi", desc: "Subiectul, prețul, data de start — în română." },
+      { title: "Conectezi Facebook sau TikTok", desc: "Legi pagina în câteva secunde." },
+      { title: "Spui ce curs oferi", desc: "Subiectul, prețul, data de start — în română. AdPilot face singur pozele și clipul cu AI." },
       { title: "Primești înscrieri", desc: "Fiecare persoană interesată îți vine direct pe WhatsApp." },
     ],
     faq: [
       { q: "Trebuie să știu ceva despre reclame?", a: "Nu. Îi spui pe WhatsApp ce curs oferi, iar AdPilot creează, lansează și optimizează reclama singur." },
-      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 40–120 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 7 zile, apoi de la un plan lunar." },
+      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 40–120 lei/zi) și e plătit direct către Facebook sau TikTok. AdPilot e gratuit 7 zile, apoi de la un plan lunar." },
       { q: "Funcționează pentru orice tip de curs?", a: "Da — cursuri online, ateliere, coaching, mentorat. Targetăm exact publicul potrivit." },
       { q: "Cum primesc înscrierile?", a: "Fiecare persoană interesată îți vine ca lead pe WhatsApp, cu nume și telefon." },
       { q: "Pot opri oricând?", a: "Da, pornești și oprești reclama din WhatsApp, fără contracte." },
@@ -333,7 +333,7 @@ export const NICHES: Record<string, NicheConfig> = {
     meta: {
       title: "Mai multe mașini în service — AdPilot",
       description:
-        "AdPilot aduce clienți noi la service-ul tău auto — reclame locale Facebook și Instagram automate, cu fiecare persoană interesată direct pe WhatsApp. Începe gratuit.",
+        "AdPilot aduce clienți noi la service-ul tău auto — reclame locale Facebook, Instagram și TikTok automate, cu fiecare persoană interesată direct pe WhatsApp. Începe gratuit.",
     },
     hero: {
       badge: "Pentru service-uri auto · vulcanizări · detailing",
@@ -357,20 +357,20 @@ export const NICHES: Record<string, NicheConfig> = {
       title: "Așa aduci clienți — dintr-o conversație pe WhatsApp",
       lines: [
         { from: "me", text: "Vreau mai mulți clienți la service" },
-        { from: "bot", text: "Perfect! Pornesc o reclamă locală pe Facebook și Instagram. Ce servicii promovezi?" },
+        { from: "bot", text: "Perfect! Pornesc o reclamă locală pe Facebook, Instagram și TikTok. Ce servicii promovezi?" },
         { from: "me", text: "Schimb ulei și ITP, buget 50 lei/zi" },
         { from: "bot", text: "Gata, reclama e live! 🎉 Îți trimit aici fiecare persoană interesată." },
         { from: "bot", text: "📩 Client nou: George, 0788… — vrea o programare pentru schimb de ulei" },
       ],
     },
     steps: [
-      { title: "Conectezi Facebook", desc: "Legi pagina service-ului în câteva secunde." },
-      { title: "Spui ce servicii oferi", desc: "Schimb ulei, ITP, detailing — în română." },
+      { title: "Conectezi Facebook sau TikTok", desc: "Legi pagina service-ului în câteva secunde." },
+      { title: "Spui ce servicii oferi", desc: "Schimb ulei, ITP, detailing — în română. AdPilot face singur pozele și clipul cu AI." },
       { title: "Primești clienți", desc: "Fiecare persoană interesată îți vine direct pe WhatsApp." },
     ],
     faq: [
       { q: "Reclamele apar în zona mea?", a: "Da. Targetăm exact orașul și zona din jurul service-ului, ca să vină clienți care pot ajunge la tine." },
-      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 40–100 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 7 zile, apoi de la un plan lunar." },
+      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 40–100 lei/zi) și e plătit direct către Facebook sau TikTok. AdPilot e gratuit 7 zile, apoi de la un plan lunar." },
       { q: "Funcționează pentru vulcanizări sau detailing?", a: "Da — pentru orice service auto. Adaptăm mesajul la serviciile tale." },
       { q: "Cum primesc clienții?", a: "Fiecare persoană interesată îți vine ca lead pe WhatsApp, cu nume și telefon." },
       { q: "Pot opri oricând?", a: "Da, pornești și oprești reclama din WhatsApp, fără contracte." },
@@ -383,7 +383,7 @@ export const NICHES: Record<string, NicheConfig> = {
     meta: {
       title: "Mai multe proiecte de construcții și renovări — AdPilot",
       description:
-        "AdPilot îți aduce clienți pentru proiecte de construcții și renovări — reclame Facebook și Instagram automate, cu fiecare cerere direct pe WhatsApp. Începe gratuit.",
+        "AdPilot îți aduce clienți pentru proiecte de construcții și renovări — reclame Facebook, Instagram și TikTok automate, cu fiecare cerere direct pe WhatsApp. Începe gratuit.",
     },
     hero: {
       badge: "Pentru firme de construcții · renovări · amenajări",
@@ -407,20 +407,20 @@ export const NICHES: Record<string, NicheConfig> = {
       title: "Așa aduci proiecte — dintr-o conversație pe WhatsApp",
       lines: [
         { from: "me", text: "Vreau clienți pentru renovări apartamente" },
-        { from: "bot", text: "Perfect! Pornesc o reclamă locală pe Facebook și Instagram. Ce servicii promovezi?" },
+        { from: "bot", text: "Perfect! Pornesc o reclamă locală pe Facebook, Instagram și TikTok. Ce servicii promovezi?" },
         { from: "me", text: "Renovări la cheie, buget 100 lei/zi" },
         { from: "bot", text: "Gata, reclama e live! 🎉 Îți trimit aici fiecare cerere." },
         { from: "bot", text: "📩 Cerere nouă: Vlad, 0799… — vrea o ofertă pentru renovare apartament 2 camere" },
       ],
     },
     steps: [
-      { title: "Conectezi Facebook", desc: "Legi pagina firmei în câteva secunde." },
-      { title: "Spui ce oferi", desc: "Construcții, renovări, amenajări — în română." },
+      { title: "Conectezi Facebook sau TikTok", desc: "Legi pagina firmei în câteva secunde." },
+      { title: "Spui ce oferi", desc: "Construcții, renovări, amenajări — în română. AdPilot face singur pozele și clipul cu AI." },
       { title: "Primești cereri", desc: "Fiecare client interesat îți vine direct pe WhatsApp." },
     ],
     faq: [
       { q: "Reclamele apar în zona mea?", a: "Da. Targetăm exact orașul și zonele unde vrei să lucrezi." },
-      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 80–250 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 7 zile, apoi de la un plan lunar." },
+      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 80–250 lei/zi) și e plătit direct către Facebook sau TikTok. AdPilot e gratuit 7 zile, apoi de la un plan lunar." },
       { q: "Ce fel de proiecte pot promova?", a: "Orice — renovări, construcții la roșu sau la cheie, amenajări interioare și exterioare." },
       { q: "Cum primesc cererile?", a: "Fiecare persoană interesată îți vine ca lead pe WhatsApp, cu nume și telefon." },
       { q: "Pot opri oricând?", a: "Da, pornești și oprești reclama din WhatsApp, fără contracte." },
@@ -433,7 +433,7 @@ export const NICHES: Record<string, NicheConfig> = {
     meta: {
       title: "Mai mulți pacienți la clinica ta medicală — AdPilot",
       description:
-        "AdPilot aduce pacienți noi la clinica ta medicală — reclame Facebook și Instagram automate, cu fiecare pacient interesat direct pe WhatsApp. Începe gratuit.",
+        "AdPilot aduce pacienți noi la clinica ta medicală — reclame Facebook, Instagram și TikTok automate, cu fiecare pacient interesat direct pe WhatsApp. Începe gratuit.",
     },
     hero: {
       badge: "Pentru clinici medicale · cabinete · recuperare",
@@ -441,7 +441,7 @@ export const NICHES: Record<string, NicheConfig> = {
       titleHighlight: "pacienți la clinică",
       titlePost: ".",
       subtitle:
-        "Reclame Facebook și Instagram gestionate cu AI. Fiecare pacient interesat vine direct pe WhatsApp — fără agenție, fără bătăi de cap.",
+        "Reclame Facebook, Instagram și TikTok gestionate cu AI. Fiecare pacient interesat vine direct pe WhatsApp — fără agenție, fără bătăi de cap.",
       ctaLabel: "Vreau mai mulți pacienți",
     },
     socialProof: "Alătură-te clinicilor din România care aduc pacienți cu AdPilot 🇷🇴",
@@ -457,20 +457,20 @@ export const NICHES: Record<string, NicheConfig> = {
       title: "Așa aduci pacienți — dintr-o conversație pe WhatsApp",
       lines: [
         { from: "me", text: "Vreau mai mulți pacienți la clinică" },
-        { from: "bot", text: "Perfect! Pornesc o reclamă pe Facebook și Instagram. Ce serviciu promovezi?" },
+        { from: "bot", text: "Perfect! Pornesc o reclamă pe Facebook, Instagram și TikTok. Ce serviciu promovezi?" },
         { from: "me", text: "Consultații dermatologie, buget 120 lei/zi" },
         { from: "bot", text: "Gata, reclama e live! 🎉 Îți trimit aici fiecare pacient interesat." },
         { from: "bot", text: "📩 Pacient nou: Ana, 0733… — vrea o programare la dermatolog" },
       ],
     },
     steps: [
-      { title: "Conectezi Facebook", desc: "Legi pagina clinicii în câteva secunde." },
-      { title: "Spui ce promovezi", desc: "Specialitatea, un pachet sau o consultație — în română." },
+      { title: "Conectezi Facebook sau TikTok", desc: "Legi pagina clinicii în câteva secunde." },
+      { title: "Spui ce promovezi", desc: "Specialitatea, un pachet sau o consultație — în română. AdPilot face singur pozele și clipul cu AI." },
       { title: "Primești pacienți", desc: "Fiecare pacient interesat îți vine direct pe WhatsApp." },
     ],
     faq: [
       { q: "E permis să faci reclame la servicii medicale?", a: "Da, cu mesaje corecte. AdPilot construiește reclame conforme cu regulile Meta pentru domeniul medical." },
-      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 100–300 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 7 zile, apoi de la un plan lunar." },
+      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 100–300 lei/zi) și e plătit direct către Facebook sau TikTok. AdPilot e gratuit 7 zile, apoi de la un plan lunar." },
       { q: "Funcționează pentru orice specialitate?", a: "Da — dermatologie, recuperare, ORL, cardiologie, clinici generale. Targetăm publicul potrivit." },
       { q: "Cum primesc pacienții?", a: "Fiecare persoană interesată îți vine ca lead pe WhatsApp, cu nume și telefon." },
       { q: "Pot opri oricând?", a: "Da, pornești și oprești reclama din WhatsApp, fără contracte." },
@@ -483,7 +483,7 @@ export const NICHES: Record<string, NicheConfig> = {
     meta: {
       title: "Mai mulți elevi înscriși la școala ta — AdPilot",
       description:
-        "AdPilot aduce înscrieri la școala sau grădinița ta privată — reclame Facebook și Instagram automate, cu fiecare părinte interesat direct pe WhatsApp. Începe gratuit.",
+        "AdPilot aduce înscrieri la școala sau grădinița ta privată — reclame Facebook, Instagram și TikTok automate, cu fiecare părinte interesat direct pe WhatsApp. Începe gratuit.",
     },
     hero: {
       badge: "Pentru școli · grădinițe · afterschool private",
@@ -507,20 +507,20 @@ export const NICHES: Record<string, NicheConfig> = {
       title: "Așa aduci înscrieri — dintr-o conversație pe WhatsApp",
       lines: [
         { from: "me", text: "Vreau înscrieri la grădinița mea" },
-        { from: "bot", text: "Perfect! Pornesc o reclamă locală pe Facebook și Instagram. Ce promovezi — înscrieri, ziua porților deschise?" },
+        { from: "bot", text: "Perfect! Pornesc o reclamă locală pe Facebook, Instagram și TikTok. Ce promovezi — înscrieri, ziua porților deschise?" },
         { from: "me", text: "Înscrieri pentru anul viitor, buget 60 lei/zi" },
         { from: "bot", text: "Gata, reclama e live! 🎉 Îți trimit aici fiecare părinte interesat." },
         { from: "bot", text: "📩 Lead nou: Diana, 0755… — vrea detalii despre înscrierea la grădiniță" },
       ],
     },
     steps: [
-      { title: "Conectezi Facebook", desc: "Legi pagina școlii în câteva secunde." },
-      { title: "Spui ce promovezi", desc: "Înscrieri, program sau ziua porților deschise — în română." },
+      { title: "Conectezi Facebook sau TikTok", desc: "Legi pagina școlii în câteva secunde." },
+      { title: "Spui ce promovezi", desc: "Înscrieri, program sau ziua porților deschise — în română. AdPilot face singur pozele și clipul cu AI." },
       { title: "Primești părinți", desc: "Fiecare părinte interesat îți vine direct pe WhatsApp." },
     ],
     faq: [
       { q: "Reclamele apar în zona mea?", a: "Da. Targetăm exact orașul și zona din jurul școlii, unde sunt părinții." },
-      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 40–120 lei/zi) și e plătit direct către Facebook. AdPilot e gratuit 7 zile, apoi de la un plan lunar." },
+      { q: "Cât costă reclamele?", a: "Bugetul îl alegi tu (ex. 40–120 lei/zi) și e plătit direct către Facebook sau TikTok. AdPilot e gratuit 7 zile, apoi de la un plan lunar." },
       { q: "Funcționează pentru grădinițe și afterschool?", a: "Da — pentru orice unitate privată de învățământ. Adaptăm mesajul." },
       { q: "Cum primesc înscrierile?", a: "Fiecare părinte interesat îți vine ca lead pe WhatsApp, cu nume și telefon." },
       { q: "Pot opri oricând?", a: "Da, pornești și oprești reclama din WhatsApp, fără contracte." },

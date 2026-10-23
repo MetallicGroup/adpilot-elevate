@@ -27,8 +27,8 @@ export const FREE_STARTER_CONSUMED_MESSAGE =
   "⏸️ Ți-am oprit reclamele — cele 7 zile gratuite din planul Starter s-au consumat luna aceasta.\n\n" +
   "Reclamele funcționează doar dacă rulează NON-STOP: pornit-oprit le omoară rezultatele. " +
   "Pe Pro și Premium campaniile tale merg continuu și aduc clienți zilnic:\n" +
-  "• Pro — campanii NELIMITATE, non-stop + asistent WhatsApp + 10 poze AI/lună\n" +
-  "• Premium — tot din Pro + poze AI nelimitate + manager dedicat\n\n" +
+  "• Pro — campanii NELIMITATE, non-stop + asistent WhatsApp + 4 clipuri și 10 poze AI/lună\n" +
+  "• Premium — tot din Pro + 15 clipuri, poze AI nelimitate + manager dedicat\n\n" +
   `Pornește un plan acum: ${PRICING_URL}\n` +
   "(Planul gratuit revine oricum luna viitoare, cu alte 7 zile.)";
 

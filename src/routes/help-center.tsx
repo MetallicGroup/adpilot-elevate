@@ -15,8 +15,9 @@ export const Route = createFileRoute("/help-center")({
 });
 
 const categories = [
-  { icon: Rocket, title: "Primii pași", body: "Creează cont, conectează Facebook și lansează prima campanie." },
-  { icon: Megaphone, title: "Campanii", body: "Creare, editare, pauză și optimizare de campanii." },
+  { icon: Rocket, title: "Primii pași", body: "Creează cont cu numărul de telefon, conectează Facebook sau TikTok și lansează prima campanie." },
+  { icon: Megaphone, title: "Campanii", body: "Creare, editare, pauză și optimizare de campanii pe Facebook, Instagram și TikTok." },
+  { icon: Rocket, title: "Poze și clipuri AI", body: "Cum primești clipul și pozele, ce include fiecare plan și cum le folosești în reclame." },
   { icon: Inbox, title: "Clienți potențiali & CRM", body: "Cum primești clienți, cum îi exporți, cum conectezi un CRM." },
   { icon: MessageCircle, title: "Asistent WhatsApp", body: "Configurare WhatsApp și folosirea comenzilor AI." },
   { icon: CreditCard, title: "Facturare", body: "Abonamente, facturi, schimbare plan, rambursări." },

@@ -5,9 +5,9 @@ import { Band, FinalCta } from "@/components/v2/kit";
 export const Route = createFileRoute("/about")({
   head: () => ({ meta: [
     { title: "Despre — AdPilot" },
-    { name: "description", content: "AdPilot face publicitatea pe Facebook și Instagram accesibilă oricărei afaceri — fără agenție." },
+    { name: "description", content: "AdPilot face publicitatea pe Facebook, Instagram și TikTok accesibilă oricărei afaceri, cu poze și clipuri făcute de AI — fără agenție." },
     { property: "og:title", content: "Despre AdPilot" },
-    { property: "og:description", content: "Misiunea noastră: reclame Facebook și Instagram accesibile oricărei afaceri." },
+    { property: "og:description", content: "Misiunea noastră: reclame Facebook, Instagram și TikTok, cu poze și clipuri AI, accesibile oricărei afaceri." },
     { property: "og:url", content: "https://adpilot.ro/about" },
   ], links: [{ rel: "canonical", href: "https://adpilot.ro/about" }] }),
   component: AboutPage,
@@ -20,7 +20,7 @@ function AboutPage() {
       <Band tone="light">
         <article className="legal">
           <p>AdPilot a fost fondat în 2025 de o echipă de marketeri, ingineri și cercetători AI care au construit ani la rând campanii de performanță pentru branduri direct-to-consumer. Vedeam mereu aceeași poveste: un produs bun, un buget mic, și o platformă de reclame atât de complexă încât avea nevoie de un specialist full-time doar pentru a lansa o singură campanie.</p>
-          <p>Meta (Facebook și Instagram) este cea mai puternică platformă de achiziție de clienți a deceniului — și merită un instrument care vine la nivelul oamenilor. AdPilot înlocuiește agenția cu un co-pilot AI care construiește, lansează și optimizează campanii în câteva minute, nu săptămâni.</p>
+          <p>Meta (Facebook și Instagram) și TikTok sunt cele mai puternice platforme de achiziție de clienți ale momentului — și merită un instrument care vine la nivelul oamenilor. AdPilot înlocuiește agenția cu un co-pilot AI care face pozele și clipurile, construiește, lansează și optimizează campanii în câteva minute, nu săptămâni.</p>
           <p>Astăzi, AdPilot ajută afaceri de servicii, magazine online și antreprenori locali din toată Europa. Avem sediul în București, România, cu o echipă fully remote în toată UE.</p>
         </article>
         <div className="trio">

@@ -14,9 +14,9 @@ export const Route = createFileRoute("/pricing")({
   }),
   head: () => ({ meta: [
     { title: "Prețuri — AdPilot" },
-    { name: "description", content: "Planuri lunare simple pentru afaceri de orice mărime. 7 zile gratuite, fără card. Anulezi oricând." },
+    { name: "description", content: "Planuri lunare simple pentru reclame pe Facebook, Instagram și TikTok, cu clipuri și poze generate cu AI. 7 zile gratuite, fără card. Anulezi oricând." },
     { property: "og:title", content: "Prețuri — AdPilot" },
-    { property: "og:description", content: "7 zile gratuite, fără card. Anulezi oricând." },
+    { property: "og:description", content: "Reclame pe Facebook, Instagram și TikTok, cu clipuri și poze AI. 7 zile gratuite, fără card." },
     { property: "og:url", content: "https://adpilot.ro/pricing" },
   ], links: [{ rel: "canonical", href: "https://adpilot.ro/pricing" }],
     scripts: [
@@ -39,8 +39,10 @@ export const Route = createFileRoute("/pricing")({
 
 const faqs = [
   { q: "Există perioadă de probă gratuită?", a: "Da — 7 zile gratuite pentru orice cont nou, fără card, de la crearea contului. Planul Starter rămâne gratuit apoi 7 zile în fiecare lună. Pentru Pro/Premium primești pe WhatsApp un link de plată când vrei să continui nelimitat." },
+  { q: "Ce clipuri și poze primesc în perioada gratuită?", a: "La înscriere, AdPilot generează cu AI din pozele tale 1 clip de 20–25 de secunde, cu voce în română și subtitrări, plus 2 poze pentru reclame. Atât include perioada gratuită, indiferent de plan. Mai multe se deblochează după ce te abonezi: pe Pro 4 clipuri și 10 poze pe lună, pe Premium 15 clipuri și poze nelimitate." },
+  { q: "Pot face reclame și pe TikTok?", a: "Da. Conectezi Facebook, TikTok sau ambele, iar AdPilot pornește reclama pe platformele alese, cu același clip și aceleași poze. Bugetul îl plătești direct către platformă." },
   { q: "Pot anula oricând?", a: "Da. Poți anula oricând în timpul perioadei de probă fără să fii taxat, sau ulterior direct din contul tău, fără întrebări." },
-  { q: "Prețul include bugetul de reclame?", a: "Nu. Abonamentul AdPilot acoperă doar platforma. Bugetul de reclame este plătit direct către Meta (Facebook & Instagram), din contul tău." },
+  { q: "Prețul include bugetul de reclame?", a: "Nu. Abonamentul AdPilot acoperă doar platforma. Bugetul de reclame este plătit direct către Meta (Facebook și Instagram) sau TikTok, din contul tău de reclame." },
   { q: "Ce metode de plată acceptați?", a: "Toate cardurile majore: Visa, Mastercard, Maestro. Plățile sunt procesate securizat prin Stripe." },
 ];
 
@@ -73,13 +75,9 @@ function PricingPage() {
   const handleSelect = (priceId: string, free?: boolean) => {
     tkClickButton(`pricing-select-${priceId}`);
     if (free) {
-      // Starter gratuit: fără Stripe. Neautentificat → cont; autentificat → onboarding
-      // (unde conectează Facebook + număr și pornește gratuitul).
-      navigate(
-        authed
-          ? ({ to: "/onboarding" } as any)
-          : ({ to: "/auth", search: { mode: "signup" } } as any),
-      );
+      // Starter gratuit: fără Stripe. Neautentificat → onboarding pe telefon (/start);
+      // autentificat → continuă acolo unde a rămas.
+      navigate(authed ? ({ to: "/onboarding" } as any) : ({ to: "/start" } as any));
       return;
     }
     if (!authed) {
@@ -94,7 +92,7 @@ function PricingPage() {
       <Hero
         eyebrow="Prețuri"
         title="Primele 7 zile sunt gratuite. Fără card."
-        sub="Alegi planul la înscriere și îl folosești complet 7 zile. Starter rămâne gratuit 7 zile pe lună; Pro și Premium continuă nelimitat după ce plătești. Bugetul de reclame îl plătești separat, direct către Meta."
+        sub="Alegi planul la înscriere și îl folosești 7 zile, cu 1 clip și 2 poze generate cu AI. Starter rămâne gratuit 7 zile pe lună; Pro și Premium continuă nelimitat și deblochează mai multe clipuri și poze după ce te abonezi. Reclamele rulează pe Facebook, Instagram și TikTok; bugetul îl plătești separat, direct către platformă."
       />
       <Band tone="light">
         <h2 className="sr-only">Planuri și prețuri AdPilot</h2>

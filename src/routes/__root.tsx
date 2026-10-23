@@ -88,28 +88,28 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "AdPilot — Reclame Facebook. Lead-uri pe WhatsApp." },
+      { title: "AdPilot — Reclame Facebook, Instagram și TikTok. Lead-uri pe WhatsApp." },
       {
         name: "description",
         content:
-          "Lansează și optimizează reclame Facebook dintr-o singură aplicație, iar fiecare lead ajunge direct pe WhatsApp. 7 zile gratuite.",
+          "Lansează și optimizează reclame pe Facebook, Instagram și TikTok dintr-o singură aplicație, cu poze și clipuri generate de AI, iar fiecare lead ajunge direct pe WhatsApp. 7 zile gratuite.",
       },
       { name: "author", content: "AdPilot" },
       { name: "google-site-verification", content: "c5wTyndeBq7gVkBTee-nP_NuFsK769W9Wv0N3GbzHC4" },
-      { property: "og:title", content: "AdPilot — Reclame Facebook. Lead-uri pe WhatsApp." },
+      { property: "og:title", content: "AdPilot — Reclame Facebook, Instagram și TikTok. Lead-uri pe WhatsApp." },
       {
         property: "og:description",
         content:
-          "Lansează și optimizează reclame Facebook dintr-o singură aplicație, iar fiecare lead ajunge direct pe WhatsApp. 7 zile gratuite.",
+          "Lansează și optimizează reclame pe Facebook, Instagram și TikTok dintr-o singură aplicație, cu poze și clipuri generate de AI, iar fiecare lead ajunge direct pe WhatsApp. 7 zile gratuite.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:title", content: "AdPilot — Reclame Facebook. Lead-uri pe WhatsApp." },
+      { name: "twitter:title", content: "AdPilot — Reclame Facebook, Instagram și TikTok. Lead-uri pe WhatsApp." },
       {
         name: "twitter:description",
         content:
-          "Lansează și optimizează reclame Facebook dintr-o singură aplicație, iar fiecare lead ajunge direct pe WhatsApp. 7 zile gratuite.",
+          "Lansează și optimizează reclame pe Facebook, Instagram și TikTok dintr-o singură aplicație, cu poze și clipuri generate de AI, iar fiecare lead ajunge direct pe WhatsApp. 7 zile gratuite.",
       },
       { property: "og:image", content: `https://adpilot.ro${ogHeroAsset.url}` },
       { name: "twitter:image", content: `https://adpilot.ro${ogHeroAsset.url}` },

@@ -72,15 +72,15 @@ hs.innerHTML=SB+`<div class="appl wa">${WAH}<div class="body" id="wbody"></div><
 <div class="post"><div class="ph"><span class="pa">SE</span><div><b>Salon Eleganza</b><small>Sponsorizat · 🌐</small></div></div><div class="tx">Părul tău merită o pauză. Programează-te în 30 de secunde și ai 20% reducere la prima vizită.</div>${CRE}<div class="lk"><div><b>Programează-te azi</b></div><em>Rezervă acum</em></div><div class="rx"><span>👍❤️ <span id="fbLikes">104</span></span><span>14 comentarii</span></div><div class="ac"><span>Îmi place</span><span>Comentează</span><span>Distribuie</span></div></div>
 </div><div class="fly" id="fly"></div></div></div><div class="nts" id="nts"></div><div class="glare"></div>`;
 const wbody=$('#wbody'),winp=$('#winp'),wsend=$('#wsend'),ftr=$('#ftr'),nts=$('#nts');
-const CAPS=['Îi scrii pe WhatsApp','AdPilot creează reclama','Live pe Facebook și Instagram','Clienții îți scriu'];
+const CAPS=['Îi scrii pe WhatsApp','AdPilot creează reclama','Live pe Facebook, Instagram și TikTok','Clienții îți scriu'];
 function cap(i){$('#capN').textContent=(i+1)+'/4';$('#capT').outerHTML=`<span id="capT">${CAPS[i]}</span>`}
 function wb(html,dir,cls=''){const d=document.createElement('div');d.className=`wb ${dir} ${cls}`;d.innerHTML=html+'<time>9:41</time>';wbody.append(d);return d}
-const CHECK=['📍 Cluj-Napoca, femei 25–45','💰 Buget: 50 lei pe zi','✍️ 3 texte de reclamă','🖼️ Imagine generată'];
+const CHECK=['📍 Cluj-Napoca, femei 25–45','💰 Buget: 50 lei pe zi','✍️ 3 texte de reclamă','🎬 Clip și poze generate cu AI'];
 function waFinal(){ wbody.innerHTML='';wbody.classList.add('static');
   wb('Vreau mai multe programări la salon','out');wb('Mă ocup. Pregătesc campania acum.','in');
   wb(`<div class="wl">${CHECK.map(c=>`<div>${c}</div>`).join('')}</div>`,'in');
   wb(CRE+'<p>Reclama e gata. O lansez?</p>','in','ad');wb('Da 👍','out');
-  wb('✅ <b>Campania e live</b><div class="wchips"><span>Facebook</span><span>Instagram</span></div>','in'); }
+  wb('✅ <b>Campania e live</b><div class="wchips"><span>Facebook</span><span>Instagram</span><span>TikTok</span></div>','in'); }
 async function typeSend(t){ winp.classList.add('typing');for(const ch of t){winp.textContent+=ch;await sleep(26)} await sleep(350);
   wsend.classList.add('hit');await sleep(130);wsend.classList.remove('hit');winp.textContent='';winp.classList.remove('typing');wb(t,'out') }
 async function botTyping(ms){const t=document.createElement('div');t.className='wtyp';t.innerHTML='<i></i><i></i><i></i>';wbody.append(t);await sleep(ms);t.remove()}
@@ -100,7 +100,7 @@ async function heroLoop(){
     for(const c of CHECK){const d=document.createElement('div');d.textContent=c;l.append(d);await sleep(520)}
     await botTyping(1100);wb(CRE+'<p>Reclama e gata. O lansez?</p>','in','ad');await sleep(1300);
     await typeSend('Da 👍');await botTyping(700);
-    wb('✅ <b>Campania e live</b><div class="wchips"><span>Facebook</span><span>Instagram</span></div>','in');await sleep(1500);
+    wb('✅ <b>Campania e live</b><div class="wchips"><span>Facebook</span><span>Instagram</span><span>TikTok</span></div>','in');await sleep(1500);
     /* 3 — live on Facebook */
     cap(2);hs.className='scr s-fb';$('#fbLikes').textContent='0';await sleep(1000);
     ftr.style.transform='translateY(-168px)';await sleep(900);
@@ -119,19 +119,19 @@ async function heroLoop(){
 /* pinned phone: one animated scene per step */
 const PS=$('#pinScr');
 PS.className='scr s-ob';
-PS.innerHTML=SB+`<div class="appl ob"><div class="obz" id="obz"><span class="brand"><span class="logo"></span>AdPilot</span><span class="eb">PASUL 1 DIN 4</span><h4>Conectează pagina ta de Facebook</h4><p>Contul de reclame rămâne al tău, pe numele tău.</p><div class="obc" id="obc"><div><i></i>Pagina de Facebook</div><div><i></i>Contul de Instagram</div><div><i></i>Contul de reclame</div></div><div class="obb" id="obb"></div></div>
+PS.innerHTML=SB+`<div class="appl ob"><div class="obz" id="obz"><span class="brand"><span class="logo"></span>AdPilot</span><span class="eb">PASUL 1 DIN 4</span><h4>Conectează Facebook sau TikTok</h4><p>Contul de reclame rămâne al tău, pe numele tău.</p><div class="obc" id="obc"><div><i></i>Facebook și Instagram</div><div><i></i>TikTok</div><div><i></i>Contul de reclame</div></div><div class="obb" id="obb"></div></div>
 <div class="fbsheet" id="fbsheet"><span class="grab"></span><div class="fw">facebook</div><div class="pair"><span class="logo"></span><u>•••</u><span class="fbi">f</span></div><h5>AdPilot solicită acces la:</h5><ul><li>Pagina „Salon Eleganza”</li><li>Contul de Instagram</li><li>Contul de reclame</li></ul><div class="go" id="fbgo">Continuă ca Daniel</div><div class="no">Anulează</div></div><i class="tap" id="ptap"></i></div>
 <div class="appl wa pwa">${WAH}<div class="body" id="pBody"></div><div class="inp"><div class="f" id="pInp"></div><div class="s" id="pSend">${'<svg viewBox="0 0 24 24"><path d="M3 20l18-8L3 4v6l11 2-11 2z"/></svg>'}</div></div></div><div class="glare"></div>`;
 const FBTXT='<svg viewBox="0 0 24 24"><path d="M13.500 22v-8h2.700l.400-3.200h-3.100V8.700c0-.900.300-1.600 1.600-1.600h1.700V4.200c-.300 0-1.300-.100-2.500-.100-2.500 0-4.100 1.500-4.100 4.200v2.500H7.400V14h2.800v8h3.300z"/></svg>Conectează cu Facebook';
 const LEAD=(n,t,q)=>['in',`🔔 <b>Client nou · ${n}</b><small>${t} · „${q}”</small>`];
 const PCHAT={
  1:[['out','Pornește te rog o reclamă pentru salon'],['in','Sigur! Ce vrei să obții?'],['out','Mai multe programări'],['in','În ce oraș și pe ce rază?'],['out','Cluj, 15 km în jur'],['in','Ce buget ai pe zi?'],['out','50 lei'],['in','Perfect. Pregătesc reclama. ✨']],
- 2:[['in','Am pregătit reclama ta:'],['ad',CRE+'<p>O aprobi și o lansez?</p>'],['out','Da 👍'],['in','✅ <b>Campania e live</b><div class="wchips"><span>Facebook</span><span>Instagram</span></div>']],
+ 2:[['in','Am pregătit reclama ta:'],['ad',CRE+'<p>O aprobi și o lansez?</p>'],['out','Da 👍'],['in','✅ <b>Campania e live</b><div class="wchips"><span>Facebook</span><span>Instagram</span><span>TikTok</span></div>']],
  3:[LEAD('Andreea M.','0740 ··· 579','Aveți liber sâmbătă?'),LEAD('Ioana P.','0722 ··· 201','Cât costă un tuns?'),LEAD('Mihai D.','0746 ··· 099','Aș vrea o programare mâine.'),LEAD('Elena R.','0755 ··· 859','Lucrați și duminica?'),['in','4 clienți noi în ultima oră. 📈']]
 };
 let pinTok=0,pinVis=false;
 function obReset(done){ $('#obz').classList.remove('zoom');$('#fbsheet').classList.remove('on');$$('#obc div').forEach(d=>d.classList.toggle('ok',!!done));
-  const b=$('#obb');b.classList.toggle('done',!!done);b.innerHTML=done?'✓ Cont Meta conectat':FBTXT }
+  const b=$('#obb');b.classList.toggle('done',!!done);b.innerHTML=done?'✓ Conturile sunt conectate':FBTXT }
 function tapAt(y){const t=$('#ptap');t.style.setProperty('--ty',y);t.classList.remove('go');void t.offsetWidth;t.classList.add('go')}
 async function pinScene(i,instant){
   const my=++pinTok,ok=()=>my===pinTok,B=$('#pBody'),I=$('#pInp'),S=$('#pSend');
@@ -143,7 +143,7 @@ async function pinScene(i,instant){
     tapAt('86%');$('#fbgo').classList.add('hit');await sleep(260);$('#fbgo').classList.remove('hit');await sleep(350);if(!ok())return;
     $('#fbsheet').classList.remove('on');await sleep(750);if(!ok())return;
     for(const d of $$('#obc div')){d.classList.add('ok');await sleep(380);if(!ok())return}
-    const b=$('#obb');b.classList.add('done');b.innerHTML='✓ Cont Meta conectat';
+    const b=$('#obb');b.classList.add('done');b.innerHTML='✓ Conturile sunt conectate';
   } else {
     PS.className='scr s-chat';B.innerHTML='';I.textContent='';I.classList.remove('typing');B.classList.toggle('static',!!instant);
     const add=m=>{const d=document.createElement('div');d.className='wb '+(m[0]==='out'?'out':'in')+(m[0]==='ad'?' ad':'');d.innerHTML=m[1]+'<time>9:41</time>';B.append(d)};
@@ -184,7 +184,7 @@ function chatWin(host,script,delay=0,time='9:41'){
         await sleep(600) }
       await sleep(4200) } })();
 }
-chatWin($('#wawin'),[['out','Vreau o campanie pentru clinica mea din București'],['in','Sigur. Ce vrei să obții: programări, apeluri sau mesaje?'],['out','Programări. Buget 60 lei pe zi'],['ad',DENT+'<p>Reclama e gata. O lansez?</p>'],['out','Da 👍'],['in','✅ <b>Campania e live</b><div class="wchips"><span>Facebook</span><span>Instagram</span></div>']]);
+chatWin($('#wawin'),[['out','Vreau o campanie pentru clinica mea din București'],['in','Sigur. Ce vrei să obții: programări, apeluri sau mesaje?'],['out','Programări. Buget 60 lei pe zi'],['ad',DENT+'<p>Reclama e gata. O lansez?</p>'],['out','Da 👍'],['in','✅ <b>Campania e live</b><div class="wchips"><span>Facebook</span><span>Instagram</span><span>TikTok</span></div>']]);
 chatWin($('#waLeads'),[['in','🔔 <b>Client nou · Andreea M.</b><small>0740 ··· 579 · „Aș vrea o programare mâine.”</small>'],['in','🔔 <b>Client nou · Mihai D.</b><small>0746 ··· 099 · „Aveți loc sâmbătă?”</small>'],['out','Câți clienți am azi?'],['in','9 clienți potențiali azi, cu 3 mai mulți decât ieri. 📈']],700);
 chatWin($('#waBudget'),[['out','Mărește bugetul la 80 lei pe zi'],['in','✅ Făcut. Bugetul este acum <b>80 lei pe zi</b>.'],['out','Pune pe pauză campania de vară'],['in','⏸️ Campania „Ofertă de vară” e pe pauză. O repornești oricând cu „pornește”.']],1400);
 chatWin($('#waReport'),[['in','☀️ <b>Bună dimineața! Raportul de ieri:</b><div class="rep"><div>Cheltuit pe reclame<b>18,00 lei</b></div><div>Clienți noi<b>9</b></div><div>Cost pe client<b>2,00 lei</b></div><div>Cost pe click<b>0,42 lei</b></div></div>'],['in','Cu 3 clienți mai mulți decât alaltăieri. 📈']],2100,'8:00');

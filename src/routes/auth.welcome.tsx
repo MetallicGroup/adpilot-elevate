@@ -42,8 +42,8 @@ function WelcomePage() {
           {name ? `Bun venit, ${name}!` : "Bun venit!"}
         </h1>
         <p className="text-muted-foreground text-sm mt-3 leading-relaxed">
-          Suntem gata să-ți lansăm prima reclamă Facebook. Îți conectăm contul Meta și pornim în mai
-          puțin de 5 minute.
+          Suntem gata să-ți lansăm prima reclamă pe Facebook, Instagram sau TikTok. Îți conectăm contul și
+          pornim în mai puțin de 5 minute.
         </p>
         <button
           onClick={() => navigate({ to: "/onboarding", replace: true })}

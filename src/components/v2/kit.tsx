@@ -66,7 +66,7 @@ export function V2Nav() {
         <Link to="/auth" search={{ mode: "signin" }} className="login btn btn-s btn-o dark">
           Intră în cont
         </Link>
-        <Link to="/auth" search={{ mode: "signup" }} className="btn btn-s btn-w">
+        <Link to="/start" className="btn btn-s btn-w">
           Începe gratuit
         </Link>
         <button type="button" className="burger" aria-label="Meniu" aria-expanded={open} onClick={() => setOpen(!open)}>
@@ -154,7 +154,7 @@ export function Hero({
 
 export function SignupButton({ label = "Începe gratuit 7 zile", tone = "w", onClick }: { label?: string; tone?: "w" | "k" | "g"; onClick?: () => void }) {
   return (
-    <Link to="/auth" search={{ mode: "signup" }} className={`btn btn-${tone}`} onClick={onClick}>
+    <Link to="/start" className={`btn btn-${tone}`} onClick={onClick}>
       {label} <span className="arr">→</span>
     </Link>
   );
@@ -184,7 +184,7 @@ export function PlanCards({ onSelect }: { onSelect?: (plan: PublicPlan) => void 
                 {p.cta}
               </button>
             ) : (
-              <Link to="/auth" search={{ mode: "signup" }} className={`btn btn-${tone}`} style={{ justifyContent: "center" }}>
+              <Link to="/start" className={`btn btn-${tone}`} style={{ justifyContent: "center" }}>
                 {p.cta}
               </Link>
             )}
@@ -220,6 +220,9 @@ export function FinalCta({ title, label, onClick }: { title: ReactNode; label?: 
         <div className="cta" data-r>
           <SignupButton label={label} onClick={onClick} />
         </div>
+        <p className="fin-sub" data-r>
+          Primul clip și 2 poze AI, gratuite · Facebook, Instagram și TikTok
+        </p>
       </div>
     </section>
   );

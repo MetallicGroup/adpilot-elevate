@@ -35,7 +35,12 @@ export function NicheLanding({ niche }: { niche: NicheConfig }) {
         <div className="facts">
           <span>7 zile gratuite</span>
           <span>Fără card</span>
-          <span>Fără agenție</span>
+          <span>Primul clip AI gratuit</span>
+        </div>
+        <div className="plat" aria-label="Platforme de reclame">
+          <span>Facebook</span>
+          <span>Instagram</span>
+          <span>TikTok</span>
         </div>
       </Hero>
 

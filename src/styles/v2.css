@@ -53,7 +53,8 @@ html:has(.v2){scroll-behavior:smooth}
 .v2 .nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;padding:14px var(--gut);transition:background .3s,backdrop-filter .3s}
 .v2 .nav.on{background:rgba(10,9,18,.72);backdrop-filter:blur(18px) saturate(1.4);border-bottom:1px solid rgba(255,255,255,.08)}
 .v2 .nav .in{max-width:var(--max);margin-inline:auto;display:flex;align-items:center;gap:28px}
-.v2 .nav .links{display:flex;gap:26px;margin-left:18px;font-size:15px;color:#c9c6dc}
+.v2 .nav .links{display:flex;gap:clamp(14px,2vw,26px);margin-left:18px;font-size:15px;color:#c9c6dc}
+.v2 .nav .links a{white-space:nowrap}
 .v2 .nav .links a:hover{color:#fff}
 .v2 .nav .sp{flex:1}
 @media(max-width:860px){
@@ -857,3 +858,39 @@ html:has(.v2){scroll-behavior:smooth}
 .v2 .obz.zoom>*:not(.obb){opacity:.28}
 .v2 .obz.zoom .obb{transform:scale(1.06);box-shadow:0 0 0 7px rgba(24,119,242,.3),0 18px 40px -10px rgba(24,119,242,.8)}
 .v2 .obz.zoom .obb.hit{transform:scale(.98)}
+
+/* ---------- platforms strip + Studio AI (clipuri și poze) ---------- */
+.v2 .plat{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.v2 .plat span{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border:1px solid rgba(255,255,255,.16);border-radius:999px;font-size:13.5px;color:#e8e6f4;background:rgba(255,255,255,.05);backdrop-filter:blur(8px)}
+.v2 .plat svg{width:16px;height:16px;flex:none}
+.v2 .fin-sub{margin:20px 0 0;font-size:14px;color:#b8b5cd}
+.v2 .studio .sgrid{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr) minmax(0,1fr);gap:clamp(18px,3vw,40px);align-items:center;margin-top:44px}
+.v2 .sclip{position:relative;aspect-ratio:9/16;border-radius:30px;overflow:hidden;background:var(--img-dental) center/cover;box-shadow:0 0 0 1px rgba(255,255,255,.12),0 50px 110px -30px rgba(107,61,255,.7)}
+.v2 .sclip::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.45),transparent 30%,transparent 48%,rgba(0,0,0,.78))}
+.v2 .sclip .ttui{position:absolute;inset:0;padding:16px}
+.v2 .sclip .tag{position:absolute;left:16px;top:16px;font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:999px;background:rgba(0,0,0,.45);backdrop-filter:blur(6px)}
+.v2 .sclip .rail{position:absolute;right:12px;bottom:112px;display:flex;flex-direction:column;gap:14px}
+.v2 .sclip .rail i{width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.4);display:grid;place-items:center;font-style:normal;font-size:16px}
+.v2 .sclip .cap{position:absolute;left:14px;right:60px;top:48%;font:800 clamp(22px,2.4vw,30px)/1.15 var(--f-display);letter-spacing:-.01em;text-shadow:0 2px 14px rgba(0,0,0,.6)}
+.v2 .sclip .cap em{font-style:normal;background:var(--grad);padding:0 8px;border-radius:8px;display:inline-block;transform:rotate(-1.5deg);animation:v2-capHot 3.2s ease-in-out infinite}
+@keyframes v2-capHot{0%,100%{transform:rotate(-1.5deg) scale(1)}50%{transform:rotate(-1.5deg) scale(1.08)}}
+.v2 .sclip .who{position:absolute;left:14px;right:60px;bottom:22px;display:flex;flex-direction:column;gap:4px}
+.v2 .sclip .who b{font-size:14px}
+.v2 .sclip .who small{font-size:12.5px;opacity:.85}
+.v2 .sclip .who .go{margin-top:8px;align-self:flex-start;background:#fe2c55;color:#fff;font-weight:600;font-size:13px;padding:8px 16px;border-radius:8px}
+.v2 .sclip .bar{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.22)}
+.v2 .sclip .bar i{display:block;height:100%;width:0;background:#fff;animation:v2-clipBar 8s linear infinite}
+@keyframes v2-clipBar{to{width:100%}}
+.v2 .sph{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.v2 .sph .ph{position:relative;aspect-ratio:4/5;border-radius:18px;background:center/cover;box-shadow:0 0 0 1px rgba(255,255,255,.1)}
+.v2 .sph .ph span{position:absolute;left:10px;bottom:10px;font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:999px;background:rgba(0,0,0,.55);backdrop-filter:blur(6px)}
+.v2 .sfacts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:16px}
+.v2 .sfacts li{display:flex;flex-direction:column;gap:2px;padding-left:18px;position:relative}
+.v2 .sfacts li::before{content:"";position:absolute;left:0;top:8px;width:7px;height:7px;border-radius:50%;background:var(--grad)}
+.v2 .sfacts b{font-size:17px;letter-spacing:-.01em}
+.v2 .sfacts span{font-size:14px;color:var(--mut)}
+@media(max-width:900px){
+  .v2 .studio .sgrid{grid-template-columns:1fr;max-width:420px;margin-inline:auto}
+  .v2 .sclip{max-width:300px;margin-inline:auto;width:100%}
+}
+@media(prefers-reduced-motion:reduce){.v2 .sclip .cap em,.v2 .sclip .bar i{animation:none}.v2 .sclip .bar i{width:60%}}

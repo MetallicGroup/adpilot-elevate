@@ -12,7 +12,7 @@ export const Route = createFileRoute("/oferta")({
       {
         name: "description",
         content:
-          "Spune-i ce vrei să obții. AdPilot creează, lansează și optimizează reclamele tale pe Facebook și Instagram — fără agenție și fără experiență. 7 zile gratuite pentru orice cont nou, fără card.",
+          "Spune-i ce vrei să obții. AdPilot creează pozele și clipurile, lansează și optimizează reclamele tale pe Facebook, Instagram și TikTok — fără agenție și fără experiență. 7 zile gratuite pentru orice cont nou, fără card.",
       },
       { property: "og:title", content: "Începe GRATUIT — AdPilot" },
       {
@@ -32,18 +32,18 @@ const DEMO: ChatLine[] = [
   { from: "me", text: "Vreau mai mulți clienți pentru afacerea mea" },
   { from: "bot", text: "Sigur. În ce oraș și ce buget pe zi?" },
   { from: "me", text: "București, 50 lei pe zi" },
-  { from: "bot", text: "✅ Reclama e live pe Facebook și Instagram." },
+  { from: "bot", text: "✅ Reclama e live pe Facebook, Instagram și TikTok." },
   { from: "bot", text: "🔔 Client nou: Andreea M. — „Aș vrea detalii.”" },
 ];
 
 const WHAT = [
   { t: "Îi spui obiectivul", d: "„Vreau mai multe vânzări” sau „mai multe programări”. Atât. În română, pe înțelesul tău." },
-  { t: "AdPilot lansează", d: "Creează reclama, textele și targetarea, apoi o pune live pe Facebook și Instagram." },
+  { t: "AdPilot lansează", d: "Creează reclama, pozele și clipul cu AI, textele și targetarea, apoi o pune live pe Facebook, Instagram și TikTok." },
   { t: "Optimizează singur", d: "Urmărește rezultatele zi de zi și ajustează campania ca să aduci clienți mai ieftin." },
 ];
 
 const STEPS = [
-  { t: "Conectează Facebook", d: "Legi pagina și contul de reclame în câteva secunde." },
+  { t: "Conectează Facebook sau TikTok", d: "Legi pagina și contul de reclame în câteva secunde." },
   { t: "Alegi obiectivul", d: "Vânzări, programări, clienți sau apeluri. Tu decizi." },
   { t: "Pornești din WhatsApp", d: "Asistentul AdPilot lansează și îți raportează totul pe WhatsApp." },
 ];
@@ -71,7 +71,7 @@ function OfertaPage() {
             Începe <span className="gtext">gratuit.</span>
           </>
         }
-        sub="Spune-i ce vrei să obții. AdPilot creează, lansează și optimizează reclamele tale pe Facebook și Instagram, fără agenție și fără experiență."
+        sub="Spune-i ce vrei să obții. AdPilot creează pozele și clipurile, lansează și optimizează reclamele tale pe Facebook, Instagram și TikTok, fără agenție și fără experiență."
         aside={<ChatPhone lines={DEMO} />}
       >
         <div className="cta">

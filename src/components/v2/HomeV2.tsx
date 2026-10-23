@@ -34,7 +34,9 @@ export function HomeV2() {
       const login = go.dataset.mode === "login";
       const inGoals = !!go.closest("#obiectiv");
       const goal = inGoals ? GOALS[Number(ref.current?.dataset.goal ?? 1)] : undefined;
-      navigate({ to: "/auth", search: { mode: login ? "signin" : "signup", ...(goal ? { goal } : {}) } });
+      if (go.dataset.agency) navigate({ to: "/auth", search: { mode: "signup", type: "agency", redirect: "/agency/setup" } });
+      else if (login) navigate({ to: "/auth", search: { mode: "signin" } });
+      else navigate({ to: "/start", search: goal ? { goal } : {} });
       return;
     }
     const home = target.closest<HTMLAnchorElement>('a[href="#home"]');
@@ -49,7 +51,7 @@ export function HomeV2() {
 
 <header className="nav" id="nav"><div className="in">
   <a className="brand" href="#home"><span className="logo"></span>AdPilot</a>
-  <nav className="links"><a href="#cum">Cum funcționează</a><a href="#obiectiv">Obiective</a><a href="#preturi">Prețuri</a><a href="#faq">Întrebări</a></nav>
+  <nav className="links"><a href="#cum">Cum funcționează</a><a href="#studio">Clipuri AI</a><a href="#obiectiv">Obiective</a><a href="#preturi">Prețuri</a><a href="#faq">Întrebări</a></nav>
   <span className="sp"></span>
   <button className="login btn btn-s btn-o dark" data-go="signup" data-mode="login">Intră în cont</button>
   <button className="btn btn-s btn-w" data-go="signup">Începe gratuit</button>
@@ -61,12 +63,17 @@ export function HomeV2() {
     <div className="hero-copy">
       <div className="pill"><i>Nou</i>7 zile gratuite, fără card</div>
       <h1 className="d1">Reclamele tale, pornite <span style={css({ whiteSpace: "nowrap" })}>dintr‑un</span> <span className="gtext">mesaj.</span></h1>
-      <p className="lead">Îi scrii lui AdPilot pe WhatsApp ce vrei să obții. El creează reclama, o lansează pe Facebook și Instagram și îți trimite clienții direct în conversație.</p>
+      <p className="lead">Îi scrii lui AdPilot pe WhatsApp ce vrei să obții. El creează reclama, cu poze și clipuri făcute de AI, o lansează pe Facebook, Instagram și TikTok și îți trimite clienții direct în conversație.</p>
       <div className="cta">
         <button className="btn btn-w" data-go="signup">Începe gratuit 7 zile <span className="arr">→</span></button>
         <a className="btn btn-o" href="#cum">Vezi cum funcționează</a>
       </div>
-      <div className="facts"><span>Fără card</span><span>Fără agenție</span><span>Gata în 5 minute</span></div>
+      <div className="facts"><span>Fără card</span><span>Fără agenție</span><span>Primul clip AI e gratuit</span></div>
+      <div className="plat" aria-label="Platforme de reclame">
+        <span><svg viewBox="0 0 24 24" fill="#4c8dff"><path d="M13.500 22v-8h2.700l.400-3.200h-3.100V8.700c0-.900.300-1.600 1.600-1.600h1.700V4.200c-.300 0-1.300-.100-2.500-.100-2.500 0-4.100 1.500-4.100 4.200v2.500H7.400V14h2.800v8h3.300z"/></svg>Facebook</span>
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="#ff6fb5" strokeWidth="1.9"><rect x="3.500" y="3.500" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r=".8" fill="#ff6fb5"/></svg>Instagram</span>
+        <span><svg viewBox="0 0 24 24" fill="#fff"><path d="M16.500 3a4.600 4.600 0 003.500 3.900v3a7.600 7.600 0 01-3.500-1v6.300a5.700 5.700 0 11-5.700-5.700c.300 0 .600 0 .900.100v3.100a2.700 2.700 0 101.800 2.500V3h3z"/></svg>TikTok</span>
+      </div>
     </div>
     <div className="stage" id="stage">
       <div className="cap" id="cap"><i id="capN">1/4</i><span id="capT">Îi scrii pe WhatsApp</span></div>
@@ -83,14 +90,14 @@ export function HomeV2() {
 <section className="band light" id="ce">
   <div className="wrap">
     <p className="ey" data-r>Ce face AdPilot</p>
-    <p className="two" data-r style={css({ maxWidth: "24ch", margin: "18px 0 0" })}><b>Tu conduci afacerea. AdPilot conduce reclamele.</b> Scrie textele, face poza, alege publicul, pornește campania și îți spune în fiecare dimineață ce a ieșit.</p>
+    <p className="two" data-r style={css({ maxWidth: "24ch", margin: "18px 0 0" })}><b>Tu conduci afacerea. AdPilot conduce reclamele.</b> Scrie textele, face pozele și clipurile, alege publicul, pornește campania pe Facebook, Instagram și TikTok și îți spune în fiecare dimineață ce a ieșit.</p>
     <div className="bento">
       <div className="cell c3" data-r>
         <h3>Vorbești ca pe WhatsApp</h3><p>Fără Ads Manager și fără meniuri. Scrii în română ce vrei, AdPilot face restul.</p>
         <div className="viz wsviz"><div className="wawin wa" id="wawin"></div></div>
       </div>
       <div className="cell c3" data-r style={css({ "--d": ".08s" })}>
-        <h3>Poza o face AI-ul</h3><p>Nu ai poză bună? Descrii ce vrei sau trimiți una de referință și primești varianta pentru reclamă într-un minut.</p>
+        <h3>Poze și clipuri făcute de AI</h3><p>Nu ai poză sau clip bun? Trimiți 2–3 poze cu afacerea ta și primești poze pentru reclamă și un clip de 20–25 de secunde, cu voce în română și subtitrări.</p>
         <div className="viz"><div className="aigen"><div className="aiph" id="aiA" style={css({ backgroundImage: "var(--img-salon)" })}></div><div className="aiph top" id="aiB"></div><i className="scanl" id="aiS"></i><span className="aibadge" id="aiBadge">Generat cu AI · 41 s</span></div><div className="aiprompt"><span className="sp">✦</span><span className="tp" id="aiP">femeie cu păr lung coafat, salon modern, lumină caldă</span></div></div>
       </div>
       <div className="cell c2" data-r>
@@ -98,7 +105,7 @@ export function HomeV2() {
         <div className="viz"><div className="wawin sm wa" id="waLeads"></div></div>
       </div>
       <div className="cell c2" data-r style={css({ "--d": ".08s" })}>
-        <h3>Bugetul îl decizi tu</h3><p>Îl plătești direct către Meta. AdPilot îl mută singur spre reclamele care merg.</p>
+        <h3>Bugetul îl decizi tu</h3><p>Îl plătești direct către Meta sau TikTok. AdPilot îl mută singur spre reclamele care merg.</p>
         <div className="viz"><div className="wawin sm wa" id="waBudget"></div></div>
       </div>
       <div className="cell c2" data-r style={css({ "--d": ".16s" })}>
@@ -114,16 +121,16 @@ export function HomeV2() {
     <div className="stick">
       <div className="steps">
         <p className="ey" style={css({ margin: "0 0 18px" })}>Cum funcționează</p>
-        <div className="step on"><span className="k">PASUL 1</span><h3>Conectezi Facebook</h3><p>Un singur buton. Contul de reclame rămâne al tău, pe numele tău.</p></div>
+        <div className="step on"><span className="k">PASUL 1</span><h3>Conectezi Facebook sau TikTok</h3><p>Un singur buton, pentru oricare sau pentru amândouă. Contul de reclame rămâne al tău, pe numele tău.</p></div>
         <div className="step"><span className="k">PASUL 2</span><h3>Spui ce vrei să obții</h3><p>Vânzări, programări, clienți potențiali sau apeluri. Scrii orașul și bugetul.</p></div>
-        <div className="step"><span className="k">PASUL 3</span><h3>AdPilot face reclama</h3><p>Text, poză, public, formular. Tu doar confirmi cu „da”.</p></div>
+        <div className="step"><span className="k">PASUL 3</span><h3>AdPilot face reclama</h3><p>Text, poze și clip cu AI, public, formular. Tu doar confirmi cu „da”.</p></div>
         <div className="step"><span className="k">PASUL 4</span><h3>Clienții îți scriu</h3><p>Primești fiecare contact pe WhatsApp, în secunda în care apare.</p></div>
       </div>
       <div className="iph"><div className="bz"><div className="scr" id="pinScr"></div></div></div>
       <div className="pside" id="pside">
-        <div className="card on"><div className="live">CONECTAT</div><h3 className="d3" style={css({ marginTop: "12px" })}>Pagina „Salon Eleganza”</h3><p style={css({ color: "var(--mut)", margin: "8px 0 0", fontSize: "14px" })}>Cont de reclame și card verificate.</p></div>
+        <div className="card on"><div className="live">CONECTAT</div><h3 className="d3" style={css({ marginTop: "12px" })}>Pagina „Salon Eleganza”</h3><p style={css({ color: "var(--mut)", margin: "8px 0 0", fontSize: "14px" })}>Facebook, Instagram și TikTok. Cont de reclame și card verificate.</p></div>
         <div className="card"><p className="ey">Obiectiv ales</p><h3 className="d3" style={css({ marginTop: "10px" })}>Mai multe programări</h3><div className="chips" style={css({ marginTop: "14px" })}><span className="chip">Cluj-Napoca + 15 km</span><span className="chip">50 lei pe zi</span></div></div>
-        <div className="card"><p className="ey">Reclamă generată</p><div style={css({ height: "150px", marginTop: "12px", borderRadius: "14px", background: "var(--img-salon) center 30%/cover" })}></div><p style={css({ margin: "12px 0 0", fontSize: "14px" })}><b>Tuns și coafat cu 20% reducere</b><br /><span style={css({ color: "var(--mut)" })}>Programează-te în 30 de secunde.</span></p></div>
+        <div className="card"><p className="ey">Reclamă, poze și clip generate</p><div style={css({ height: "150px", marginTop: "12px", borderRadius: "14px", background: "var(--img-salon) center 30%/cover" })}></div><p style={css({ margin: "12px 0 0", fontSize: "14px" })}><b>Tuns și coafat cu 20% reducere</b><br /><span style={css({ color: "var(--mut)" })}>Programează-te în 30 de secunde.</span></p></div>
         <div className="card"><div className="live">LEAD NOU</div><div className="row" style={css({ display: "flex", gap: "12px", alignItems: "center", marginTop: "14px" })}><span className="av">IP</span><div><b>Ioana P.</b><div style={css({ color: "var(--mut)", fontSize: "13px" })}>0740 ··· 579 · acum 4 secunde</div></div></div></div>
       </div>
       <div className="progress"><i id="pinBar"></i></div>
@@ -135,7 +142,7 @@ export function HomeV2() {
   <div className="wrap">
     <p className="ey" data-r>Așa arată în flux</p>
     <h2 className="d2" data-r style={css({ maxWidth: "17ch", marginTop: "16px" })}>Reclame care arată ca făcute de o agenție.</h2>
-    <p className="lead" data-r style={css({ marginTop: "22px" })}>Text, imagine și buton, gata de publicat pe Facebook și Instagram. Tu doar confirmi.</p>
+    <p className="lead" data-r style={css({ marginTop: "22px" })}>Text, imagine sau clip și buton, gata de publicat pe Facebook, Instagram și TikTok. Tu doar confirmi.</p>
     <div className="ads">
       <article className="fbp" data-r data-p=".04" style={css({ "--d": "0s" })}>
         <div className="fbh"><b>facebook</b><span><i><svg viewBox="0 0 24 24" fill="none" stroke="#050505" strokeWidth="2.4" strokeLinecap="round"><circle cx="10.500" cy="10.500" r="6.500"/><path d="M15.500 15.500L20 20"/></svg></i><i><svg viewBox="0 0 24 24" fill="#050505"><path d="M12 3C6.900 3 3 6.700 3 11.400c0 2.600 1.200 4.900 3.100 6.400V21l3-1.600c.900.200 1.900.400 2.900.400 5.100 0 9-3.700 9-8.400S17.100 3 12 3zm.900 11.200l-2.300-2.400-4.400 2.400 4.900-5.200 2.300 2.400 4.400-2.400-4.900 5.200z"/></svg></i></span></div>
@@ -172,6 +179,37 @@ export function HomeV2() {
   </div>
 </section>
 
+<section className="band dark studio" id="studio">
+  <div className="wrap">
+    <p className="ey" data-r>Studio AI</p>
+    <h2 className="d2" data-r style={css({ marginTop: "16px", maxWidth: "18ch" })}>Clipuri și poze cu AI, făcute din pozele tale.</h2>
+    <p className="lead" data-r style={css({ marginTop: "22px", maxWidth: "52ch" })}>Trimiți 2–3 poze cu afacerea ta. În 3–5 minute primești un clip de 20–25 de secunde, cu voce în română, subtitrări și mai multe unghiuri, plus pozele gata de reclamă. Același clip merge pe Facebook, Instagram și TikTok.</p>
+    <div className="sgrid">
+      <div className="sclip" data-r role="img" aria-label="Clip vertical generat cu AI pentru un cabinet stomatologic, cu subtitrări">
+        <div className="ttui">
+          <span className="tag">Sponsorizat · TikTok</span>
+          <div className="rail"><i>♥</i><i>💬</i><i>↗</i></div>
+          <div className="cap"><b>NU ALEGI</b> <em>IMPLANTUL</em><br />PE LOC</div>
+          <div className="who"><b>@clinica.dentasmile</b><small>Programează un consult gratuit</small><span className="go">Programează-te</span></div>
+          <div className="bar"><i></i></div>
+        </div>
+      </div>
+      <div className="sph" data-r style={css({ "--d": ".1s" })}>
+        <div className="ph" style={css({ backgroundImage: "var(--img-salon)" })}><span>Poză AI</span></div>
+        <div className="ph" style={css({ backgroundImage: "var(--img-imob)" })}><span>Poză AI</span></div>
+      </div>
+      <ul className="sfacts" data-r style={css({ "--d": ".2s" })}>
+        <li><b>20–25 de secunde</b><span>suficient pentru 2–3 argumente puternice</span></li>
+        <li><b>Voce în română</b><span>buzele se mișcă pe cuvintele rostite</span></li>
+        <li><b>Mai multe unghiuri</b><span>prezentator în spațiul tău, alternat cu cadre din pozele tale</span></li>
+        <li><b>Subtitrări pe cuvânt</b><span>cuvintele-cheie ies în evidență</span></li>
+        <li><b>Format vertical</b><span>Reels, Stories și TikTok, fără retușuri</span></li>
+      </ul>
+    </div>
+    <div className="goal-out" data-r><p>Primul clip și 2 poze AI sunt gratuite, la înscriere.</p><button className="btn btn-w" data-go="signup">Fă-mi primul clip <span className="arr">→</span></button></div>
+  </div>
+</section>
+
 <section className="band dark" id="obiectiv">
   <div className="wrap">
     <p className="ey" data-r>Începe de aici</p>
@@ -190,19 +228,19 @@ export function HomeV2() {
   <div className="wrap">
     <p className="ey" data-r>Prețuri</p>
     <h2 className="d2" data-r style={css({ marginTop: "16px", maxWidth: "15ch" })}>Primele 7 zile sunt gratuite. Fără card.</h2>
-    <p className="lead" data-r style={css({ marginTop: "22px" })}>Alegi planul la înscriere și îl folosești complet 7 zile, fără să plătești nimic. Bugetul de reclame îl plătești separat, direct către Meta.</p>
+    <p className="lead" data-r style={css({ marginTop: "22px" })}>Alegi planul la înscriere și îl folosești 7 zile, fără să plătești nimic. În cele 7 zile primești 1 clip și 2 poze generate cu AI; mai multe se deblochează după ce te abonezi. Bugetul de reclame îl plătești separat, direct către Meta sau TikTok.</p>
     <div className="plans">
       <div className="plan" data-r><span className="tag">7 zile gratuite pe lună</span><div className="nm">Starter</div><div className="pr"><span className="z">0 lei</span></div><div className="then">gratuit mereu, 7 zile de rulare pe lună</div>
-        <ul><li>Asistent AdPilot pe WhatsApp</li><li>Campanii pe Facebook și Instagram</li><li>O campanie activă, 7 zile în fiecare lună</li></ul>
+        <ul><li>Asistent AdPilot pe WhatsApp</li><li>Reclame pe Facebook, Instagram și TikTok</li><li>1 clip și 2 poze generate cu AI, la înscriere</li><li>O campanie activă, 7 zile în fiecare lună</li></ul>
         <button className="btn btn-o" data-go="signup" style={css({ justifyContent: "center" })}>Începe gratuit</button></div>
       <div className="plan hot" data-r style={css({ "--d": ".08s" })}><span className="tag">Cel mai ales · gratis primele 7 zile</span><div className="nm">Pro</div><div className="pr"><span className="z">0 lei</span> <s>495 lei</s></div><div className="then">primele 7 zile, apoi 495 lei pe lună</div>
-        <ul><li>Campanii nelimitate, care rulează non-stop</li><li>10 poze generate cu AI pe lună</li><li>Asistent AdPilot pe WhatsApp</li><li>Suport prioritar</li></ul>
+        <ul><li>Campanii nelimitate, non-stop, pe Facebook, Instagram și TikTok</li><li>Primele 7 zile: 1 clip și 2 poze generate cu AI</li><li>După abonare: 4 clipuri și 10 poze AI pe lună</li><li>Asistent AdPilot pe WhatsApp</li><li>Suport prioritar</li></ul>
         <button className="btn btn-w" data-go="signup" style={css({ justifyContent: "center" })}>Începe gratuit 7 zile</button></div>
       <div className="plan" data-r style={css({ "--d": ".16s" })}><span className="tag">Gratis primele 7 zile</span><div className="nm">Premium</div><div className="pr"><span className="z">0 lei</span> <s>995 lei</s></div><div className="then">primele 7 zile, apoi 995 lei pe lună</div>
-        <ul><li>Tot ce are Pro</li><li>Poze generate cu AI, nelimitat</li><li>Manager dedicat</li></ul>
+        <ul><li>Tot ce are Pro</li><li>Primele 7 zile: 1 clip și 2 poze generate cu AI</li><li>După abonare: 15 clipuri și poze AI nelimitate pe lună</li><li>Manager dedicat</li></ul>
         <button className="btn btn-k" data-go="signup" style={css({ justifyContent: "center" })}>Începe gratuit 7 zile</button></div>
     </div>
-    <div className="agency" data-r><div><p className="ey" style={css({ color: "#a5a2bc" })}>Pentru agenții</p><h3 className="d3" style={css({ marginTop: "10px" })}>Toți clienții tăi, într-un singur cont.</h3><p>995 lei pe lună cu 2 afaceri incluse, apoi 249 lei pentru fiecare afacere în plus. Clienții se conectează singuri, printr-un link.</p></div><button className="btn btn-w" data-go="signup">AdPilot pentru agenții <span className="arr">→</span></button></div>
+    <div className="agency" data-r><div><p className="ey" style={css({ color: "#a5a2bc" })}>Pentru agenții</p><h3 className="d3" style={css({ marginTop: "10px" })}>Toți clienții tăi, într-un singur cont.</h3><p>995 lei pe lună cu 2 afaceri incluse, apoi 249 lei pentru fiecare afacere în plus. Clienții se conectează singuri, printr-un link.</p></div><button className="btn btn-w" data-go="signup" data-agency="1">AdPilot pentru agenții <span className="arr">→</span></button></div>
   </div>
 </section>
 
@@ -212,8 +250,11 @@ export function HomeV2() {
     <div className="faq" data-r>
       <details open><summary>Ce se întâmplă după cele 7 zile?</summary><p>Pe Starter rămâi gratuit, cu 7 zile de rulare în fiecare lună. Pe Pro sau Premium primești pe WhatsApp un link de plată. Plătești cu cardul și contul continuă fără întrerupere.</p></details>
       <details><summary>Am nevoie de experiență cu reclame?</summary><p>Nu. Răspunzi la câteva întrebări despre afacere și obiectiv, iar AdPilot creează și lansează campania.</p></details>
-      <details><summary>Prețul include bugetul de reclame?</summary><p>Nu. Abonamentul acoperă platforma. Bugetul îl plătești direct către Meta, din contul tău de reclame.</p></details>
-      <details><summary>Al cui este contul de reclame?</summary><p>Al tău. Contul Meta rămâne pe numele tău și poți retrage accesul AdPilot oricând.</p></details>
+      <details><summary>Prețul include bugetul de reclame?</summary><p>Nu. Abonamentul acoperă platforma. Bugetul îl plătești direct către Meta (Facebook și Instagram) sau TikTok, din contul tău de reclame.</p></details>
+      <details><summary>Pot face reclame și pe TikTok?</summary><p>Da. Conectezi Facebook, TikTok sau ambele, iar AdPilot pornește reclama pe platformele alese, cu același clip și aceleași poze.</p></details>
+      <details><summary>Ce primesc gratuit, în cele 7 zile?</summary><p>Un clip de 20–25 de secunde cu voce în română și 2 poze, generate cu AI din pozele tale. Mai multe clipuri și poze se deblochează după abonare: pe Pro 4 clipuri și 10 poze pe lună, pe Premium 15 clipuri și poze nelimitate.</p></details>
+      <details><summary>Cum se face clipul?</summary><p>Trimiți 2–3 poze cu afacerea ta. AI-ul scrie textul, creează prezentatorul în spațiul tău, înregistrează vocea în română și montează clipul cu subtitrări. Durează 3–5 minute, iar îl primești și pe WhatsApp.</p></details>
+      <details><summary>Al cui este contul de reclame?</summary><p>Al tău. Contul Meta sau TikTok rămâne pe numele tău și poți retrage accesul AdPilot oricând.</p></details>
       <details><summary>Pot anula oricând?</summary><p>Da, din cont, în orice moment. Accesul continuă până la finalul perioadei plătite.</p></details>
     </div>
   </div>
@@ -224,7 +265,7 @@ export function HomeV2() {
   <div className="wrap">
     <h2 className="d1" data-r>Prima reclamă,<br />în 5 minute.</h2>
     <div className="cta" data-r><button className="btn btn-w" data-go="signup">Începe gratuit 7 zile <span className="arr">→</span></button></div>
-    
+    <p className="fin-sub" data-r>Primul clip și 2 poze AI, gratuite · Facebook, Instagram și TikTok</p>
   </div>
 </section>
 

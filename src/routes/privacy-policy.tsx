@@ -42,7 +42,8 @@ export const Route = createFileRoute("/privacy-policy")({
         <li>Furnizori de cloud și baze de date pentru operarea platformei.</li>
         <li>Procesatori de plăți (Stripe) pentru facturare.</li>
         <li>Furnizori de email și mesagerie pentru comunicări tranzacționale.</li>
-        <li>Meta (Facebook și Instagram), pentru a opera campaniile autorizate de tine.</li>
+        <li>Meta (Facebook și Instagram) și TikTok (TikTok for Business), pentru a opera campaniile autorizate de tine.</li>
+        <li>Furnizori AI de imagine, video, voce și text, cărora le transmitem pozele pe care ni le trimiți, doar ca să generăm clipurile și pozele tale.</li>
         <li>Furnizori de analitică (de ex. Google Analytics, cu anonimizarea IP).</li>
         <li>Autorități, când legea o cere.</li>
       </UL>

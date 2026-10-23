@@ -381,7 +381,7 @@ function AuthPage() {
                 <div>
                   <b>AdPilot</b>
                   <div className="l" style={{ margin: 0 }}>
-                    Campania ta e live pe Facebook și Instagram.
+                    Campania ta e live pe Facebook, Instagram și TikTok.
                   </div>
                 </div>
               </div>

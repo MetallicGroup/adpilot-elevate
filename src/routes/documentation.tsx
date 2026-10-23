@@ -17,9 +17,17 @@ const sections = [
   {
     title: "1. Primii pași",
     items: [
-      { id: "creeaza-cont", h: "Creează-ți contul", body: "Înregistrează-te pe adpilot.ro/auth cu email și parolă, sau continuă cu Google. După confirmarea emailului, ajungi direct pe dashboard." },
-      { id: "conecteaza", h: "Conectează contul de reclame", body: "Din Setări → Conexiuni, apasă Conectează Meta. Vei fi redirecționat către ecranul OAuth oficial unde alegi ce cont de reclame să partajezi cu AdPilot. Poți revoca accesul oricând." },
+      { id: "creeaza-cont", h: "Creează-ți contul", body: "Apasă „Începe gratuit” pe adpilot.ro și introdu numărul tău de WhatsApp. Primești un cod pe WhatsApp, răspunzi la două întrebări despre afacere și trimiți 2–3 poze. Din acel moment ai cont; conturile vechi cu email sau Google rămân valabile." },
+      { id: "conecteaza", h: "Conectează contul de reclame", body: "Conectezi Facebook (Meta), TikTok sau ambele, din onboarding sau din Setări → Conexiuni. Vei fi redirecționat către ecranul OAuth oficial al platformei, unde alegi ce cont de reclame să partajezi cu AdPilot. Poți revoca accesul oricând." },
       { id: "prima-campanie", h: "Lansează prima campanie", body: "Apasă „Creează campanie” pe dashboard. Urmează wizard-ul: obiectiv, buget, audiență, creativ, formular (dacă e cazul) și revizuire. AI-ul îți sugerează audiențe și texte la fiecare pas." },
+    ],
+  },
+  {
+    title: "Clipuri și poze generate cu AI",
+    items: [
+      { id: "primul-clip", h: "Primul clip și 2 poze, gratuite", body: "La înscriere trimiți 2–3 poze cu afacerea ta. AdPilot creează un clip de 20–25 de secunde, cu voce în română, subtitrări și mai multe unghiuri, plus 2 poze pentru reclame. Durează 3–5 minute, iar le primești și pe WhatsApp. Perioada gratuită include doar acest clip și aceste 2 poze." },
+      { id: "limite-ai", h: "Câte clipuri și poze primești", body: "Starter: doar cele de la înscriere. Pro și Premium: la fel în primele 7 zile; după abonare, Pro are 4 clipuri și 10 poze AI pe lună, iar Premium 15 clipuri și poze nelimitate. Limitele se reîncarcă la începutul lunii." },
+      { id: "folosire-clip", h: "Folosește clipul în reclame", body: "Clipul se publică pe Facebook, Instagram (Reels) și TikTok. Când pornești o reclamă, asistentul te întreabă dacă folosești clipul, pozele sau altceva." },
     ],
   },
   {

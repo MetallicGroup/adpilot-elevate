@@ -35,7 +35,8 @@ const PLANS = [
     desc: "Gratuit — 7 zile în fiecare lună, fără card.",
     items: [
       "Asistent WhatsApp AI inclus",
-      "Campanii pe Facebook & Instagram",
+      "Reclame pe Facebook, Instagram și TikTok",
+      "1 clip și 2 poze AI, la înscriere",
       "7 zile gratuite în fiecare lună",
     ],
   },
@@ -47,7 +48,8 @@ const PLANS = [
     desc: "Pentru afacerile care vor să crească rapid.",
     items: [
       "Campanii nelimitate, non-stop",
-      "10 poze AI pe lună",
+      "Primele 7 zile: 1 clip și 2 poze AI",
+      "După abonare: 4 clipuri și 10 poze AI pe lună",
       "Asistent WhatsApp AI",
       "Suport prioritar",
     ],
@@ -59,7 +61,8 @@ const PLANS = [
     desc: "Pentru branduri și agenții care scalează agresiv.",
     items: [
       "Campanii nelimitate, non-stop",
-      "Poze AI nelimitate",
+      "Primele 7 zile: 1 clip și 2 poze AI",
+      "După abonare: 15 clipuri și poze AI nelimitate",
       "Asistent WhatsApp AI",
       "Manager dedicat",
     ],
