@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, redirect, Link, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { Home, Plus, BarChart3, Settings, Users, CalendarCheck } from "lucide-react";
+import { Home, Plus, BarChart3, Settings, Users, CalendarCheck, Film } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -94,6 +94,10 @@ function DesktopSidebar() {
           <Link to="/bookings" className={NAV_ITEM} activeProps={NAV_ACTIVE}>
             <CalendarCheck className="h-[18px] w-[18px]" />
             Programări
+          </Link>
+          <Link to="/materiale" className={NAV_ITEM} activeProps={NAV_ACTIVE}>
+            <Film className="h-[18px] w-[18px]" />
+            Materiale
           </Link>
         </nav>
       </div>

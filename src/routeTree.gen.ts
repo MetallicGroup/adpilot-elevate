@@ -48,6 +48,7 @@ import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedCreateRouteImport } from './routes/_authenticated/create'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
+import { Route as AuthenticatedMaterialeRouteImport } from './routes/_authenticated/materiale'
 import { Route as AuthenticatedMetaStatusRouteImport } from './routes/_authenticated/meta-status'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedProgramariRouteImport } from './routes/_authenticated/programari'
@@ -286,6 +287,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
 const AuthenticatedLeadsRoute = AuthenticatedLeadsRouteImport.update({
   id: '/leads',
   path: '/leads',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMaterialeRoute = AuthenticatedMaterialeRouteImport.update({
+  id: '/materiale',
+  path: '/materiale',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedMetaStatusRoute = AuthenticatedMetaStatusRouteImport.update({
@@ -574,6 +580,7 @@ export interface FileRoutesByFullPath {
   '/create': typeof AuthenticatedCreateRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/leads': typeof AuthenticatedLeadsRoute
+  '/materiale': typeof AuthenticatedMaterialeRoute
   '/meta-status': typeof AuthenticatedMetaStatusRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/programari': typeof AuthenticatedProgramariRoute
@@ -659,6 +666,7 @@ export interface FileRoutesByTo {
   '/create': typeof AuthenticatedCreateRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/leads': typeof AuthenticatedLeadsRoute
+  '/materiale': typeof AuthenticatedMaterialeRoute
   '/meta-status': typeof AuthenticatedMetaStatusRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/programari': typeof AuthenticatedProgramariRoute
@@ -746,6 +754,7 @@ export interface FileRoutesById {
   '/_authenticated/create': typeof AuthenticatedCreateRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/leads': typeof AuthenticatedLeadsRoute
+  '/_authenticated/materiale': typeof AuthenticatedMaterialeRoute
   '/_authenticated/meta-status': typeof AuthenticatedMetaStatusRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/programari': typeof AuthenticatedProgramariRoute
@@ -833,6 +842,7 @@ export interface FileRouteTypes {
     | '/create'
     | '/dashboard'
     | '/leads'
+    | '/materiale'
     | '/meta-status'
     | '/onboarding'
     | '/programari'
@@ -918,6 +928,7 @@ export interface FileRouteTypes {
     | '/create'
     | '/dashboard'
     | '/leads'
+    | '/materiale'
     | '/meta-status'
     | '/onboarding'
     | '/programari'
@@ -1004,6 +1015,7 @@ export interface FileRouteTypes {
     | '/_authenticated/create'
     | '/_authenticated/dashboard'
     | '/_authenticated/leads'
+    | '/_authenticated/materiale'
     | '/_authenticated/meta-status'
     | '/_authenticated/onboarding'
     | '/_authenticated/programari'
@@ -1389,6 +1401,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLeadsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/materiale': {
+      id: '/_authenticated/materiale'
+      path: '/materiale'
+      fullPath: '/materiale'
+      preLoaderRoute: typeof AuthenticatedMaterialeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/meta-status': {
       id: '/_authenticated/meta-status'
       path: '/meta-status'
@@ -1726,6 +1745,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCreateRoute: typeof AuthenticatedCreateRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
+  AuthenticatedMaterialeRoute: typeof AuthenticatedMaterialeRoute
   AuthenticatedMetaStatusRoute: typeof AuthenticatedMetaStatusRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedProgramariRoute: typeof AuthenticatedProgramariRoute
@@ -1747,6 +1767,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCreateRoute: AuthenticatedCreateRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
+  AuthenticatedMaterialeRoute: AuthenticatedMaterialeRoute,
   AuthenticatedMetaStatusRoute: AuthenticatedMetaStatusRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedProgramariRoute: AuthenticatedProgramariRoute,

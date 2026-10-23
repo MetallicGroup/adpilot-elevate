@@ -36,6 +36,14 @@ export async function refreshAllInsights(): Promise<{ refreshed: number; errors:
   } catch (e) {
     console.error("[refresh-insights] free-plan clocks", e);
   }
+  // TikTok: o dată la 10 minute (API-ul lor are limite mai strânse).
+  if (new Date().getUTCMinutes() % 10 === 0) {
+    try {
+      await refreshTikTokInsights(supabaseAdmin);
+    } catch (e) {
+      console.error("[refresh-insights] tiktok", e);
+    }
+  }
   const { data: camps } = await supabaseAdmin
     .from("campaigns")
     .select("id, user_id, meta_campaign_id")
@@ -93,6 +101,51 @@ export async function refreshAllInsights(): Promise<{ refreshed: number; errors:
     }
   }
   return { refreshed, errors };
+}
+
+/** Statisticile zilnice ale campaniilor TikTok în performance_data (dashboard, rapoarte). */
+async function refreshTikTokInsights(db: any): Promise<void> {
+  const { data: camps } = await db
+    .from("campaigns")
+    .select("id, user_id, tiktok_campaign_id")
+    .eq("platform", "tiktok")
+    .in("status", ["active", "paused"])
+    .not("tiktok_campaign_id", "is", null);
+  if (!camps?.length) return;
+  const tt = await import("./tiktok-ads.server");
+  for (const c of camps) {
+    try {
+      const ctx = await tt.getTikTokAdContext(db, c.user_id);
+      if (!ctx) continue;
+      const days = await tt.getTikTokCampaignDaily(ctx, c.tiktok_campaign_id, 30);
+      if (!days.length) continue;
+      const { data: leads } = await db.from("leads").select("created_at").eq("campaign_id", c.id);
+      const leadsByDay = new Map<string, number>();
+      for (const l of leads ?? []) {
+        const d = String(l.created_at).slice(0, 10);
+        leadsByDay.set(d, (leadsByDay.get(d) ?? 0) + 1);
+      }
+      await db.from("performance_data").delete().eq("campaign_id", c.id);
+      await db.from("performance_data").insert(
+        days.map((d) => {
+          const lds = leadsByDay.get(d.date) ?? 0;
+          return {
+            user_id: c.user_id,
+            campaign_id: c.id,
+            date: d.date,
+            spend: d.spend,
+            impressions: d.impressions,
+            clicks: d.clicks,
+            ctr: d.impressions ? (d.clicks / d.impressions) * 100 : 0,
+            leads: lds,
+            cpl: lds ? d.spend / lds : 0,
+          };
+        }),
+      );
+    } catch (e) {
+      console.error("[refresh-insights] tiktok campaign", c.id, (e as Error).message);
+    }
+  }
 }
 
 /** Send a per-campaign WhatsApp pulse (spend / views / clicks / leads) hourly. */

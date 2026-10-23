@@ -115,7 +115,7 @@ export const getDashboardOverview = createServerFn({ method: "GET" })
       id: l.id,
       name: l.full_name || l.phone || l.email || "Lead nou",
       detail:
-        (l.platform === "meta" ? "Meta" : l.platform === "booking" ? "Programare" : l.platform || "Lead") +
+        (l.platform === "meta" ? "Meta" : l.platform === "tiktok" ? "TikTok" : l.platform === "booking" ? "Programare" : l.platform || "Lead") +
         (l.status ? ` · ${l.status}` : ""),
       created_at: l.created_at,
     }));

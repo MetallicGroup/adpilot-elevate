@@ -531,6 +531,37 @@ function ymd(d: Date) {
 }
 
 /** Cheltuieli, afișări, click-uri pe ultimele `days` zile (inclusiv azi), sau pe un interval dat. */
+/** Cheltuieli, afișări și click-uri pe zile (ultimele `days` zile, max. 30). */
+export async function getTikTokCampaignDaily(ctx: TikTokAdContext, campaignId: string, days = 30) {
+  const end = new Date();
+  const start = new Date(Date.now() - (Math.min(30, Math.max(1, days)) - 1) * 86400_000);
+  const data = await ttRequest<{ list?: Array<{ dimensions?: Record<string, string>; metrics?: Record<string, string> }> }>(
+    ctx.token,
+    "GET",
+    "/report/integrated/get/",
+    {
+      advertiser_id: ctx.advertiserId,
+      report_type: "BASIC",
+      data_level: "AUCTION_CAMPAIGN",
+      dimensions: ["campaign_id", "stat_time_day"],
+      metrics: ["spend", "impressions", "clicks"],
+      start_date: ymd(start),
+      end_date: ymd(end),
+      filtering: [{ field_name: "campaign_ids", filter_type: "IN", filter_value: JSON.stringify([campaignId]) }],
+      page_size: 100,
+    },
+    "raport zilnic",
+  );
+  return (data.list ?? [])
+    .map((r) => ({
+      date: String(r.dimensions?.stat_time_day ?? "").slice(0, 10),
+      spend: Number(r.metrics?.spend ?? 0),
+      impressions: Number(r.metrics?.impressions ?? 0),
+      clicks: Number(r.metrics?.clicks ?? 0),
+    }))
+    .filter((d) => d.date);
+}
+
 export async function getTikTokCampaignStats(
   ctx: TikTokAdContext,
   campaignId: string,

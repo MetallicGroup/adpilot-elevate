@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import {
   Plus, Inbox, ArrowRight, Sparkles, Pause, Play, CreditCard, Target,
-  TrendingUp, MousePointerClick, Wand2, BarChart3, CalendarClock,
+  TrendingUp, MousePointerClick, Wand2, BarChart3, CalendarClock, Film,
 } from "lucide-react";
 import { fmtMoney, fmtNum } from "@/lib/format";
 import { setCampaignStatus } from "@/lib/campaigns.functions";
@@ -305,7 +305,7 @@ function Dashboard() {
                     <span className="min-w-0">
                       <b className="block truncate text-[11px]">{c.name}</b>
                       <small className="block text-[9px] text-muted-foreground">
-                        {c.platform === "meta" ? "Facebook & Instagram" : c.platform} · {fmtMoney(c.spend)}
+                        {c.platform === "meta" ? "Facebook & Instagram" : c.platform === "tiktok" ? "TikTok" : c.platform} · {fmtMoney(c.spend)}
                       </small>
                     </span>
                   </Link>
@@ -372,12 +372,13 @@ function Dashboard() {
       </div>
 
       {/* Quick actions */}
-      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {[
           { to: "/create", icon: Plus, title: "Campanie nouă", sub: "Pornește în câteva minute" },
           { to: "/bookings", icon: CalendarClock, title: "Programări", sub: "Din paginile de booking" },
           { to: "/leads", icon: Inbox, title: "Clienți potențiali", sub: "Toate platformele" },
           { to: "/reports", icon: BarChart3, title: "Raport complet", sub: "Vezi performanța" },
+          { to: "/materiale", icon: Film, title: "Materiale", sub: "Clipuri și poze AI" },
         ].map((q) => (
           <Link key={q.to} to={q.to} className="press card-floating flex items-center gap-3 p-4 transition-colors hover:border-primary/40">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
