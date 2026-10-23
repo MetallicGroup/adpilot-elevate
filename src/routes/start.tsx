@@ -18,6 +18,8 @@ import {
 import { startMetaOAuth } from "@/lib/meta-oauth.functions";
 import { startTikTokOAuth } from "@/lib/tiktok-oauth.functions";
 import { getStoredReferral, referralFromSearch, storeReferral } from "@/lib/referral";
+import { fbCompleteRegistration } from "@/lib/meta-pixel";
+import { tkTrack } from "@/lib/tiktok-pixel";
 import startCss from "../styles/start.css?url";
 
 type StartSearch = {
@@ -450,8 +452,14 @@ function CodeScreen(props: {
     setError(null);
     try {
       const r = await verify({ data: { phone: `0${props.digits}`, code, referral: getStoredReferral() } });
-      const { error: vErr } = await supabase.auth.verifyOtp({ token_hash: r.tokenHash, type: "magiclink" });
+      const { data: auth, error: vErr } = await supabase.auth.verifyOtp({ token_hash: r.tokenHash, type: "magiclink" });
       if (vErr) throw new Error("Nu am putut porni sesiunea. Încearcă din nou.");
+      // Înscriere nouă: evenimentul din browser (cu cookie-urile de click ale reclamei),
+      // cu același event_id ca cel trimis de server, ca platformele să-l numere o singură dată.
+      if (r.isNew && auth?.user?.id) {
+        fbCompleteRegistration(`reg_${auth.user.id}`);
+        tkTrack("CompleteRegistration", {}, `reg_${auth.user.id}`);
+      }
       setState("ok");
       setTimeout(() => props.onVerified(r.isNew), 600);
     } catch (e) {
