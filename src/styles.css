@@ -210,9 +210,11 @@
     border-color: var(--color-border);
   }
 
+  /* `clip`, nu `hidden`: taie depășirile laterale fără să facă din html/body un container
+     de derulare (altfel `position: sticky` nu mai funcționează, ex. „Cum funcționează”). */
   html,
   body {
-    overflow-x: hidden;
+    overflow-x: clip;
     max-width: 100vw;
   }
 

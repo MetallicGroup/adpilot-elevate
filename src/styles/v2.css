@@ -15,7 +15,7 @@
   --gut:clamp(18px,4vw,56px); --max:1240px; --ease:cubic-bezier(.2,.8,.2,1);}
 .v2 *{box-sizing:border-box}
 html:has(.v2){scroll-behavior:smooth}
-.v2{background:var(--ink);color:#fff;font-family:var(--f-body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.v2{background:var(--ink);color:#fff;font-family:var(--f-body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:clip}
 .v2 a{color:inherit;text-decoration:none}
 .v2 button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 .v2 :focus-visible{outline:2px solid var(--magenta);outline-offset:3px;border-radius:8px}
@@ -170,8 +170,10 @@ html:has(.v2){scroll-behavior:smooth}
 @media(max-width:900px){
   .v2 .pin .track{height:auto}
   .v2 .pin .stick{position:static;height:auto;grid-template-columns:1fr;padding-block:80px}
-  .v2 .step{opacity:1}
+  .v2 .step{opacity:.42;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .v2 .step.on{opacity:1;border-top-color:rgba(255,255,255,.55)}
   .v2 .step p{max-height:none;margin-top:10px}
+  .v2 .pin .iph{touch-action:pan-y}
   .v2 .pside,.v2 .progress{display:none}
   .v2 .pin .phone{margin-inline:auto}
   .v2 .pscr{opacity:0}

@@ -159,6 +159,12 @@ async function pinScene(i,instant){
 }
 obReset(false);
 IO(es=>es.forEach(e=>{pinVis=e.isIntersecting;if(pinVis)pinScene(Math.max(0,pinIdx),RM);else pinTok++}),{threshold:.35}).observe(PS);
+/* mobil: secțiunea nu e fixată, așa că pașii se schimbă cu atingere pe pas sau swipe pe telefon */
+steps.forEach((st,k)=>st.addEventListener('click',()=>{if(innerWidth<=900)setPin(k)},{signal:ac.signal}));
+let swX=null,swY=null;
+PS.addEventListener('touchstart',e=>{swX=e.touches[0].clientX;swY=e.touches[0].clientY},{passive:true,signal:ac.signal});
+PS.addEventListener('touchend',e=>{if(swX===null)return;const dx=e.changedTouches[0].clientX-swX,dy=e.changedTouches[0].clientY-swY;swX=null;
+  if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)*1.2)setPin((Math.max(0,pinIdx)+(dx<0?1:3))%4)},{passive:true,signal:ac.signal});
 
 /* ---------- WhatsApp windows in the bento ---------- */
 const DENT=`<div class="cre pic" role="img" aria-label="Reclama clinicii" style="background:var(--img-dental) center/cover;aspect-ratio:720/568"></div>`;
