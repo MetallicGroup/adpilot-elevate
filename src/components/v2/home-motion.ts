@@ -49,7 +49,7 @@ function onScroll(){
   if(!RM&&innerWidth>960)$$('[data-p]').forEach(el=>{const r=el.getBoundingClientRect();if(r.bottom<-200||r.top>innerHeight+200)return;
     const d=(r.top+r.height/2-innerHeight/2)*parseFloat(el.dataset.p);el.style.translate=`0 ${d.toFixed(1)}px`});
   if(track&&innerWidth>900){const r=track.getBoundingClientRect(),p=Math.max(0,Math.min(1,-r.top/(r.height-innerHeight)));
-    pinBar.style.width=(p*100)+'%';setPin(Math.min(3,Math.floor(p*4)))}
+    pinBar.style.width=(p*100)+'%';setPin(Math.min(steps.length-1,Math.floor(p*steps.length)))}
 }
 function setPin(i){ if(i===pinIdx)return; pinIdx=i;
   steps.forEach((s,k)=>s.classList.toggle('on',k===i)); pcards.forEach((s,k)=>s.classList.toggle('on',k===i)); if(pinVis)pinScene(i,RM); }
@@ -116,55 +116,151 @@ async function heroLoop(){
   }
 }
 
-/* pinned phone: one animated scene per step */
+/* pinned phone: one animated scene per step = the real onboarding, in order */
 const PS=$('#pinScr');
-PS.className='scr s-ob';
-PS.innerHTML=SB+`<div class="appl ob"><div class="obz" id="obz"><span class="brand"><span class="logo"></span>AdPilot</span><span class="eb">PASUL 1 DIN 4</span><h4>Conectează Facebook sau TikTok</h4><p>Contul de reclame rămâne al tău, pe numele tău.</p><div class="obc" id="obc"><div><i></i>Facebook și Instagram</div><div><i></i>TikTok</div><div><i></i>Contul de reclame</div></div><div class="obb" id="obb"></div></div>
-<div class="fbsheet" id="fbsheet"><span class="grab"></span><div class="fw">facebook</div><div class="pair"><span class="logo"></span><u>•••</u><span class="fbi">f</span></div><h5>AdPilot solicită acces la:</h5><ul><li>Pagina „Salon Eleganza”</li><li>Contul de Instagram</li><li>Contul de reclame</li></ul><div class="go" id="fbgo">Continuă ca Daniel</div><div class="no">Anulează</div></div><i class="tap" id="ptap"></i></div>
-<div class="appl wa pwa">${WAH}<div class="body" id="pBody"></div><div class="inp"><div class="f" id="pInp"></div><div class="s" id="pSend">${'<svg viewBox="0 0 24 24"><path d="M3 20l18-8L3 4v6l11 2-11 2z"/></svg>'}</div></div></div><div class="glare"></div>`;
-const FBTXT='<svg viewBox="0 0 24 24"><path d="M13.500 22v-8h2.700l.400-3.200h-3.100V8.700c0-.900.300-1.600 1.600-1.600h1.700V4.200c-.300 0-1.300-.100-2.500-.100-2.500 0-4.100 1.500-4.100 4.200v2.500H7.400V14h2.800v8h3.300z"/></svg>Conectează cu Facebook';
+const PHOTO=`<div class="cth"><i style="background:var(--img-dental) 22% 30%/cover"></i><i style="background:var(--img-dental) 72% 40%/cover"></i><i style="background:var(--img-dental) 46% 85%/cover"></i></div>`;
+const CRED=`<div class="cre pic" role="img" aria-label="Reclama cabinetului" style="background:var(--img-dental) center/cover;aspect-ratio:720/568"></div>`;
+const ICO_FB=`<svg viewBox="0 0 24 24" fill="#fff"><path d="M13.500 22v-8h2.700l.400-3.200h-3.100V8.700c0-.900.300-1.600 1.600-1.600h1.700V4.200c-.300 0-1.300-.100-2.500-.100-2.500 0-4.100 1.500-4.100 4.200v2.500H7.400V14h2.800v8h3.300z"/></svg>`;
+const ICO_TT=`<svg viewBox="0 0 24 24" fill="#fff"><path d="M16.500 3a4.600 4.600 0 003.500 3.900v3a7.600 7.600 0 01-3.500-1v6.300a5.700 5.700 0 11-5.700-5.700c.300 0 .600 0 .900.100v3.100a2.700 2.700 0 101.800 2.500V3h3z"/></svg>`;
+const CLIPSVG=`<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 11.500-8.600 8.600a5.500 5.500 0 01-7.800-7.800l9-9a3.700 3.700 0 015.200 5.200l-9 9a1.800 1.800 0 01-2.600-2.600l8.300-8.300"/></svg>`;
+PS.className='scr s-n';
+PS.innerHTML=SB+`
+<div class="appl pw" id="pw">
+  <div class="pwv on" id="vNum"><span class="pbr"><span class="logo"></span>AdPilot</span><span class="peb">ÎNCEPE GRATUIT</span><h4>Pune numărul tău de <b class="gtext">WhatsApp</b></h4><p class="psub">Acolo primești clipul, pozele și clienții. Fără parolă.</p>
+    <div class="pfield"><span class="pre"><i class="ro"></i>+40</span><span class="pval" id="pNum"></span></div>
+    <div class="pchk" id="pChk"><i></i><span>Sunt de acord să primesc mesaje pe WhatsApp.</span></div>
+    <div class="pbtn" id="pBtn1">Trimite codul pe WhatsApp</div></div>
+  <div class="pwv" id="vCode"><span class="pbr"><span class="logo"></span>AdPilot</span><span class="peb">CONFIRMĂ NUMĂRUL</span><h4>Ți-am trimis un <b class="gtext">cod</b></h4><p class="psub">Cele 6 cifre primite pe WhatsApp.</p>
+    <div class="pcodes" id="pCodes"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="phint" id="pHint">Verific codul…</div></div>
+  <div class="pwv" id="vNiche"><span class="pbr"><span class="logo"></span>AdPilot</span><span class="peb">DESPRE TINE</span><h4>Ce fel de <b class="gtext">afacere</b> ai?</h4><p class="psub">Două-trei cuvinte sunt de ajuns.</p>
+    <div class="pfield"><span class="pval" id="pNiche"></span></div>
+    <div class="pchips" id="pNicheChips"><span>Service auto</span><span>Salon</span><span>Cabinet stomatologic</span><span>Restaurant</span></div>
+    <div class="pbtn" id="pBtn2">Continuă</div></div>
+  <div class="pwv" id="vGoal"><span class="pbr"><span class="logo"></span>AdPilot</span><span class="peb">CE ÎȚI DOREȘTI</span><h4>Ce vrei să <b class="gtext">primești</b> din reclame?</h4>
+    <div class="pgoals" id="pGoals"><div><b>Apeluri</b><small>Te sună direct</small></div><div><b>Formulare</b><small>Nume și telefon</small></div><div><b>Vizite pe site</b><small>Click-uri</small></div><div><b>Vânzări online</b><small>Comenzi</small></div></div></div>
+  <div class="pnts" id="pnts"></div>
+</div>
+<div class="appl pwc" id="pwc">
+  <div class="chd"><span class="av"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M4 12.500 20 5l-4.500 14-3.500-5.500L4 12.500Zm8 1L20 5"/></svg></span><div><b>Asistent AdPilot</b><small>● online</small></div></div>
+  <div class="cbody" id="cBody"></div>
+  <div class="cinp"><div class="cptr" id="cPtr">Trimite pozele aici</div><span class="cclip" id="cClip">${CLIPSVG}</span><div class="cf">Scrie mesajul tău…</div></div>
+</div>
+<div class="appl wa pwa">${WAH}<div class="body" id="pBody"></div><div class="inp"><div class="f" id="pInp"></div><div class="s" id="pSend"><svg viewBox="0 0 24 24"><path d="M3 20l18-8L3 4v6l11 2-11 2z"/></svg></div></div></div><div class="glare"></div>`;
+
 const LEAD=(n,t,q)=>['in',`🔔 <b>Client nou · ${n}</b><small>${t} · „${q}”</small>`];
+const VID=`<div class="vth"><i></i><span>0:21</span></div>Clipul tău`;
+const PH3=`<div class="ph3"><i style="background:var(--img-dental) 22% 30%/cover"></i><i style="background:var(--img-dental) 72% 40%/cover"></i><i style="background:var(--img-dental) 46% 85%/cover"></i></div>Pozele tale`;
 const PCHAT={
- 1:[['out','Pornește te rog o reclamă pentru salon'],['in','Sigur! Ce vrei să obții?'],['out','Mai multe programări'],['in','În ce oraș și pe ce rază?'],['out','Cluj, 15 km în jur'],['in','Ce buget ai pe zi?'],['out','50 lei'],['in','Perfect. Pregătesc reclama. ✨']],
- 2:[['in','Am pregătit reclama ta:'],['ad',CRE+'<p>O aprobi și o lansez?</p>'],['out','Da 👍'],['in','✅ <b>Campania e live</b><div class="wchips"><span>Facebook</span><span>Instagram</span><span>TikTok</span></div>']],
- 3:[LEAD('Andreea M.','0740 ··· 579','Aveți liber sâmbătă?'),LEAD('Ioana P.','0722 ··· 201','Cât costă un tuns?'),LEAD('Mihai D.','0746 ··· 099','Aș vrea o programare mâine.'),LEAD('Elena R.','0755 ··· 859','Lucrați și duminica?'),['in','4 clienți noi în ultima oră. 📈']]
+ 5:[
+  ['in','<small class="tg">Șablon aprobat</small>Salut! Aici AdPilot. Clipul și pozele tale pentru <b>cabinet stomatologic</b> sunt gata. Apasă butonul de mai jos și ți le trimit imediat.<div class="wbtn"><span>Trimite-mi materialele</span></div>'],
+  ['tap','Trimite-mi materialele'],
+  ['in',VID],['in',PH3],
+  ['in','Vrei să pornesc și o reclamă cu ele? Conturile tale de Facebook, Instagram și TikTok sunt deja conectate.<div class="wbtn two"><span>Da, pornim</span><span>Nu acum</span></div>'],
+  ['tap','Da, pornim'],
+  ['in','În ce oraș și ce vârstă are clientul tău ideal?'],['out','Cluj, 25–45 de ani'],
+  ['in','Ce folosim în reclamă?<div class="wbtn two"><span>Clipul</span><span>Pozele</span></div>'],['tap','Clipul'],
+  ['ad',CRED+'<p>Am pregătit reclama ta. O lansez?</p>'],['out','Da 👍'],
+  ['in','✅ <b>Campania e live</b><div class="wchips"><span>Facebook</span><span>Instagram</span><span>TikTok</span></div>']
+ ],
+ 6:[LEAD('Andreea M.','0740 ··· 579','Aveți liber sâmbătă?'),LEAD('Ioana P.','0722 ··· 201','Cât costă un implant?'),LEAD('Mihai D.','0746 ··· 099','Aș vrea o programare mâine.'),LEAD('Elena R.','0755 ··· 859','Lucrați și duminica?'),['in','4 clienți noi în ultima oră. 📈']]
 };
 let pinTok=0,pinVis=false;
-function obReset(done){ $('#obz').classList.remove('zoom');$('#fbsheet').classList.remove('on');$$('#obc div').forEach(d=>d.classList.toggle('ok',!!done));
-  const b=$('#obb');b.classList.toggle('done',!!done);b.innerHTML=done?'✓ Conturile sunt conectate':FBTXT }
-function tapAt(y){const t=$('#ptap');t.style.setProperty('--ty',y);t.classList.remove('go');void t.offsetWidth;t.classList.add('go')}
-async function pinScene(i,instant){
-  const my=++pinTok,ok=()=>my===pinTok,B=$('#pBody'),I=$('#pInp'),S=$('#pSend');
-  if(i===0){ PS.className='scr s-ob'; if(instant){obReset(true);return}
-    obReset(false);await sleep(900);if(!ok())return;
-    $('#obz').classList.add('zoom');await sleep(1250);if(!ok())return;
-    tapAt('92%');$('#obb').classList.add('hit');await sleep(260);$('#obb').classList.remove('hit');await sleep(380);if(!ok())return;
-    $('#obz').classList.remove('zoom');$('#fbsheet').classList.add('on');await sleep(1700);if(!ok())return;
-    tapAt('86%');$('#fbgo').classList.add('hit');await sleep(260);$('#fbgo').classList.remove('hit');await sleep(350);if(!ok())return;
-    $('#fbsheet').classList.remove('on');await sleep(750);if(!ok())return;
-    for(const d of $$('#obc div')){d.classList.add('ok');await sleep(380);if(!ok())return}
-    const b=$('#obb');b.classList.add('done');b.innerHTML='✓ Conturile sunt conectate';
-  } else {
-    PS.className='scr s-chat';B.innerHTML='';I.textContent='';I.classList.remove('typing');B.classList.toggle('static',!!instant);
-    const add=m=>{const d=document.createElement('div');d.className='wb '+(m[0]==='out'?'out':'in')+(m[0]==='ad'?' ad':'');d.innerHTML=m[1]+'<time>9:41</time>';B.append(d)};
-    if(instant){PCHAT[i].forEach(add);return}
-    await sleep(500);
-    for(const m of PCHAT[i]){ if(!ok())return;
-      if(m[0]==='out'){ I.classList.add('typing');for(const ch of m[1]){I.textContent+=ch;await sleep(22);if(!ok())return}
-        await sleep(260);S.classList.add('hit');await sleep(120);S.classList.remove('hit');I.textContent='';I.classList.remove('typing');add(m) }
-      else{ const t=document.createElement('div');t.className='wtyp';t.innerHTML='<i></i><i></i><i></i>';B.append(t);await sleep(m[0]==='ad'?1300:i===3?650:750);t.remove();if(!ok())return;add(m) }
-      await sleep(i===3?700:480) }
-  }
-  if(ok()&&innerWidth<=900&&pinVis){await sleep(2600);if(ok())setPin((i+1)%4)}
+const view=id=>$$('#pw .pwv').forEach(v=>v.classList.toggle('on',v.id===id));
+async function typeEl(el,txt,ms,ok){el.textContent='';for(const ch of txt){el.textContent+=ch;await sleep(ms);if(!ok())return false}return true}
+const cB=()=>$('#cBody');
+function cadd(html,cls='cm'){const d=document.createElement('div');d.className=cls;d.innerHTML=html;cB().append(d);return d}
+async function ctyp(ms,ok){const t=document.createElement('div');t.className='ctyp';t.innerHTML='<i></i><i></i><i></i>';cB().append(t);await sleep(ms);t.remove();return ok()}
+const CROW=(k,n,sub,bg,ic,done)=>`<div class="cconn ${done?'done':''}" data-k="${k}"><span class="ic" style="background:${bg}">${ic}</span><span class="t"><b>${n}</b><small>${sub}</small></span><span class="st">${done?'Conectat ✓':'Conectează'}</span></div>`;
+const FBROW=d=>CROW('fb','Facebook și Instagram','Pagina și contul de reclame','linear-gradient(135deg,#1877f2,#0a5bd0)',ICO_FB,d);
+const TTROW=d=>CROW('tt','TikTok','Contul tău TikTok','linear-gradient(135deg,#111,#2a2a2a)',ICO_TT,d);
+async function connect(row,ok){row.classList.add('busy');row.querySelector('.st').innerHTML='<i class="cspin"></i>';await sleep(1000);if(!ok())return false;row.classList.remove('busy');row.classList.add('done');row.querySelector('.st').textContent='Conectat ✓';return true}
+
+async function sc0(ok,ins){
+  PS.className='scr s-n';view('vNum');const num=$('#pNum'),chk=$('#pChk'),btn=$('#pBtn1'),nt=$('#pnts'),codes=$$('#pCodes i'),pc=$('#pCodes'),hint=$('#pHint');
+  nt.innerHTML='';num.textContent='';chk.classList.remove('ok');btn.classList.remove('hit');codes.forEach(c=>c.textContent='');pc.classList.remove('ok');hint.classList.remove('ok');hint.textContent='Verific codul…';
+  const fin=()=>{pc.classList.add('ok');hint.textContent='Număr confirmat ✓';hint.classList.add('ok')};
+  if(ins){view('vCode');'482917'.split('').forEach((d,i)=>codes[i].textContent=d);fin();return}
+  await sleep(700);if(!ok())return;
+  if(!await typeEl(num,'733 682 037',70,ok))return;
+  await sleep(300);chk.classList.add('ok');await sleep(550);if(!ok())return;
+  btn.classList.add('hit');await sleep(240);btn.classList.remove('hit');await sleep(350);if(!ok())return;
+  const n=document.createElement('div');n.className='nt';n.innerHTML=`<span class="wi">${WIC}</span><div><b>AdPilot</b>482 917 este codul de confirmare.</div><small>acum</small>`;nt.append(n);await sleep(1700);if(!ok())return;
+  n.classList.add('out');view('vCode');await sleep(550);if(!ok())return;nt.innerHTML='';
+  for(let i=0;i<6;i++){codes[i].textContent='482917'[i];await sleep(240);if(!ok())return}
+  await sleep(250);fin();
 }
-obReset(false);
+async function sc1(ok,ins){
+  PS.className='scr s-n';const f=$('#pNiche'),goals=$$('#pGoals div'),chips=$$('#pNicheChips span'),b2=$('#pBtn2');
+  f.textContent='';goals.forEach(g=>g.classList.remove('on'));chips.forEach(c=>c.classList.remove('hot'));b2.classList.remove('hit');view('vNiche');
+  if(ins){f.textContent='Cabinet stomatologic';view('vGoal');goals[1].classList.add('on');return}
+  await sleep(700);if(!ok())return;
+  chips[2].classList.add('hot');await sleep(600);if(!ok())return;
+  if(!await typeEl(f,'Cabinet stomatologic',55,ok))return;
+  await sleep(500);b2.classList.add('hit');await sleep(240);b2.classList.remove('hit');await sleep(350);if(!ok())return;
+  view('vGoal');await sleep(1000);if(!ok())return;
+  goals[2].classList.add('hov');await sleep(450);goals[2].classList.remove('hov');goals[1].classList.add('on');
+}
+async function sc2(ok,ins){
+  PS.className='scr s-web';cB().innerHTML='';const clip=$('#cClip'),ptr=$('#cPtr');clip.classList.remove('pulse');ptr.classList.remove('on');
+  const A=['Salut! Sunt asistentul tău AdPilot. Creez clipuri și reclame care aduc clienți.','Ca să fac primul tău clip am nevoie de <b>2–3 poze</b> cu afacerea ta.'];
+  if(ins){A.forEach(t=>cadd(t));cadd(PHOTO,'cm me ph');return}
+  await sleep(500);
+  for(const t of A){if(!await ctyp(850,ok))return;cadd(t);await sleep(300)}
+  clip.classList.add('pulse');ptr.classList.add('on');await sleep(1900);if(!ok())return;
+  clip.classList.remove('pulse');ptr.classList.remove('on');cadd(PHOTO,'cm me ph');
+}
+async function sc3(ok,ins){
+  PS.className='scr s-web';const B=cB();B.innerHTML='';const clip=$('#cClip');clip.classList.remove('pulse');$('#cPtr').classList.remove('on');
+  cadd(PHOTO,'cm me ph');
+  if(ins){cadd('Facebook și Instagram conectate ✓. Doar pe Facebook sau și pe TikTok?');cadd('Și pe TikTok','cm me');cadd('<div class="cacts">'+FBROW(true)+TTROW(true)+'</div>','cx');return}
+  if(!await ctyp(800,ok))return;cadd('Am primit pozele. Conectează <b>cel puțin un cont</b>:');await sleep(350);
+  const blk=cadd('<div class="cacts">'+FBROW(false)+TTROW(false)+'</div>','cx');await sleep(1100);if(!ok())return;
+  const fb=blk.querySelector('[data-k=fb]'),tt=blk.querySelector('[data-k=tt]');tt.classList.add('dim');
+  if(!await connect(fb,ok))return;await sleep(500);
+  if(!await ctyp(800,ok))return;cadd('Facebook și Instagram conectate ✓. Vrei reclama doar pe ele, sau și pe TikTok?');await sleep(350);
+  const ch=cadd('<div class="cbtn">Doar pe Facebook și Instagram</div><div class="cbtn hot">Și pe TikTok</div>','cx cch');await sleep(1300);if(!ok())return;
+  ch.remove();cadd('Și pe TikTok','cm me');await sleep(500);
+  if(!await ctyp(800,ok))return;cadd('Perfect. Conectează și <b>TikTok</b>:');await sleep(300);
+  tt.classList.remove('dim');await sleep(800);if(!ok())return;
+  await connect(tt,ok);
+}
+async function sc4(ok,ins){
+  PS.className='scr s-web';const B=cB();B.innerHTML='';$('#cClip').classList.remove('pulse');$('#cPtr').classList.remove('on');
+  const STEPS=['Scriu scenariul în română','Creez cadrele din pozele tale','Sincronizez vocea și buzele','Montez subtitrările'];
+  const card=`<div class="cgen"><div class="gt"><span id="gLab">${STEPS[0]}</span><b id="gPc">0%</b></div><div class="gb"><i id="gBar"></i></div></div>`;
+  if(ins){cadd('Conturile sunt conectate. Încep să creez clipul tău.');cadd('<span class="rd"></span><b>Durează între 3 și 5 minute.</b> Poți ieși de pe pagină: îți trimitem totul pe WhatsApp.','cm warn');cadd(card,'cx');$('#gPc').textContent='100%';$('#gBar').style.width='100%';$('#gLab').textContent='Gata! Clipul și pozele sunt gata ✓';return}
+  await sleep(400);if(!await ctyp(800,ok))return;cadd('Conturile sunt conectate. Încep să creez clipul tău.');await sleep(500);
+  if(!await ctyp(700,ok))return;cadd('<span class="rd"></span><b>Durează între 3 și 5 minute.</b> Poți ieși de pe pagină: îți trimitem totul pe WhatsApp.','cm warn');await sleep(900);if(!ok())return;
+  cadd(card,'cx');const lab=$('#gLab'),pc=$('#gPc'),bar=$('#gBar');
+  for(let p=0;p<=100;p+=2){bar.style.width=p+'%';pc.textContent=p+'%';lab.textContent=STEPS[Math.min(3,Math.floor(p/26))];await sleep(120);if(!ok())return}
+  lab.textContent='Gata! Clipul și pozele sunt gata ✓';
+}
+async function scChat(i,ok,ins){
+  PS.className='scr s-chat';const B=$('#pBody'),I=$('#pInp'),S=$('#pSend');B.innerHTML='';I.textContent='';I.classList.remove('typing');B.classList.toggle('static',!!ins);
+  const add=m=>{const k=m[0]==='tap'?'out':m[0];const d=document.createElement('div');d.className='wb '+(k==='out'?'out':'in')+(k==='ad'?' ad':'');d.innerHTML=m[1]+'<time>9:41</time>';B.append(d)};
+  if(ins){PCHAT[i].forEach(add);return}
+  await sleep(500);
+  for(const m of PCHAT[i]){if(!ok())return;
+    if(m[0]==='out'){I.classList.add('typing');for(const ch of m[1]){I.textContent+=ch;await sleep(22);if(!ok())return}
+      await sleep(260);S.classList.add('hit');await sleep(120);S.classList.remove('hit');I.textContent='';I.classList.remove('typing');add(m)}
+    else if(m[0]==='tap'){await sleep(900);if(!ok())return;add(m);await sleep(450)}
+    else{const t=document.createElement('div');t.className='wtyp';t.innerHTML='<i></i><i></i><i></i>';B.append(t);await sleep(m[0]==='ad'?1200:i===6?650:800);t.remove();if(!ok())return;add(m)}
+    await sleep(i===6?700:420)}
+}
+const SCENES=[sc0,sc1,sc2,sc3,sc4,(ok,ins)=>scChat(5,ok,ins),(ok,ins)=>scChat(6,ok,ins)];
+async function pinScene(i,instant){
+  const my=++pinTok,ok=()=>my===pinTok;
+  await SCENES[Math.min(i,SCENES.length-1)](ok,!!instant);
+  if(ok()&&innerWidth<=900&&pinVis){await sleep(2600);if(ok())setPin((i+1)%steps.length)}
+}
+sc0(()=>true,true);
 IO(es=>es.forEach(e=>{pinVis=e.isIntersecting;if(pinVis)pinScene(Math.max(0,pinIdx),RM);else pinTok++}),{threshold:.35}).observe(PS);
 /* mobil: secțiunea nu e fixată, așa că pașii se schimbă cu atingere pe pas sau swipe pe telefon */
 steps.forEach((st,k)=>st.addEventListener('click',()=>{if(innerWidth<=900)setPin(k)},{signal:ac.signal}));
 let swX=null,swY=null;
 PS.addEventListener('touchstart',e=>{swX=e.touches[0].clientX;swY=e.touches[0].clientY},{passive:true,signal:ac.signal});
 PS.addEventListener('touchend',e=>{if(swX===null)return;const dx=e.changedTouches[0].clientX-swX,dy=e.changedTouches[0].clientY-swY;swX=null;
-  if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)*1.2)setPin((Math.max(0,pinIdx)+(dx<0?1:3))%4)},{passive:true,signal:ac.signal});
+  if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)*1.2){const n=steps.length;setPin((Math.max(0,pinIdx)+(dx<0?1:n-1))%n)}},{passive:true,signal:ac.signal});
 
 /* ---------- WhatsApp windows in the bento ---------- */
 const DENT=`<div class="cre pic" role="img" aria-label="Reclama clinicii" style="background:var(--img-dental) center/cover;aspect-ratio:720/568"></div>`;

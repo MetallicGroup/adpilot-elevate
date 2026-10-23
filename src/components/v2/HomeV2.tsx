@@ -120,17 +120,23 @@ export function HomeV2() {
   <div className="track" id="track">
     <div className="stick">
       <div className="steps">
-        <p className="ey" style={css({ margin: "0 0 18px" })}>Cum funcționează</p>
-        <div className="step on"><span className="k">PASUL 1</span><h3>Conectezi Facebook sau TikTok</h3><p>Un singur buton, pentru oricare sau pentru amândouă. Contul de reclame rămâne al tău, pe numele tău.</p></div>
-        <div className="step"><span className="k">PASUL 2</span><h3>Spui ce vrei să obții</h3><p>Vânzări, programări, clienți potențiali sau apeluri. Scrii orașul și bugetul.</p></div>
-        <div className="step"><span className="k">PASUL 3</span><h3>AdPilot face reclama</h3><p>Text, poze și clip cu AI, public, formular. Tu doar confirmi cu „da”.</p></div>
-        <div className="step"><span className="k">PASUL 4</span><h3>Clienții îți scriu</h3><p>Primești fiecare contact pe WhatsApp, în secunda în care apare.</p></div>
+        <p className="ey" style={css({ margin: "0 0 14px" })}>Cum funcționează</p>
+        <div className="step on"><span className="k">PASUL 1</span><h3>Pui numărul tău de WhatsApp</h3><p>Primești un cod pe WhatsApp. Fără parolă, fără email, fără formulare lungi.</p></div>
+        <div className="step"><span className="k">PASUL 2</span><h3>Spui ce afacere ai</h3><p>Două întrebări: ce fel de afacere ai și ce vrei să primești. Apeluri, formulare, vizite pe site sau vânzări.</p></div>
+        <div className="step"><span className="k">PASUL 3</span><h3>Trimiți 2–3 poze</h3><p>Poze făcute cu telefonul, cu locul sau lucrul tău. Din ele facem clipul și pozele pentru reclamă.</p></div>
+        <div className="step"><span className="k">PASUL 4</span><h3>Conectezi Facebook sau TikTok</h3><p>Unul sau amândouă. Contul de reclame rămâne al tău, pe numele tău.</p></div>
+        <div className="step"><span className="k">PASUL 5</span><h3>AI-ul face clipul și pozele</h3><p>În 3–5 minute: un clip de 20–25 de secunde cu voce în română, plus 2 poze. Poți ieși de pe pagină, primești totul pe WhatsApp.</p></div>
+        <div className="step"><span className="k">PASUL 6</span><h3>Pornești reclama din WhatsApp</h3><p>Apeși „Trimite-mi materialele”, primești clipul și pozele, răspunzi la două întrebări și scrii „da”.</p></div>
+        <div className="step"><span className="k">PASUL 7</span><h3>Clienții îți scriu</h3><p>Primești fiecare contact pe WhatsApp, în secunda în care apare.</p></div>
       </div>
       <div className="iph"><div className="bz"><div className="scr" id="pinScr"></div></div></div>
       <div className="pside" id="pside">
-        <div className="card on"><div className="live">CONECTAT</div><h3 className="d3" style={css({ marginTop: "12px" })}>Pagina „Salon Eleganza”</h3><p style={css({ color: "var(--mut)", margin: "8px 0 0", fontSize: "14px" })}>Facebook, Instagram și TikTok. Cont de reclame și card verificate.</p></div>
-        <div className="card"><p className="ey">Obiectiv ales</p><h3 className="d3" style={css({ marginTop: "10px" })}>Mai multe programări</h3><div className="chips" style={css({ marginTop: "14px" })}><span className="chip">Cluj-Napoca + 15 km</span><span className="chip">50 lei pe zi</span></div></div>
-        <div className="card"><p className="ey">Reclamă, poze și clip generate</p><div style={css({ height: "150px", marginTop: "12px", borderRadius: "14px", background: "var(--img-salon) center 30%/cover" })}></div><p style={css({ margin: "12px 0 0", fontSize: "14px" })}><b>Tuns și coafat cu 20% reducere</b><br /><span style={css({ color: "var(--mut)" })}>Programează-te în 30 de secunde.</span></p></div>
+        <div className="card on"><div className="live">NUMĂR CONFIRMAT</div><div className="bigcode">482 · 917</div><p style={css({ color: "var(--mut)", margin: "8px 0 0", fontSize: "14px" })}>Cod primit pe WhatsApp. Contul tău e gata, fără parolă.</p></div>
+        <div className="card"><p className="ey">Afacerea ta</p><h3 className="d3" style={css({ marginTop: "10px" })}>Cabinet stomatologic</h3><div className="chips" style={css({ marginTop: "14px" })}><span className="chip">Obiectiv: formulare completate</span></div></div>
+        <div className="card"><p className="ey">Pozele tale</p><div className="pth" style={css({ marginTop: "12px" })}><i></i><i></i><i></i></div><p style={css({ color: "var(--mut)", margin: "12px 0 0", fontSize: "14px" })}>3 poze trimise din telefon.</p></div>
+        <div className="card"><div className="live">CONECTAT</div><h3 className="d3" style={css({ marginTop: "12px" })}>Facebook, Instagram și TikTok</h3><p style={css({ color: "var(--mut)", margin: "8px 0 0", fontSize: "14px" })}>Cont de reclame și card verificate. Rămâne al tău.</p></div>
+        <div className="card"><div className="live">GATA ÎN 3–5 MINUTE</div><h3 className="d3" style={css({ marginTop: "12px" })}>Clip de 20–25 de secunde</h3><div className="chips" style={css({ marginTop: "14px" })}><span className="chip">Voce în română</span><span className="chip">Subtitrări</span><span className="chip">2 poze AI</span></div></div>
+        <div className="card"><p className="ey">Reclamă live</p><div style={css({ height: "140px", marginTop: "12px", borderRadius: "14px", background: "var(--img-dental) center 30%/cover" })}></div><p style={css({ margin: "12px 0 0", fontSize: "14px" })}><b>Programează un consult</b><br /><span style={css({ color: "var(--mut)" })}>Facebook · Instagram · TikTok</span></p></div>
         <div className="card"><div className="live">LEAD NOU</div><div className="row" style={css({ display: "flex", gap: "12px", alignItems: "center", marginTop: "14px" })}><span className="av">IP</span><div><b>Ioana P.</b><div style={css({ color: "var(--mut)", fontSize: "13px" })}>0740 ··· 579 · acum 4 secunde</div></div></div></div>
       </div>
       <div className="progress"><i id="pinBar"></i></div>
