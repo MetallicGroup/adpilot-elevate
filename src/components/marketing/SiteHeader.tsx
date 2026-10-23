@@ -47,7 +47,7 @@ export function SiteHeader() {
         </nav>
         <span className="hidden md:block w-px h-5 bg-border/60 mx-1" />
         <div className="hidden md:flex items-center gap-1">
-          <Link to="/auth" search={{ mode: "signin" }} className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-full hover:bg-white/5">
+          <Link to="/start" search={{ login: "1" } as never} className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-full hover:bg-white/5">
             Login
           </Link>
           <Link to="/start" className="press btn-primary text-[13px] px-4 py-1.5 rounded-full font-medium">
@@ -71,7 +71,7 @@ export function SiteHeader() {
               </Link>
             ))}
             <div className="mt-2 pt-3 border-t border-border/60 flex flex-col gap-2">
-              <Link to="/auth" search={{ mode: "signin" }} onClick={() => setOpen(false)} className="text-sm py-2 px-3 rounded-lg hover:bg-white/5">Login</Link>
+              <Link to="/start" search={{ login: "1" } as never} onClick={() => setOpen(false)} className="text-sm py-2 px-3 rounded-lg hover:bg-white/5">Login</Link>
               <Link to="/start" onClick={() => setOpen(false)} className="press btn-primary text-sm px-4 py-2.5 rounded-xl text-center font-medium">
                 Începe gratuit
               </Link>

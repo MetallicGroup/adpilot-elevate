@@ -7,6 +7,7 @@ import { requestPhoneCode, verifyPhoneCode } from "@/lib/phone-auth.functions";
 import {
   getStartState,
   saveStartAnswers,
+  saveStartEmail,
   saveStartPhotos,
   saveStartTargets,
   startDemo,
@@ -21,6 +22,8 @@ import startCss from "../styles/start.css?url";
 
 type StartSearch = {
   login?: string;
+  /** Cale internă unde ne întoarcem după login (ex. /pricing?plan=pro_monthly). */
+  redirect?: string;
   ref?: string;
   goal?: string;
   utm_source?: string;
@@ -37,6 +40,7 @@ export const Route = createFileRoute("/start")({
     for (const k of ["login", "ref", "goal", "utm_source", "utm_medium", "utm_campaign", "meta", "tiktok"] as const) {
       if (typeof s[k] === "string") out[k] = s[k] as string;
     }
+    if (typeof s.redirect === "string" && s.redirect.startsWith("/") && !s.redirect.startsWith("//")) out.redirect = s.redirect;
     return out;
   },
   head: () => ({
@@ -46,7 +50,7 @@ export const Route = createFileRoute("/start")({
   component: StartPage,
 });
 
-type Screen = "boot" | "phone" | "code" | "niche" | "goal" | "prep" | "work";
+type Screen = "boot" | "phone" | "code" | "email" | "niche" | "goal" | "prep" | "work";
 
 const NICHES = ["Service auto", "Salon / frizerie", "Cabinet stomatologic", "Restaurant", "Magazin online", "Sală de fitness", "Agenție imobiliară", "Altceva"];
 
@@ -160,14 +164,15 @@ function StartPage() {
       }
       // Conturile vechi (fără onboarding nou) și cele care au primit deja clipul merg în aplicație.
       if (!s.hasSession || (!isNew && s.demo.status === "delivered")) {
-        navigate({ to: "/dashboard" });
+        if (search.redirect) window.location.assign(search.redirect);
+        else navigate({ to: "/dashboard" });
         return;
       }
       setNiche(s.niche ?? "");
       setGoal(s.goal);
-      setScreen(s.niche ? "work" : "niche");
+      setScreen(s.needsEmail ? "email" : s.niche ? "work" : "niche");
     },
-    [load, navigate],
+    [load, navigate, search.redirect],
   );
 
   useEffect(() => {
@@ -232,6 +237,16 @@ function StartPage() {
             onVerified={(isNew) => void afterLogin(isNew)}
             niche={niche}
             goal={goal}
+          />
+        )}
+        {screen === "email" && (
+          <EmailScreen
+            niche={niche}
+            goal={goal}
+            onDone={async () => {
+              const s = await load().catch(() => null);
+              setScreen(s?.niche ? "work" : "niche");
+            }}
           />
         )}
         {screen === "niche" && (
@@ -531,6 +546,65 @@ function CodeScreen(props: {
 }
 
 // ───────────────────────────── 3. afacere ─────────────────────────────
+
+// ───────────────────────────── 2b. email ─────────────────────────────
+
+function EmailScreen(props: { niche: string; goal: StartGoal | null; onDone: () => void }) {
+  const save = useServerFn(saveStartEmail);
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const ok = /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(email.trim());
+
+  async function submit() {
+    if (!ok || busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await save({ data: { email: email.trim() } });
+      props.onDone();
+    } catch (e) {
+      setError(errMsg(e));
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="screen" aria-labelledby="h-email">
+      <div className="q">
+        <div className="qmain">
+          <p className="eyebrow">Încă un pas</p>
+          <h1 id="h-email">
+            Adaugă adresa ta de <span className="grad">email</span>
+          </h1>
+          <p className="lead">O folosim pentru facturi și ca a doua cale de intrare în cont. Nu primești spam.</p>
+          <div className="field">
+            <input
+              id="st-email"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              autoFocus
+              placeholder="nume@firma.ro"
+              aria-label="Adresa de email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && void submit()}
+            />
+          </div>
+          <div className={`hint ${error ? "err" : ""}`}>{error ?? " "}</div>
+          <div className="row">
+            <button className="btn" disabled={!ok || busy} onClick={() => void submit()}>
+              {busy ? <span className="spin" /> : null}
+              Continuă
+            </button>
+          </div>
+        </div>
+        <MiniCard niche={props.niche} goal={props.goal} />
+      </div>
+    </section>
+  );
+}
 
 function NicheScreen(props: { niche: string; goal: StartGoal | null; onNiche: (v: string) => void; onNext: () => void }) {
   const ok = props.niche.trim().length >= 2;

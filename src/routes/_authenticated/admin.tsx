@@ -236,7 +236,7 @@ function FacebookView({ fb }: { fb: any }) {
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <span className="rounded px-1.5 py-0.5 text-[10px]" style={{ background: r.source === "facebook" ? "#1877F220" : "var(--secondary)", color: r.source === "facebook" ? "#1877F2" : undefined }}>
-                {r.source === "facebook" ? "🔵 FB signup" : r.source === "google" ? "Google" : "Email"}
+                {r.source === "facebook" ? "🔵 FB signup" : r.source === "google" ? "Google" : r.source === "phone" ? "📱 Telefon" : "Email"}
               </span>
               <span className="text-muted-foreground">{fmt(r.at)}</span>
             </div>

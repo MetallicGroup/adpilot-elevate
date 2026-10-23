@@ -81,7 +81,7 @@ function PricingPage() {
       return;
     }
     if (!authed) {
-      navigate({ to: "/auth", search: { redirect: `/pricing?plan=${priceId}` } as any });
+      navigate({ to: "/start", search: { redirect: `/pricing?plan=${priceId}` } as any });
       return;
     }
     openCheckout({ priceId });

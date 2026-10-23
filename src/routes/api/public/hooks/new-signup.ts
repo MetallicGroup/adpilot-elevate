@@ -37,6 +37,9 @@ export const Route = createFileRoute("/api/public/hooks/new-signup")({
         try {
           const { data } = await supabaseAdmin.auth.admin.getUserById(userId);
           email = data?.user?.email ?? null;
+          // Conturile create cu telefonul au o adresă internă: la Meta trimitem doar telefonul.
+          const { isPlaceholderEmail } = await import("@/lib/phone-auth.server");
+          if (isPlaceholderEmail(email)) email = null;
           provider = (data?.user?.app_metadata as any)?.provider ?? null;
           name = name ?? ((data?.user?.user_metadata as any)?.full_name ?? null);
           phone = phone ?? ((data?.user?.user_metadata as any)?.phone ?? null);

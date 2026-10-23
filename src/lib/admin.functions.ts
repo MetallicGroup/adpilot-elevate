@@ -74,7 +74,8 @@ export const listAdminUsers = createServerFn({ method: "GET" })
 
     const { data: authList } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 200 });
     const emailById = new Map<string, string>();
-    for (const u of authList?.users ?? []) emailById.set(u.id, u.email ?? "");
+    const { displayEmail } = await import("@/lib/phone-auth.server");
+    for (const u of authList?.users ?? []) emailById.set(u.id, displayEmail(u.email));
 
     const { data: campaigns } = await supabaseAdmin
       .from("campaigns")
@@ -215,7 +216,7 @@ export const getAdminUserDetail = createServerFn({ method: "POST" })
       .maybeSingle();
 
     return {
-      profile: { ...profile, email: authUser?.user?.email ?? null },
+      profile: { ...profile, email: (await import("@/lib/phone-auth.server")).displayEmail(authUser?.user?.email) || null },
       campaigns: campaignsOut,
       leads: leads ?? [],
       tickets: tickets ?? [],
@@ -529,13 +530,16 @@ export const getAdminDashboard = createServerFn({ method: "GET" })
     const authUsers = authListRes.data?.users ?? [];
     const authById = new Map<string, any>();
     for (const u of authUsers) authById.set(u.id, u);
-    const classifySource = (u: any): "facebook" | "google" | "email" =>
+    const classifySource = (u: any): "facebook" | "google" | "email" | "phone" =>
       u?.user_metadata?.signup_source === "facebook"
         ? "facebook"
-        : u?.app_metadata?.provider === "google"
-          ? "google"
-          : "email";
-    const bySource = { facebook: 0, google: 0, email: 0 };
+        : u?.user_metadata?.signup_method === "phone"
+          ? "phone"
+          : u?.app_metadata?.provider === "google"
+            ? "google"
+            : "email";
+    const bySource = { facebook: 0, google: 0, email: 0, phone: 0 };
+    const { displayEmail } = await import("@/lib/phone-auth.server");
     for (const u of authUsers) bySource[classifySource(u)]++;
     // Activări recente (abonamente) — cine, ce plan, status, când.
     const recentSubs = (subsRes.data ?? [])
@@ -546,7 +550,7 @@ export const getAdminDashboard = createServerFn({ method: "GET" })
         const u = authById.get(s.user_id);
         return {
           name: (u?.user_metadata?.full_name as string) ?? null,
-          email: u?.email ?? null,
+          email: displayEmail(u?.email) || null,
           plan: planName(s.price_id),
           status: s.status,
           trial_end: s.trial_end,
@@ -561,7 +565,7 @@ export const getAdminDashboard = createServerFn({ method: "GET" })
       return {
         user_id: c.user_id,
         name: (u?.user_metadata?.full_name as string) ?? c.meta_user_name ?? null,
-        email: u?.email ?? null,
+        email: displayEmail(u?.email) || null,
         source: u ? classifySource(u) : "email",
         at: c.created_at,
       };

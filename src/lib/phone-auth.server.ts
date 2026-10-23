@@ -22,6 +22,10 @@ const PHONE_EMAIL_DOMAIN = "phone.adpilot.ro";
 
 export class PhoneAuthError extends Error {}
 
+/** Textul exact al acordului bifat în /start, salvat ca dovadă (GDPR) cu data și IP-ul. */
+export const WHATSAPP_CONSENT_TEXT =
+  "Sunt de acord să primesc pe WhatsApp mesaje de la AdPilot: codul de autentificare, clipul și reclamele mele. Mă pot opri oricând.";
+
 /** „0733 682 037”, „+40733682037”, „40733…” → „40733682037”. Doar mobile din România. */
 export function normalizeRoMobile(input: string): string | null {
   let d = (input ?? "").replace(/\D/g, "");
@@ -38,6 +42,21 @@ export function phoneEmail(e164: string): string {
 
 export function isPhoneEmail(email?: string | null): boolean {
   return !!email && email.toLowerCase().endsWith(`@${PHONE_EMAIL_DOMAIN}`);
+}
+
+/** Adresă internă (cont creat cu telefonul sau cu Facebook fără email), nu una a omului. */
+export function isPlaceholderEmail(email?: string | null): boolean {
+  const e = (email ?? "").toLowerCase();
+  return e.endsWith(`@${PHONE_EMAIL_DOMAIN}`) || e.endsWith("@pending.adpilot.ro");
+}
+
+/** Ce afișăm în admin pentru un cont: emailul real sau, la conturile pe telefon, numărul. */
+export function displayEmail(email?: string | null): string {
+  if (isPhoneEmail(email)) {
+    const d = (email ?? "").split("@")[0];
+    return `📱 0${d.slice(2, 5)} ${d.slice(5, 8)} ${d.slice(8)}`;
+  }
+  return email ?? "";
 }
 
 function hashCode(phone: string, code: string): string {
@@ -81,6 +100,7 @@ export async function requestCode(
     code_hash: hashCode(phone, code),
     expires_at: new Date(Date.now() + OTP_TTL_MS).toISOString(),
     ip: params.ip,
+    consent_text: WHATSAPP_CONSENT_TEXT,
   });
   if (error) throw new Error(error.message);
 
@@ -113,7 +133,7 @@ export async function verifyCode(
 
   const { data: otp } = await supabaseAdmin
     .from("phone_otps")
-    .select("id, code_hash, expires_at, attempts")
+    .select("id, code_hash, expires_at, attempts, ip, created_at, consent_text")
     .eq("phone", phone)
     .is("consumed_at", null)
     .order("created_at", { ascending: false })
@@ -203,6 +223,16 @@ export async function verifyCode(
       .from("onboarding_sessions")
       .upsert({ user_id: userId }, { onConflict: "user_id", ignoreDuplicates: true });
   }
+
+  // Dovada acordului pentru WhatsApp: textul bifat, momentul și IP-ul cererii de cod.
+  await supabaseAdmin
+    .from("profiles")
+    .update({
+      whatsapp_consent_at: otp.created_at,
+      whatsapp_consent_ip: otp.ip ?? null,
+      whatsapp_consent_text: otp.consent_text ?? WHATSAPP_CONSENT_TEXT,
+    })
+    .eq("id", userId);
 
   const { data: link, error: lErr } = await supabaseAdmin.auth.admin.generateLink({
     type: "magiclink",

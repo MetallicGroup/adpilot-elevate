@@ -1043,7 +1043,7 @@ export async function onboardingHint(db: any, userId: string): Promise<string | 
   ];
   if (s.demo_status === "delivered") {
     lines.push(
-      "- I-am trimis deja pe WhatsApp clipul demo și pozele generate. Dacă răspunde „Da, pornim”, întreabă pe rând: orașul/zona, vârsta clientului ideal, apoi ce folosim în reclamă (clipul din chat, pozele din chat sau altceva). Clipul din chat e media disponibilă pentru campanie.",
+      "- I-am trimis deja pe WhatsApp clipul demo și pozele generate. Dacă răspunde „Da, pornim”: ÎNTÂI întreabă pe ce platformă pornim, Facebook (cu Instagram) sau TikTok, și lasă-l să scrie el răspunsul. Apoi, pe rând: orașul/zona, vârsta clientului ideal și ce folosim în reclamă (clipul din chat, pozele din chat sau altceva). Clipul din chat e media disponibilă pentru campanie.",
     );
   }
   return lines.join("\n");

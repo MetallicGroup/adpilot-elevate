@@ -11,6 +11,8 @@ export type DemoStatus = "none" | "queued" | "running" | "ready" | "failed" | "d
 
 export type StartState = {
   hasSession: boolean;
+  /** Cont creat cu telefonul, încă fără email real (pasul 2 din /start). */
+  needsEmail: boolean;
   niche: string | null;
   goal: StartGoal | null;
   photos: Array<{ path: string; url: string | null }>;
@@ -70,8 +72,12 @@ export const getStartState = createServerFn({ method: "POST" })
     const { demoProgress } = await import("@/lib/demo-video.server");
     const prog = demoProgress(s?.demo_status ?? "none", s?.demo_job ?? {});
 
+    const { data: au } = await supabaseAdmin.auth.admin.getUserById(userId);
+    const { isPlaceholderEmail } = await import("@/lib/phone-auth.server");
+
     return {
       hasSession: !!s,
+      needsEmail: isPlaceholderEmail(au?.user?.email),
       niche: s?.niche ?? null,
       goal: (s?.goal as StartGoal) ?? null,
       photos: photoPaths.map((p, i) => ({ path: p, url: photoUrls[i] ?? null })),
@@ -87,6 +93,32 @@ export const getStartState = createServerFn({ method: "POST" })
       },
       completed: !!s?.completed_at,
     };
+  });
+
+/** Pasul de email din /start: devine emailul contului (facturi, a doua cale de login). Fără cod. */
+export const saveStartEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => {
+    const email = String((raw as { email?: unknown })?.email ?? "").trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(email)) throw new Error("Introdu o adresă de email validă.");
+    if (/@(phone|pending)\.adpilot\.ro$/.test(email)) throw new Error("Introdu adresa ta reală de email.");
+    return { email };
+  })
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: existing } = await (supabaseAdmin as any).rpc("get_user_id_by_email", { p_email: data.email });
+    if (existing && existing !== userId) {
+      throw new Error("Emailul e folosit deja de alt cont AdPilot. Folosește altul sau intră cu el.");
+    }
+    const { data: cur } = await supabaseAdmin.auth.admin.getUserById(userId);
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+      email: data.email,
+      email_confirm: true,
+      user_metadata: { ...((cur?.user?.user_metadata as object) ?? {}), email_added_at: new Date().toISOString() },
+    });
+    if (error) throw new Error("Nu am putut salva emailul. Încearcă din nou.");
+    return { ok: true as const };
   });
 
 export const saveStartAnswers = createServerFn({ method: "POST" })

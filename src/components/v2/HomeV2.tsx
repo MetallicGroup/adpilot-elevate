@@ -35,7 +35,7 @@ export function HomeV2() {
       const inGoals = !!go.closest("#obiectiv");
       const goal = inGoals ? GOALS[Number(ref.current?.dataset.goal ?? 1)] : undefined;
       if (go.dataset.agency) navigate({ to: "/auth", search: { mode: "signup", type: "agency", redirect: "/agency/setup" } });
-      else if (login) navigate({ to: "/auth", search: { mode: "signin" } });
+      else if (login) navigate({ to: "/start", search: { login: "1" } });
       else navigate({ to: "/start", search: goal ? { goal } : {} });
       return;
     }
@@ -121,7 +121,7 @@ export function HomeV2() {
     <div className="stick">
       <div className="steps">
         <p className="ey" style={css({ margin: "0 0 14px" })}>Cum funcționează</p>
-        <div className="step on"><span className="k">PASUL 1</span><h3>Pui numărul tău de WhatsApp</h3><p>Primești un cod pe WhatsApp. Fără parolă, fără email, fără formulare lungi.</p></div>
+        <div className="step on"><span className="k">PASUL 1</span><h3>Pui numărul tău de WhatsApp</h3><p>Primești un cod pe WhatsApp, apoi adaugi emailul pentru facturi. Fără parolă, fără formulare lungi.</p></div>
         <div className="step"><span className="k">PASUL 2</span><h3>Spui ce afacere ai</h3><p>Două întrebări: ce fel de afacere ai și ce vrei să primești. Apeluri, formulare, vizite pe site sau vânzări.</p></div>
         <div className="step"><span className="k">PASUL 3</span><h3>Trimiți 2–3 poze</h3><p>Poze făcute cu telefonul, cu locul sau lucrul tău. Din ele facem clipul și pozele pentru reclamă.</p></div>
         <div className="step"><span className="k">PASUL 4</span><h3>Conectezi Facebook sau TikTok</h3><p>Unul sau amândouă. Contul de reclame rămâne al tău, pe numele tău.</p></div>

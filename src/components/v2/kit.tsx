@@ -63,7 +63,7 @@ export function V2Nav() {
           ))}
         </nav>
         <span className="sp" />
-        <Link to="/auth" search={{ mode: "signin" }} className="login btn btn-s btn-o dark">
+        <Link to="/start" search={{ login: "1" } as never} className="login btn btn-s btn-o dark">
           Intră în cont
         </Link>
         <Link to="/start" className="btn btn-s btn-w">
@@ -81,7 +81,7 @@ export function V2Nav() {
               {l.label}
             </Link>
           ))}
-          <Link to="/auth" search={{ mode: "signin" }} onClick={() => setOpen(false)}>
+          <Link to="/start" search={{ login: "1" } as never} onClick={() => setOpen(false)}>
             Intră în cont
           </Link>
         </nav>

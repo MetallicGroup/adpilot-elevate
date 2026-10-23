@@ -57,8 +57,8 @@ export function GoalPicker() {
               {active.confirm}
             </p>
             <Link
-              to="/auth"
-              search={{ goal: active.id }}
+              to="/start"
+              search={{ goal: active.id } as never}
               className="press btn-primary mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold sm:mt-0 sm:w-auto"
             >
               Creează campania mea <ArrowRight className="h-4 w-4" />

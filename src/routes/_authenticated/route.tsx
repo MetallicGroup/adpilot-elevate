@@ -9,7 +9,7 @@ export const Route = createFileRoute("/_authenticated")({
       data: { session },
       error,
     } = await supabase.auth.getSession();
-    if (error || !session?.user) throw redirect({ to: "/auth" });
+    if (error || !session?.user) throw redirect({ to: "/start", search: { login: "1" } as never });
 
     // Gate onboarding: nu lăsăm userul în aplicație până nu a conectat Facebook
     // ȘI a ales un plan. Excludem /onboarding (ar face buclă) și /checkout (revenire

@@ -75,7 +75,7 @@ function Settings() {
     qc.clear();
     await supabase.auth.signOut();
     toast.success("Te-ai deconectat 👋");
-    navigate({ to: "/auth", replace: true });
+    navigate({ to: "/start", search: { login: "1" } as never, replace: true });
   }
 
   return (
