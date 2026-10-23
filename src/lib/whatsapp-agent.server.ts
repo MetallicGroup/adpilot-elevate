@@ -602,7 +602,9 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
             return quota.limit === 0
               ? {
                   error:
-                    "Generarea de poze cu AI e disponibilă în planurile *Pro* și *Premium*. Fă upgrade din Setări, sau trimite-mi o poză proprie pentru reclamă. 📸",
+                    quota.tier === "pro" || quota.tier === "premium"
+                      ? "Pozele noi cu AI se deblochează după plata abonamentului. Până atunci poți folosi clipul și pozele create la început, sau o poză proprie. 📸"
+                      : "Generarea de poze cu AI e disponibilă în planurile *Pro* și *Premium*. Fă upgrade din Setări, sau trimite-mi o poză proprie pentru reclamă. 📸",
                 }
               : {
                   error: `Ai atins limita de *${quota.limit} poze AI* pe luna aceasta (planul Pro). Treci pe *Premium* pentru poze nelimitate, sau trimite-mi o poză proprie. 📸`,

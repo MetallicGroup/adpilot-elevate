@@ -70,7 +70,16 @@ export async function checkAiPhotoQuota(
   userId: string,
 ): Promise<{ allowed: boolean; limit: number; used: number; tier: PlanTier }> {
   const tier = await getUserPlanTier(supabaseAdmin, userId);
-  const limit = aiPhotoMonthlyLimit(tier);
+  // În perioada de probă primește doar clipul și cele 2 poze din onboarding; restul după plată.
+  const { data: sub } = await supabaseAdmin
+    .from("subscriptions")
+    .select("status")
+    .eq("user_id", userId)
+    .eq("environment", serverPaymentsEnv())
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const limit = sub?.status === "trialing" ? 0 : aiPhotoMonthlyLimit(tier);
   if (limit === 0) return { allowed: false, limit, used: 0, tier };
   if (!isFinite(limit)) return { allowed: true, limit, used: 0, tier };
   const start = new Date();

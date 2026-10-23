@@ -491,10 +491,10 @@ Restul câmpurilor sunt în ENGLEZĂ (pentru modelele de imagine/video):
 - actionPrompt: ce face prezentatorul în spațiu fără să vorbească (ex. "sits relaxed in the dental chair, eyes closed, smiling");
 - actionMotion: mișcarea subtilă din acel cadru (ex. "she slowly leans back and smiles, gentle push-in");
 - brollPrompts: exact 2 mișcări de cameră prin spațiul din poze, fără oameni: [cadru larg cu mișcare lentă, apropiere pe cel mai interesant detaliu (numește obiectul)];
-- imagePrompts: 3 idei de poze publicitare în acest spațiu (ex. specialistul lucrând, un detaliu de aproape, clientul mulțumit).
+- imagePrompts: 2 idei de poze publicitare în acest spațiu (ex. specialistul lucrând, clientul mulțumit).
 
 Răspunde DOAR cu JSON valid:
-{"voiceover":"...","keywords":["..."],"presenter":"female","presenterLook":"...","avatarPrompt":"...","actionPrompt":"...","actionMotion":"...","brollPrompts":["...","..."],"imagePrompts":["...","...","..."]}`;
+{"voiceover":"...","keywords":["..."],"presenter":"female","presenterLook":"...","avatarPrompt":"...","actionPrompt":"...","actionMotion":"...","brollPrompts":["...","..."],"imagePrompts":["...","..."]}`;
 
   const { text } = await generateText({
     model: chatModel(),
@@ -523,11 +523,11 @@ Răspunde DOAR cu JSON valid:
     actionPrompt: String(j.actionPrompt ?? "").trim() || "works calmly in the space, focused and smiling",
     actionMotion: String(j.actionMotion ?? "").trim() || "gentle natural movement, slow push-in",
     brollPrompts: arr(j.brollPrompts, 2),
-    imagePrompts: arr(j.imagePrompts, 3),
+    imagePrompts: arr(j.imagePrompts, 2),
     keywords: arr(j.keywords, 5),
   };
   while (script.brollPrompts.length < 2) script.brollPrompts.push("Slow cinematic dolly-in through the room.");
-  while (script.imagePrompts.length < 3) script.imagePrompts.push("A specialist working in this space, smiling.");
+  while (script.imagePrompts.length < 2) script.imagePrompts.push("A specialist working in this space, smiling.");
   return script;
 }
 
