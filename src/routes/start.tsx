@@ -33,13 +33,15 @@ type StartSearch = {
   utm_campaign?: string;
   meta?: string;
   tiktok?: string;
+  /** Venit de pe /auth cu Facebook/Google, dar fără cont: îi spunem să-și facă unul aici. */
+  nou?: string;
 };
 
 export const Route = createFileRoute("/start")({
   ssr: false,
   validateSearch: (s: Record<string, unknown>): StartSearch => {
     const out: StartSearch = {};
-    for (const k of ["login", "ref", "goal", "utm_source", "utm_medium", "utm_campaign", "meta", "tiktok"] as const) {
+    for (const k of ["login", "ref", "goal", "utm_source", "utm_medium", "utm_campaign", "meta", "tiktok", "nou"] as const) {
       if (typeof s[k] === "string") out[k] = s[k] as string;
     }
     if (typeof s.redirect === "string" && s.redirect.startsWith("/") && !s.redirect.startsWith("//")) out.redirect = s.redirect;
@@ -221,6 +223,7 @@ function StartPage() {
         {screen === "phone" && (
           <PhoneScreen
             login={!!search.login}
+            noAccount={!!search.nou}
             digits={phoneDigits}
             onDigits={setPhoneDigits}
             onSent={(m) => {
@@ -320,6 +323,7 @@ function MiniCard({ niche, goal }: { niche: string; goal: StartGoal | null }) {
 
 function PhoneScreen(props: {
   login: boolean;
+  noAccount?: boolean;
   digits: string;
   onDigits: (d: string) => void;
   onSent: (masked: string) => void;
@@ -352,13 +356,17 @@ function PhoneScreen(props: {
     <section className="screen" aria-labelledby="h-phone">
       <div className="q">
         <div className="qmain">
-          <p className="eyebrow">{props.login ? "Bine ai revenit" : "Începe gratuit"}</p>
+          <p className="eyebrow">
+            {props.noAccount ? "Nu ai încă cont" : props.login ? "Bine ai revenit" : "Începe gratuit"}
+          </p>
           <h1 id="h-phone">
             {props.login ? "Intră cu numărul tău de " : "Pune numărul tău de "}
             <span className="grad">WhatsApp</span>
           </h1>
           <p className="lead">
-            {props.login
+            {props.noAccount
+              ? "Hai să-l facem în 1 minut. Acolo îți trimit clipul, pozele și rezultatele reclamelor."
+              : props.login
               ? "Îți trimitem un cod pe WhatsApp. Fără parolă."
               : "Acolo îți trimit clipul, pozele și rezultatele reclamelor. Fără parolă, fără formulare lungi."}
           </p>

@@ -8,6 +8,9 @@
  *  - Token SYSTEM-USER (Facebook Login for Business, config_id): `/me` NU are
  *    email → creăm contul cu un email temporar `fb-<id>@pending.adpilot.ro`,
  *    dedupe după `meta_user_id` (stabil). Emailul real se cere în onboarding.
+ *
+ * Înscrierile noi se fac doar prin /start (telefon + WhatsApp). Implicit, aici doar
+ * logăm conturile existente; fără cont → `no_account`, iar pagina trimite omul la /start.
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
@@ -21,7 +24,7 @@ export function isPendingEmail(email?: string | null): boolean {
 
 export type FinishResult =
   | { ok: true; redirect: string }
-  | { ok: false; reason: "create_failed" | "session_failed" };
+  | { ok: false; reason: "create_failed" | "session_failed" | "no_account" };
 
 async function userEmailById(uid: string): Promise<string | null> {
   const { data } = await supabaseAdmin.auth.admin.getUserById(uid);
@@ -33,8 +36,10 @@ export async function finishFacebookSignup(params: {
   expiresIn?: number | null;
   origin: string;
   referralCode?: string | null;
+  /** Creează contul dacă nu există. Oprit implicit: conturile noi pornesc din /start. */
+  allowCreate?: boolean;
 }): Promise<FinishResult> {
-  const { accessToken, expiresIn = null, origin, referralCode = null } = params;
+  const { accessToken, expiresIn = null, origin, referralCode = null, allowCreate = false } = params;
   const referralMeta = referralCode?.trim()
     ? { referral_code: referralCode.trim().slice(0, 40) }
     : {};
@@ -61,6 +66,7 @@ export async function finishFacebookSignup(params: {
       p_email: email,
     });
     uid = (existing as string | null) ?? null;
+    if (!uid && !allowCreate) return { ok: false, reason: "no_account" };
     if (!uid) {
       const { data: created, error: cErr } = await supabaseAdmin.auth.admin.createUser({
         email,
@@ -97,6 +103,7 @@ export async function finishFacebookSignup(params: {
         p_email: placeholder,
       });
       uid = (byPlaceholder as string | null) ?? null;
+      if (!uid && !allowCreate) return { ok: false, reason: "no_account" };
       if (!uid) {
         const { data: created, error: cErr } = await supabaseAdmin.auth.admin.createUser({
           email: placeholder,

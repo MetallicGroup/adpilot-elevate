@@ -8,6 +8,7 @@ import { postAuthDest } from "@/lib/post-auth";
 import { translateAuthError } from "@/lib/auth";
 import { clearStoredReferral, getStoredReferral } from "@/lib/referral";
 import { claimReferral } from "@/lib/referral.functions";
+import { discardFreshOAuthAccount } from "@/lib/oauth-guard.functions";
 
 export const Route = createFileRoute("/auth/callback")({
   ssr: false,
@@ -113,7 +114,19 @@ function AuthCallbackPage() {
         const isFirstSignIn = Math.abs(lastSignIn - created) < 15_000;
         const isOAuth = (user.app_metadata?.provider ?? "email") !== "email";
 
+        // Google doar pentru login: contul abia creat (gol) se șterge, înscrierea se face pe /start.
         if (isOAuth && isFirstSignIn) {
+          let discarded = false;
+          try {
+            discarded = (await discardFreshOAuthAccount()).discarded;
+          } catch {
+            /* dacă verificarea pică, nu lăsăm omul blocat */
+          }
+          if (discarded) {
+            await supabase.auth.signOut().catch(() => undefined);
+            window.location.replace("/start?nou=google");
+            return;
+          }
           if (!cancelled) navigate({ to: "/auth/welcome", replace: true });
           return;
         }

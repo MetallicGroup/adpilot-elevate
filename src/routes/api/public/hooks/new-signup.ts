@@ -50,6 +50,14 @@ export const Route = createFileRoute("/api/public/hooks/new-signup")({
           console.error("[new-signup] user lookup failed:", e);
         }
 
+        // Google creează contul la prima intrare, dar /auth/callback îl șterge imediat dacă omul
+        // nu avea cont (înscrierile se fac pe /start). Așteptăm puțin: dacă a dispărut, nu e înscriere.
+        if (provider && provider !== "email") {
+          await new Promise((r) => setTimeout(r, 8000));
+          const { data: still } = await supabaseAdmin.auth.admin.getUserById(userId);
+          if (!still?.user) return Response.json({ ok: true, skipped: "discarded_oauth" });
+        }
+
         const loadProfile = async () => {
           const { data: profile } = await supabaseAdmin
             .from("profiles")

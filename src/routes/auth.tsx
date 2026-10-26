@@ -295,6 +295,9 @@ function AuthPage() {
           .then((res: any) => {
             if (res?.ok && res.redirect) {
               window.location.href = res.redirect; // magic link → sesiune → onboarding
+            } else if (res?.reason === "no_account") {
+              // Facebook e doar pentru login; conturile noi se fac pe /start.
+              window.location.href = "/start?nou=facebook";
             } else {
               setLoading(false);
               toast.error(FB_NOTICE[res?.reason] ?? FB_NOTICE.failed);
@@ -343,10 +346,10 @@ function AuthPage() {
             <path d="M13.5 22v-8h2.7l.4-3.2h-3.1V8.700c0-.9.300-1.600 1.600-1.600h1.700V4.200c-.300 0-1.300-.1-2.500-.1-2.500 0-4.100 1.500-4.100 4.200v2.500H7.400V14h2.800v8h3.300z" />
           </svg>
         )}
-        Continuă cu Facebook
+        Intră cu Facebook
       </button>
       <button type="button" className="sso gg" onClick={() => oauth("google")} disabled={loading}>
-        Continuă cu Google
+        Intră cu Google
       </button>
       <Link to="/start" search={{ login: "1" } as never} className="sso gg" style={{ textDecoration: "none" }}>
         Intră cu numărul de telefon

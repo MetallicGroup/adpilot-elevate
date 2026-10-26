@@ -84,9 +84,12 @@ export const Route = createFileRoute("/api/meta/auth/callback")({
               origin,
               referralCode,
             });
-            return res.ok
-              ? new Response(null, { status: 302, headers: { Location: res.redirect } })
-              : toAuth(`fb=${res.reason}`);
+            if (res.ok) return new Response(null, { status: 302, headers: { Location: res.redirect } });
+            // Fără cont: nu mai creăm unul de aici, îl trimitem în fluxul nou.
+            if (res.reason === "no_account") {
+              return new Response(null, { status: 302, headers: { Location: "/start?nou=facebook" } });
+            }
+            return toAuth(`fb=${res.reason}`);
           }
 
           // ── FLUX AGENȚIE: clientul se conectează la o agenție (fără user nou) ──
