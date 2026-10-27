@@ -302,8 +302,14 @@ export async function getDiagnosis(
 }
 
 /** Linkurile pe care asistentul le poate trimite pentru pașii lipsă. */
-export function nextStepLinks(d: AccountDiagnosis): string[] {
+export async function nextStepLinks(d: AccountDiagnosis, userId?: string): Promise<string[]> {
   const out: string[] = [];
+  if (d.missing.includes("connect_meta") && userId) {
+    const { metaConnectLink } = await import("./connect-link.server");
+    out.push(
+      `Conectare Facebook — link personal, se deschide direct pe telefon, fără parolă și fără să intre în aplicație (valabil 24h): ${metaConnectLink(userId)}`,
+    );
+  }
   if (d.missing.includes("facebook_page")) out.push("Creare pagină Facebook: https://www.facebook.com/pages/create");
   if (d.missing.includes("lead_terms") && d.meta.leadTerms) {
     out.push(`Acceptare condiții formulare Meta (deschide, apasă „Creează formular”, apoi „Accept”): https://business.facebook.com/latest/instant_forms?asset_id=${d.meta.leadTerms.pageId}`);

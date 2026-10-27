@@ -85,7 +85,7 @@ export async function runWhatsAppAgent(
       new Promise<null>((r) => setTimeout(() => r(null), 6000)),
     ]);
     if (diag) {
-      const links = nextStepLinks(diag);
+      const links = await nextStepLinks(diag, ctx.userId);
       accountHint = `\n\n[Context cont]\n${diagnosisForAgent(diag)}${links.length ? `\nLinkuri pentru pașii lipsă:\n${links.join("\n")}` : ""}`;
     }
   } catch {
@@ -997,7 +997,7 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
         const { getDiagnosis, diagnosisForAgent, nextStepLinks } = await import("./account-diagnosis.server");
         const d = await getDiagnosis(supabaseAdmin, ctx.userId, { force: true });
         if (!d) return { error: "Nu am putut verifica acum contul. Încearcă din nou peste un minut." };
-        return { segment: d.segment, missing: d.missing, summary: diagnosisForAgent(d), links: nextStepLinks(d) };
+        return { segment: d.segment, missing: d.missing, summary: diagnosisForAgent(d), links: await nextStepLinks(d, ctx.userId) };
       },
     }),
 
@@ -2236,7 +2236,9 @@ async function buildCampaignPreview(supabaseAdmin: any, ctx: AgentCtx, prepared:
       .eq("user_id", ctx.userId)
       .eq("is_active", true)
       .maybeSingle();
-    if (!conn?.access_token) return { error: "Conectează Meta din Settings înainte." };
+    if (!conn?.access_token) {
+      return { error: "Facebook-ul nu e conectat. Apelează check_account și trimite-i userului linkul personal de conectare." };
+    }
     const { data: adAcc } = await supabaseAdmin
       .from("meta_ad_accounts")
       .select("ad_account_id")

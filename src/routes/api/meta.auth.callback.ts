@@ -11,7 +11,9 @@ export const Route = createFileRoute("/api/meta/auth/callback")({
         const error = url.searchParams.get("error");
 
         const returnTo = getCookie("meta_oauth_return") ?? "/settings";
-        const safeReturn = returnTo === "/onboarding" || returnTo === "/start" ? returnTo : "/settings";
+        const safeReturn = ["/onboarding", "/start", "/conectat"].includes(returnTo) ? returnTo : "/settings";
+        // /conectat = linkul personal trimis pe WhatsApp (fără sesiune în browser).
+        const viaLink = safeReturn === "/conectat";
         deleteCookie("meta_oauth_return", { path: "/" });
         const back = (q: string) =>
           new Response(null, {
@@ -118,6 +120,21 @@ export const Route = createFileRoute("/api/meta/auth/callback")({
             granted,
             metaUser: { id: me.id, name: me.name },
           });
+          if (viaLink) {
+            const { getCentralWhatsApp } = await import("@/lib/whatsapp.server");
+            const { notifyOwner } = await import("@/lib/wa-notify.server");
+            const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+            try {
+              await notifyOwner(supabaseAdmin, userIdFromState as string, {
+                kind: "meta_connected",
+                text: "Gata, Facebook-ul tău e conectat la AdPilot ✅ Hai să pornim reclama: trimite-mi aici pozele sau clipul, dacă nu mi le-ai trimis deja.",
+              });
+            } catch (e) {
+              console.error("[meta-callback] notify connected", (e as Error).message);
+            }
+            const wa = getCentralWhatsApp()?.displayNumber;
+            return back(`meta=connected${wa ? `&wa=${wa}` : ""}`);
+          }
           return back("meta=connected");
         } catch (e) {
           console.error("Meta OAuth callback error", e);

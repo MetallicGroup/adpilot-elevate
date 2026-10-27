@@ -16,6 +16,7 @@ import { Route as AgentieRouteImport } from './routes/agentie'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BeautyRouteImport } from './routes/beauty'
 import { Route as CliniciRouteImport } from './routes/clinici'
+import { Route as ConectatRouteImport } from './routes/conectat'
 import { Route as ConstructiiRouteImport } from './routes/constructii'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CookiePolicyRouteImport } from './routes/cookie-policy'
@@ -63,6 +64,7 @@ import { Route as AuthWelcomeRouteImport } from './routes/auth.welcome'
 import { Route as BSlugRouteImport } from './routes/b.$slug'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as ConnectSlugRouteImport } from './routes/connect.$slug'
+import { Route as FbTokenRouteImport } from './routes/fb.$token'
 import { Route as PCodeRouteImport } from './routes/p.$code'
 import { Route as AuthenticatedAgencyDashboardRouteImport } from './routes/_authenticated/agency.dashboard'
 import { Route as AuthenticatedAgencySettingsRouteImport } from './routes/_authenticated/agency.settings'
@@ -127,6 +129,11 @@ const BeautyRoute = BeautyRouteImport.update({
 const CliniciRoute = CliniciRouteImport.update({
   id: '/clinici',
   path: '/clinici',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConectatRoute = ConectatRouteImport.update({
+  id: '/conectat',
+  path: '/conectat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConstructiiRoute = ConstructiiRouteImport.update({
@@ -364,6 +371,11 @@ const ConnectSlugRoute = ConnectSlugRouteImport.update({
   path: '/connect/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FbTokenRoute = FbTokenRouteImport.update({
+  id: '/fb/$token',
+  path: '/fb/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PCodeRoute = PCodeRouteImport.update({
   id: '/p/$code',
   path: '/p/$code',
@@ -548,6 +560,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRouteWithChildren
   '/beauty': typeof BeautyRoute
   '/clinici': typeof CliniciRoute
+  '/conectat': typeof ConectatRoute
   '/constructii': typeof ConstructiiRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
@@ -595,6 +608,7 @@ export interface FileRoutesByFullPath {
   '/b/$slug': typeof BSlugRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/connect/$slug': typeof ConnectSlugRoute
+  '/fb/$token': typeof FbTokenRoute
   '/p/$code': typeof PCodeRoute
   '/agency/dashboard': typeof AuthenticatedAgencyDashboardRoute
   '/agency/settings': typeof AuthenticatedAgencySettingsRoute
@@ -634,6 +648,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRouteWithChildren
   '/beauty': typeof BeautyRoute
   '/clinici': typeof CliniciRoute
+  '/conectat': typeof ConectatRoute
   '/constructii': typeof ConstructiiRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
@@ -681,6 +696,7 @@ export interface FileRoutesByTo {
   '/b/$slug': typeof BSlugRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/connect/$slug': typeof ConnectSlugRoute
+  '/fb/$token': typeof FbTokenRoute
   '/p/$code': typeof PCodeRoute
   '/agency/dashboard': typeof AuthenticatedAgencyDashboardRoute
   '/agency/settings': typeof AuthenticatedAgencySettingsRoute
@@ -722,6 +738,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRouteWithChildren
   '/beauty': typeof BeautyRoute
   '/clinici': typeof CliniciRoute
+  '/conectat': typeof ConectatRoute
   '/constructii': typeof ConstructiiRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
@@ -769,6 +786,7 @@ export interface FileRoutesById {
   '/b/$slug': typeof BSlugRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/connect/$slug': typeof ConnectSlugRoute
+  '/fb/$token': typeof FbTokenRoute
   '/p/$code': typeof PCodeRoute
   '/_authenticated/agency/dashboard': typeof AuthenticatedAgencyDashboardRoute
   '/_authenticated/agency/settings': typeof AuthenticatedAgencySettingsRoute
@@ -810,6 +828,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/beauty'
     | '/clinici'
+    | '/conectat'
     | '/constructii'
     | '/contact'
     | '/cookie-policy'
@@ -857,6 +876,7 @@ export interface FileRouteTypes {
     | '/b/$slug'
     | '/checkout/return'
     | '/connect/$slug'
+    | '/fb/$token'
     | '/p/$code'
     | '/agency/dashboard'
     | '/agency/settings'
@@ -896,6 +916,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/beauty'
     | '/clinici'
+    | '/conectat'
     | '/constructii'
     | '/contact'
     | '/cookie-policy'
@@ -943,6 +964,7 @@ export interface FileRouteTypes {
     | '/b/$slug'
     | '/checkout/return'
     | '/connect/$slug'
+    | '/fb/$token'
     | '/p/$code'
     | '/agency/dashboard'
     | '/agency/settings'
@@ -983,6 +1005,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/beauty'
     | '/clinici'
+    | '/conectat'
     | '/constructii'
     | '/contact'
     | '/cookie-policy'
@@ -1030,6 +1053,7 @@ export interface FileRouteTypes {
     | '/b/$slug'
     | '/checkout/return'
     | '/connect/$slug'
+    | '/fb/$token'
     | '/p/$code'
     | '/_authenticated/agency/dashboard'
     | '/_authenticated/agency/settings'
@@ -1071,6 +1095,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRouteWithChildren
   BeautyRoute: typeof BeautyRoute
   CliniciRoute: typeof CliniciRoute
+  ConectatRoute: typeof ConectatRoute
   ConstructiiRoute: typeof ConstructiiRoute
   ContactRoute: typeof ContactRoute
   CookiePolicyRoute: typeof CookiePolicyRoute
@@ -1101,6 +1126,7 @@ export interface RootRouteChildren {
   BSlugRoute: typeof BSlugRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   ConnectSlugRoute: typeof ConnectSlugRoute
+  FbTokenRoute: typeof FbTokenRoute
   PCodeRoute: typeof PCodeRoute
   ApiAgencyConnectStartRoute: typeof ApiAgencyConnectStartRoute
   ApiMetaAuthCallbackRoute: typeof ApiMetaAuthCallbackRoute
@@ -1175,6 +1201,13 @@ declare module '@tanstack/react-router' {
       path: '/clinici'
       fullPath: '/clinici'
       preLoaderRoute: typeof CliniciRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conectat': {
+      id: '/conectat'
+      path: '/conectat'
+      fullPath: '/conectat'
+      preLoaderRoute: typeof ConectatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/constructii': {
@@ -1506,6 +1539,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConnectSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/fb/$token': {
+      id: '/fb/$token'
+      path: '/fb/$token'
+      fullPath: '/fb/$token'
+      preLoaderRoute: typeof FbTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/p/$code': {
       id: '/p/$code'
       path: '/p/$code'
@@ -1810,6 +1850,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   BeautyRoute: BeautyRoute,
   CliniciRoute: CliniciRoute,
+  ConectatRoute: ConectatRoute,
   ConstructiiRoute: ConstructiiRoute,
   ContactRoute: ContactRoute,
   CookiePolicyRoute: CookiePolicyRoute,
@@ -1840,6 +1881,7 @@ const rootRouteChildren: RootRouteChildren = {
   BSlugRoute: BSlugRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   ConnectSlugRoute: ConnectSlugRoute,
+  FbTokenRoute: FbTokenRoute,
   PCodeRoute: PCodeRoute,
   ApiAgencyConnectStartRoute: ApiAgencyConnectStartRoute,
   ApiMetaAuthCallbackRoute: ApiMetaAuthCallbackRoute,
