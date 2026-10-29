@@ -508,6 +508,11 @@ export async function createAdSet(
     // Cu Advantage+ audience, genul e doar o sugestie — când clientul cere explicit un gen, îl respectăm strict.
     targeting.targeting_automation = { advantage_audience: 0 };
   }
+  // Cu Advantage+ audience, Meta refuză o vârstă maximă sub 65 (o acceptă doar ca sugestie).
+  // Când clientul cere o vârstă maximă, o respectăm strict.
+  if (args.targeting.age_max < 65) {
+    targeting.targeting_automation = { advantage_audience: 0 };
+  }
   // Interese + comportamente (targetare detaliată) — OR în cadrul unui grup
   // flexible_spec. Ex B2B: „Small business owners" + „Beauty salon"; B2C: „Makeup".
   const flex: Record<string, unknown> = {};
