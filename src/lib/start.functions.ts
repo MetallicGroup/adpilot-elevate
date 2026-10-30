@@ -207,12 +207,15 @@ export const startDemo = createServerFn({ method: "POST" })
     }
 
     const now = new Date().toISOString();
+    // „Refă clipul” după un eșec: refolosim ce a ieșit deja (scenariu, voce, cadre bune), refacem doar ce a picat.
+    const { reusableDemoJob } = await import("@/lib/demo-video.server");
+    const reuse = s.demo_status === "failed" ? reusableDemoJob(s.demo_job, s.updated_at) : null;
     const { error } = await db
       .from("onboarding_sessions")
       .update({
         targets,
         demo_status: "queued",
-        demo_job: {},
+        demo_job: reuse ?? {},
         demo_error: null,
         demo_started_at: now,
         completed_at: s.completed_at ?? now,

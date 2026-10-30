@@ -23,7 +23,7 @@ import { chmod, copyFile, mkdir, mkdtemp, readFile, rm, stat, writeFile } from "
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { kieCreate, kiePoll } from "./kie.server";
+import { kieCreate, kiePoll, kieRetryTransient, kieWaitingRetry, type KieTask } from "./kie.server";
 
 const BUCKET = "onboarding";
 const LOCK_MS = 4 * 60 * 1000;
@@ -600,10 +600,50 @@ async function stepScript(db: any, s: any, job: Job, ref: JobRef): Promise<void>
   job.phase = "clips";
 }
 
-/** Repornește o dată un task eșuat; a doua oară întoarce null. */
+/**
+ * Repornește o dată un task eșuat; a doua oară întoarce null.
+ * O pană la kie nu consumă reîncercarea: sarcina așteaptă și e refăcută mai târziu (kieRetryTransient).
+ */
 async function retryOnce(t: Task, make: () => Promise<Task>): Promise<Task | null> {
+  if (kieWaitingRetry(t)) return (await kieRetryTransient(t)) ?? t;
   if ((t.retries ?? 0) >= 1) return null;
   return { ...(await make()), retries: 1 };
+}
+
+/**
+ * La „Refă clipul”: păstrăm ce a ieșit deja (scenariul, vocea, cadrele și clipurile reușite) și refacem
+ * doar sarcinile picate — fără să plătim din nou pentru pașii buni. Doar dacă încercarea e recentă
+ * (linkurile semnate și fișierele temporare kie expiră). Altfel, null = de la zero.
+ */
+export function reusableDemoJob(job: any, updatedAt?: string | null): Record<string, unknown> | null {
+  if (!job?.script || !job?.voice || !Array.isArray(job?.plan)) return null;
+  if (!updatedAt || Date.now() - new Date(updatedAt).getTime() > 20 * 3600_000) return null;
+  // Sarcinile care știu cum au fost create se refac imediat, cu aceleași date. Celelalte:
+  //  - cadrele: rămân „picate” cu reîncercarea resetată → retryOnce le recreează;
+  //  - avatarurile: se șterg → bucla le recreează din cadru;
+  //  - b-roll / poze: rămân picate → montajul folosește poza clientului cu zoom.
+  const again = (t: KieTask | undefined, otherwise: "reset" | "drop" | "keep"): KieTask | undefined => {
+    if (!t || t.url || !t.failed) return t;
+    if (t.model && t.input) return { ...t, transient: true, transientRetries: 0, retryAt: 0 };
+    return otherwise === "drop" ? undefined : otherwise === "reset" ? { ...t, retries: 0 } : t;
+  };
+  const map = (o: Record<string, KieTask> | undefined, otherwise: "reset" | "drop" | "keep") =>
+    Object.fromEntries(Object.entries(o ?? {}).map(([k, v]) => [k, again(v, otherwise)]).filter(([, v]) => v));
+  return {
+    ...job,
+    phase: "clips",
+    errors: 0,
+    lastError: undefined,
+    frames: map(job.frames, "reset"),
+    avatars: map(job.avatars, "drop"),
+    broll: map(job.broll, "keep"),
+    images: (job.images ?? []).map((t: KieTask) => again(t, "keep") ?? t),
+  };
+}
+
+/** Poll + reluarea după o pană kie, pentru sarcinile fără reîncercare proprie (b-roll, poze). */
+async function pollOrRetry(t?: Task): Promise<Task | undefined> {
+  return kieRetryTransient(await kiePoll(t));
 }
 
 async function stepClips(db: any, s: any, job: Job): Promise<void> {
@@ -657,13 +697,14 @@ async function stepClips(db: any, s: any, job: Job): Promise<void> {
   if (frames.action?.url && !broll.action) {
     broll.action = await kieCreate("kling/v3-turbo-image-to-video", brollInput(script.actionMotion, frames.action.url, true));
   }
-  for (const k of ["wide", "detail", "action"] as const) broll[k] = await kiePoll(broll[k]);
-  job.images = (await Promise.all((job.images ?? []).map((t) => kiePoll(t)))) as Task[];
+  for (const k of ["wide", "detail", "action"] as const) broll[k] = await pollOrRetry(broll[k]);
+  job.images = (await Promise.all((job.images ?? []).map((t) => pollOrRetry(t)))) as Task[];
 
-  const settled = (t?: Task) => !!t && (!!t.url || !!t.failed);
+  // Gata = are rezultat sau a picat definitiv (nu „așteaptă reluarea după o pană kie”).
+  const settled = (t?: Task) => !!t && (!!t.url || (!!t.failed && !kieWaitingRetry(t)));
   const talks = (job.plan ?? []).filter((x) => x.kind === "talk").length;
   const avatarsDone = Object.values(avatars).filter((a) => a.url).length === talks;
-  const actionDone = settled(broll.action) || !!frames.action?.fallback || !!frames.action?.failed;
+  const actionDone = settled(broll.action) || !!frames.action?.fallback || (!!frames.action?.failed && !kieWaitingRetry(frames.action));
   if (avatarsDone && settled(broll.wide) && settled(broll.detail) && actionDone && (job.images ?? []).every(settled)) {
     job.phase = "render";
   }
