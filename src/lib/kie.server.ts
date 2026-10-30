@@ -34,7 +34,8 @@ function isTransientFail(msg?: string | null): boolean {
 
 /** Sarcina așteaptă o reluare după o pană kie (încă nu e un eșec definitiv). */
 export function kieWaitingRetry(t?: KieTask): boolean {
-  return !!t?.failed && !!t.transient && (t.transientRetries ?? 0) < KIE_TRANSIENT_MAX;
+  // Doar sarcinile care știu cum au fost create pot fi refăcute; celelalte nu așteaptă nimic.
+  return !!t?.failed && !!t.transient && !!t.model && !!t.input && (t.transientRetries ?? 0) < KIE_TRANSIENT_MAX;
 }
 
 /**

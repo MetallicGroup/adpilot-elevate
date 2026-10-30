@@ -683,12 +683,14 @@ async function stepClips(db: any, s: any, job: Job): Promise<void> {
       avatars[key] = await kieCreate("kling/ai-avatar-standard", avatarInput(script, shot.angle, frame, await signedUrl(db, shot.audio!)));
     }
     avatars[key] = (await kiePoll(avatars[key]))!;
-    if (avatars[key]?.failed) {
+    if (avatars[key]?.failed && !avatars[key]?.fallback && frame) {
       const r = await retryOnce(avatars[key], async () =>
         kieCreate("kling/ai-avatar-standard", avatarInput(script, shot.angle, frame!, await signedUrl(db, shot.audio!))),
       );
-      if (!r) throw new Error(`avatar ${i} failed`);
-      avatars[key] = r;
+      // Avatarul a picat definitiv (ex. Kling în pană mult timp): clipul iese oricum, cu cadrul
+      // prezentatorului cu zoom lent peste voce, în loc să nu primească nimic.
+      if (!r) console.warn(`[clip] avatar ${i} failed, folosesc cadrul static`);
+      avatars[key] = r ?? { ...avatars[key], fallback: true };
     }
     if (!avatars[key]) delete avatars[key];
   }
@@ -702,8 +704,8 @@ async function stepClips(db: any, s: any, job: Job): Promise<void> {
 
   // Gata = are rezultat sau a picat definitiv (nu „așteaptă reluarea după o pană kie”).
   const settled = (t?: Task) => !!t && (!!t.url || (!!t.failed && !kieWaitingRetry(t)));
-  const talks = (job.plan ?? []).filter((x) => x.kind === "talk").length;
-  const avatarsDone = Object.values(avatars).filter((a) => a.url).length === talks;
+  // Gata când fiecare cadru vorbit din plan are avatarul (sau cadrul static de rezervă).
+  const avatarsDone = (job.plan ?? []).every((x, i) => x.kind !== "talk" || !!avatars[String(i)]?.url || !!avatars[String(i)]?.fallback);
   const actionDone = settled(broll.action) || !!frames.action?.fallback || (!!frames.action?.failed && !kieWaitingRetry(frames.action));
   if (avatarsDone && settled(broll.wide) && settled(broll.detail) && actionDone && (job.images ?? []).every(settled)) {
     job.phase = "render";
@@ -811,9 +813,19 @@ async function stepRender(db: any, s: any, job: Job, ref: JobRef): Promise<void>
     for (const [i, shot] of job.plan!.entries()) {
       const dur = Math.max(0.4, shot.t1 - shot.t0);
       if (shot.kind === "talk") {
-        const f = join(work, `t${i}.mp4`);
-        await writeFile(f, await download(job.avatars![String(i)].url!));
-        shots.push({ file: f, image: false, dur });
+        const avatarUrl = job.avatars?.[String(i)]?.url;
+        if (avatarUrl) {
+          const f = join(work, `t${i}.mp4`);
+          await writeFile(f, await download(avatarUrl));
+          shots.push({ file: f, image: false, dur });
+        } else {
+          // Fără avatar: cadrul cu prezentatorul, cu zoom lent (vocea și subtitrările rămân).
+          const frameUrl = job.frames?.[shot.angle]?.url ?? job.frames?.selfie?.url;
+          const img = frameUrl
+            ? await fallbackImage(`f${i}`, undefined, frameUrl)
+            : await fallbackImage(`c${i}`, (job.cropPaths ?? [])[0]);
+          shots.push({ file: img, image: true, dur });
+        }
         continue;
       }
       const clip = job.broll?.[shot.src]?.url;
