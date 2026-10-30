@@ -114,7 +114,10 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
                 // Buton rapid dintr-un template (ex. „Vezi detaliile”)
                 text = m.button?.text ?? m.button?.payload ?? "";
               } else if (type === "interactive") {
-                text = m.interactive?.button_reply?.title ?? m.interactive?.list_reply?.title ?? "";
+                const reply = m.interactive?.button_reply ?? m.interactive?.list_reply;
+                text = reply?.title ?? "";
+                // ID-ul opțiunii (ex. page:123) ajunge și el la agent: titlurile sunt tăiate la 20–24 de caractere.
+                if (reply?.id && reply.id !== reply.title) text = `${text} [opțiune: ${reply.id}]`;
               } else if (
                 type === "image" ||
                 type === "video" ||
@@ -443,6 +446,34 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
                       mime: lastMedia.media_mime || "image/jpeg",
                       signedUrl: signed.signedUrl,
                     };
+                  }
+                }
+              }
+
+              // Butoanele din mesajele de lead (Am vorbit / A venit / ...): răspuns scurt, fără agent.
+              if (type === "interactive") {
+                const replyId = String(m.interactive?.button_reply?.id ?? m.interactive?.list_reply?.id ?? "");
+                if (replyId.startsWith("lead:")) {
+                  try {
+                    const { handleLeadButton } = await import("@/lib/lead-closer.server");
+                    const reply = await handleLeadButton(supabaseAdmin, conn.user_id, replyId);
+                    if (reply) {
+                      const { id: outId } = await sendWhatsAppMessage(central.phoneNumberId, central.accessToken, fromPhone, {
+                        type: "text",
+                        text: reply,
+                      });
+                      await supabaseAdmin.from("whatsapp_messages").insert({
+                        user_id: conn.user_id,
+                        connection_id: conn.id,
+                        wa_message_id: outId,
+                        direction: "out",
+                        msg_type: "text",
+                        text: reply,
+                      });
+                      continue;
+                    }
+                  } catch (e) {
+                    console.error("[wa] lead button failed", e);
                   }
                 }
               }

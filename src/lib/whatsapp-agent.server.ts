@@ -14,7 +14,7 @@ import {
   creativeCountForBudget,
   normalizeCreatives,
   objectiveFromDraft,
-  suggestNicheFormQuestions,
+  radiusForCity,
   type AgentPublishSnapshot,
   type CreativeVariant,
 } from "./wa-campaign-strategy.server";
@@ -37,6 +37,8 @@ type AgentCtx = {
   toPhone: string;
   /** Most recent media uploaded by the user in this conversation (path in wa-media bucket). */
   latestMedia: { path: string; mime: string; signedUrl: string } | null;
+  /** Setat de send_choice: mesajul cu butoane a plecat deja în tura asta. */
+  sentInteractive?: boolean;
 };
 
 const SYSTEM_PROMPT = WA_AGENT_SYSTEM_PROMPT;
@@ -54,9 +56,10 @@ export async function runWhatsAppAgent(
 
   if (isRetryPublishRequest(userMessage) && shouldRetryPublishFromHistory(history, userMessage)) {
     const retry = await retryLastDraftCampaign(supabaseAdmin, ctx);
-    const text = "error" in retry
-      ? formatPublishErrorForWhatsApp(retry.error)
-      : "Gata — campania este LIVE acum ✅";
+    // Erorile vin deja explicate pentru om (vezi meta-errors.server.ts).
+    const text = "error" in retry && retry.error
+      ? String(retry.error)
+      : "Gata — am trimis campania la Facebook ✅ Îți scriu când e aprobată și pornește.";
     await sendChunked(ctx, text);
     return { text };
   }
@@ -76,18 +79,21 @@ export async function runWhatsAppAgent(
       ? (lastOut.meta as any).anomaly_action
       : null;
 
-  // Diagnosticul contului (din cache, max 6h): segmentul, ce lipsește, istoricul pe 90 de zile.
+  // STAREA DE ACUM a contului (sursa de adevăr, mai nouă decât conversația): pagina, contul de
+  // reclame, cardul, ce lipsește, ultima eroare Meta, campaniile din AdPilot. Cache scurt când lipsește ceva.
   let accountHint = "";
   try {
     const { getDiagnosis, diagnosisForAgent, nextStepLinks } = await import("./account-diagnosis.server");
     const diag = await Promise.race([
       getDiagnosis(supabaseAdmin, ctx.userId),
-      new Promise<null>((r) => setTimeout(() => r(null), 6000)),
+      new Promise<null>((r) => setTimeout(() => r(null), 8000)),
     ]);
     if (diag) {
       const links = await nextStepLinks(diag, ctx.userId);
-      accountHint = `\n\n[Context cont]\n${diagnosisForAgent(diag)}${links.length ? `\nLinkuri pentru pașii lipsă:\n${links.join("\n")}` : ""}`;
+      const at = new Date(diag.computedAt).toLocaleString("ro-RO", { timeZone: "Europe/Bucharest", dateStyle: "short", timeStyle: "short" });
+      accountHint = `\n\n[Context cont — starea de acum, verificată la ${at}; are prioritate față de orice s-a spus mai devreme în conversație]\n${diagnosisForAgent(diag)}${links.length ? `\nLinkuri pentru pașii lipsă:\n${links.join("\n")}` : ""}`;
     }
+    accountHint += await campaignsHint(supabaseAdmin, ctx.userId);
   } catch {
     /* fără diagnostic, agentul merge ca înainte */
   }
@@ -107,7 +113,7 @@ export async function runWhatsAppAgent(
     accountHint +
     onboardingCtx +
     (pendingAction
-      ? `\n\n[Acțiune sugerată în așteptare] ${JSON.stringify(pendingAction)}. Dacă userul răspunde afirmativ (da/ok/yes/rezolvă/fă), execută-o direct prin tool-ul corespunzător (pause_campaign pentru kind=pause, generate_copy pentru regen_copy, generate_image+create_campaign sau update creative pentru regen_image) și confirmă scurt. Dacă userul refuză, lasă-o.`
+      ? `\n\n[Acțiune sugerată în așteptare] ${JSON.stringify(pendingAction)}. Dacă userul răspunde afirmativ (da/ok/fă/„Fă schimbarea”/„Refă reclama”), execută-o direct: pause → pause_campaign; switch_to_messages → relaunch_campaign(objective="messages"); fix_rejected → scrie 2 texte noi fără afirmațiile respinse, apoi relaunch_campaign(creatives=...); regen_image → generate_image, apoi relaunch_campaign(use_latest_media=true); regen_copy → generate_copy. Confirmă scurt după. Dacă refuză („Lasă așa”), lasă-o.`
       : "");
 
   const messages: ModelMessage[] = [
@@ -135,10 +141,27 @@ export async function runWhatsAppAgent(
     stopWhen: stepCountIs(50),
   });
 
-  const finalText = result.text?.trim() || "Gata. ✅";
-  // Send reply (split if too long)
-  await sendChunked(ctx, finalText);
+  const finalText = result.text?.trim() || "";
+  // Dacă a trimis deja un mesaj cu butoane și n-are nimic de adăugat, nu mai trimitem „Gata”.
+  if (finalText) await sendChunked(ctx, finalText);
+  else if (!ctx.sentInteractive) await sendChunked(ctx, "Gata. ✅");
   return { text: finalText };
+}
+
+/** Campaniile din AdPilot (ultimele 30 de zile), pe scurt, pentru contextul agentului. */
+async function campaignsHint(supabaseAdmin: any, userId: string): Promise<string> {
+  const { data } = await supabaseAdmin
+    .from("campaigns")
+    .select("name, platform, status, review_state, budget, created_at")
+    .eq("user_id", userId)
+    .neq("status", "draft")
+    .gte("created_at", new Date(Date.now() - 30 * 86400_000).toISOString())
+    .order("created_at", { ascending: false })
+    .limit(6);
+  if (!data?.length) return "\nCampanii în AdPilot (30 de zile): niciuna.";
+  return `\nCampanii în AdPilot (30 de zile): ${data
+    .map((c: any) => `„${c.name}” (${c.platform}, ${c.status}${c.review_state ? `, ${c.review_state}` : ""}, ${c.budget} lei/zi)`)
+    .join("; ")}.`;
 }
 
 function mediaHint(ctx: AgentCtx): string {
@@ -180,11 +203,26 @@ const campaignArgsSchema = z.object({
         name: z.string().max(80),
         daily_budget: z.number().positive().describe("Buget zilnic în RON (comun pe ad set — Meta împarte pe creative)"),
         objective: z
-          .enum(["leads", "sales", "calls", "traffic", "signups"])
+          .enum(["leads", "messages", "sales", "calls", "traffic", "signups"])
           .default("leads")
           .describe(
-            "'leads' = formular FB/IG · 'sales' = vânzări + Pixel · 'signups' = înscrieri CompleteRegistration · 'calls' = Sună acum · 'traffic' = vizite site",
+            "'leads' = formular FB/IG · 'messages' = butonul „Trimite mesaj” deschide direct chatul (WhatsApp/Messenger/Instagram), fără formular · 'sales' = vânzări + Pixel · 'signups' = înscrieri CompleteRegistration · 'calls' = Sună acum · 'traffic' = vizite site",
           ),
+        message_destination: z
+          .enum(["auto", "whatsapp", "messenger", "instagram"])
+          .default("auto")
+          .describe("Doar pentru 'messages'. auto = WhatsApp dacă pagina are WhatsApp legat, altfel Messenger."),
+        form_intro: z
+          .string()
+          .max(400)
+          .optional()
+          .describe(
+            "Doar pentru 'leads': ecranul de început al formularului — oferta, prețul și termenul, din fapte date de client (ex. „Vopsit + tuns la 200 lei în loc de 255, doar până pe 1 decembrie. Lasă-ne numele și telefonul și îți confirmăm ora.”).",
+          ),
+        use_second_media: z
+          .boolean()
+          .default(true)
+          .describe("Dacă a trimis în ultimele 48h și o poză, și un clip, facem câte o reclamă pentru fiecare în același set."),
         business_type: z
           .string()
           .max(80)
@@ -205,10 +243,10 @@ const campaignArgsSchema = z.object({
             }),
           )
           .min(1)
-          .max(6)
+          .max(2)
           .optional()
           .describe(
-            "O singură reclamă pe set: trimite UN element, cu unghiul ales (pain/benefit/social_proof). Dacă trimiți mai multe, se folosește doar primul.",
+            "1 sau 2 variante de text (unghiuri diferite), alese de client. Peste 30 lei/zi se pot rula ambele în același set; altfel doar prima.",
           ),
         landing_url: z
           .string()
@@ -237,13 +275,21 @@ const campaignArgsSchema = z.object({
           )
           .max(8)
           .optional()
-          .describe("Întrebări calificare pe nișă (leads). Dacă goale, sistemul sugerează automat pe business_type."),
+          .describe(
+            "Întrebări în plus în formular — DOAR dacă clientul le cere explicit. Implicit formularul are doar nume și telefon (convertește cel mai bine).",
+          ),
         countries: z.array(z.string()).default(["RO"]).describe("Coduri ISO, ex ['RO']"),
         cities: z
           .array(z.string())
           .optional()
           .describe("Orașe locale (ex ['Bucharest']). Dacă e setat, countries e ignorat la geo."),
-        city_radius_km: z.number().int().min(10).max(80).default(25),
+        city_radius_km: z
+          .number()
+          .int()
+          .min(15)
+          .max(80)
+          .optional()
+          .describe("Raza în km. Gol = automat după mărimea orașului (oraș mic ~17 km, oraș mare ~20 km, București 25 km)."),
         interests: z
           .array(z.string().max(60))
           .max(10)
@@ -264,8 +310,10 @@ const campaignArgsSchema = z.object({
       });
 type CampaignArgs = z.infer<typeof campaignArgsSchema>;
 type PreparedCampaign = Omit<CampaignArgs, "creatives" | "objective"> & {
-  objective: "leads" | "sales" | "calls" | "traffic" | "signups";
+  objective: "leads" | "messages" | "sales" | "calls" | "traffic" | "signups";
   creatives: CreativeVariant[];
+  /** A doua media (alt tip decât prima: poză + clip), pentru o reclamă în plus în același set. */
+  second_media?: { path: string; mime: string } | null;
 };
 
 /** Media deja încărcată la Meta pentru o ciornă (refolosită la publicare, fără re-upload). */
@@ -312,14 +360,9 @@ function prepareCampaignArgs(
     args.creatives as CreativeVariant[] | undefined,
     creativeCountForBudget(args.daily_budget),
   );
-  let custom_questions = args.custom_questions;
-  if (args.objective === "leads" && (!custom_questions || custom_questions.length === 0)) {
-    custom_questions = suggestNicheFormQuestions(args.business_type || args.name, args.primary_text).map((q) => ({
-      label: q.label,
-      type: (q.type ?? "short") as "short" | "choice",
-      options: q.options,
-    }));
-  }
+  // Formularul are doar nume + telefon; întrebări în plus doar dacă le-a cerut clientul.
+  const custom_questions = args.custom_questions?.length ? args.custom_questions : undefined;
+  const city_radius_km = args.city_radius_km ?? radiusForCity(args.cities?.[0]);
   const budgetNote = budgetLearningWarning(
     args.daily_budget,
     args.objective === "calls" ? "calls" : args.objective,
@@ -333,12 +376,12 @@ function prepareCampaignArgs(
     }
     const tel = raw.startsWith("+") ? raw : `+40${raw.replace(/^0/, "")}`;
     return {
-      prepared: { ...args, objective: "traffic", landing_url: `tel:${tel}`, cta: "Call Now", creatives, custom_questions },
+      prepared: { ...args, objective: "traffic", landing_url: `tel:${tel}`, cta: "Call Now", creatives, custom_questions, city_radius_km },
       budgetNote,
       creativesCount: creatives.length,
     };
   }
-  return { prepared: { ...args, creatives, custom_questions }, budgetNote, creativesCount: creatives.length };
+  return { prepared: { ...args, creatives, custom_questions, city_radius_km }, budgetNote, creativesCount: creatives.length };
 }
 
 function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
@@ -1001,6 +1044,179 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
       },
     }),
 
+    relaunch_campaign: tool({
+      description:
+        "Reface o campanie lansată de AdPilot cu o schimbare, și o oprește pe cea veche: objective='messages' (butonul deschide chatul, când lumea apasă dar nu trimite formularul), texte noi (după o respingere), sau ultima poză/clip trimis (use_latest_media). Restul (public, buget, oraș) rămâne la fel. Folosește-l când omul apasă „Fă schimbarea” / „Refă reclama” / „Fă reclamă nouă” (id perf:...:<campaign_id>) sau confirmă acțiunea propusă.",
+      inputSchema: z.object({
+        campaign_id: z.string().uuid(),
+        objective: z.enum(["leads", "messages"]).optional(),
+        creatives: z
+          .array(z.object({ headline: z.string().max(40), primary_text: z.string().max(500), angle: z.string().optional() }))
+          .max(2)
+          .optional(),
+        use_latest_media: z.boolean().default(false),
+      }),
+      execute: async ({ campaign_id, objective, creatives, use_latest_media }) => {
+        const { data: camp } = await supabaseAdmin
+          .from("campaigns")
+          .select("id, name, creative, meta_campaign_id")
+          .eq("id", campaign_id)
+          .eq("user_id", ctx.userId)
+          .maybeSingle();
+        const snap = (camp?.creative as any)?.agent_publish as AgentPublishSnapshot | undefined;
+        if (!camp || !snap) {
+          return { error: "Campania asta n-a fost creată de mine, așa că n-am setările ei salvate. O refacem de la zero cu preview_campaign (aceeași poză, același public)." };
+        }
+        const media = use_latest_media && ctx.latestMedia
+          ? ctx.latestMedia
+          : snap.media_path
+            ? { path: snap.media_path, mime: snap.media_mime ?? "image/jpeg", signedUrl: "" }
+            : null;
+        if (!media) return { error: "Nu mai găsesc poza campaniei. Cere-i să o trimită din nou." };
+        const nextObjective = (objective ?? snap.objective ?? "leads") as PreparedCampaign["objective"];
+        const variants = (creatives?.length ? creatives : snap.creatives ?? [{ headline: snap.headline, primary_text: snap.primary_text }]) as CreativeVariant[];
+        const relCtx: AgentCtx = { ...ctx, latestMedia: media };
+        const res = await createMetaCampaignFromAgent(supabaseAdmin, relCtx, {
+          name: `${snap.name}${nextObjective === "messages" && snap.objective !== "messages" ? " — mesaje" : " — v2"}`.slice(0, 80),
+          daily_budget: snap.daily_budget,
+          objective: nextObjective,
+          message_destination: snap.message_destination ?? "auto",
+          form_intro: snap.form_intro,
+          headline: variants[0]!.headline,
+          primary_text: variants[0]!.primary_text,
+          cta: snap.cta ?? "Learn More",
+          landing_url: snap.landing_url,
+          custom_questions: snap.custom_questions,
+          countries: snap.countries ?? ["RO"],
+          cities: snap.cities,
+          city_radius_km: snap.city_radius_km,
+          age_min: snap.age_min,
+          age_max: snap.age_max,
+          gender: snap.gender,
+          beneficiary: snap.beneficiary,
+          interests: snap.interests,
+          creatives: variants,
+          use_second_media: false,
+        });
+        if ("error" in res && res.error) return res;
+        // Noua campanie e pornită: o oprim pe cea veche, ca să nu se împartă bugetul.
+        const paused = await setMetaCampaignStatus({ userId: ctx.userId, campaignId: camp.id, next: "PAUSED" });
+        return { ...res, old_campaign_paused: !("error" in paused) };
+      },
+    }),
+
+    send_choice: tool({
+      description:
+        "Trimite o întrebare cu butoane (2–3 opțiuni) sau cu listă (4–10 opțiuni) în loc de text. Folosește-l la orice alegere: confirmarea campaniei ([Lansează] [Schimbă ceva]), pagina de Facebook, platforma, varianta de text. Răspunsul omului vine ca text cu titlul butonului și „[opțiune: <id>]”. După ce îl apelezi, NU repeta întrebarea în textul final (lasă-l gol sau o propoziție scurtă înainte).",
+      inputSchema: z.object({
+        text: z.string().min(1).max(1000).describe("Întrebarea (poate conține rezumatul și linkul)."),
+        options: z
+          .array(
+            z.object({
+              id: z.string().max(100).describe("ID scurt, ex. launch, change, page:123, act:456"),
+              title: z.string().max(24).describe("Max 20 caractere la butoane, 24 la listă."),
+              description: z.string().max(72).optional(),
+            }),
+          )
+          .min(2)
+          .max(10),
+      }),
+      execute: async ({ text, options }) => {
+        const content =
+          options.length <= 3
+            ? { type: "buttons" as const, text, buttons: options.map((o) => ({ id: o.id, title: o.title.slice(0, 20) })) }
+            : { type: "list" as const, text, button: "Alege", rows: options };
+        try {
+          const { id } = await sendWhatsAppMessage(ctx.connection.phone_number_id, ctx.connection.access_token, ctx.toPhone, content);
+          await supabaseAdmin.from("whatsapp_messages").insert({
+            user_id: ctx.userId,
+            connection_id: ctx.connection.id,
+            wa_message_id: id,
+            direction: "out",
+            msg_type: "interactive",
+            text: `${text}\n${options.map((o) => `[${o.title}]`).join(" ")}`,
+          });
+          ctx.sentInteractive = true;
+          return { ok: true, note: "Mesajul cu opțiuni a plecat. Nu repeta întrebarea; aștepți alegerea omului." };
+        } catch (e: any) {
+          return { error: `Nu am putut trimite butoanele (${e?.message}). Pune întrebarea ca text, cu opțiunile numerotate.` };
+        }
+      },
+    }),
+
+    select_page: tool({
+      description:
+        "Setează pagina de Facebook pe care facem reclamele (din lista din [Context cont], după ce omul a ales). Verifică și dacă pagina a acceptat condițiile pentru formulare.",
+      inputSchema: z.object({ page_id: z.string().max(40) }),
+      execute: async ({ page_id }) => {
+        const { data: conn } = await supabaseAdmin
+          .from("meta_connections")
+          .select("id")
+          .eq("user_id", ctx.userId)
+          .eq("is_active", true)
+          .maybeSingle();
+        if (!conn) return { error: "Facebook-ul nu e conectat." };
+        const { data: page } = await supabaseAdmin
+          .from("meta_pages")
+          .select("page_id, page_name, page_access_token")
+          .eq("connection_id", conn.id)
+          .eq("page_id", page_id.replace(/^page:/, ""))
+          .maybeSingle();
+        if (!page) return { error: "Pagina asta nu e printre paginile conectate. Alege una din lista din [Context cont]." };
+        await supabaseAdmin.from("meta_pages").update({ is_active: false }).eq("user_id", ctx.userId);
+        await supabaseAdmin.from("meta_pages").update({ is_active: true }).eq("connection_id", conn.id).eq("page_id", page.page_id);
+        await supabaseAdmin.from("meta_connections").update({ page_confirmed_at: new Date().toISOString() }).eq("id", conn.id);
+        await supabaseAdmin.from("account_diagnoses").delete().eq("user_id", ctx.userId);
+        const { pageLeadTermsAccepted, leadTermsUrl } = await import("./meta-publish.server");
+        const terms = page.page_access_token ? await pageLeadTermsAccepted(page.page_id, page.page_access_token) : null;
+        return {
+          ok: true,
+          page: page.page_name,
+          lead_terms_accepted: terms,
+          ...(terms === false ? { lead_terms_link: leadTermsUrl(page.page_id) } : {}),
+        };
+      },
+    }),
+
+    select_ad_account: tool({
+      description:
+        "Schimbă contul de reclame folosit (din „Alte conturi de reclame” din [Context cont]) — când cel actual e închis/cu datorie și omul are altul activ, sau când omul cere.",
+      inputSchema: z.object({ ad_account_id: z.string().max(40) }),
+      execute: async ({ ad_account_id }) => {
+        const id = ad_account_id.replace(/^(act_|act:)/, "");
+        const { data: acc } = await supabaseAdmin
+          .from("meta_ad_accounts")
+          .select("ad_account_id, account_name")
+          .eq("user_id", ctx.userId)
+          .eq("ad_account_id", id)
+          .maybeSingle();
+        if (!acc) return { error: "Contul ăsta de reclame nu e printre cele conectate." };
+        await supabaseAdmin.from("meta_ad_accounts").update({ is_active: false }).eq("user_id", ctx.userId);
+        await supabaseAdmin.from("meta_ad_accounts").update({ is_active: true }).eq("user_id", ctx.userId).eq("ad_account_id", id);
+        await supabaseAdmin.from("account_diagnoses").delete().eq("user_id", ctx.userId);
+        const token = await getMetaToken(supabaseAdmin, ctx.userId);
+        const { checkAdAccountRunnable } = await import("./meta-publish.server");
+        const runnable = token ? await checkAdAccountRunnable(id, token) : { ok: true };
+        return { ok: true, account: acc.account_name ?? id, runnable: runnable.ok, ...(runnable.ok ? {} : { problem: runnable.message }) };
+      },
+    }),
+
+    read_creative: tool({
+      description:
+        "Citește textul scris pe poza trimisă (prețuri, ofertă, termen, „Scrie-ne pe WhatsApp”). Apelează-l ÎNAINTE să scrii textul reclamei, ca prețurile și termenele din text să fie exact cele de pe poză, și ca să vezi dacă poza promite mesaje (atunci reclama trebuie să fie de mesaje).",
+      inputSchema: z.object({}),
+      execute: async () => {
+        if (!ctx.latestMedia) return { error: "Nu am nicio poză de la el." };
+        if (!ctx.latestMedia.mime.toLowerCase().startsWith("image/")) return { text: null, note: "E clip video; textul nu se poate citi automat." };
+        const { data: file } = await supabaseAdmin.storage.from("wa-media").download(ctx.latestMedia.path);
+        if (!file) return { error: "Nu pot citi poza." };
+        const { readCreativeText } = await import("./wa-campaign-preflight.server");
+        const { detectCreativePromise } = await import("./wa-campaign-strategy.server");
+        const text = await readCreativeText(new Uint8Array(await file.arrayBuffer()), ctx.latestMedia.mime);
+        return { text, promise: detectCreativePromise(text) };
+      },
+    }),
+
     create_tiktok_campaign: tool({
       description:
         "Creează și lansează o campanie TikTok de clienți potențiali (o singură reclamă). Destinația e o pagină AdPilot cu formular, creată automat, cu pixel TikTok. Necesită contul TikTok conectat în Setări și un video vertical SAU o poză (latestMedia; din poză facem o reclamă carusel cu muzică — video-ul merge de obicei mai bine pe TikTok). Confirmă cu userul ÎNAINTE (oraș/județ, vârstă, buget, textul reclamei).",
@@ -1563,9 +1779,6 @@ async function retryLastDraftCampaign(
     userId: ctx.userId,
   });
 
-  if ("error" in result && result.error) {
-    return { error: classifyPublishError(result.error).user_message, raw_error: result.error };
-  }
   return result;
 }
 
@@ -1629,6 +1842,10 @@ async function publishCampaignToMeta(
     bytes: Uint8Array;
     mediaMime: string;
     preUploaded?: PreUploadedMedia;
+    /** A doua media (poză + clip): o reclamă în plus în același set. */
+    secondMedia?: { path: string; mime: string } | null;
+    /** Doar pentru objective="messages". */
+    messageDestination?: import("./meta-publish.server").MessageDestination;
     args: {
       name: string;
       daily_budget: number;
@@ -1638,6 +1855,7 @@ async function publishCampaignToMeta(
       cta: string;
       landing_url?: string;
       website?: string;
+      form_intro?: string;
       custom_questions?: Array<{ label: string; type?: "short" | "choice"; options?: string[] }>;
       countries: string[];
       age_min: number;
@@ -1648,7 +1866,7 @@ async function publishCampaignToMeta(
       pixel_id?: string;
       creatives?: CreativeVariant[];
     };
-    objective: "leads" | "traffic" | "sales" | "signups";
+    objective: "leads" | "messages" | "traffic" | "sales" | "signups";
     cityKeys: Array<{ key: string; radius?: number }>;
     userId: string;
   },
@@ -1685,7 +1903,8 @@ async function publishCampaignToMeta(
     const runnable = await checkAdAccountRunnable(input.adAccountId, input.accessToken);
     if (!runnable.ok) {
       await supabaseAdmin.from("campaigns").update({ status: "draft" }).eq("id", input.campaignRowId);
-      return { error: runnable.message ?? "Contul de reclame nu este activ pe Facebook." };
+      const hint = classifyPublishError(runnable.message ?? "", { adAccountId: input.adAccountId, pageId: input.pageId });
+      return { error: runnable.message ?? hint.user_message, problem_kind: hint.kind, ...(hint.link ? { link: hint.link } : {}) };
     }
 
     // Formular de clienți: pagina trebuie să fi acceptat Condițiile Meta pentru lead ads (o singură dată).
@@ -1705,7 +1924,7 @@ async function publishCampaignToMeta(
     }
 
     let form: { id: string } | null = null;
-    let objective: "leads" | "traffic" | "sales" | "signups" = input.objective;
+    let objective: "leads" | "messages" | "traffic" | "sales" | "signups" = input.objective;
     let landing_url = input.args.landing_url ?? "https://adpilot.ro";
     let fallbackNote = "";
     let pixel_id: string | undefined;
@@ -1724,14 +1943,20 @@ async function publishCampaignToMeta(
 
     if (input.objective === "leads") {
       try {
+        const ownerPhone = await getClickToCallPhone(supabaseAdmin, input.userId);
         form = await createLeadForm(input.pageId, input.pageAccessToken, {
           name: input.args.name,
           fields: ["Name", "Phone"],
           privacy_url: "https://adpilot.ro/privacy-policy",
           custom_questions: input.args.custom_questions,
+          intro: input.args.form_intro,
+          intro_title: input.args.headline,
           thank_you: {
             website: input.args.website ?? null,
-            phone: await getClickToCallPhone(supabaseAdmin, input.userId),
+            phone: ownerPhone,
+            // Finalul formularului: „Scrie-ne pe WhatsApp” deschide chatul cu afacerea, mesajul e deja scris.
+            whatsapp: ownerPhone,
+            whatsapp_text: `Bună! Am completat formularul pentru: ${input.args.headline}`,
           },
         });
         await supabaseAdmin.from("campaigns").update({ meta_lead_form_id: form?.id ?? null }).eq("id", input.campaignRowId);
@@ -1814,11 +2039,13 @@ async function publishCampaignToMeta(
     }
 
     const metaObjective =
-      objective === "traffic"
-        ? "OUTCOME_TRAFFIC"
-        : objective === "sales" || objective === "signups"
-          ? "OUTCOME_SALES"
-          : "OUTCOME_LEADS";
+      objective === "messages"
+        ? "OUTCOME_ENGAGEMENT"
+        : objective === "traffic"
+          ? "OUTCOME_TRAFFIC"
+          : objective === "sales" || objective === "signups"
+            ? "OUTCOME_SALES"
+            : "OUTCOME_LEADS";
 
     const metaCamp = await createCampaign(
       input.adAccountId,
@@ -1880,6 +2107,7 @@ async function publishCampaignToMeta(
         },
         status: "ACTIVE",
         objective,
+        message_destination: objective === "messages" ? input.messageDestination ?? "MESSENGER" : undefined,
         pixel_id,
         advantage_placements: true,
       });
@@ -1963,6 +2191,7 @@ async function publishCampaignToMeta(
         cta: adCta,
         landing_url,
         lead_gen_form_id: form?.id,
+        message_destination: objective === "messages" ? input.messageDestination ?? "MESSENGER" : undefined,
       });
       const ad = await createAd(input.adAccountId, input.accessToken, {
         name: `${input.args.name} — ${label}`,
@@ -1973,10 +2202,51 @@ async function publishCampaignToMeta(
       adIds.push(ad.id);
     }
 
+    // A doua media (poza + clipul): o reclamă în plus în același set, cu primul text.
+    if (input.secondMedia) {
+      try {
+        const { data: f2 } = await supabaseAdmin.storage.from("wa-media").download(input.secondMedia.path);
+        if (f2) {
+          const b2 = new Uint8Array(await f2.arrayBuffer());
+          const isVid2 = input.secondMedia.mime.toLowerCase().startsWith("video/");
+          const { uploadAdVideoFromBytes } = await import("./meta-publish.server");
+          const m2 = isVid2
+            ? await uploadAdVideoFromBytes(input.adAccountId, input.accessToken, b2, "ad2.mp4", input.secondMedia.mime)
+            : { image_hash: await uploadAdImageFromBytes(input.adAccountId, input.accessToken, b2, "ad2.jpg", input.secondMedia.mime) };
+          const v0 = creatives[0]!;
+          const label2 = isVid2 ? "clip" : "poză";
+          const cr2 = await createAdCreative(input.adAccountId, input.accessToken, {
+            name: `${input.args.name} — ${label2}`,
+            page_id: input.pageId,
+            instagram_user_id: igId,
+            image_hash: "image_hash" in m2 ? m2.image_hash : undefined,
+            video_id: "video_id" in m2 ? m2.video_id : undefined,
+            thumbnail_url: "thumbnail_url" in m2 ? m2.thumbnail_url : undefined,
+            headline: v0.headline,
+            description: v0.primary_text,
+            cta: v0.cta || input.args.cta,
+            landing_url,
+            lead_gen_form_id: form?.id,
+            message_destination: objective === "messages" ? input.messageDestination ?? "MESSENGER" : undefined,
+          });
+          const ad2 = await createAd(input.adAccountId, input.accessToken, {
+            name: `${input.args.name} — ${label2}`,
+            adset_id: adset.id,
+            creative_id: cr2.id,
+            status: "ACTIVE",
+          });
+          adIds.push(ad2.id);
+        }
+      } catch (e) {
+        // A doua reclamă e un bonus: dacă pică, prima rămâne live.
+        console.warn("[wa-agent] second media ad failed", (e as Error).message);
+      }
+    }
+
     const primaryAdId = adIds[0]!;
     fallbackNote =
       (fallbackNote ? fallbackNote + " · " : "") +
-      `${creatives.length === 1 ? "o reclamă" : `${creatives.length} reclame`} în setul de reclame (Advantage+ placements)`;
+      `${adIds.length === 1 ? "o reclamă" : `${adIds.length} reclame`} în același set de reclame`;
 
     const { data: existingRow } = await supabaseAdmin
       .from("campaigns")
@@ -2008,7 +2278,9 @@ async function publishCampaignToMeta(
           ? { objective: "CONVERSIONS", lead_form: null }
           : objective === "traffic"
             ? { objective: "LINK_CLICKS", lead_form: null }
-            : {}),
+            : objective === "messages"
+              ? { objective: "MESSAGES", lead_form: null }
+              : {}),
       })
       .eq("id", input.campaignRowId);
 
@@ -2019,7 +2291,9 @@ async function publishCampaignToMeta(
           ? "Campanie de *înscrieri* LIVE ✅ — Pixel + o reclamă."
           : objective === "traffic"
             ? `Campanie LIVE ✅${fallbackNote ? " — " + fallbackNote : ""}`
-            : `Campanie LIVE (lead form) ✅ — o reclamă.`;
+            : objective === "messages"
+              ? `Campanie de *mesaje* trimisă la Facebook ✅ — butonul „Trimite mesaj” deschide direct chatul.`
+              : `Campanie cu formular trimisă la Facebook ✅.`;
 
     return {
       ok: true,
@@ -2034,7 +2308,16 @@ async function publishCampaignToMeta(
     const msg = e?.message ?? "Publish failed";
     console.error("[wa-agent] create_campaign publish failed:", msg, e);
     await persistPublishError(msg);
-    return { error: msg, hint: classifyPublishError(msg) };
+    // Diagnosticul vechi nu mai e valabil: la mesajul următor botul vede eroarea explicată.
+    await supabaseAdmin.from("account_diagnoses").delete().eq("user_id", input.userId);
+    const hint = classifyPublishError(msg, { adAccountId: input.adAccountId, pageId: input.pageId });
+    return {
+      error: hint.user_message,
+      raw_error: msg,
+      problem_kind: hint.kind,
+      ...(hint.link ? { link: hint.link } : {}),
+      needs_human: !!hint.needs_human,
+    };
   }
 }
 
@@ -2044,7 +2327,13 @@ async function createMetaCampaignFromAgent(
   args: {
     name: string;
     daily_budget: number;
-    objective?: "leads" | "traffic" | "sales" | "calls" | "signups";
+    objective?: "leads" | "messages" | "traffic" | "sales" | "calls" | "signups";
+    message_destination?: "auto" | "whatsapp" | "messenger" | "instagram";
+    /** Destinația deja verificată la previzualizare. */
+    resolved_destination?: string;
+    form_intro?: string;
+    use_second_media?: boolean;
+    second_media?: { path: string; mime: string } | null;
     business_type?: string;
     headline: string;
     primary_text: string;
@@ -2065,7 +2354,7 @@ async function createMetaCampaignFromAgent(
   },
   opts: { preUploaded?: PreUploadedMedia } = {},
 ) {
-  const objective: "leads" | "traffic" | "sales" | "signups" =
+  const objective: "leads" | "messages" | "traffic" | "sales" | "signups" =
     args.objective === "calls" ? "traffic" : (args.objective ?? "leads");
 
   const { assertCanPublishCampaign } = await import("@/lib/access.server");
@@ -2077,17 +2366,15 @@ async function createMetaCampaignFromAgent(
     .eq("user_id", ctx.userId)
     .eq("is_active", true)
     .maybeSingle();
-  if (!conn?.access_token) return { error: "Conectează Meta din Settings înainte." };
+  if (!conn?.access_token) {
+    return { error: "Facebook-ul nu e conectat. Apelează check_account și trimite-i userului linkul personal de conectare." };
+  }
 
-  const { data: adAcc } = await supabaseAdmin
-    .from("meta_ad_accounts")
-    .select("ad_account_id")
-    .eq("user_id", ctx.userId)
-    .eq("connection_id", conn.id)
-    .eq("is_active", true)
-    .limit(1)
-    .maybeSingle();
-  if (!adAcc?.ad_account_id) return { error: "Selectează un ad account din Settings." };
+  const pf = await import("./wa-campaign-preflight.server");
+  // Cont de reclame închis → trecem singuri pe unul activ (dacă are).
+  const switched = await pf.autoSwitchAdAccount(supabaseAdmin, ctx.userId, conn.id, conn.access_token);
+  const adAcc = switched.adAccountId ? { ad_account_id: switched.adAccountId } : null;
+  if (!adAcc?.ad_account_id) return { error: "Nu găsesc niciun cont de reclame. Verifică cu check_account." };
 
   const { data: page } = await supabaseAdmin
     .from("meta_pages")
@@ -2097,7 +2384,29 @@ async function createMetaCampaignFromAgent(
     .eq("is_active", true)
     .limit(1)
     .maybeSingle();
-  if (!page?.page_id || !page.page_access_token) return { error: "Conectează o Pagină în Settings." };
+  if (!page?.page_id || !page.page_access_token) {
+    return { error: "Nu e aleasă nicio pagină de Facebook. Verifică cu check_account și, dacă are mai multe, întreabă-l pe care (select_page)." };
+  }
+
+  // Destinația pentru reclamele de mesaje (verificată deja la previzualizare, dacă a existat).
+  let messageDestination: import("./meta-publish.server").MessageDestination | undefined;
+  if (objective === "messages") {
+    if (args.resolved_destination === "WHATSAPP" || args.resolved_destination === "MESSENGER" || args.resolved_destination === "INSTAGRAM_DIRECT") {
+      messageDestination = args.resolved_destination;
+    } else {
+      const { fetchPageInstagramId } = await import("./meta-publish.server");
+      const ig = await fetchPageInstagramId(page.page_id, page.page_access_token);
+      messageDestination = (
+        await pf.resolveMessageDestination(args.message_destination, { id: page.page_id, token: page.page_access_token }, ig)
+      ).destination;
+    }
+  }
+  const secondMedia =
+    args.second_media !== undefined
+      ? args.second_media
+      : args.use_second_media !== false && ctx.latestMedia
+        ? await pf.recentSecondMedia(supabaseAdmin, ctx.userId, ctx.latestMedia)
+        : null;
 
   let bytes = new Uint8Array(0);
   if (!opts.preUploaded) {
@@ -2157,14 +2466,19 @@ async function createMetaCampaignFromAgent(
     creatives,
     media_path: ctx.latestMedia!.path,
     media_mime: ctx.latestMedia!.mime,
+    gender: args.gender,
+    form_intro: args.form_intro,
+    message_destination: args.message_destination,
   };
 
   const dbObjective =
     objective === "traffic"
       ? "LINK_CLICKS"
-      : objective === "sales" || objective === "signups"
-        ? "CONVERSIONS"
-        : "LEAD_GENERATION";
+      : objective === "messages"
+        ? "MESSAGES"
+        : objective === "sales" || objective === "signups"
+          ? "CONVERSIONS"
+          : "LEAD_GENERATION";
 
   const { data: campRow, error: insErr } = await supabaseAdmin
     .from("campaigns")
@@ -2218,6 +2532,8 @@ async function createMetaCampaignFromAgent(
     cityKeys,
     userId: ctx.userId,
     preUploaded: opts.preUploaded,
+    secondMedia,
+    messageDestination,
   });
 }
 
@@ -2239,13 +2555,9 @@ async function buildCampaignPreview(supabaseAdmin: any, ctx: AgentCtx, prepared:
     if (!conn?.access_token) {
       return { error: "Facebook-ul nu e conectat. Apelează check_account și trimite-i userului linkul personal de conectare." };
     }
-    const { data: adAcc } = await supabaseAdmin
-      .from("meta_ad_accounts")
-      .select("ad_account_id")
-      .eq("connection_id", conn.id)
-      .eq("is_active", true)
-      .limit(1)
-      .maybeSingle();
+    const pf = await import("./wa-campaign-preflight.server");
+    // Cont de reclame închis → trecem singuri pe unul activ (dacă are).
+    const switched = await pf.autoSwitchAdAccount(supabaseAdmin, ctx.userId, conn.id, conn.access_token);
     const { data: page } = await supabaseAdmin
       .from("meta_pages")
       .select("page_id, page_name, page_access_token")
@@ -2253,29 +2565,79 @@ async function buildCampaignPreview(supabaseAdmin: any, ctx: AgentCtx, prepared:
       .eq("is_active", true)
       .limit(1)
       .maybeSingle();
-    if (!adAcc?.ad_account_id || !page?.page_id) {
+    if (!switched.adAccountId || !page?.page_id) {
       return { error: "Lipsește contul de reclame sau pagina — verifică cu check_account." };
     }
+    const adAccountId = switched.adAccountId;
     const { data: file, error: dlErr } = await supabaseAdmin.storage.from("wa-media").download(ctx.latestMedia!.path);
     if (dlErr || !file) return { error: `Nu pot citi poza/clipul: ${dlErr?.message}` };
     const bytes = new Uint8Array(await file.arrayBuffer());
     const mime = ctx.latestMedia!.mime || "image/jpeg";
 
     const mp = await import("./meta-publish.server");
-    const media: PreUploadedMedia = { kind: "image", mime, media_path: ctx.latestMedia!.path };
-    if (mime.toLowerCase().startsWith("video/")) {
-      const ext = (mime.split("/")[1] || "mp4").split(";")[0];
-      const v = await mp.uploadAdVideoFromBytes(adAcc.ad_account_id, conn.access_token, bytes, `ad.${ext}`, mime);
-      Object.assign(media, { kind: "video", video_id: v.video_id, thumbnail_url: v.thumbnail_url });
-    } else {
-      media.image_hash = await mp.uploadAdImageFromBytes(adAcc.ad_account_id, conn.access_token, bytes, "ad.jpg", mime);
-    }
-
     const igId =
       (page.page_access_token && (await mp.fetchPageInstagramId(page.page_id, page.page_access_token))) ||
       (await mp.fetchPageInstagramId(page.page_id, conn.access_token));
+
+    // ── Verificarea de dinainte: tot ce poate opri lansarea, fără să creăm nimic ──
+    const cityKeys = await resolveCityKeys(conn.access_token, prepared.cities, prepared.countries, prepared.city_radius_km ?? 25);
+    if (prepared.cities?.length && !cityKeys.length) {
+      return { error: `Nu am găsit orașele cerute (${prepared.cities.join(", ")}) în Meta. Verifică numele.` };
+    }
+    const preflightObjective =
+      prepared.objective === "calls" ? "traffic" : (prepared.objective as "leads" | "messages" | "traffic" | "sales" | "signups");
+    const check = await pf.preflightCampaign({
+      adAccountId,
+      accessToken: conn.access_token,
+      pageId: page.page_id,
+      pageAccessToken: page.page_access_token,
+      objective: preflightObjective,
+      name: prepared.name,
+      targeting: mp.buildTargeting({
+        countries: prepared.countries,
+        age_min: prepared.age_min,
+        age_max: prepared.age_max,
+        genders: prepared.gender === "female" ? [2] : prepared.gender === "male" ? [1] : undefined,
+        cities: cityKeys.length ? cityKeys : undefined,
+      }),
+    });
+    if (!check.ok) {
+      // Salvăm problema ca botul s-o vadă și la mesajul următor (și să nu o confunde cu altceva).
+      await supabaseAdmin.from("account_diagnoses").delete().eq("user_id", ctx.userId);
+      return {
+        error: check.error,
+        problem_kind: check.kind,
+        ...(check.link ? { link: check.link } : {}),
+        note: "Verificarea de dinainte de lansare a găsit problema asta. Explic-o omului exact așa, cu linkul, și spune-i să-ți scrie „gata” după; atunci reiei preview_campaign cu aceleași date. NU deschide tichet.",
+      };
+    }
+
+    // Ce scrie pe creativ (prețuri, ofertă, „Scrie-ne”): textul reclamei trebuie să spună același lucru.
+    const creativeText = await pf.readCreativeText(bytes, mime);
+    const promiseWarning = pf.promiseMismatch(creativeText, prepared.objective);
+
+    let destination: Awaited<ReturnType<typeof pf.resolveMessageDestination>> | null = null;
+    if (prepared.objective === "messages") {
+      destination = await pf.resolveMessageDestination(
+        prepared.message_destination,
+        { id: page.page_id, token: page.page_access_token },
+        igId,
+      );
+    }
+
+    const media: PreUploadedMedia = { kind: "image", mime, media_path: ctx.latestMedia!.path };
+    if (mime.toLowerCase().startsWith("video/")) {
+      const ext = (mime.split("/")[1] || "mp4").split(";")[0];
+      const v = await mp.uploadAdVideoFromBytes(adAccountId, conn.access_token, bytes, `ad.${ext}`, mime);
+      Object.assign(media, { kind: "video", video_id: v.video_id, thumbnail_url: v.thumbnail_url });
+    } else {
+      media.image_hash = await mp.uploadAdImageFromBytes(adAccountId, conn.access_token, bytes, "ad.jpg", mime);
+    }
+    const second_media =
+      prepared.use_second_media !== false ? await pf.recentSecondMedia(supabaseAdmin, ctx.userId, ctx.latestMedia!) : null;
+
     const first = prepared.creatives[0]!;
-    const previewUrl = await mp.generateAdPreviewUrl(adAcc.ad_account_id, conn.access_token, {
+    const previewUrl = await mp.generateAdPreviewUrl(adAccountId, conn.access_token, {
       page_id: page.page_id,
       instagram_user_id: igId,
       image_hash: media.image_hash,
@@ -2285,10 +2647,16 @@ async function buildCampaignPreview(supabaseAdmin: any, ctx: AgentCtx, prepared:
       description: first.primary_text,
       cta: (first.cta as string) || prepared.cta,
       landing_url: prepared.landing_url ?? PREVIEW_SITE,
+      message_destination: destination?.destination,
       // doar ca butonul să fie unul acceptat la formulare; previzualizarea nu are nevoie de formular real
       lead_gen_form_id: prepared.objective === "leads" ? "preview" : undefined,
     });
 
+    const payload: PreparedCampaign & { resolved_destination?: string } = {
+      ...prepared,
+      second_media,
+      ...(destination ? { resolved_destination: destination.destination } : {}),
+    };
     const code = Math.random().toString(36).slice(2, 10);
     await supabaseAdmin
       .from("campaign_previews")
@@ -2298,20 +2666,46 @@ async function buildCampaignPreview(supabaseAdmin: any, ctx: AgentCtx, prepared:
     const { error } = await supabaseAdmin.from("campaign_previews").insert({
       code,
       user_id: ctx.userId,
-      payload: prepared,
+      payload,
       media,
       preview_url: previewUrl,
       page_name: page.page_name ?? null,
     });
     if (error) return { error: error.message };
+    const fmtKm = prepared.city_radius_km ? ` +${prepared.city_radius_km} km` : "";
     return {
       ok: true,
       preview_link: `${PREVIEW_SITE}/p/${code}`,
+      summary: [
+        prepared.cities?.length ? `${prepared.cities.join(", ")}${fmtKm}` : prepared.countries.join(", "),
+        `${prepared.age_min}–${prepared.age_max} ani`,
+        prepared.gender === "female" ? "femei" : prepared.gender === "male" ? "bărbați" : "bărbați și femei",
+        `${prepared.daily_budget} lei/zi`,
+        prepared.objective === "messages"
+          ? `buton „Trimite mesaj” → ${destination?.destination === "WHATSAPP" ? "WhatsApp" : destination?.destination === "INSTAGRAM_DIRECT" ? "Instagram" : "Messenger"}`
+          : prepared.objective === "leads"
+            ? `formular: nume + telefon${prepared.custom_questions?.length ? ` + ${prepared.custom_questions.length} întrebări` : ""}`
+            : prepared.objective,
+        second_media ? "2 reclame (poza + clipul)" : null,
+      ]
+        .filter(Boolean)
+        .join(" · "),
+      audience: check.audience,
+      warnings: [
+        ...(switched.note ? [switched.note] : []),
+        ...check.warnings,
+        ...(destination?.note ? [destination.note] : []),
+        ...(promiseWarning ? [promiseWarning] : []),
+      ],
+      creative_text: creativeText,
+      page_name: page.page_name ?? null,
       note:
-        "Trimite-i linkul (arată reclama exact ca în feed și formularul). Întreabă dacă vrea să schimbe ceva (text, buget, public) sau o pornim. La „da” → publish_preview; la modificări → preview_campaign din nou cu datele noi.",
+        "Verificarea la Meta a trecut. Trimite linkul + rezumatul pe o linie + publicul estimat, apoi întreabă cu send_choice: [Lansează] [Schimbă ceva]. Dacă există warnings, spune-le scurt înainte (la nepotrivirea dintre poză și destinație propune schimbarea, cu butoane). Textul reclamei trebuie să folosească aceleași prețuri/termene ca în creative_text.",
     };
   } catch (e: any) {
-    return { error: e?.message ?? "Nu am putut pregăti previzualizarea." };
+    const { classifyPublishError } = await import("./wa-campaign-strategy.server");
+    const hint = classifyPublishError(e?.message ?? "");
+    return { error: hint.user_message, problem_kind: hint.kind, ...(hint.link ? { link: hint.link } : {}) };
   }
 }
 

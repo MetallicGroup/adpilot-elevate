@@ -56,7 +56,9 @@ export type WAMessageContent =
   | { type: "image_link"; url: string; caption?: string }
   | { type: "video_link"; url: string; caption?: string }
   /** Mesaj cu până la 3 butoane de răspuns (doar în fereastra de 24h). */
-  | { type: "buttons"; text: string; buttons: Array<{ id: string; title: string }> };
+  | { type: "buttons"; text: string; buttons: Array<{ id: string; title: string }> }
+  /** Listă cu până la 10 opțiuni (un buton „button” deschide lista). Doar în fereastra de 24h. */
+  | { type: "list"; text: string; button: string; rows: Array<{ id: string; title: string; description?: string }> };
 
 /**
  * Marchează mesajul primit ca CITIT și afișează indicatorul „typing…" (bulele).
@@ -120,6 +122,25 @@ export async function sendWhatsAppMessage(
           type: "reply",
           reply: { id: b.id.slice(0, 256), title: b.title.slice(0, 20) },
         })),
+      },
+    };
+  } else if (content.type === "list") {
+    body.type = "interactive";
+    body.interactive = {
+      type: "list",
+      body: { text: content.text.slice(0, 1024) },
+      action: {
+        button: content.button.slice(0, 20),
+        sections: [
+          {
+            title: "Opțiuni",
+            rows: content.rows.slice(0, 10).map((r) => ({
+              id: r.id.slice(0, 200),
+              title: r.title.slice(0, 24),
+              ...(r.description ? { description: r.description.slice(0, 72) } : {}),
+            })),
+          },
+        ],
       },
     };
   }

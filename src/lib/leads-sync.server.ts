@@ -112,7 +112,7 @@ export async function syncMetaLeadsForUser(
 
             const mapped = mapMetaLeadFields(row.field_data || []);
             // Unique index on (platform, external_lead_id) makes this idempotent.
-            const { error: insErr } = await supabaseAdmin.from("leads").insert({
+            const { data: insertedLead, error: insErr } = await supabaseAdmin.from("leads").insert({
               user_id: userId,
               platform: "meta" as const,
               campaign_id,
@@ -126,7 +126,7 @@ export async function syncMetaLeadsForUser(
               raw: row as any,
               status: "new" as const,
               created_at: row.created_time ?? new Date().toISOString(),
-            });
+            }).select("id").single();
             if (insErr) {
               // 23505 = duplicate → lead already stored (webhook or earlier run).
               if (insErr.code !== "23505") {
@@ -141,25 +141,14 @@ export async function syncMetaLeadsForUser(
                 : Date.now();
               if (Date.now() - createdMs < LEAD_FRESH_MS) {
                 const questions = extractLeadQuestions(row.field_data || [], storedQuestions);
-                const lines = [
-                  "🎯 *Lead nou!*",
-                  mapped.full_name ? `👤 *${mapped.full_name}*` : "",
-                  mapped.phone ? `📞 ${mapped.phone}` : "",
-                  mapped.email ? `✉️ ${mapped.email}` : "",
-                  campaignName ? `📣 _${campaignName}_` : "",
-                  ...(questions.length
-                    ? ["", "*Răspunsuri formular:*", ...questions.map((x) => `• ${x.q}: *${x.a}*`)]
-                    : []),
-                  "",
-                  "Scrie-mi *lead-uri* ca să le vezi pe toate. 📋",
-                ]
-                  .filter(Boolean)
-                  .join("\n");
-                const { notifyOwner } = await import("./wa-notify.server");
-                await notifyOwner(supabaseAdmin, userId, {
-                  text: lines,
-                  holdIfClosed: true,
-                  kind: "lead_notify",
+                const { notifyNewLead, leadContext } = await import("./lead-closer.server");
+                const ctx = await leadContext(supabaseAdmin, { user_id: userId, campaign_id });
+                await notifyNewLead(supabaseAdmin, userId, {
+                  lead: { id: insertedLead!.id, full_name: mapped.full_name, phone: mapped.phone, email: mapped.email },
+                  business: ctx.business,
+                  offer: ctx.offer,
+                  campaignName,
+                  answers: questions,
                 });
               }
             }

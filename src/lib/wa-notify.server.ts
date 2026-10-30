@@ -100,6 +100,10 @@ export async function notifyOwner(
     /** true = rutină (rapoarte): nu trimite între 21:00 și 09:00. */
     respectQuietHours?: boolean;
     kind: string;
+    /** Butoane de răspuns (max 3), doar când fereastra e deschisă; altfel pleacă textul simplu. */
+    buttons?: Array<{ id: string; title: string }>;
+    /** Salvat pe mesaj (ex. anomaly_action: acțiunea propusă, executată de agent la „da”). */
+    meta?: Record<string, unknown>;
   },
 ): Promise<NotifyResult> {
   const central = getCentralWhatsApp();
@@ -122,18 +126,21 @@ export async function notifyOwner(
     return { held: true };
   }
   try {
-    const { id } = await sendWhatsAppMessage(central.phoneNumberId, central.accessToken, phone, {
-      type: "text",
-      text: msg.text,
-    });
+    const withButtons = !!msg.buttons?.length && msg.text.length <= 1024;
+    const { id } = await sendWhatsAppMessage(
+      central.phoneNumberId,
+      central.accessToken,
+      phone,
+      withButtons ? { type: "buttons", text: msg.text, buttons: msg.buttons! } : { type: "text", text: msg.text },
+    );
     await supabaseAdmin.from("whatsapp_messages").insert({
       user_id: userId,
       connection_id: wa.id,
       wa_message_id: id,
       direction: "out",
-      msg_type: "text",
-      text: msg.text,
-      meta: { kind: msg.kind },
+      msg_type: withButtons ? "interactive" : "text",
+      text: withButtons ? `${msg.text}\n${msg.buttons!.map((b) => `[${b.title}]`).join(" ")}` : msg.text,
+      meta: { kind: msg.kind, ...(msg.meta ?? {}) },
     });
     return { sent: "text", id };
   } catch (e) {

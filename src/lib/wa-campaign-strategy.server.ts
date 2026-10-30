@@ -2,8 +2,9 @@
  * Domain-agnostic campaign strategy helpers for the WhatsApp agent.
  * Pure logic — no Meta Graph calls.
  */
+import { explainMetaError, type MetaProblemContext, type MetaProblemKind } from "./meta-errors.server";
 
-export type AgentObjective = "leads" | "sales" | "calls" | "traffic" | "signups";
+export type AgentObjective = "leads" | "messages" | "sales" | "calls" | "traffic" | "signups";
 
 export type CreativeVariant = {
   angle?: "pain" | "benefit" | "social_proof" | string;
@@ -41,12 +42,15 @@ export type AgentPublishSnapshot = {
   creatives?: CreativeVariant[];
   media_path?: string;
   media_mime?: string;
+  gender?: "all" | "female" | "male";
+  form_intro?: string;
+  message_destination?: "auto" | "whatsapp" | "messenger" | "instagram";
 };
 
-/** How many ads to launch in one ad set for a given daily budget (RON). */
-/** Fiecare set de reclame pornește cu o singură reclamă, indiferent de buget. */
-export function creativeCountForBudget(_dailyBudgetRon: number): number {
-  return 1;
+/** Câte variante de text rulăm în același set, după bugetul zilnic (RON). */
+export function creativeCountForBudget(dailyBudgetRon: number): number {
+  // Peste ~30 lei/zi, două texte în același set se pot testa; sub, tot bugetul pe unul.
+  return dailyBudgetRon >= 30 ? 2 : 1;
 }
 
 /**
@@ -295,52 +299,20 @@ export function objectiveFromDraft(
 }
 
 export type PublishErrorHint = {
-  category: "dsa" | "rate_limit" | "permission" | "media" | "pixel" | "targeting" | "budget" | "policy" | "unknown";
+  category: "dsa" | "rate_limit" | "permission" | "media" | "pixel" | "targeting" | "budget" | "policy" | "account" | "unknown";
+  /** Tipul exact al problemei Meta (vezi meta-errors.server.ts). */
+  kind?: MetaProblemKind;
   user_message: string;
   retryable: boolean;
   fix?: string;
+  link?: string;
+  /** true doar când problema nu e una cunoscută — abia atunci se deschide tichet. */
+  needs_human?: boolean;
 };
 
-/** Classify Meta publish errors for smart retry messaging. */
-export function classifyPublishError(error: string): PublishErrorHint {
+/** Clasifică o eroare de publicare Meta și dă pasul clar pentru om (vezi explainMetaError). */
+export function classifyPublishError(error: string, ctx: MetaProblemContext = {}): PublishErrorHint {
   const m = error.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-  if (/too many calls|rate.?limit|call limit/.test(m)) {
-    return {
-      category: "rate_limit",
-      user_message:
-        "Meta a blocat temporar contul (prea multe apeluri). Așteaptă 15–30 min, apoi scrie *încearcă iar* — draftul rămâne salvat.",
-      retryable: true,
-      fix: "wait_then_retry",
-    };
-  }
-  if (/beneficiar|beneficiary|payer|payor|person or organization|dsa/.test(m)) {
-    return {
-      category: "dsa",
-      user_message:
-        "Meta cere numele firmei/persoanei promovate (regula UE). Scrie-mi exact denumirea legală și reîncerc.",
-      retryable: true,
-      fix: "ask_beneficiary",
-    };
-  }
-  if (/pages_manage_ads|\(#200\)|permission|oauth|\(#10\)/.test(m)) {
-    return {
-      category: "permission",
-      user_message:
-        "Lipsește o permisiune Meta. Reconectează contul din Setări (acceptă toate permisiunile) și spune *încearcă iar*.",
-      retryable: true,
-      fix: "reconnect_meta",
-    };
-  }
-  if (/image|video|adimage|advideo|media|hash|thumbnail|format/.test(m)) {
-    return {
-      category: "media",
-      user_message:
-        "Problema e la poză/video. Trimite din nou media pe WhatsApp (JPG/PNG sau MP4) și spune *încearcă iar*.",
-      retryable: true,
-      fix: "resend_media",
-    };
-  }
   if (/pixel|promoted_object|custom_event/.test(m)) {
     return {
       category: "pixel",
@@ -350,37 +322,39 @@ export function classifyPublishError(error: string): PublishErrorHint {
       fix: "check_pixel",
     };
   }
-  if (/city|geo|targeting|interest|audience|age/.test(m)) {
-    return {
-      category: "targeting",
-      user_message:
-        "Targetarea a fost respinsă (oraș/vârstă/interes). Spune-mi alt oraș sau interval de vârstă și reîncerc.",
-      retryable: true,
-      fix: "fix_targeting",
-    };
-  }
-  if (/budget|billing|payment|account.?status|disabled|unsettled/.test(m)) {
-    return {
-      category: "budget",
-      user_message:
-        "Contul de reclame are o problemă de plată/status pe Meta. Verifică billing-ul în Ads Manager, apoi *încearcă iar*.",
-      retryable: true,
-      fix: "fix_billing",
-    };
-  }
-  if (/policy|disapprove|rejected|advertising standards|restricted/.test(m)) {
-    return {
-      category: "policy",
-      user_message:
-        "Meta a blocat textul/creativul (politici ads). Schimbă copy-ul (fără claim-uri medicale absolute) și spune *încearcă iar*.",
-      retryable: true,
-      fix: "revise_copy",
-    };
-  }
+  const p = explainMetaError(error, ctx);
+  const category: PublishErrorHint["category"] =
+    p.kind === "checkpoint" || p.kind === "profile_restricted" || p.kind === "account_closed" || p.kind === "account_disabled"
+      ? "account"
+      : p.kind === "unsettled" || p.kind === "no_payment"
+        ? "budget"
+        : p.kind === "lead_terms"
+          ? "permission"
+          : (p.kind as PublishErrorHint["category"]);
+  const fix: Record<MetaProblemKind, string | undefined> = {
+    checkpoint: "confirm_identity_in_ads_manager",
+    profile_restricted: "request_review",
+    unsettled: "pay_balance",
+    account_closed: "switch_ad_account",
+    account_disabled: "switch_ad_account",
+    no_payment: "add_card",
+    lead_terms: "accept_lead_terms",
+    permission: "reconnect_meta",
+    rate_limit: "wait_then_retry",
+    dsa: "ask_beneficiary",
+    media: "resend_media",
+    policy: "revise_copy",
+    targeting: "fix_targeting",
+    unknown: undefined,
+  };
   return {
-    category: "unknown",
-    user_message: `Nu a mers încă. Motivul real: ${error}`,
-    retryable: true,
+    category,
+    kind: p.kind,
+    user_message: p.user_message,
+    retryable: p.kind !== "unknown",
+    fix: fix[p.kind],
+    link: p.link,
+    needs_human: p.needs_human,
   };
 }
 
@@ -390,4 +364,21 @@ export function isPixelHealthy(lastFiredTime: string | null | undefined): boolea
   const t = new Date(lastFiredTime).getTime();
   if (Number.isNaN(t)) return false;
   return Date.now() - t < 30 * 86_400_000;
+}
+
+/** Raza implicită (km) după mărimea orașului: orașele mari au periferii întinse. */
+export function radiusForCity(city?: string | null): number {
+  const c = (city ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  if (!c) return 25;
+  if (/bucuresti|bucharest/.test(c)) return 25;
+  if (/cluj|timisoara|iasi|constanta|brasov|craiova|galati|ploiesti|oradea|braila|arad|sibiu|bacau/.test(c)) return 20;
+  return 17;
+}
+
+/** Ce promite creativul (textul de pe poză): dacă spune „scrie-ne”, reclama trebuie să ducă la mesaje. */
+export function detectCreativePromise(text?: string | null): "messages" | "calls" | null {
+  const t = (text ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  if (/scrie-?ne|whats ?app|\bmesaj|\bdm\b|inbox|messenger|trimite-?ne un mesaj/.test(t)) return "messages";
+  if (/suna(-ne)?\b|sunati|apeleaza|\btel(efon)?\b|\b07\d{2}[\s.]?\d{3}/.test(t)) return "calls";
+  return null;
 }

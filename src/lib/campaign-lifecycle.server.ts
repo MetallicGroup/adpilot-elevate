@@ -4,7 +4,8 @@
  * dar nu rulează (de obicei lipsește cardul la Facebook). Rulează din cron la ~10 minute.
  */
 import { metaApiVersion } from "./meta.server";
-import { notifyOwner } from "./wa-notify.server";
+import { notifyOwner, isQuietHours } from "./wa-notify.server";
+import { explainAdIssues } from "./meta-errors.server";
 
 const GRAPH = "https://graph.facebook.com";
 const WATCH_DAYS = 14;
@@ -63,18 +64,36 @@ export async function runCampaignLifecycle(): Promise<{ checked: number; notifie
       if (!token) continue;
       checked++;
 
-      const ad = await graph(c.meta_ad_id, token, { fields: "effective_status,ad_review_feedback,account_id" });
+      const ad = await graph(c.meta_ad_id, token, { fields: "effective_status,ad_review_feedback,account_id,issues_info" });
       const status: string = ad?.effective_status ?? "";
       const update: Record<string, unknown> = {};
+      const issue = explainAdIssues(ad?.issues_info, { adAccountId: String(ad?.account_id ?? "") || null });
 
-      if (status === "DISAPPROVED") {
+      if (issue && (status === "WITH_ISSUES" || status === "PAUSED" || status === "CAMPAIGN_PAUSED" || status === "ADSET_PAUSED")) {
+        // Meta a oprit reclama după creare (ex. verificarea de securitate a contului): îi spunem exact ce are de făcut, o dată.
+        const state = `issue_${issue.kind}`;
+        if (c.review_state !== state) {
+          const r = await notifyOwner(supabaseAdmin, c.user_id, {
+            text: `⚠️ Reclama *${c.name}* nu rulează încă.\n\n${issue.user_message}`,
+            holdIfClosed: true,
+            kind: "ad_issue",
+          });
+          if ("sent" in r || "held" in r) notified++;
+        }
+        update.review_state = state;
+      } else if (status === "DISAPPROVED") {
         const reason = rejectionReason(ad.ad_review_feedback);
         update.review_state = "rejected";
         update.review_reason = reason;
         const r = await notifyOwner(supabaseAdmin, c.user_id, {
-          text: `⚠️ Facebook a respins reclama *${c.name}*.${reason ? `\n\nMotivul dat de Facebook: _${reason}_` : ""}\n\nScrie-mi aici și o refacem împreună, cu un text care trece de verificare.`,
+          text: `⚠️ Facebook a respins reclama *${c.name}*.${reason ? `\n\nMotivul dat de Facebook: _${reason}_` : ""}\n\nPot pregăti o variantă corectată (text fără afirmațiile care nu trec), cu aceeași poză și aceleași setări.`,
           holdIfClosed: true,
           kind: "ad_rejected",
+          buttons: [
+            { id: `perf:fix_rejected:${c.id}`, title: "Refă reclama" },
+            { id: `perf:ignore:${c.id}`, title: "Lasă așa" },
+          ],
+          meta: { anomaly_action: { kind: "fix_rejected", campaign_id: c.id, reason } },
         });
         if ("sent" in r || "held" in r) {
           update.rejected_notified_at = new Date().toISOString();
@@ -130,7 +149,108 @@ export async function runCampaignLifecycle(): Promise<{ checked: number; notifie
     }
   }
   const tk = await runTikTokLifecycle(supabaseAdmin);
-  return { checked: checked + tk.checked, notified: notified + tk.notified, errors: errors + tk.errors };
+  const perf = await runPerformanceChecks(supabaseAdmin).catch((e) => {
+    console.error("[lifecycle] performance", (e as Error).message);
+    return { notified: 0 };
+  });
+  return {
+    checked: checked + tk.checked,
+    notified: notified + tk.notified + perf.notified,
+    errors: errors + tk.errors,
+  };
+}
+
+const LEAD_ACTIONS = ["lead", "onsite_conversion.lead_grouped"];
+const CONVO_ACTIONS = ["onsite_conversion.messaging_conversation_started_7d"];
+
+function actionMax(actions: Array<{ action_type: string; value: string }> | undefined, types: string[]): number {
+  return Math.max(0, ...(actions ?? []).filter((a) => types.includes(a.action_type)).map((a) => Number(a.value) || 0));
+}
+
+/**
+ * Verificarea de după 24h și 48h de rulare (o dată fiecare): oamenii dau click dar nu trimit formularul,
+ * sau s-a cheltuit bugetul fără niciun rezultat. Propune schimbarea concretă, cu butoane;
+ * la „da”, agentul o face (vezi anomaly_action).
+ */
+async function runPerformanceChecks(supabaseAdmin: any): Promise<{ notified: number }> {
+  if (isQuietHours()) return { notified: 0 };
+  const { data: camps } = await supabaseAdmin
+    .from("campaigns")
+    .select("id, user_id, name, objective, budget, creative, live_notified_at, meta_campaign_id, status")
+    .eq("platform", "meta")
+    .eq("status", "active")
+    .not("live_notified_at", "is", null)
+    .not("meta_campaign_id", "is", null)
+    .gte("live_notified_at", new Date(Date.now() - 4 * 86400_000).toISOString());
+  let notified = 0;
+  for (const c of (camps ?? []) as any[]) {
+    const hours = (Date.now() - new Date(c.live_notified_at).getTime()) / 3600_000;
+    const monitor = (c.creative?.monitor ?? {}) as Record<string, string>;
+    const stage = hours >= 48 && !monitor.d2_at ? "d2_at" : hours >= 24 && !monitor.d1_at ? "d1_at" : null;
+    if (!stage) continue;
+    try {
+      const { data: conn } = await supabaseAdmin
+        .from("meta_connections")
+        .select("access_token")
+        .eq("user_id", c.user_id)
+        .eq("is_active", true)
+        .limit(1)
+        .maybeSingle();
+      if (!conn?.access_token) continue;
+      const ins = await graph(`${c.meta_campaign_id}/insights`, conn.access_token, {
+        date_preset: "maximum",
+        fields: "spend,impressions,inline_link_clicks,actions",
+      });
+      const row = ins?.data?.[0] ?? {};
+      const spend = Number(row.spend ?? 0);
+      const clicks = Number(row.inline_link_clicks ?? 0);
+      const isMessages = c.objective === "MESSAGES";
+      const results = actionMax(row.actions, isMessages ? CONVO_ACTIONS : LEAD_ACTIONS);
+      const budget = Number(c.budget ?? 0);
+      let text: string | null = null;
+      let action: Record<string, unknown> | null = null;
+      let buttons: Array<{ id: string; title: string }> | undefined;
+
+      if (!isMessages && c.objective === "LEAD_GENERATION" && clicks >= 20 && results / Math.max(clicks, 1) < 0.06) {
+        text =
+          `📊 *${c.name}*: ${clicks} oameni au apăsat pe reclamă, dar doar ${results} au trimis formularul.\n\n` +
+          "Reclama atrage (oamenii apasă), problema e ce urmează: mulți nu vor să completeze un formular. " +
+          "Propun s-o refac cu butonul „Trimite mesaj”, care deschide direct chatul — aceeași poză, același text, același buget, iar pe cea veche o opresc.";
+        action = { kind: "switch_to_messages", campaign_id: c.id };
+        buttons = [
+          { id: `perf:switch_to_messages:${c.id}`, title: "Fă schimbarea" },
+          { id: `perf:ignore:${c.id}`, title: "Lasă așa" },
+        ];
+      } else if (spend >= budget * 1.5 && results === 0 && clicks < 10) {
+        text =
+          `📊 *${c.name}*: s-au cheltuit ${spend.toFixed(0)} lei și aproape nimeni n-a apăsat (${clicks} click-uri). ` +
+          "De obicei e poza sau primul rând din text. Propun o poză nouă și un alt început de text, cu aceeași ofertă.";
+        action = { kind: "regen_image", campaign_id: c.id };
+        buttons = [
+          { id: `perf:new_creative:${c.id}`, title: "Fă reclamă nouă" },
+          { id: `perf:ignore:${c.id}`, title: "Lasă așa" },
+        ];
+      }
+
+      if (text) {
+        const r = await notifyOwner(supabaseAdmin, c.user_id, {
+          text,
+          holdIfClosed: true,
+          kind: "perf_check",
+          buttons,
+          meta: { anomaly_action: action },
+        });
+        if ("sent" in r || "held" in r) notified++;
+      }
+      await supabaseAdmin
+        .from("campaigns")
+        .update({ creative: { ...(c.creative ?? {}), monitor: { ...monitor, [stage]: new Date().toISOString() } } })
+        .eq("id", c.id);
+    } catch (e) {
+      console.error("[lifecycle] performance check", c.id, (e as Error).message);
+    }
+  }
+  return { notified };
 }
 
 const TIKTOK_STALL_AFTER_MS = 12 * 60 * 60 * 1000;

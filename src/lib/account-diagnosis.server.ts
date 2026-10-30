@@ -17,6 +17,7 @@ export type MissingStep =
   | "ad_account"
   | "payment_method"
   | "lead_terms"
+  | "page_choice"
   | "whatsapp";
 
 export type AdHistory = {
@@ -37,6 +38,14 @@ export type AccountDiagnosis = {
   meta: {
     connected: boolean;
     pages: Array<{ id: string; name: string | null }>;
+    /** Pagina pe care facem reclame acum. */
+    activePage: { id: string; name: string | null } | null;
+    /** Are mai multe pagini și n-a confirmat pe care facem reclame. */
+    pageChoiceNeeded: boolean;
+    /** Celelalte conturi de reclame (pentru schimbare când cel ales nu merge). */
+    otherAdAccounts: Array<{ id: string; name: string | null; status: number | null; currency: string | null }>;
+    /** Ultima eroare Meta la publicare (ultimele 3 zile), explicată. */
+    lastPublishProblem: { kind: string; message: string; at: string } | null;
     /** Pagina activă a acceptat Condițiile Meta pentru formulare? null = necunoscut. */
     leadTerms: { pageId: string; accepted: boolean | null } | null;
     adAccount: { id: string; name: string | null; status: number | null; currency: string | null } | null;
@@ -128,7 +137,7 @@ export async function diagnoseAccount(supabaseAdmin: any, userId: string): Promi
   const [{ data: conn }, { data: tt }, { data: wa }] = await Promise.all([
     supabaseAdmin
       .from("meta_connections")
-      .select("id, access_token")
+      .select("id, access_token, page_confirmed_at")
       .eq("user_id", userId)
       .eq("is_active", true)
       .order("created_at", { ascending: false })
@@ -146,6 +155,10 @@ export async function diagnoseAccount(supabaseAdmin: any, userId: string): Promi
   const meta: AccountDiagnosis["meta"] = {
     connected: !!conn?.access_token,
     pages: [],
+    activePage: null,
+    pageChoiceNeeded: false,
+    otherAdAccounts: [],
+    lastPublishProblem: null,
     leadTerms: null,
     adAccount: null,
     hasPaymentMethod: false,
@@ -159,11 +172,13 @@ export async function diagnoseAccount(supabaseAdmin: any, userId: string): Promi
       supabaseAdmin.from("meta_pages").select("page_id, page_name, page_access_token, is_active").eq("connection_id", conn.id),
       supabaseAdmin
         .from("meta_ad_accounts")
-        .select("ad_account_id, account_name, currency, is_active")
+        .select("ad_account_id, account_name, currency, is_active, status")
         .eq("connection_id", conn.id),
     ]);
     meta.pages = (pages ?? []).map((p: any) => ({ id: p.page_id, name: p.page_name ?? null }));
     const activePage = (pages ?? []).find((p: any) => p.is_active) ?? (pages ?? [])[0];
+    if (activePage) meta.activePage = { id: activePage.page_id, name: activePage.page_name ?? null };
+    meta.pageChoiceNeeded = (pages ?? []).length > 1 && !conn.page_confirmed_at;
     if (activePage?.page_access_token) {
       const { pageLeadTermsAccepted } = await import("./meta-publish.server");
       meta.leadTerms = {
@@ -173,6 +188,14 @@ export async function diagnoseAccount(supabaseAdmin: any, userId: string): Promi
     }
 
     const chosen = (accts ?? []).find((a: any) => a.is_active) ?? (accts ?? [])[0];
+    meta.otherAdAccounts = (accts ?? [])
+      .filter((a: any) => a.ad_account_id !== chosen?.ad_account_id)
+      .map((a: any) => ({
+        id: a.ad_account_id,
+        name: a.account_name ?? null,
+        status: a.status != null && a.status !== "" ? Number(a.status) : null,
+        currency: a.currency ?? null,
+      }));
     if (chosen) {
       const info = await graph<any>(`act_${chosen.ad_account_id}`, token, {
         fields: "account_status,currency,funding_source_details,name",
@@ -201,6 +224,35 @@ export async function diagnoseAccount(supabaseAdmin: any, userId: string): Promi
     }
   }
 
+  // Ultima eroare de publicare (ultimele 3 zile), ca botul să știe exact ce l-a oprit.
+  try {
+    const { data: lastErr } = await supabaseAdmin
+      .from("campaigns")
+      .select("creative, updated_at")
+      .eq("user_id", userId)
+      .eq("platform", "meta")
+      .gte("updated_at", new Date(Date.now() - 3 * 86400_000).toISOString())
+      .order("updated_at", { ascending: false })
+      .limit(5);
+    // Doar dacă cea mai recentă încercare a eșuat (o lansare reușită după aceea înseamnă că s-a rezolvat).
+    const newest = (lastErr ?? [])[0] as any;
+    const row = newest?.creative?.last_publish_error ? newest : null;
+    if (row) {
+      const { explainMetaError } = await import("./meta-errors.server");
+      const p = explainMetaError(String(row.creative.last_publish_error), {
+        adAccountId: meta.adAccount?.id,
+        pageId: meta.activePage?.id,
+      });
+      meta.lastPublishProblem = {
+        kind: p.kind,
+        message: p.user_message,
+        at: String(row.creative.last_publish_error_at ?? row.updated_at),
+      };
+    }
+  } catch {
+    /* opțional */
+  }
+
   const missing: MissingStep[] = [];
   if (!meta.connected) missing.push("connect_meta");
   else {
@@ -208,6 +260,7 @@ export async function diagnoseAccount(supabaseAdmin: any, userId: string): Promi
     if (!meta.adAccount || meta.adAccount.status !== 1) missing.push("ad_account");
     else if (!meta.hasPaymentMethod) missing.push("payment_method");
     if (meta.leadTerms?.accepted === false) missing.push("lead_terms");
+    if (meta.pageChoiceNeeded) missing.push("page_choice");
   }
   const waActive = wa?.status === "active";
   if (!waActive) missing.push("whatsapp");
@@ -250,10 +303,31 @@ export function diagnosisForAgent(d: AccountDiagnosis): string {
     ad_account: "nu are cont de reclame activ",
     payment_method: "nu are card adăugat în contul de reclame Facebook",
     lead_terms: "pagina n-a acceptat Condițiile Meta pentru reclame cu formular (necesar doar pentru campanii cu formular)",
+    page_choice: "are mai multe pagini de Facebook și trebuie să aleagă pe care facem reclame (întreabă-l cu send_choice, apoi select_page)",
     whatsapp: "WhatsApp nu e activ",
   };
   if (d.missing.length) lines.push(`Lipsește: ${d.missing.map((m) => missingText[m]).join("; ")}.`);
-  if (d.meta.pages.length) lines.push(`Pagini: ${d.meta.pages.map((p) => p.name ?? p.id).slice(0, 3).join(", ")}.`);
+  if (d.meta.activePage) lines.push(`Pagina folosită pentru reclame: ${d.meta.activePage.name ?? d.meta.activePage.id} (id ${d.meta.activePage.id}).`);
+  if (d.meta.pages.length > 1) {
+    lines.push(`Toate paginile: ${d.meta.pages.map((p) => `${p.name ?? p.id} (id ${p.id})`).slice(0, 10).join(", ")}.`);
+  }
+  if (d.meta.adAccount) {
+    const a = d.meta.adAccount;
+    const st: Record<number, string> = { 1: "activ", 2: "dezactivat", 3: "cu sumă neplătită", 7: "în verificare", 9: "în perioadă de grație", 100: "în curs de închidere", 101: "închis" };
+    lines.push(
+      `Cont de reclame folosit: ${a.name ?? ""} (id ${a.id}, ${a.status != null ? st[a.status] ?? `status ${a.status}` : "status necunoscut"}, ${a.currency ?? "?"}, ${d.meta.hasPaymentMethod ? "are card" : "fără card"}).`,
+    );
+  }
+  if (d.meta.otherAdAccounts?.length) {
+    lines.push(
+      `Alte conturi de reclame: ${d.meta.otherAdAccounts.map((o) => `${o.name ?? ""} (id ${o.id}, status ${o.status ?? "?"}, ${o.currency ?? "?"})`).join("; ")}.`,
+    );
+  }
+  if (d.meta.lastPublishProblem) {
+    lines.push(
+      `Ultima eroare Meta la publicare (${d.meta.lastPublishProblem.at.slice(0, 16)}), tip ${d.meta.lastPublishProblem.kind}: ${d.meta.lastPublishProblem.message}`,
+    );
+  }
   const h = d.meta.history;
   if (h && h.spend > 0) {
     const cur = h.currency ?? "lei";
@@ -272,6 +346,8 @@ export function diagnosisForAgent(d: AccountDiagnosis): string {
 }
 
 const DIAGNOSIS_MAX_AGE_MS = 6 * 60 * 60 * 1000;
+/** Când lipsește ceva, verificăm des: omul tocmai poate rezolva pasul. */
+const DIAGNOSIS_MAX_AGE_BLOCKED_MS = 10 * 60 * 1000;
 
 /**
  * Diagnosticul din cache (max 6 ore), recalculat când e vechi sau la cerere (`force`).
@@ -287,7 +363,10 @@ export async function getDiagnosis(
     .select("data, updated_at")
     .eq("user_id", userId)
     .maybeSingle();
-  const fresh = row && Date.now() - new Date(row.updated_at).getTime() < DIAGNOSIS_MAX_AGE_MS;
+  const cached = row?.data as AccountDiagnosis | undefined;
+  const blocked = !!cached && ((cached.missing?.length ?? 0) > 0 || !!cached.meta?.lastPublishProblem);
+  const maxAge = blocked ? DIAGNOSIS_MAX_AGE_BLOCKED_MS : DIAGNOSIS_MAX_AGE_MS;
+  const fresh = row && Date.now() - new Date(row.updated_at).getTime() < maxAge;
   if (fresh && !opts.force) return row.data as AccountDiagnosis;
   try {
     const d = await diagnoseAccount(supabaseAdmin, userId);

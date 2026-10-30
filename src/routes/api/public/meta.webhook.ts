@@ -114,24 +114,17 @@ export const Route = createFileRoute("/api/public/meta/webhook")({
             // Notificăm doar lead-urile noi (sincronizarea periodică poate să-l fi inserat deja).
             if (insertedRows?.length) {
               try {
+                const { notifyNewLead, leadContext } = await import("@/lib/lead-closer.server");
                 const campName = campaign_id
-                  ? (await supabaseAdmin.from("campaigns").select("name").eq("id", campaign_id).maybeSingle()).data?.name
+                  ? (await supabaseAdmin.from("campaigns").select("name").eq("id", campaign_id).maybeSingle()).data?.name ?? null
                   : null;
-                const lines = [
-                  "🎯 *Lead nou*",
-                  campName ? `📣 Campania: ${campName}` : "",
-                  mapped.full_name ? `👤 ${mapped.full_name}` : "",
-                  mapped.phone ? `📞 ${mapped.phone}` : "",
-                  mapped.email ? `✉️ ${mapped.email}` : "",
-                  mapped.message ? `💬 "${mapped.message}"` : "",
-                  "",
-                  "Scrie *lead-uri* să vezi ultimele sau întreabă-mă orice 🚀",
-                ].filter(Boolean).join("\n");
-                const { notifyOwner } = await import("@/lib/wa-notify.server");
-                await notifyOwner(supabaseAdmin, page.user_id, {
-                  text: lines,
-                  holdIfClosed: true,
-                  kind: "lead_notify",
+                const ctx = await leadContext(supabaseAdmin, { user_id: page.user_id, campaign_id });
+                await notifyNewLead(supabaseAdmin, page.user_id, {
+                  lead: { id: insertedRows[0]!.id, full_name: mapped.full_name, phone: mapped.phone, email: mapped.email },
+                  business: ctx.business,
+                  offer: ctx.offer,
+                  campaignName: campName,
+                  answers: mapped.message ? [{ q: "Mesaj", a: mapped.message }] : [],
                 });
               } catch (e) {
                 console.error("[meta webhook] WA notify failed", e);

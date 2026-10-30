@@ -51,6 +51,12 @@ function PreviewPage() {
               <div style={avatar}>{(d.pageName ?? "A").trim().charAt(0).toUpperCase()}</div>
               <b>{d.pageName ?? "Pagina ta"}</b>
             </div>
+            {d.formIntro && (
+              <div style={{ padding: "18px 20px", borderBottom: "1px solid #e6e8ee" }}>
+                <b style={{ fontSize: 17 }}>{d.headline}</b>
+                <p style={{ ...muted, marginTop: 6, whiteSpace: "pre-wrap" }}>{d.formIntro}</p>
+              </div>
+            )}
             <div style={{ padding: 20 }}>
               <Field label="Nume complet" hint="Completat automat din Facebook" />
               <Field label="Număr de telefon" hint="Completat automat din Facebook" />
@@ -77,9 +83,22 @@ function PreviewPage() {
           <div style={{ ...card, textAlign: "center", padding: "32px 20px" }}>
             <div style={check}>✓</div>
             <b style={{ fontSize: 20 }}>Mulțumim!</b>
-            <p style={muted}>Te contactăm în cel mai scurt timp.</p>
-            <div style={{ ...button, marginTop: 16 }}>{d.website ? "Vizitează site-ul" : "Sună acum"}</div>
-            {d.website && <p style={{ ...muted, fontSize: 13 }}>Duce la {d.website.replace(/^https?:\/\//, "")}</p>}
+            <p style={muted}>Te contactăm în cel mai scurt timp. Dacă vrei să stabilim mai repede, scrie-ne direct pe WhatsApp.</p>
+            <div style={{ ...button, marginTop: 16, background: "#1fbf5f" }}>Scrie-ne pe WhatsApp</div>
+            <p style={{ ...muted, fontSize: 13 }}>Deschide chatul cu tine, cu mesajul deja scris.</p>
+          </div>
+        </section>
+      )}
+
+      {d.destination && (
+        <section style={{ marginTop: 28 }}>
+          <p style={label}>2 · La click pe „Trimite mesaj”</p>
+          <div style={{ ...card, padding: "24px 20px", textAlign: "center" }}>
+            <b style={{ fontSize: 18 }}>
+              Se deschide direct chatul pe{" "}
+              {d.destination === "WHATSAPP" ? "WhatsApp" : d.destination === "INSTAGRAM_DIRECT" ? "Instagram" : "Messenger"}
+            </b>
+            <p style={muted}>Fără formular: omul îți scrie, iar tu îi răspunzi și îl programezi.</p>
           </div>
         </section>
       )}

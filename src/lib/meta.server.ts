@@ -127,7 +127,7 @@ export async function fetchMetaPermissions(accessToken: string) {
 }
 
 export async function fetchAdAccounts(accessToken: string) {
-  const fields = "account_id,name,currency,timezone_name,account_status";
+  const fields = "account_id,name,currency,timezone_name,account_status,amount_spent,funding_source_details";
   const seen = new Set<string>();
   const data: any[] = [];
 

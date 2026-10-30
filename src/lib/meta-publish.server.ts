@@ -1,9 +1,22 @@
 /**
  * Server-only Meta Marketing API publish helpers.
  */
+import { createHash } from "node:crypto";
 import { metaApiVersion } from "./meta.server";
 
 const GRAPH = "https://graph.facebook.com";
+
+/** Eroare Meta cu codurile originale, ca să poată fi explicată omului (vezi meta-errors.server.ts). */
+export class MetaApiError extends Error {
+  code?: number;
+  subcode?: number;
+  title?: string;
+  constructor(message: string, info: { code?: number; subcode?: number; title?: string } = {}) {
+    super(message);
+    this.name = "MetaApiError";
+    Object.assign(this, info);
+  }
+}
 
 export const COUNTRY_CODES: Record<string, string> = {
   // Romanian labels — what the wizard UI actually produces
@@ -69,21 +82,32 @@ async function metaPOST(path: string, accessToken: string, body: Record<string, 
   }
   form.append("access_token", accessToken);
   const res = await fetch(url, { method: "POST", body: form });
-  const json = await res.json();
-  if (!res.ok) {
-    const msg = json?.error?.error_user_msg || json?.error?.message || `Meta ${path} failed`;
-    const step = path.includes("/adsets")
-      ? "ad set"
-      : path.includes("/campaigns")
-        ? "campanie"
-        : path.includes("/adcreatives")
-          ? "creative"
-          : path.includes("/ads")
-            ? "ad"
-            : path.includes("leadgen_forms")
-              ? "formular lead"
-              : path;
-    throw new Error(`${msg} (${res.status}) [pas: ${step}]`);
+  const json = await res.json().catch(() => null);
+  const step = path.includes("/adsets")
+    ? "ad set"
+    : path.includes("/campaigns")
+      ? "campanie"
+      : path.includes("/adcreatives")
+        ? "creative"
+        : path.includes("/ads")
+          ? "ad"
+          : path.includes("leadgen_forms")
+            ? "formular lead"
+            : path;
+  const err = json?.error;
+  if (!res.ok || err) {
+    const msg = err?.error_user_msg || err?.message || `Meta ${path} failed`;
+    const title = err?.error_user_title && err.error_user_title !== msg ? `${err.error_user_title}: ` : "";
+    const codes = err?.code ? ` #${err.code}${err?.error_subcode ? `/${err.error_subcode}` : ""}` : "";
+    throw new MetaApiError(`${title}${msg} (${res.status}${codes}) [pas: ${step}]`, {
+      code: err?.code,
+      subcode: err?.error_subcode,
+      title: err?.error_user_title,
+    });
+  }
+  // Crearea unui obiect trebuie să întoarcă un ID; altfel nu continuăm cu un pas „gol”.
+  if (body.execution_options === undefined && /\/(campaigns|adsets|adcreatives|ads|leadgen_forms)$/.test(path) && !json?.id) {
+    throw new MetaApiError(`Meta n-a întors niciun ID (răspuns: ${JSON.stringify(json).slice(0, 200)}) [pas: ${step}]`);
   }
   return json;
 }
@@ -131,8 +155,13 @@ export async function createLeadForm(
     fields: string[];
     privacy_url: string;
     follow_up_url?: string;
-    /** Butonul de la finalul formularului: site-ul clientului, altfel „Sună acum" pe numărul lui. */
-    thank_you?: { website?: string | null; phone?: string | null };
+    /**
+     * Butonul de la finalul formularului: „Scrie-ne pe WhatsApp” (numărul afacerii), altfel
+     * site-ul clientului, altfel „Sună acum” pe numărul lui.
+     */
+    thank_you?: { website?: string | null; phone?: string | null; whatsapp?: string | null; whatsapp_text?: string | null };
+    /** Titlul ecranului de început (oferta pe scurt). */
+    intro_title?: string;
     custom_questions?: Array<
       | string
       | {
@@ -144,8 +173,13 @@ export async function createLeadForm(
     >;
   },
 ) {
-  // Sufixul „(RO)" ține separat formularele vechi (create în engleză) de cele noi.
-  const formName = `${spec.name.slice(0, 250)} (RO)`;
+  // Meta cere nume unic pe pagină; refolosim un formular doar dacă are EXACT același conținut
+  // (altfel, după o modificare, omul ar primi formularul vechi, cu întrebările vechi).
+  const fingerprint = createHash("sha1")
+    .update(JSON.stringify([spec.fields, spec.custom_questions ?? [], spec.intro ?? "", spec.intro_title ?? "", spec.thank_you ?? {}]))
+    .digest("hex")
+    .slice(0, 6);
+  const formName = `${spec.name.slice(0, 230)} (RO ${fingerprint})`;
   // Reuse existing form with same name (Meta enforces unique names per page)
   try {
     const listUrl = `${GRAPH}/${metaApiVersion()}/${pageId}/leadgen_forms?fields=id,name&limit=200&access_token=${encodeURIComponent(pageAccessToken)}`;
@@ -186,29 +220,66 @@ export async function createLeadForm(
   const website = (spec.thank_you?.website ?? "").trim();
   const hasWebsite = /^https?:\/\//i.test(website) && !/(^|\.)adpilot\.ro/i.test(website);
   const phone = normalizeThankYouPhone(spec.thank_you?.phone);
-  const thankYou = hasWebsite
+  const wa = normalizeThankYouPhone(spec.thank_you?.whatsapp)?.replace(/\D/g, "");
+  const waText = (spec.thank_you?.whatsapp_text ?? "").trim();
+  const thankYou = wa
+    ? {
+        button_type: "VIEW_WEBSITE",
+        button_text: "Scrie-ne pe WhatsApp",
+        website_url: `https://wa.me/${wa}${waText ? `?text=${encodeURIComponent(waText.slice(0, 200))}` : ""}`,
+      }
+    : hasWebsite
+      ? { button_type: "VIEW_WEBSITE", button_text: "Vizitează site-ul", website_url: website }
+      : phone
+        ? { button_type: "CALL_BUSINESS", button_text: "Sună acum", business_phone_number: phone, country_code: "RO" }
+        : null;
+  const thankYouBasic = hasWebsite
     ? { button_type: "VIEW_WEBSITE", button_text: "Vizitează site-ul", website_url: website }
     : phone
       ? { button_type: "CALL_BUSINESS", button_text: "Sună acum", business_phone_number: phone, country_code: "RO" }
       : null;
+  // Ecranul de început: oferta, ca omul să știe la ce se înscrie.
+  const intro = (spec.intro ?? "").trim();
+  const contextCard = intro
+    ? {
+        context_card: {
+          title: (spec.intro_title ?? spec.name).trim().slice(0, 60),
+          style: "PARAGRAPH_STYLE",
+          content: [intro.slice(0, 500)],
+          button_text: "Continuă",
+        },
+      }
+    : {};
 
-  try {
-    return await metaPOST(`/${pageId}/leadgen_forms`, pageAccessToken, {
-      name: formName,
-      questions,
-      privacy_policy: { url: spec.privacy_url, link_text: "Politica de confidențialitate" },
-      locale: "RO_RO",
-      ...(thankYou
-        ? {
-            thank_you_page: {
-              title: "Mulțumim!",
-              body: "Te contactăm în cel mai scurt timp.",
-              ...thankYou,
-            },
-          }
+  const formBody = (withExtras: boolean) => ({
+    name: formName,
+    questions,
+    privacy_policy: { url: spec.privacy_url, link_text: "Politica de confidențialitate" },
+    locale: "RO_RO",
+    ...(withExtras ? contextCard : {}),
+    ...((withExtras ? thankYou : thankYouBasic)
+      ? {
+          thank_you_page: {
+            title: "Mulțumim!",
+            body:
+              withExtras && wa
+                ? "Te contactăm în cel mai scurt timp. Dacă vrei să stabilim mai repede, scrie-ne direct pe WhatsApp."
+                : "Te contactăm în cel mai scurt timp.",
+            ...(withExtras ? thankYou : thankYouBasic),
+          },
+        }
         : // Fără site și fără telefon: butonul duce pe pagina de Facebook a afacerii, nu pe AdPilot.
           { follow_up_action_url: `https://www.facebook.com/${pageId}` }),
-    });
+  });
+  try {
+    try {
+      return await metaPOST(`/${pageId}/leadgen_forms`, pageAccessToken, formBody(true));
+    } catch (e: any) {
+      // Ecranul de început e un bonus: dacă Meta nu-l acceptă, formularul pleacă fără el.
+      if ((!Object.keys(contextCard).length && !wa) || !/param|context_card|invalid|url/i.test(String(e?.message ?? ""))) throw e;
+      console.warn("[lead form] context card refuzat, reîncerc fără", e?.message);
+      return await metaPOST(`/${pageId}/leadgen_forms`, pageAccessToken, formBody(false));
+    }
   } catch (e: any) {
     const msg = String(e?.message ?? "");
     console.error("createLeadForm failed", { pageId, msg });
@@ -297,7 +368,7 @@ export async function createCampaign(
   accessToken: string,
   name: string,
   status: "ACTIVE" | "PAUSED" = "ACTIVE",
-  objective: "OUTCOME_LEADS" | "OUTCOME_TRAFFIC" | "OUTCOME_SALES" = "OUTCOME_LEADS",
+  objective: "OUTCOME_LEADS" | "OUTCOME_TRAFFIC" | "OUTCOME_SALES" | "OUTCOME_ENGAGEMENT" = "OUTCOME_LEADS",
 ) {
   return metaPOST(`/act_${adAccountId}/campaigns`, accessToken, {
     name,
@@ -468,7 +539,9 @@ export async function createAdSet(
       behaviors?: Array<{ id: string; name: string }>;
     };
     status: "ACTIVE" | "PAUSED";
-    objective?: "leads" | "traffic" | "bookings" | "landing_lead" | "sales" | "signups";
+    objective?: "leads" | "traffic" | "bookings" | "landing_lead" | "sales" | "signups" | "messages";
+    /** Doar pentru objective="messages": unde ajunge omul când apasă „Trimite mesaj”. */
+    message_destination?: MessageDestination;
     pixel_id?: string;
     dsa_beneficiary?: string;
     dsa_payor?: string;
@@ -479,6 +552,23 @@ export async function createAdSet(
     advantage_placements?: boolean;
   },
 ) {
+  const targeting = buildTargeting(args.targeting, args.advantage_placements !== false);
+  return createAdSetWithTargeting(adAccountId, accessToken, args, targeting);
+}
+
+export type TargetingInput = {
+  countries: string[];
+  age_min: number;
+  age_max: number;
+  genders?: number[];
+  cities?: Array<{ key: string; radius?: number; distance_unit?: "kilometer" | "mile" }>;
+  interests?: Array<{ id: string; name: string }>;
+  behaviors?: Array<{ id: string; name: string }>;
+};
+
+/** Specificația de targetare Meta (aceeași la creare și la verificarea dinainte de lansare). */
+export function buildTargeting(input: TargetingInput, advantagePlacements = true): Record<string, unknown> {
+  const args = { targeting: input };
   const geo_locations: Record<string, unknown> = {};
   if (args.targeting.cities && args.targeting.cities.length) {
     geo_locations.cities = args.targeting.cities.map((c) => ({
@@ -489,7 +579,6 @@ export async function createAdSet(
   } else {
     geo_locations.countries = args.targeting.countries;
   }
-  const advantagePlacements = args.advantage_placements !== false;
   const targeting: Record<string, unknown> = {
     geo_locations,
     age_min: args.targeting.age_min,
@@ -523,14 +612,29 @@ export async function createAdSet(
     flex.behaviors = args.targeting.behaviors.map((b) => ({ id: b.id, name: b.name }));
   }
   if (Object.keys(flex).length) targeting.flexible_spec = [flex];
+  return targeting;
+}
+
+async function createAdSetWithTargeting(
+  adAccountId: string,
+  accessToken: string,
+  args: Parameters<typeof createAdSet>[2],
+  targeting: Record<string, unknown>,
+) {
   // Conversii pe site/landing (evenimente trimise prin Pixel + CAPI).
   const isConversion =
     args.objective === "bookings" ||
     args.objective === "landing_lead" ||
     args.objective === "sales" ||
     args.objective === "signups";
-  const optimization_goal =
-    args.objective === "traffic" ? "LINK_CLICKS" : isConversion ? "OFFSITE_CONVERSIONS" : "LEAD_GENERATION";
+  const isMessages = args.objective === "messages";
+  const optimization_goal = isMessages
+    ? "CONVERSATIONS"
+    : args.objective === "traffic"
+      ? "LINK_CLICKS"
+      : isConversion
+        ? "OFFSITE_CONVERSIONS"
+        : "LEAD_GENERATION";
   const body: Record<string, unknown> = {
     name: args.name,
     campaign_id: args.campaign_id,
@@ -539,7 +643,11 @@ export async function createAdSet(
     bid_strategy: "LOWEST_COST_WITHOUT_CAP",
     targeting,
     status: args.status,
-    destination_type: args.objective === "leads" ? "ON_AD" : "WEBSITE",
+    destination_type: isMessages
+      ? (args.message_destination ?? "MESSENGER")
+      : args.objective === "leads"
+        ? "ON_AD"
+        : "WEBSITE",
   };
   if (isConversion) {
     // Optimizare pe conversii reale (evenimente trimise prin Pixel + CAPI).
@@ -634,7 +742,12 @@ export async function findCityKey(
 /** Butoanele pe care Meta le acceptă la reclamele cu formular de clienți. */
 const LEAD_FORM_CTAS = new Set(["SIGN_UP", "LEARN_MORE", "APPLY_NOW", "GET_QUOTE", "SUBSCRIBE", "DOWNLOAD"]);
 
+/** Unde ajunge omul la o reclamă de mesaje. */
+export type MessageDestination = "WHATSAPP" | "MESSENGER" | "INSTAGRAM_DIRECT";
+
 export type AdStoryArgs = {
+  /** Reclamă de mesaje: butonul „Trimite mesaj” deschide direct chatul (fără formular, fără site). */
+  message_destination?: MessageDestination;
   page_id: string;
   image_hash?: string;
   video_id?: string;
@@ -649,6 +762,7 @@ export type AdStoryArgs = {
 
 /** object_story_spec pentru o reclamă (imagine sau video), folosit la creare și la previzualizare. */
 export function buildAdStorySpec(args: AdStoryArgs, opts: { previewOnly?: boolean } = {}) {
+  if (args.message_destination) return buildMessageStorySpec(args);
   let cta_type = CTA_MAP[args.cta] || "LEARN_MORE";
   // Formularele nu acceptă „Book Now” & co. — Meta respinge creativul; „Înscrie-te” e cel mai apropiat.
   if (args.lead_gen_form_id && !LEAD_FORM_CTAS.has(cta_type)) cta_type = "SIGN_UP";
@@ -680,6 +794,105 @@ export function buildAdStorySpec(args: AdStoryArgs, opts: { previewOnly?: boolea
     ...base,
     link_data: { image_hash: args.image_hash, link, message: args.description, name: args.headline, call_to_action },
   };
+}
+
+const MESSAGE_CTA: Record<MessageDestination, { type: string; link: string }> = {
+  WHATSAPP: { type: "WHATSAPP_MESSAGE", link: "https://api.whatsapp.com/send" },
+  MESSENGER: { type: "MESSAGE_PAGE", link: "https://fb.com/messenger_doc/" },
+  INSTAGRAM_DIRECT: { type: "INSTAGRAM_MESSAGE", link: "https://www.instagram.com/" },
+};
+
+function buildMessageStorySpec(args: AdStoryArgs) {
+  const dest = args.message_destination!;
+  const cta = MESSAGE_CTA[dest];
+  const call_to_action = { type: cta.type, value: { app_destination: dest } };
+  const base = {
+    page_id: args.page_id,
+    ...(args.instagram_user_id ? { instagram_user_id: args.instagram_user_id } : {}),
+  };
+  if (args.video_id) {
+    const video_data: Record<string, unknown> = {
+      video_id: args.video_id,
+      title: args.headline,
+      message: args.description,
+      call_to_action,
+    };
+    if (args.thumbnail_url) video_data.image_url = args.thumbnail_url;
+    return { ...base, video_data };
+  }
+  if (!args.image_hash) throw new Error("Reclama are nevoie de image_hash sau video_id");
+  return {
+    ...base,
+    link_data: { image_hash: args.image_hash, link: cta.link, message: args.description, name: args.headline, call_to_action },
+  };
+}
+
+/** Numărul de WhatsApp legat de pagina de Facebook (necesar pentru reclame „Trimite mesaj pe WhatsApp”). */
+export async function pageWhatsAppNumber(pageId: string, accessToken: string): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `${GRAPH}/${metaApiVersion()}/${pageId}?fields=whatsapp_number&access_token=${encodeURIComponent(accessToken)}`,
+    );
+    const json: any = await res.json();
+    const n = String(json?.whatsapp_number ?? "").replace(/\D/g, "");
+    return res.ok && n ? n : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Verificare înainte de lansare: Meta validează targetarea și întoarce mărimea estimată a publicului.
+ * Nu creează nimic. Prinde din timp erori de vârstă / oraș / Advantage+.
+ */
+export async function estimateAudience(
+  adAccountId: string,
+  accessToken: string,
+  targeting: Record<string, unknown>,
+  optimizationGoal = "LEAD_GENERATION",
+): Promise<{ ok: true; lower: number | null; upper: number | null } | { ok: false; error: string }> {
+  try {
+    const qs = new URLSearchParams({
+      targeting_spec: JSON.stringify(targeting),
+      optimization_goal: optimizationGoal,
+      access_token: accessToken,
+    });
+    const res = await fetch(`${GRAPH}/${metaApiVersion()}/act_${adAccountId}/delivery_estimate?${qs.toString()}`);
+    const json: any = await res.json().catch(() => null);
+    if (!res.ok || json?.error) {
+      const e = json?.error;
+      return { ok: false, error: `${e?.error_user_msg || e?.message || `Meta ${res.status}`}${e?.code ? ` (#${e.code}${e?.error_subcode ? `/${e.error_subcode}` : ""})` : ""}` };
+    }
+    const d = json?.data?.[0];
+    const lower = Number(d?.estimate_mau_lower_bound ?? d?.estimate_mau ?? NaN);
+    const upper = Number(d?.estimate_mau_upper_bound ?? d?.estimate_mau ?? NaN);
+    return { ok: true, lower: Number.isFinite(lower) ? lower : null, upper: Number.isFinite(upper) ? upper : null };
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
+  }
+}
+
+/** Validează campania la Meta fără s-o creeze (`validate_only`). */
+export async function validateCampaign(
+  adAccountId: string,
+  accessToken: string,
+  name: string,
+  objective: "OUTCOME_LEADS" | "OUTCOME_TRAFFIC" | "OUTCOME_SALES" | "OUTCOME_ENGAGEMENT",
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    await metaPOST(`/act_${adAccountId}/campaigns`, accessToken, {
+      name,
+      objective,
+      status: "PAUSED",
+      special_ad_categories: [],
+      buying_type: "AUCTION",
+      is_adset_budget_sharing_enabled: false,
+      execution_options: ["validate_only"],
+    });
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
+  }
 }
 
 export async function createAdCreative(

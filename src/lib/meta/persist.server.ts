@@ -21,6 +21,14 @@ export async function persistMetaConnection(params: {
   } = await import("@/lib/meta.server");
 
   const expiresAt = expiresIn ? new Date(Date.now() + expiresIn * 1000).toISOString() : null;
+  const { pickAdAccount, pickPage } = await import("./selection.server");
+
+  // Alegerile de dinainte (ale omului sau ale noastre) rămân, dacă sunt încă valabile.
+  const [{ data: prevAcc }, { data: prevPage }, { data: onb }] = await Promise.all([
+    supabaseAdmin.from("meta_ad_accounts").select("ad_account_id").eq("user_id", userId).eq("is_active", true).limit(1).maybeSingle(),
+    supabaseAdmin.from("meta_pages").select("page_id").eq("user_id", userId).eq("is_active", true).limit(1).maybeSingle(),
+    (supabaseAdmin as any).from("onboarding_sessions").select("niche").eq("user_id", userId).maybeSingle(),
+  ]);
 
   const { data: conn, error: connErr } = await supabaseAdmin
     .from("meta_connections")
@@ -44,8 +52,7 @@ export async function persistMetaConnection(params: {
   try {
     const ads = await fetchAdAccounts(accessToken);
     const adData = ads?.data ?? [];
-    const fallbackAdAccountId =
-      adData.find((a: any) => a.account_status === 1)?.account_id ?? adData[0]?.account_id;
+    const fallbackAdAccountId = pickAdAccount(adData, prevAcc?.ad_account_id ?? null);
     const rows = adData.map((a: any) => ({
       user_id: userId,
       connection_id: conn.id,
@@ -69,7 +76,8 @@ export async function persistMetaConnection(params: {
   try {
     const pages = await fetchPages(accessToken);
     const pageData = pages?.data ?? [];
-    const fallbackPageId = pageData[0]?.id;
+    const choice = pickPage(pageData, [onb?.niche ?? ""].filter(Boolean), prevPage?.page_id ?? null);
+    const fallbackPageId = choice.pageId;
     const rows = pageData.map((p: any) => ({
       user_id: userId,
       connection_id: conn.id,
@@ -84,6 +92,11 @@ export async function persistMetaConnection(params: {
         .from("meta_pages")
         .upsert(rows, { onConflict: "connection_id,page_id" });
     }
+    // O singură pagină sau o potrivire clară = confirmată; altfel botul îl întreabă pe om.
+    await (supabaseAdmin as any)
+      .from("meta_connections")
+      .update({ page_confirmed_at: choice.needsChoice ? null : new Date().toISOString() })
+      .eq("id", conn.id);
 
     const version = metaApiVersion();
     await Promise.all(
