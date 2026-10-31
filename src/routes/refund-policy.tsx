@@ -16,7 +16,7 @@ export const Route = createFileRoute("/refund-policy")({
     links: [{ rel: "canonical", href: "https://adpilot.ro/refund-policy" }],
   }),
   component: () => (
-    <LegalPage title="Politica de rambursare" updated="3 august 2026">
+    <LegalPage title="Politica de rambursare" updated="1 noiembrie 2026">
       <CompanyDetails />
       <P>
         Politica de rambursare de mai jos se aplică tuturor abonamentelor plătite în platforma AdPilot. Dacă ai întrebări, ne poți scrie oricând la{" "}
@@ -45,7 +45,7 @@ export const Route = createFileRoute("/refund-policy")({
       </UL>
 
       <H2>Anulare abonament</H2>
-      <P>Poți anula abonamentul oricând din contul tău, fără penalități. Accesul la platformă rămâne activ până la sfârșitul perioadei plătite, după care contul trece în plan gratuit sau este suspendat.</P>
+      <P>Poți anula abonamentul oricând din contul tău, fără penalități. Accesul la platformă rămâne activ până la sfârșitul perioadei plătite, după care abonamentul se oprește.</P>
 
       <H2>Contact</H2>
       <P>

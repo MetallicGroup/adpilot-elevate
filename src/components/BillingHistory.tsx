@@ -155,7 +155,7 @@ export function BillingHistory() {
         </p>
         {invoices.length === 0 ? (
           <p className="text-sm text-muted-foreground px-1">
-            Nu există facturi încă. Prima factură apare aici după ce se încheie trialul.
+            Nu există facturi încă. Prima factură apare aici după prima plată.
           </p>
         ) : (
           <div className="space-y-2">

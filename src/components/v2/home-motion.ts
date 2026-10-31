@@ -126,7 +126,7 @@ const CLIPSVG=`<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="
 PS.className='scr s-n';
 PS.innerHTML=SB+`
 <div class="appl pw" id="pw">
-  <div class="pwv on" id="vNum"><span class="pbr"><span class="logo"></span>AdPilot</span><span class="peb">ÎNCEPE GRATUIT</span><h4>Pune numărul tău de <b class="gtext">WhatsApp</b></h4><p class="psub">Acolo primești clipul, pozele și clienții. Fără parolă.</p>
+  <div class="pwv on" id="vNum"><span class="pbr"><span class="logo"></span>AdPilot</span><span class="peb">FĂ-ȚI CLIPUL</span><h4>Pune numărul tău de <b class="gtext">WhatsApp</b></h4><p class="psub">Acolo primești clipul, pozele și clienții. Fără parolă.</p>
     <div class="pfield"><span class="pre"><i class="ro"></i>+40</span><span class="pval" id="pNum"></span></div>
     <div class="pchk" id="pChk"><i></i><span>Sunt de acord să primesc mesaje pe WhatsApp.</span></div>
     <div class="pbtn" id="pBtn1">Trimite codul pe WhatsApp</div></div>

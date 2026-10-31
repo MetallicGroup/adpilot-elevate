@@ -62,7 +62,7 @@ async function sendReactivationMessage(userId: string, chosenPlan: string | null
   const planName = (chosenPlan ?? "").toLowerCase().includes("premium") ? "Premium" : "Pro";
 
   const text =
-    `🎉 Cele 7 zile gratuite s-au încheiat — ai lansat reclame ca un profesionist!\n\n` +
+    `🎉 Perioada gratuită s-a încheiat — ai lansat reclame ca un profesionist!\n\n` +
     `Ca să continui NELIMITAT cu planul *${planName}* (campanii non-stop + asistent WhatsApp), ` +
     `plătește rapid și sigur cu cardul aici:\n${link}\n\n` +
     `După plată, contul tău se reactivează automat și pornim din nou. 💳`;
@@ -102,8 +102,8 @@ async function sendStarterBonusEndedMessage(userId: string): Promise<void> {
   if (!conn) return;
   const phone = conn.user_phone.replace(/\D/g, "");
   const text =
-    "🎉 Cele 7 zile gratuite s-au încheiat! Rămâi pe planul *Starter gratuit* cu " +
-    "*7 zile gratuite în fiecare lună*.\n\nPentru campanii NELIMITATE, non-stop, treci pe " +
+    "🎉 Perioada gratuită s-a încheiat! Rămâi pe planul *Starter gratuit*, " +
+    "cu o perioadă gratuită în fiecare lună.\n\nPentru campanii NELIMITATE, non-stop, treci pe " +
     "Pro sau Premium: https://adpilot.ro/pricing";
   try {
     const { id } = await sendWhatsAppMessage(central.phoneNumberId, central.accessToken, phone, {

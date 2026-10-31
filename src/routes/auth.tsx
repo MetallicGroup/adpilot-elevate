@@ -36,17 +36,22 @@ const FB_NOTICE: Record<string, string> = {
   failed: "Ceva n-a mers la conectarea cu Facebook. Încearcă din nou.",
 };
 
+function isAgencySignup(sp: AuthSearch): boolean {
+  return sp.type === "agency" || !!sp.redirect?.startsWith("/agency");
+}
+
 export const Route = createFileRoute("/auth")({
   ssr: false,
   component: AuthPage,
-  // Înscrierea pentru afaceri pornește acum din onboarding-ul pe telefon (/start).
-  // Agențiile, revenirile cu `redirect` și mesajele de eroare Facebook rămân aici.
+  // Înscrierea pentru afaceri pornește doar din onboarding-ul pe telefon (/start).
+  // Agențiile și mesajele de eroare Facebook rămân aici.
   beforeLoad: ({ search }) => {
     const sp = search as AuthSearch;
-    if (sp.mode === "signup" && sp.type !== "agency" && !sp.redirect && !sp.fb) {
+    if (sp.mode === "signup" && !isAgencySignup(sp) && !sp.fb) {
       throw redirect({
         to: "/start",
         search: {
+          ...(sp.redirect ? { redirect: sp.redirect } : {}),
           ...(sp.ref ? { ref: sp.ref } : {}),
           ...(sp.goal ? { goal: sp.goal } : {}),
           ...(sp.utm_source ? { utm_source: sp.utm_source } : {}),
@@ -79,14 +84,12 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const navigate = useNavigate();
   const search = Route.useSearch();
-  const [mode, setMode] = useState<"signin" | "signup">(search.mode ?? "signin");
+  const agencySignup = isAgencySignup(search);
+  const [mode, setMode] = useState<"signin" | "signup">(search.mode === "signup" && agencySignup ? "signup" : "signin");
   const [email, setEmail] = useState(search.email ?? "");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [accountType] = useState<"business" | "agency">(
-    search.type === "agency" ? "agency" : "business",
-  );
   const [loading, setLoading] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
   const [fbReady, setFbReady] = useState(false);
@@ -203,9 +206,8 @@ function AuthPage() {
         }
         tkClickButton("signup-submit");
         fbLead("signup");
-        // Alegere Afacere/Agenție → agenția merge pe fluxul de agenție (persistă și
-        // prin confirmarea pe email).
-        if (accountType === "agency") markAgencyIntent();
+        // Agenția merge pe fluxul de agenție (persistă și prin confirmarea pe email).
+        markAgencyIntent();
         const referralCode = getStoredReferral();
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -332,6 +334,10 @@ function AuthPage() {
   if (childActive) return <Outlet />;
 
   const switchMode = (next: "signin" | "signup") => {
+    if (next === "signup" && !agencySignup) {
+      navigate({ to: "/start" });
+      return;
+    }
     setMode(next);
     setEmailOpen(false);
   };
@@ -369,7 +375,7 @@ function AuthPage() {
           </Link>
           <div>
             <p className="ey" style={{ color: "#c9c6dc" }}>
-              7 zile gratuite · fără card
+              Clipuri și reclame făcute cu AI
             </p>
             <h2 style={{ marginTop: 16 }}>
               Tu conduci afacerea.
@@ -414,9 +420,7 @@ function AuthPage() {
           <h2 className="d2">{isSignup ? "Creează cont" : "Bine ai revenit"}</h2>
           <p style={{ margin: "-6px 0 2px", color: "var(--mut)" }}>
             {isSignup
-              ? accountType === "agency"
-                ? "Cont de agenție. Clienții tăi se conectează printr-un link."
-                : "7 zile gratuite, fără card."
+              ? "Cont de agenție. Clienții tăi se conectează printr-un link."
               : "Intră în contul tău AdPilot."}
           </p>
 
@@ -443,7 +447,7 @@ function AuthPage() {
               </label>
               <button type="submit" className="btn btn-k asubmit" disabled={loading}>
                 {loading && <Loader2 className="spin" width={18} height={18} />}
-                {accountType === "agency" ? "Creează cont de agenție" : "Începe gratuit 7 zile"}
+                Creează cont de agenție
               </button>
             </div>
           ) : (

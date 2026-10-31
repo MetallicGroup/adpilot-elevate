@@ -12,9 +12,9 @@ export const Route = createFileRoute("/oferta")({
       {
         name: "description",
         content:
-          "Spune-i ce vrei să obții. AdPilot creează pozele și clipurile, lansează și optimizează reclamele tale pe Facebook, Instagram și TikTok — fără agenție și fără experiență. 7 zile gratuite pentru orice cont nou, fără card.",
+          "Spune-i ce vrei să obții. AdPilot creează pozele și clipurile, lansează și optimizează reclamele tale pe Facebook, Instagram și TikTok — fără agenție și fără experiență. Vezi gratuit cum începe clipul tău.",
       },
-      { property: "og:title", content: "Începe GRATUIT — AdPilot" },
+      { property: "og:title", content: "Fă-ți clipul — AdPilot" },
       {
         property: "og:description",
         content:

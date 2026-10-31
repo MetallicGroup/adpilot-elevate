@@ -419,7 +419,7 @@ function PhoneScreen(props: {
           <p className="fine">
             {props.login
               ? "Ai cont cu email? "
-              : "Primul clip și pozele sunt gratuite. Ai deja cont cu email? "}
+              : "Vezi gratuit cum începe clipul tău. Ai deja cont cu email? "}
             <a href="/auth?mode=signin" style={{ color: "inherit" }}>
               Intră cu emailul
             </a>

@@ -111,7 +111,7 @@ function ConfirmEmailPage() {
             Nu vezi emailul? Verifică folderul de Spam sau{" "}
             <Link
               to="/auth"
-              search={{ mode: "signup" as const }}
+              search={{ mode: "signup" as const, type: "agency" as const }}
               className="text-foreground hover:underline"
             >
               schimbă adresa

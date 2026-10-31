@@ -24,13 +24,13 @@ export const PRICING_URL = "https://adpilot.ro/pricing";
 
 /** Mesaj când planul gratuit (7 zile/lună) s-a consumat luna aceasta. */
 export const FREE_STARTER_CONSUMED_MESSAGE =
-  "⏸️ Ți-am oprit reclamele — cele 7 zile gratuite din planul Starter s-au consumat luna aceasta.\n\n" +
+  "⏸️ Ți-am oprit reclamele — perioada gratuită din planul Starter s-a consumat luna aceasta.\n\n" +
   "Reclamele funcționează doar dacă rulează NON-STOP: pornit-oprit le omoară rezultatele. " +
   "Pe Pro și Premium campaniile tale merg continuu și aduc clienți zilnic:\n" +
   "• Pro — campanii NELIMITATE, non-stop + asistent WhatsApp + 4 clipuri și 10 poze AI/lună\n" +
   "• Premium — tot din Pro + 15 clipuri, poze AI nelimitate + manager dedicat\n\n" +
   `Pornește un plan acum: ${PRICING_URL}\n` +
-  "(Planul gratuit revine oricum luna viitoare, cu alte 7 zile.)";
+  "(Planul gratuit revine oricum luna viitoare.)";
 
 /** Mesaj când userul n-a ales încă un plan. */
 export const CHOOSE_PLAN_MESSAGE =

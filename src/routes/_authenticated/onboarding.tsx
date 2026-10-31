@@ -32,12 +32,12 @@ const PLANS = [
     name: "Starter",
     price: "Gratuit",
     free: true,
-    desc: "Gratuit — 7 zile în fiecare lună, fără card.",
+    desc: "Planul gratuit al contului tău.",
     items: [
       "Asistent WhatsApp AI inclus",
       "Reclame pe Facebook, Instagram și TikTok",
       "1 clip și 2 poze AI, la înscriere",
-      "7 zile gratuite în fiecare lună",
+      "Perioadă gratuită în fiecare lună",
     ],
   },
   {
@@ -48,7 +48,7 @@ const PLANS = [
     desc: "Pentru afacerile care vor să crească rapid.",
     items: [
       "Campanii nelimitate, non-stop",
-      "Primele 7 zile: 1 clip și 2 poze AI",
+      "La început: 1 clip și 2 poze AI",
       "După abonare: 4 clipuri și 10 poze AI pe lună",
       "Asistent WhatsApp AI",
       "Suport prioritar",
@@ -61,7 +61,7 @@ const PLANS = [
     desc: "Pentru branduri și agenții care scalează agresiv.",
     items: [
       "Campanii nelimitate, non-stop",
-      "Primele 7 zile: 1 clip și 2 poze AI",
+      "La început: 1 clip și 2 poze AI",
       "După abonare: 15 clipuri și poze AI nelimitate",
       "Asistent WhatsApp AI",
       "Manager dedicat",
@@ -83,6 +83,11 @@ function OnboardingPage() {
     try {
       const r = await fetchStatus({ data: { environment: getStripeEnvironment() } });
       setStatus(r);
+      // Conturile din onboarding-ul nou își termină pașii pe /start.
+      if (r.startPending) {
+        navigate({ to: "/start", replace: true });
+        return;
+      }
       // Facebook + plan + WhatsApp = gata. Intră direct în dashboard.
       if (r.hasMetaConnection && r.planChosen && r.whatsappConnected) {
         navigate({ to: "/dashboard", replace: true });
@@ -138,8 +143,8 @@ function OnboardingPage() {
       await choosePlan({ data: { plan: key } });
       toast.success(
         key === "starter"
-          ? "Gata! Planul Starter e activ: 7 zile gratuite în fiecare lună. Activează WhatsApp 👇"
-          : `Gata! Ai ales ${key === "premium" ? "Premium" : "Pro"} — 7 zile gratuite acum. Activează WhatsApp 👇`,
+          ? "Gata! Planul Starter e activ. Activează WhatsApp 👇"
+          : `Gata! Ai ales ${key === "premium" ? "Premium" : "Pro"}. Activează WhatsApp 👇`,
       );
       await reload();
     } catch (e: any) {
@@ -185,7 +190,7 @@ function OnboardingPage() {
   const steps = [
     { t: "Conectează Facebook", s: "Pagina și contul de reclame", done: step1Done, open: true },
     { t: "Cont de reclame și card", s: "Verificat automat în Meta", done: adReady, open: step1Done },
-    { t: "Alege planul", s: "7 zile gratuite, fără card", done: planChosen, open: step1Done },
+    { t: "Alege planul", s: "Fără card", done: planChosen, open: step1Done },
     { t: "Activează WhatsApp", s: "Aici vorbești cu AdPilot", done: waDone, open: step1Done },
   ];
   const doneCount = steps.filter((x) => x.done).length;
@@ -293,7 +298,7 @@ function OnboardingPage() {
               <div className="pane" key="3">
                 <p className="ey">Pasul 3 din 4</p>
                 <h3>Alege planul tău</h3>
-                <p>Toate planurile sunt gratuite primele 7 zile, fără card. Nu plătești nimic acum.</p>
+                <p>Nu plătești nimic acum și nu ai nevoie de card.</p>
                 <div className="pp">
                   <div className="pp-list">
                     {PLANS.map((p, i) => (
@@ -318,7 +323,7 @@ function OnboardingPage() {
                     ))}
                   </div>
                   <div className="pp-detail" key={picked.id} style={{ "--hc": pickedHue } as React.CSSProperties}>
-                    <span className="free">{picked.free ? FREE_STARTER_LABEL : "Gratis primele 7 zile"}</span>
+                    <span className="free">{picked.free ? FREE_STARTER_LABEL : "Gratis la început"}</span>
                     <div className="big">
                       {picked.free ? (
                         <>
@@ -345,8 +350,8 @@ function OnboardingPage() {
                       </div>
                       <div>
                         <i />
-                        <b>{picked.free ? "În fiecare lună" : "Ziua 7"}</b>
-                        <small>{picked.free ? "7 zile de rulare" : "Link de plată pe WhatsApp"}</small>
+                        <b>{picked.free ? "În fiecare lună" : "La final"}</b>
+                        <small>{picked.free ? "Perioadă gratuită de rulare" : "Link de plată pe WhatsApp"}</small>
                       </div>
                       <div>
                         <i />
@@ -358,7 +363,7 @@ function OnboardingPage() {
                 </div>
                 <div className="acts">
                   <button type="button" className="btn btn-w" onClick={() => selectPlan(picked)}>
-                    {picked.free ? "Începe gratuit" : "Începe gratuit 7 zile"} <span className="arr">→</span>
+                    Începe gratuit <span className="arr">→</span>
                   </button>
                   <span className="fine" style={{ color: "#8c89a6" }}>
                     {planChosen ? "Ai deja un plan ales. Îl poți schimba aici." : "Fără card. Poți schimba planul oricând."}

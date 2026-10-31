@@ -94,7 +94,7 @@ function Settings() {
         </TabsList>
 
         <TabsContent value="cont" className="mt-6 space-y-4">
-          <Card title="Plan & facturare" subtitle="Abonamentul tău activ, perioada de trial și data următoarei facturări.">
+          <Card title="Plan & facturare" subtitle="Abonamentul tău activ și data următoarei facturări.">
             <SubscriptionBadge />
           </Card>
 
