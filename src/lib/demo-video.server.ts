@@ -37,6 +37,8 @@ const AVATAR_MODEL = "omnihuman-2-0";
 const AVATAR_BACKUP_MODEL = "kling/ai-avatar-standard";
 const AVATAR_TIMEOUT_MS = 30 * 60 * 1000;
 const AVATAR_PROMPT_MAX = 300;
+/** OmniHuman refuză vocea sub 4 s; bucățile scurte primesc liniște la final, iar montajul taie cadrul la durata lui. */
+const AVATAR_MIN_AUDIO_SEC = 4;
 export const DELIVERY_TEMPLATE = "materiale_gata";
 export const DELIVERY_PAYLOAD = "materiale";
 
@@ -561,7 +563,8 @@ async function cutAudio(voice: Uint8Array, t0: number, t1: number, work: string,
   const inp = join(work, "voice.mp3");
   await writeFile(inp, voice);
   const out = join(work, `seg${i}.mp3`);
-  await run(bin, ["-y", "-i", inp, "-ss", t0.toFixed(3), "-to", t1.toFixed(3), "-c:a", "libmp3lame", "-q:a", "2", out]);
+  const cut = `atrim=${t0.toFixed(3)}:${t1.toFixed(3)},asetpts=PTS-STARTPTS,apad=whole_dur=${AVATAR_MIN_AUDIO_SEC}`;
+  await run(bin, ["-y", "-i", inp, "-af", cut, "-c:a", "libmp3lame", "-q:a", "2", out]);
   return new Uint8Array(await readFile(out));
 }
 
@@ -730,7 +733,10 @@ async function stepClips(db: any, s: any, job: Job): Promise<void> {
     if (avatars[key]?.failed && !avatars[key]?.fallback && frame) {
       const model = avatars[key].model ?? AVATAR_BACKUP_MODEL;
       let r = await retryOnce(avatars[key], () => makeAvatar(model));
-      if (!r && model !== AVATAR_BACKUP_MODEL) r = await makeAvatar(AVATAR_BACKUP_MODEL);
+      if (!r && model !== AVATAR_BACKUP_MODEL) {
+        console.warn(`[clip] avatar ${i}: ${model} a picat (${avatars[key].failMsg ?? "fără motiv"}), trec pe ${AVATAR_BACKUP_MODEL}`);
+        r = await makeAvatar(AVATAR_BACKUP_MODEL);
+      }
       // Avatarul a picat definitiv pe ambele modele: montajul pune o scenă peste voce.
       if (!r) console.warn(`[clip] avatar ${i} failed, îl acopăr cu o scenă`);
       avatars[key] = r ?? { ...avatars[key], fallback: true };
