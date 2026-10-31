@@ -228,9 +228,9 @@ async function sc4(ok,ins){
   PS.className='scr s-web';const B=cB();B.innerHTML='';$('#cClip').classList.remove('pulse');$('#cPtr').classList.remove('on');
   const STEPS=['Scriu scenariul în română','Creez cadrele din pozele tale','Sincronizez vocea și buzele','Montez subtitrările'];
   const card=`<div class="cgen"><div class="gt"><span id="gLab">${STEPS[0]}</span><b id="gPc">0%</b></div><div class="gb"><i id="gBar"></i></div></div>`;
-  if(ins){cadd('Conturile sunt conectate. Încep să creez clipul tău.');cadd('<span class="rd"></span><b>Durează între 3 și 5 minute.</b> Poți ieși de pe pagină: îți trimitem totul pe WhatsApp.','cm warn');cadd(card,'cx');$('#gPc').textContent='100%';$('#gBar').style.width='100%';$('#gLab').textContent='Gata! Clipul și pozele sunt gata ✓';return}
+  if(ins){cadd('Conturile sunt conectate. Încep să creez clipul tău.');cadd('<span class="rd"></span><b>Durează între 10 și 15 minute.</b> Poți ieși de pe pagină: îți trimitem totul pe WhatsApp.','cm warn');cadd(card,'cx');$('#gPc').textContent='100%';$('#gBar').style.width='100%';$('#gLab').textContent='Gata! Clipul și pozele sunt gata ✓';return}
   await sleep(400);if(!await ctyp(800,ok))return;cadd('Conturile sunt conectate. Încep să creez clipul tău.');await sleep(500);
-  if(!await ctyp(700,ok))return;cadd('<span class="rd"></span><b>Durează între 3 și 5 minute.</b> Poți ieși de pe pagină: îți trimitem totul pe WhatsApp.','cm warn');await sleep(900);if(!ok())return;
+  if(!await ctyp(700,ok))return;cadd('<span class="rd"></span><b>Durează între 10 și 15 minute.</b> Poți ieși de pe pagină: îți trimitem totul pe WhatsApp.','cm warn');await sleep(900);if(!ok())return;
   cadd(card,'cx');const lab=$('#gLab'),pc=$('#gPc'),bar=$('#gBar');
   for(let p=0;p<=100;p+=2){bar.style.width=p+'%';pc.textContent=p+'%';lab.textContent=STEPS[Math.min(3,Math.floor(p/26))];await sleep(120);if(!ok())return}
   lab.textContent='Gata! Clipul și pozele sunt gata ✓';

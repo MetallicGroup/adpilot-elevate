@@ -25,7 +25,7 @@ const sections = [
   {
     title: "Clipuri și poze generate cu AI",
     items: [
-      { id: "primul-clip", h: "Primul clip și 2 poze, gratuite", body: "La înscriere trimiți 2–3 poze cu afacerea ta. AdPilot creează un clip de 20–25 de secunde, cu voce în română, subtitrări și mai multe unghiuri, plus 2 poze pentru reclame. Durează 3–5 minute, iar le primești și pe WhatsApp. Perioada gratuită include doar acest clip și aceste 2 poze." },
+      { id: "primul-clip", h: "Primul clip și 2 poze, gratuite", body: "La înscriere trimiți 2–3 poze cu afacerea ta. AdPilot creează un clip de 20–25 de secunde, cu voce în română, subtitrări și mai multe unghiuri, plus 2 poze pentru reclame. Durează 10–15 minute, iar le primești și pe WhatsApp. Perioada gratuită include doar acest clip și aceste 2 poze." },
       { id: "limite-ai", h: "Câte clipuri și poze primești", body: "Starter: doar cele de la înscriere. Pro și Premium: la fel în primele 7 zile; după abonare, Pro are 4 clipuri și 10 poze AI pe lună, iar Premium 15 clipuri și poze nelimitate. Limitele se reîncarcă la începutul lunii." },
       { id: "folosire-clip", h: "Folosește clipul în reclame", body: "Clipul se publică pe Facebook, Instagram (Reels) și TikTok. Când pornești o reclamă, asistentul te întreabă dacă folosești clipul, pozele sau altceva." },
     ],

@@ -1026,7 +1026,7 @@ function Work(props: { state: StartState; niche: string; goal: StartGoal | null;
       "wait",
       <>
         <span className="rd" />
-        <b>Durează între 3 și 5 minute.</b> Poți ieși de pe pagină: îți trimitem clipul și pozele direct pe WhatsApp, imediat ce sunt gata.
+        <b>Durează între 10 și 15 minute.</b> Poți ieși de pe pagină: îți trimitem clipul și pozele direct pe WhatsApp, imediat ce sunt gata.
       </>,
       demoDone ? "m cool" : "m warn",
     );
@@ -1251,7 +1251,7 @@ function Canvas(props: { state: StartState; active: boolean; done: boolean }) {
             <span className="lbar-fill" style={{ width: `${pct}%` }} />
           </div>
         </div>
-        <p className="gnote">Durează 3–5 minute. Poți închide pagina: îți trimitem totul pe WhatsApp.</p>
+        <p className="gnote">Durează 10–15 minute. Poți închide pagina: îți trimitem totul pe WhatsApp.</p>
       </div>
     );
   }

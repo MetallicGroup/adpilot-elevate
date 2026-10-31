@@ -13,7 +13,7 @@
  *             ElevenLabs: vocea (20–25 s) cu momentul fiecărui cuvânt → planul tăieturilor;
  *             pornesc: selfie-ul (Nano Banana Pro) și 2 poze 4:5
  *   clips   → după selfie: planul mediu, prim-planul și cadrele scenelor (selfie-ul ca referință);
- *             pe fiecare unghi gata: Kling AI Avatar pe bucata lui din voce; scena → Kling Turbo
+ *             pe fiecare unghi gata: OmniHuman pe bucata lui din voce (Kling Avatar dacă pică); scena → Kling Turbo
  *   render  → ffmpeg: cadrele lipite pe tăieturi, vocea întreagă peste muzică, subtitrări cuvânt cu cuvânt
  *   deliver → șablonul `materiale_gata`; materialele pleacă la apăsarea butonului
  *
@@ -32,6 +32,11 @@ const BUCKET = "onboarding";
 const MUSIC_BASE = "https://www.adpilot.ro/music";
 const LOCK_MS = 4 * 60 * 1000;
 const MAX_ERRORS = 4;
+/** Buzele: OmniHuman arată cel mai natural, dar e lent (~7 min pe bucată). Kling Avatar doar dacă pică de tot. */
+const AVATAR_MODEL = "omnihuman-2-0";
+const AVATAR_BACKUP_MODEL = "kling/ai-avatar-standard";
+const AVATAR_TIMEOUT_MS = 30 * 60 * 1000;
+const AVATAR_PROMPT_MAX = 300;
 export const DELIVERY_TEMPLATE = "materiale_gata";
 export const DELIVERY_PAYLOAD = "materiale";
 
@@ -203,8 +208,16 @@ function angleInput(kind: "medium" | "close", selfieUrl: string, photoUrls: stri
 }
 
 const SCENE_RULE =
-  "Candid documentary moment caught mid-action: real-looking people with natural skin and ordinary clothes, nobody looks at the camera or poses. " +
-  "Anatomically correct hands and faces. Shot on a modern smartphone, natural light, vertical 9:16. No text, no logos, no watermark.";
+  "Cinematic film still caught mid-action: real-looking people with natural skin and ordinary clothes, nobody looks at the camera or poses. " +
+  "Anatomically correct hands and faces. Shallow depth of field, soft directional light, natural film color, shot on a 35mm lens, vertical 9:16. No text, no logos, no watermark.";
+
+/** Câte o mișcare de cameră pe scenă, ca scenele să nu semene între ele și să se simtă față de selfie-ul UGC. */
+const SCENE_CAMERA = [
+  "smooth gimbal shot following the action",
+  "slow dolly-in toward the people",
+  "slow lateral tracking shot with foreground parallax",
+  "gentle arc around the people",
+];
 
 function sceneInput(scene: Scene, selfieUrl: string, photoUrls: string[]) {
   const place = "When the scene happens at the business, keep the place recognizable from the location photos: same walls, colors, equipment and light.";
@@ -229,18 +242,21 @@ function imageInput(prompt: string, photoUrl: string) {
   };
 }
 
-function sceneClipInput(scene: Scene, imageUrl: string) {
+function sceneClipInput(scene: Scene, index: number, imageUrl: string) {
+  const camera = SCENE_CAMERA[index % SCENE_CAMERA.length];
   return {
-    prompt: `${scene.motion} The people keep moving naturally the whole time, handheld camera with a slow push-in, the same people and place, realistic, no text.`,
+    prompt: `${scene.motion} The people keep moving naturally the whole time, cinematic ${camera}, the same people and place, realistic, no text.`,
     image_urls: [imageUrl],
     duration: "3",
     resolution: "720p",
   };
 }
 
-function avatarInput(script: DemoScript, angle: Angle, imageUrl: string, audioUrl: string) {
+function avatarInput(model: string, script: DemoScript, angle: Angle, imageUrl: string, audioUrl: string) {
   const cam = angle === "selfie" ? "Handheld selfie video with slight natural camera shake; the person talks to the phone camera." : "Static camera.";
-  return { image_url: imageUrl, audio_url: audioUrl, prompt: `${script.avatarPrompt} ${cam}` };
+  if (model === AVATAR_BACKUP_MODEL) return { image_url: imageUrl, audio_url: audioUrl, prompt: `${script.avatarPrompt} ${cam}` };
+  const prompt = `${script.avatarPrompt.slice(0, AVATAR_PROMPT_MAX - cam.length - 1)} ${cam}`;
+  return { image_urls: [imageUrl], audio_url: audioUrl, prompt, enable_watermark: false };
 }
 
 // ───────────────────────────── storage ─────────────────────────────
@@ -707,15 +723,15 @@ async function stepClips(db: any, s: any, job: Job): Promise<void> {
     if (shot.kind !== "talk") continue;
     const frame = frames[shot.angle]?.url;
     const key = String(i);
-    if (frame && !avatars[key]) {
-      avatars[key] = await kieCreate("kling/ai-avatar-standard", avatarInput(script, shot.angle, frame, await signedUrl(db, shot.audio!)));
-    }
-    avatars[key] = (await kiePoll(avatars[key]))!;
+    const makeAvatar = async (model: string) =>
+      kieCreate(model, avatarInput(model, script, shot.angle, frame!, await signedUrl(db, shot.audio!)));
+    if (frame && !avatars[key]) avatars[key] = await makeAvatar(AVATAR_MODEL);
+    avatars[key] = (await kiePoll(avatars[key], AVATAR_TIMEOUT_MS))!;
     if (avatars[key]?.failed && !avatars[key]?.fallback && frame) {
-      const r = await retryOnce(avatars[key], async () =>
-        kieCreate("kling/ai-avatar-standard", avatarInput(script, shot.angle, frame!, await signedUrl(db, shot.audio!))),
-      );
-      // Avatarul a picat definitiv (ex. Kling în pană mult timp): montajul pune o scenă peste voce.
+      const model = avatars[key].model ?? AVATAR_BACKUP_MODEL;
+      let r = await retryOnce(avatars[key], () => makeAvatar(model));
+      if (!r && model !== AVATAR_BACKUP_MODEL) r = await makeAvatar(AVATAR_BACKUP_MODEL);
+      // Avatarul a picat definitiv pe ambele modele: montajul pune o scenă peste voce.
       if (!r) console.warn(`[clip] avatar ${i} failed, îl acopăr cu o scenă`);
       avatars[key] = r ?? { ...avatars[key], fallback: true };
     }
@@ -732,7 +748,7 @@ async function stepClips(db: any, s: any, job: Job): Promise<void> {
       sceneFrames[i] = frame!;
       const key = String(i);
       if (!frame?.url) continue;
-      const makeClip = () => kieCreate("kling/v3-turbo-image-to-video", sceneClipInput(scene, frame!.url!));
+      const makeClip = () => kieCreate("kling/v3-turbo-image-to-video", sceneClipInput(scene, i, frame!.url!));
       let clip = await kiePoll(broll[key] ?? (await makeClip()));
       if (clip?.failed) clip = (await retryOnce(clip, makeClip)) ?? clip;
       broll[key] = clip;

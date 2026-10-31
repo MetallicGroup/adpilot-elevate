@@ -1,6 +1,6 @@
 /**
  * kie.ai (server-only): o singură poartă către modelele de imagine și video
- * (Nano Banana Pro, Kling AI Avatar, Kling 3.0 Turbo). Task-urile sunt asincrone:
+ * (Nano Banana Pro, OmniHuman, Kling AI Avatar, Kling 3.0 Turbo). Task-urile sunt asincrone:
  * `kieCreate` pornește, `kiePoll` verifică o dată, `kieWait` așteaptă rezultatul.
  */
 const KIE = "https://api.kie.ai/api/v1/jobs";

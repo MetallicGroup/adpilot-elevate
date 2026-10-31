@@ -90,7 +90,7 @@ function MaterialsPage() {
     try {
       const paths = clipFiles.length ? await uploadPhotos(clipFiles) : [];
       await startClip({ data: { paths, brief } });
-      toast.success("Am pornit clipul. Durează 3–5 minute; ți-l trimitem și pe WhatsApp.");
+      toast.success("Am pornit clipul. Durează 10–15 minute; ți-l trimitem și pe WhatsApp.");
       setClipFiles([]);
       setBrief("");
       await load();
@@ -149,7 +149,7 @@ function MaterialsPage() {
             </span>
             <div>
               <h2 className="text-base font-semibold">Clip nou</h2>
-              <p className="text-xs text-muted-foreground">20–25 de secunde, voce în română, subtitrări, plus 2 poze. Durează 3–5 minute.</p>
+              <p className="text-xs text-muted-foreground">20–25 de secunde, voce în română, subtitrări, plus 2 poze. Durează 10–15 minute.</p>
             </div>
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-2">

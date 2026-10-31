@@ -125,7 +125,7 @@ export function HomeV2() {
         <div className="step"><span className="k">PASUL 2</span><h3>Spui ce afacere ai</h3><p>Două întrebări: ce fel de afacere ai și ce vrei să primești. Apeluri, formulare, vizite pe site sau vânzări.</p></div>
         <div className="step"><span className="k">PASUL 3</span><h3>Trimiți 2–3 poze</h3><p>Poze făcute cu telefonul, cu locul sau lucrul tău. Din ele facem clipul și pozele pentru reclamă.</p></div>
         <div className="step"><span className="k">PASUL 4</span><h3>Conectezi Facebook sau TikTok</h3><p>Unul sau amândouă. Contul de reclame rămâne al tău, pe numele tău.</p></div>
-        <div className="step"><span className="k">PASUL 5</span><h3>AI-ul face clipul și pozele</h3><p>În 3–5 minute: un clip de 20–25 de secunde cu voce în română, plus 2 poze. Poți ieși de pe pagină, primești totul pe WhatsApp.</p></div>
+        <div className="step"><span className="k">PASUL 5</span><h3>AI-ul face clipul și pozele</h3><p>În 10–15 minute: un clip de 20–25 de secunde cu voce în română, plus 2 poze. Poți ieși de pe pagină, primești totul pe WhatsApp.</p></div>
         <div className="step"><span className="k">PASUL 6</span><h3>Pornești reclama din WhatsApp</h3><p>Apeși „Trimite-mi materialele”, primești clipul și pozele, răspunzi la două întrebări și scrii „da”.</p></div>
         <div className="step"><span className="k">PASUL 7</span><h3>Clienții îți scriu</h3><p>Primești fiecare contact pe WhatsApp, în secunda în care apare.</p></div>
       </div>
@@ -189,7 +189,7 @@ export function HomeV2() {
   <div className="wrap">
     <p className="ey" data-r>Studio AI</p>
     <h2 className="d2" data-r style={css({ marginTop: "16px", maxWidth: "18ch" })}>Clipuri și poze cu AI, făcute din pozele tale.</h2>
-    <p className="lead" data-r style={css({ marginTop: "22px", maxWidth: "52ch" })}>Trimiți 2–3 poze cu afacerea ta. În 3–5 minute primești un clip de 20–25 de secunde, cu voce în română, subtitrări și mai multe unghiuri, plus pozele gata de reclamă. Același clip merge pe Facebook, Instagram și TikTok.</p>
+    <p className="lead" data-r style={css({ marginTop: "22px", maxWidth: "52ch" })}>Trimiți 2–3 poze cu afacerea ta. În 10–15 minute primești un clip de 20–25 de secunde, cu voce în română, subtitrări și mai multe unghiuri, plus pozele gata de reclamă. Același clip merge pe Facebook, Instagram și TikTok.</p>
     <div className="sgrid">
       <div className="sclip" data-r role="img" aria-label="Clip vertical generat cu AI pentru un cabinet stomatologic, cu subtitrări">
         <div className="ttui">
@@ -259,7 +259,7 @@ export function HomeV2() {
       <details><summary>Prețul include bugetul de reclame?</summary><p>Nu. Abonamentul acoperă platforma. Bugetul îl plătești direct către Meta (Facebook și Instagram) sau TikTok, din contul tău de reclame.</p></details>
       <details><summary>Pot face reclame și pe TikTok?</summary><p>Da. Conectezi Facebook, TikTok sau ambele, iar AdPilot pornește reclama pe platformele alese, cu același clip și aceleași poze.</p></details>
       <details><summary>Ce primesc gratuit, în cele 7 zile?</summary><p>Un clip de 20–25 de secunde cu voce în română și 2 poze, generate cu AI din pozele tale. Mai multe clipuri și poze se deblochează după abonare: pe Pro 4 clipuri și 10 poze pe lună, pe Premium 15 clipuri și poze nelimitate.</p></details>
-      <details><summary>Cum se face clipul?</summary><p>Trimiți 2–3 poze cu afacerea ta. AI-ul scrie textul, creează prezentatorul în spațiul tău, înregistrează vocea în română și montează clipul cu subtitrări. Durează 3–5 minute, iar îl primești și pe WhatsApp.</p></details>
+      <details><summary>Cum se face clipul?</summary><p>Trimiți 2–3 poze cu afacerea ta. AI-ul scrie textul, creează prezentatorul în spațiul tău, înregistrează vocea în română și montează clipul cu subtitrări. Durează 10–15 minute, iar îl primești și pe WhatsApp.</p></details>
       <details><summary>Al cui este contul de reclame?</summary><p>Al tău. Contul Meta sau TikTok rămâne pe numele tău și poți retrage accesul AdPilot oricând.</p></details>
       <details><summary>Pot anula oricând?</summary><p>Da, din cont, în orice moment. Accesul continuă până la finalul perioadei plătite.</p></details>
     </div>

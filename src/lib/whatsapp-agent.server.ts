@@ -622,7 +622,7 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
 
     create_ai_clip: tool({
       description:
-        "Creează un CLIP video nou cu AI (20–25 s, vertical, prezentator în spațiul clientului, voce în română, subtitrări, plus 2 poze), pornind de la pozele lui reale (ultimele trimise pe WhatsApp sau cele de la înscriere). Folosește când cere un clip / video nou. Limită lunară după abonare: Pro 4, Premium 15; în perioada de probă are doar clipul de la înscriere. Durează 3–5 minute, iar clipul îl trimit automat aici când e gata.",
+        "Creează un CLIP video nou cu AI (20–25 s, vertical, prezentator în spațiul clientului, voce în română, subtitrări, plus 2 poze), pornind de la pozele lui reale (ultimele trimise pe WhatsApp sau cele de la înscriere). Folosește când cere un clip / video nou. Limită lunară după abonare: Pro 4, Premium 15; în perioada de probă are doar clipul de la înscriere. Durează 10–15 minute, iar clipul îl trimit automat aici când e gata.",
       inputSchema: z.object({
         brief: z
           .string()
@@ -654,7 +654,7 @@ function buildTools(ctx: AgentCtx, supabaseAdmin: any) {
             job_id: jobId,
             used_this_month: q.used + 1,
             monthly_limit: q.limit,
-            message: "Clipul a pornit. Spune-i că durează 3–5 minute și că i-l trimiți aici, automat, când e gata.",
+            message: "Clipul a pornit. Spune-i că durează 10–15 minute și că i-l trimiți aici, automat, când e gata.",
           };
         } catch (e: any) {
           return { error: e?.message ?? "Nu am putut porni clipul." };
