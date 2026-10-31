@@ -27,6 +27,7 @@ function UpgradePage() {
   const confirm = useServerFn(confirmUpgrade);
   const { openCheckout, closeCheckout, isOpen, checkoutElement } = useStripeCheckout();
   const [picked, setPicked] = useState<CatalogPlan | null>(null);
+  const [agreed, setAgreed] = useState(false);
   const [state, setState] = useState<"idle" | "confirming" | "done" | "error">(sessionId ? "confirming" : "idle");
 
   useEffect(() => {
@@ -106,9 +107,16 @@ function UpgradePage() {
             Plătești <b>{picked.lei - current} lei</b> acum.
             {renews ? ` Pe ${renews} se reînnoiește la ${picked.lei} lei.` : ` Apoi se reînnoiește la ${picked.lei} lei pe lună.`}
           </p>
+          <label className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
+            <input type="checkbox" className="mt-0.5" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
+            <span>
+              Vreau clipurile în plus imediat și înțeleg că, odată ce a fost generat un clip sau o poză, plata nu se mai rambursează. Renunț la dreptul de retragere de 14 zile.
+            </span>
+          </label>
           <button
             type="button"
-            className="mt-3 w-full rounded-xl bg-foreground px-4 py-3 font-medium text-background"
+            disabled={!agreed}
+            className="mt-3 w-full rounded-xl bg-foreground px-4 py-3 font-medium text-background disabled:opacity-40"
             onClick={() =>
               openCheckout({
                 priceId: picked.id,

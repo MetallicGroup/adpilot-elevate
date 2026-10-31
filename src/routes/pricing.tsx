@@ -44,6 +44,7 @@ const faqs = [
   { q: "Cât costă să trec pe un pachet mai mare?", a: "Plătești o singură dată diferența dintre pachete, iar clipurile în plus apar imediat. De exemplu, de la Start la Afacere plătești 406 lei. Reînnoirea rămâne la aceeași dată, la prețul noului pachet." },
   { q: "Pot face reclame și pe TikTok?", a: "Da, de la pachetul Afacere. Conectezi Facebook, TikTok sau ambele, iar AdPilot pornește reclama pe platformele alese. Bugetul îl plătești direct către platformă." },
   { q: "Pot anula oricând?", a: "Da, direct din contul tău, fără întrebări. Abonamentul rămâne activ până la finalul perioadei plătite." },
+  { q: "Pot primi banii înapoi?", a: "Odată ce a fost generat un clip sau o poză, plata nu se mai rambursează. Clipul pe care îl deblochezi e deja generat, de aceea îți arătăm începutul lui înainte să plătești." },
   { q: "Prețul include bugetul de reclame?", a: "Nu. Abonamentul AdPilot acoperă doar platforma. Bugetul de reclame este plătit direct către Meta (Facebook și Instagram) sau TikTok, din contul tău de reclame." },
   { q: "Ce metode de plată acceptați?", a: "Toate cardurile majore: Visa, Mastercard, Maestro. Plățile sunt procesate securizat prin Stripe." },
 ];

@@ -8,9 +8,11 @@ interface Props {
   returnUrl?: string;
   /** Plătește doar diferența până la `priceId`, pe abonamentul existent. */
   upgrade?: boolean;
+  /** A bifat renunțarea la retragere pentru conținutul livrat imediat. */
+  waiver?: boolean;
 }
 
-export function StripeEmbeddedCheckout({ priceId, returnUrl, upgrade }: Props) {
+export function StripeEmbeddedCheckout({ priceId, returnUrl, upgrade, waiver }: Props) {
   const createSession = useServerFn(createCheckoutSession);
   const createUpgrade = useServerFn(createUpgradeSession);
 
@@ -27,7 +29,7 @@ export function StripeEmbeddedCheckout({ priceId, returnUrl, upgrade }: Props) {
     const back = returnUrl || `${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`;
     const result = upgrade
       ? await createUpgrade({ data: { toPriceId: priceId, returnUrl: back, environment: getStripeEnvironment() } })
-      : await createSession({ data: { priceId, returnUrl: back, environment: getStripeEnvironment() } });
+      : await createSession({ data: { priceId, returnUrl: back, environment: getStripeEnvironment(), waiver } });
     if ("error" in result) throw new Error(result.error);
     if (!result.clientSecret) throw new Error("Stripe nu a returnat un client secret");
     return result.clientSecret;

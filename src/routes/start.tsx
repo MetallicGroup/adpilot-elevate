@@ -1258,7 +1258,15 @@ function ClipPaywall(props: { state: StartState }) {
   const { demo } = props.state;
   const [past, setPast] = useState(false);
   const { openCheckout, closeCheckout, isOpen, checkoutElement } = useStripeCheckout();
-  const buy = (id: string) => openCheckout({ priceId: id, returnUrl: `${window.location.origin}/start?paid=1` });
+  const [agreed, setAgreed] = useState(false);
+  const [nudge, setNudge] = useState(false);
+  const buy = (id: string) => {
+    if (!agreed) {
+      setNudge(true);
+      return;
+    }
+    openCheckout({ priceId: id, returnUrl: `${window.location.origin}/start?paid=1`, waiver: true });
+  };
   return (
     <div className="cv">
       <div className="done-wrap">
@@ -1287,6 +1295,15 @@ function ClipPaywall(props: { state: StartState }) {
               ))}
             </div>
           ) : null}
+          <label className={`pw-waiver ${nudge && !agreed ? "nudge" : ""}`}>
+            <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
+            <span>
+              Vreau clipul imediat și înțeleg că, fiind deja generat, plata nu se mai rambursează. Renunț la dreptul de retragere de 14 zile.{" "}
+              <a href="/refund-policy" target="_blank" rel="noreferrer">
+                Detalii
+              </a>
+            </span>
+          </label>
           <div className="pw-plans">
             {PLAN_CATALOG.map((p) => (
               <button key={p.id} type="button" className={`pw-plan ${p.featured ? "hot" : ""}`} onClick={() => buy(p.id)}>

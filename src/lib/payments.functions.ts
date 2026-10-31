@@ -9,6 +9,8 @@ import {
 type CheckoutSessionResult = { clientSecret: string } | { error: string };
 type PortalSessionResult = { url: string } | { error: string };
 
+const NO_REFUND_NOTICE = "Odată ce a fost generat un clip sau o poză, plata nu se mai rambursează.";
+
 async function resolveOrCreateCustomer(
   stripe: ReturnType<typeof createStripeClient>,
   options: { email?: string; userId?: string },
@@ -49,6 +51,8 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       priceId: string;
       returnUrl: string;
       environment: StripeEnv;
+      /** A bifat că vrea conținutul imediat și renunță la retragere. */
+      waiver?: boolean;
     }) => {
       if (!/^[a-zA-Z0-9_-]+$/.test(data.priceId)) throw new Error("Invalid priceId");
       // Strict same-origin allowlist to prevent open-redirect via Stripe return_url.
@@ -97,7 +101,8 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         customer: customerId,
         client_reference_id: userId,
         // FĂRĂ trial și FĂRĂ reducere — plata pornește imediat la alegerea planului.
-        metadata: { userId },
+        metadata: { userId, ...(data.waiver ? { digital_waiver_at: new Date().toISOString() } : {}) },
+        custom_text: { submit: { message: NO_REFUND_NOTICE } },
         customer_update: { address: "auto", name: "auto" },
         // „Factură pe firmă": bifă opțională în checkout care cere CUI + denumire
         // firmă (pt. RO: tip `ro_tin`). Datele ajung pe factura Stripe, trimisă pe email.
@@ -158,7 +163,14 @@ export const createUpgradeSession = createServerFn({ method: "POST" })
             price_data: { currency: "ron", unit_amount: diff * 100, product_data: { name: `Trecere la pachetul ${to.name}` } },
           },
         ],
-        metadata: { userId, kind: "upgrade", toPriceId: to.id, subscriptionId: sub.stripe_subscription_id },
+        metadata: {
+          userId,
+          kind: "upgrade",
+          toPriceId: to.id,
+          subscriptionId: sub.stripe_subscription_id,
+          digital_waiver_at: new Date().toISOString(),
+        },
+        custom_text: { submit: { message: NO_REFUND_NOTICE } },
         customer_update: { address: "auto", name: "auto" },
         tax_id_collection: { enabled: true },
         automatic_tax: { enabled: true },

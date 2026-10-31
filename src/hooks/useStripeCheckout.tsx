@@ -5,6 +5,7 @@ interface CheckoutOptions {
   priceId: string;
   returnUrl?: string;
   upgrade?: boolean;
+  waiver?: boolean;
 }
 
 export function useStripeCheckout() {
