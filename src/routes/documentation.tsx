@@ -17,7 +17,7 @@ const sections = [
   {
     title: "1. Primii pași",
     items: [
-      { id: "creeaza-cont", h: "Creează-ți contul", body: "Apasă „Începe gratuit” pe adpilot.ro și introdu numărul tău de WhatsApp. Primești un cod pe WhatsApp, răspunzi la două întrebări despre afacere și trimiți 2–3 poze. Din acel moment ai cont; conturile vechi cu email sau Google rămân valabile." },
+      { id: "creeaza-cont", h: "Creează-ți contul", body: "Apasă „Fă-ți clipul” pe adpilot.ro și introdu numărul tău de WhatsApp. Primești un cod pe WhatsApp, răspunzi la două întrebări despre afacere și trimiți 2–3 poze. Din acel moment ai cont; conturile vechi cu email sau Google rămân valabile." },
       { id: "conecteaza", h: "Conectează contul de reclame", body: "Conectezi Facebook (Meta), TikTok sau ambele, din onboarding sau din Setări → Conexiuni. Vei fi redirecționat către ecranul OAuth oficial al platformei, unde alegi ce cont de reclame să partajezi cu AdPilot. Poți revoca accesul oricând." },
       { id: "prima-campanie", h: "Lansează prima campanie", body: "Apasă „Creează campanie” pe dashboard. Urmează wizard-ul: obiectiv, buget, audiență, creativ, formular (dacă e cazul) și revizuire. AI-ul îți sugerează audiențe și texte la fiecare pas." },
     ],
@@ -25,8 +25,8 @@ const sections = [
   {
     title: "Clipuri și poze generate cu AI",
     items: [
-      { id: "primul-clip", h: "Primul clip și 2 poze, gratuite", body: "La înscriere trimiți 2–3 poze cu afacerea ta. AdPilot creează un clip de 20–25 de secunde, cu voce în română, subtitrări și mai multe unghiuri, plus 2 poze pentru reclame. Durează 10–15 minute, iar le primești și pe WhatsApp. Perioada gratuită include doar acest clip și aceste 2 poze." },
-      { id: "limite-ai", h: "Câte clipuri și poze primești", body: "Starter: doar cele de la înscriere. Pro și Premium: la fel în primele 7 zile; după abonare, Pro are 4 clipuri și 10 poze AI pe lună, iar Premium 15 clipuri și poze nelimitate. Limitele se reîncarcă la începutul lunii." },
+      { id: "primul-clip", h: "Primul clip", body: "La înscriere trimiți 2–3 poze cu afacerea ta. AdPilot creează un clip de 20–25 de secunde, cu voce în română, subtitrări și muzică, plus 2 poze pentru reclame. Durează cam 10 minute, iar când e gata primești un mail. Vezi gratuit cum începe clipul; clipul întreg și pozele se deblochează când alegi un pachet." },
+      { id: "limite-ai", h: "Câte clipuri și poze primești", body: "Start: 2 clipuri sau 20 de poze pe lună. Creator: 6 clipuri sau 60 de poze. Afacere: 16 clipuri sau 160 de poze, plus reclame și asistentul de pe WhatsApp. Zilnic: 32 de clipuri sau 320 de poze, plus reclame și asistent. Un clip consumă cât 10 poze, iar totalul se reîncarcă la fiecare reînnoire." },
       { id: "folosire-clip", h: "Folosește clipul în reclame", body: "Clipul se publică pe Facebook, Instagram (Reels) și TikTok. Când pornești o reclamă, asistentul te întreabă dacă folosești clipul, pozele sau altceva." },
     ],
   },

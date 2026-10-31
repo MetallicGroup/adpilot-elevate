@@ -195,9 +195,10 @@ export async function verifyCode(
       isNew = true;
     }
 
-    await supabaseAdmin
+    // Conturile noi intră pe paywall: văd începutul clipului și plătesc pentru tot.
+    await (supabaseAdmin as any)
       .from("profiles")
-      .update({ phone: `0${phone.slice(2)}`, chosen_plan: "starter", plan: "starter" })
+      .update({ phone: `0${phone.slice(2)}`, chosen_plan: "starter", plan: "starter", ...(isNew ? { paywall: true } : {}) })
       .eq("id", userId);
 
     const { data: hasWa } = await supabaseAdmin

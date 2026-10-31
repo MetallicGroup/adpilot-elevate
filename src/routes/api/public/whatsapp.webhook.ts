@@ -338,11 +338,34 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
                 } = await import("@/lib/access.server");
                 const access = await resolveAccess(supabaseAdmin, conn.user_id);
                 if (!access.botAllowed) {
+                  // Clipul plătit se livrează și pe pachetele fără agent.
+                  if (
+                    access.paywall &&
+                    type === "button" &&
+                    (String(m.button?.payload ?? "").startsWith("materiale") || /trimite-mi materialele/i.test(text ?? ""))
+                  ) {
+                    try {
+                      const { deliverDemoMaterials } = await import("@/lib/demo-video.server");
+                      const sent = await deliverDemoMaterials(supabaseAdmin, {
+                        userId: conn.user_id,
+                        connectionId: conn.id,
+                        toPhone: fromPhone,
+                        payload: m.button?.payload ?? null,
+                      });
+                      if (sent) continue;
+                    } catch (e) {
+                      console.error("[wa] paid clip delivery failed", e);
+                    }
+                  }
                   const consumed = access.freeStarter.state === "consumed";
                   const paidChoice = !!access.chosenPlan && !isFreeChoice(access.chosenPlan);
                   let msg: string;
                   let kind: string;
-                  if (paidChoice) {
+                  if (access.paywall) {
+                    const { paywallBotReply } = await import("@/lib/paywall-bot.server");
+                    msg = paywallBotReply(conn.user_id, access.tier, String(m.interactive?.button_reply?.id ?? ""));
+                    kind = "paywall_gate";
+                  } else if (paidChoice) {
                     // Pro/Premium neplătit după perioada gratuită → link de plată Stripe.
                     const { data: prof } = await (supabaseAdmin as any)
                       .from("profiles")

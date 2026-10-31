@@ -221,3 +221,19 @@
 @media (prefers-reduced-motion: reduce) {
   .st *, .st *::before, .st *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
+
+/* Paywall-ul clipului */
+.st .pw-vid { position: relative; }
+.st .pw-lock { position: absolute; inset: auto 12px 56px; display: flex; flex-direction: column; gap: 2px; padding: 12px; border-radius: 14px; background: rgba(10, 10, 16, 0.78); color: #fff; text-align: center; pointer-events: none; }
+.st .pw-lock small { color: rgba(255, 255, 255, 0.78); }
+.st .pw-plans { display: flex; flex-direction: column; gap: 8px; }
+.st .pw-plan { position: relative; display: flex; flex-direction: column; gap: 3px; width: 100%; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--st-line-2); background: var(--st-ink-3); color: inherit; font: inherit; text-align: left; cursor: pointer; transition: border-color 0.15s, transform 0.15s; }
+.st .pw-plan:hover { border-color: #8d6bff; transform: translateY(-1px); }
+.st .pw-plan.hot { border-color: #8d6bff; box-shadow: 0 0 0 1px #8d6bff; }
+.st .pw-plan small { color: var(--st-muted); font-size: 12.5px; }
+.st .pw-plan small.yes { color: #7fe3a8; }
+.st .pw-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.st .pw-top em { font-style: normal; font-weight: 700; }
+.st .pw-tag { align-self: flex-start; padding: 1px 8px; border-radius: 999px; background: #8d6bff; color: #fff; font-size: 11px; font-weight: 700; }
+.st .pw-checkout { position: fixed; inset: 0; z-index: 60; overflow-y: auto; padding: 16px; background: #fff; color: #17171c; }
+.st .pw-close { display: block; margin: 0 auto 12px; max-width: 760px; width: 100%; border: 0; background: none; color: #55555f; font: inherit; text-align: left; cursor: pointer; }

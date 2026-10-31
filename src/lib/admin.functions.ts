@@ -485,22 +485,7 @@ export const getAdminDashboard = createServerFn({ method: "GET" })
       .slice(-30);
 
     // ====== Financiar (din subscriptions; DOAR mediul live, exclus comp) ======
-    const monthlyLei = (priceId?: string | null): number => {
-      const v = (priceId ?? "").toLowerCase();
-      if (!v || v.includes("comp")) return 0; // comp = cont gratuit (admin/propriu)
-      if (v.includes("premium")) return 995;
-      if (v.includes("pro")) return 495;
-      if (v.includes("starter")) return 249;
-      return 0;
-    };
-    const planName = (priceId?: string | null): string => {
-      const v = (priceId ?? "").toLowerCase();
-      if (v.includes("comp")) return "Comp (gratuit)";
-      if (v.includes("premium")) return "Premium";
-      if (v.includes("pro")) return "Pro";
-      if (v.includes("starter")) return "Starter";
-      return "Necunoscut";
-    };
+    const { planMonthlyLei: monthlyLei, planLabel: planName } = await import("@/lib/plan-catalog");
     const subs = (subsRes.data ?? []).filter((s: any) => s.environment === "live");
     const payingSubs = subs.filter((s: any) => s.status === "active" && monthlyLei(s.price_id) > 0);
     const trialingSubs = subs.filter(

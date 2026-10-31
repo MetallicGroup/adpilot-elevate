@@ -41,7 +41,10 @@ export type FreeStarterState = "none" | "eligible" | "active" | "consumed";
 
 export type Access = {
   tier: PlanTier;
+  /** Are reclame și agent (Afacere, Zilnic și planurile vechi Pro, Premium). */
   paid: boolean;
+  /** Cont nou, cu paywall: fără perioadă gratuită, doar pachet plătit. */
+  paywall: boolean;
   chosenPlan: string | null;
   signupTrial: { active: boolean; endsAt: string | null };
   freeStarter: {
@@ -79,16 +82,17 @@ export async function resolveAccess(
   const { data: profile } = await supabaseAdmin
     .from("profiles")
     .select(
-      "chosen_plan, signup_trial_ends_at, free_plan_month, free_plan_started_at",
+      "chosen_plan, paywall, signup_trial_ends_at, free_plan_month, free_plan_started_at",
     )
     .eq("id", userId)
     .maybeSingle();
 
   const chosenPlan: string | null = profile?.chosen_plan ?? null;
+  const paywall = !!profile?.paywall;
 
   // 7 zile de la crearea contului.
   const trialEndsAt: string | null = profile?.signup_trial_ends_at ?? null;
-  const signupActive = !paid && !!trialEndsAt && Date.now() < new Date(trialEndsAt).getTime();
+  const signupActive = !paid && !paywall && !!trialEndsAt && Date.now() < new Date(trialEndsAt).getTime();
 
   // Free Starter lunar (7 zile), relevant DOAR pentru cei care au ales gratuitul.
   const month = currentPlanMonth();
@@ -107,16 +111,17 @@ export async function resolveAccess(
   }
 
   const starterChoice = isFreeChoice(chosenPlan);
-  const freeStarterActive = !paid && starterChoice && (fsState === "active" || fsState === "eligible");
+  const freeStarterActive = !paid && !paywall && starterChoice && (fsState === "active" || fsState === "eligible");
 
   const allowed = paid || signupActive || freeStarterActive;
   return {
     tier,
     paid,
+    paywall,
     chosenPlan,
     signupTrial: { active: signupActive, endsAt: trialEndsAt },
     freeStarter: {
-      state: paid ? "none" : starterChoice ? fsState : "none",
+      state: paid || paywall ? "none" : starterChoice ? fsState : "none",
       month: fpMonth,
       startedAt,
       endsAt: fsEndsAt,
@@ -140,6 +145,9 @@ export async function assertCanPublishCampaign(
   const access = await resolveAccess(supabaseAdmin, userId);
   if (access.paid || access.signupTrial.active) return; // nelimitat
 
+  if (access.paywall) {
+    throw new Error(`Reclamele sunt incluse de la pachetul Afacere (495 lei pe lună). Dacă ai deja un pachet, plătești doar diferența: https://www.adpilot.ro/upgrade`);
+  }
   if (!access.whatsappAllowed) {
     if (access.freeStarter.state === "consumed") {
       throw new Error(
@@ -165,4 +173,20 @@ export async function assertCanPublishCampaign(
       `Planul Starter gratuit include o singură campanie. Treci pe Pro sau Premium pentru campanii NELIMITATE, care rulează non-stop: ${PRICING_URL}`,
     );
   }
+}
+
+/**
+ * Clipul de la înscriere e blocat cât timp contul cu paywall n-are niciun pachet.
+ * După prima plată rămâne deblocat, chiar dacă abonamentul se oprește ulterior.
+ */
+export async function isClipLocked(supabaseAdmin: any, userId: string): Promise<boolean> {
+  const [{ data: profile }, { data: onb }] = await Promise.all([
+    supabaseAdmin.from("profiles").select("paywall").eq("id", userId).maybeSingle(),
+    supabaseAdmin.from("onboarding_sessions").select("demo_unlocked_at").eq("user_id", userId).maybeSingle(),
+  ]);
+  if (!profile?.paywall || onb?.demo_unlocked_at) return false;
+  const tier = await getUserPlanTier(supabaseAdmin, userId);
+  if (tier === "none" || tier === "starter") return true;
+  await supabaseAdmin.from("onboarding_sessions").update({ demo_unlocked_at: new Date().toISOString() }).eq("user_id", userId);
+  return false;
 }

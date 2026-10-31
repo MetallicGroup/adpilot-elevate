@@ -33,9 +33,9 @@ export function NicheLanding({ niche }: { niche: NicheConfig }) {
           <SignupButton label={cta} onClick={track("hero")} />
         </div>
         <div className="facts">
-          <span>7 zile gratuite</span>
-          <span>Fără card</span>
-          <span>Primul clip AI gratuit</span>
+          <span>Vezi clipul înainte să plătești</span>
+          <span>Fără agenție</span>
+          <span>De la 89 lei pe lună</span>
         </div>
         <div className="plat" aria-label="Platforme de reclame">
           <span>Facebook</span>
@@ -87,7 +87,7 @@ export function NicheLanding({ niche }: { niche: NicheConfig }) {
           Prețuri
         </p>
         <h2 className="d2" data-r style={{ marginTop: 16, maxWidth: "15ch" }}>
-          Primele 7 zile sunt gratuite. Fără card.
+          Vezi gratuit cum începe clipul. Plătești doar dacă îl vrei.
         </h2>
         <PlanCards />
       </Band>
@@ -99,7 +99,7 @@ export function NicheLanding({ niche }: { niche: NicheConfig }) {
         <Faq items={niche.faq} />
       </Band>
 
-      <FinalCta title={niche.socialProof.replace(/\s*🇷🇴/, "")} label="Începe gratuit acum" onClick={track("final")} />
+      <FinalCta title={niche.socialProof.replace(/\s*🇷🇴/, "")} label="Fă-ți clipul" onClick={track("final")} />
     </MarketingLayout>
   );
 }

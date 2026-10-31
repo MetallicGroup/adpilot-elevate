@@ -1,6 +1,7 @@
 /**
- * Onboarding-ul nou (/start): întrebări → poze → conectare Facebook/TikTok →
- * clipul demo gratuit, livrat pe WhatsApp. Starea stă în `onboarding_sessions`.
+ * Onboarding-ul nou (/start). Conturile cu paywall: întrebări → poze → clip → previzualizare → plată,
+ * iar Facebook și TikTok se conectează abia la pornirea reclamei. Conturile vechi: conectare, apoi clip gratuit.
+ * Starea stă în `onboarding_sessions`.
  */
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -26,7 +27,17 @@ export type StartState = {
     error: string | null;
     videoUrl: string | null;
     imageUrls: string[];
+    /** Previzualizarea blurată, cât timp clipul e blocat. */
+    previewUrl: string | null;
+    /** Secunda de la care previzualizarea e blurată. */
+    previewCut: number | null;
+    previewImageUrls: string[];
   };
+  /** Cont nou: clipul pornește fără conectare și se deblochează la plată. */
+  paywall: boolean;
+  /** Clipul e gata, dar n-a plătit încă. */
+  locked: boolean;
+  email: string | null;
   completed: boolean;
 };
 
@@ -65,11 +76,17 @@ export const getStartState = createServerFn({ method: "POST" })
       db.from("tiktok_connections").select("id").eq("user_id", userId).eq("is_active", true).limit(1).maybeSingle(),
     ]);
 
+    const { isClipLocked } = await import("@/lib/access.server");
+    const { data: profile } = await db.from("profiles").select("paywall").eq("id", userId).maybeSingle();
+    const locked = await isClipLocked(db, userId);
     const photoPaths: string[] = s?.photo_paths ?? [];
-    const outPaths: string[] = [...(s?.demo_video_path ? [s.demo_video_path] : []), ...(s?.demo_image_paths ?? [])];
-    const [photoUrls, outUrls] = await Promise.all([signed(db, photoPaths), signed(db, outPaths)]);
-    const hasVideo = !!s?.demo_video_path;
-    const { demoProgress } = await import("@/lib/demo-video.server");
+    // Cât e blocat, în browser ajung doar fișierele de previzualizare.
+    const outPaths: string[] = locked ? [] : [...(s?.demo_video_path ? [s.demo_video_path] : []), ...(s?.demo_image_paths ?? [])];
+    const previewPaths: string[] = locked ? [...(s?.demo_preview_path ? [s.demo_preview_path] : []), ...(s?.demo_preview_image_paths ?? [])] : [];
+    const [photoUrls, outUrls, previewUrls] = await Promise.all([signed(db, photoPaths), signed(db, outPaths), signed(db, previewPaths)]);
+    const hasVideo = !locked && !!s?.demo_video_path;
+    const hasPreview = locked && !!s?.demo_preview_path;
+    const { demoProgress, previewCut } = await import("@/lib/demo-video.server");
     const prog = demoProgress(s?.demo_status ?? "none", s?.demo_job ?? {});
 
     const { data: au } = await supabaseAdmin.auth.admin.getUserById(userId);
@@ -90,7 +107,13 @@ export const getStartState = createServerFn({ method: "POST" })
         error: s?.demo_status === "failed" ? "Clipul nu a putut fi creat. Încearcă din nou." : null,
         videoUrl: hasVideo ? (outUrls[0] ?? null) : null,
         imageUrls: (hasVideo ? outUrls.slice(1) : outUrls).filter(Boolean) as string[],
+        previewUrl: hasPreview ? (previewUrls[0] ?? null) : null,
+        previewCut: hasPreview ? previewCut(s?.demo_job?.plan, s?.demo_job?.voice?.duration ?? 20) : null,
+        previewImageUrls: (hasPreview ? previewUrls.slice(1) : []).filter(Boolean) as string[],
       },
+      paywall: !!profile?.paywall,
+      locked: locked && !!s?.demo_video_path,
+      email: isPlaceholderEmail(au?.user?.email) ? null : (au?.user?.email ?? null),
       completed: !!s?.completed_at,
     };
   });
@@ -182,8 +205,9 @@ export const saveStartTargets = createServerFn({ method: "POST" })
   });
 
 /**
- * Pornește clipul demo (unul gratuit per cont; se poate relua doar dacă a eșuat).
- * Cere pozele și conturile alese conectate. Generarea rulează din cron (demo-tick).
+ * Pornește clipul demo (unul per cont; se poate relua doar dacă a eșuat).
+ * Conturile vechi trebuie să aibă conturile alese conectate; cele cu paywall, doar pozele.
+ * Generarea rulează din cron (demo-tick).
  */
 export const startDemo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -196,17 +220,30 @@ export const startDemo = createServerFn({ method: "POST" })
     if (!s.photo_paths?.length) throw new Error("Trimite întâi 2–3 poze.");
     if (s.demo_status !== "none" && s.demo_status !== "failed") return { ok: true as const, status: s.demo_status };
 
-    const [{ data: meta }, { data: tt }] = await Promise.all([
+    const [{ data: meta }, { data: tt }, { data: profile }] = await Promise.all([
       db.from("meta_connections").select("id").eq("user_id", userId).eq("is_active", true).limit(1).maybeSingle(),
       db.from("tiktok_connections").select("id").eq("user_id", userId).eq("is_active", true).limit(1).maybeSingle(),
+      db.from("profiles").select("paywall").eq("id", userId).maybeSingle(),
     ]);
     const connected = { fb: !!meta, tt: !!tt };
     const targets: StartTarget[] = s.targets?.length ? s.targets : (["fb", "tt"] as StartTarget[]).filter((k) => connected[k]);
-    if (!targets.length || targets.some((k) => !connected[k])) {
+    if (!profile?.paywall && (!targets.length || targets.some((k) => !connected[k]))) {
       throw new Error("Conectează întâi contul de Facebook sau TikTok.");
     }
 
     const now = new Date().toISOString();
+    if (profile?.paywall && s.demo_status === "none") {
+      // Fiecare clip te costă înainte de plată, așa că limităm câte pornesc pe zi.
+      const dayStart = new Date();
+      dayStart.setUTCHours(0, 0, 0, 0);
+      const { count } = await db
+        .from("onboarding_sessions")
+        .select("user_id", { count: "exact", head: true })
+        .gte("demo_started_at", dayStart.toISOString());
+      if ((count ?? 0) >= Number(process.env.DEMO_DAILY_LIMIT ?? 30)) {
+        throw new Error("Avem multe clipuri în lucru azi. Încearcă din nou mâine dimineață.");
+      }
+    }
     // „Refă clipul” după un eșec: refolosim ce a ieșit deja (scenariu, voce, cadre bune), refacem doar ce a picat.
     const { reusableDemoJob } = await import("@/lib/demo-video.server");
     const reuse = s.demo_status === "failed" ? reusableDemoJob(s.demo_job, s.updated_at) : null;
@@ -232,4 +269,15 @@ export const startDemo = createServerFn({ method: "POST" })
       console.error("[start] first demo step failed", (e as Error).message);
     }
     return { ok: true as const, status: "queued" as const };
+  });
+
+/** După plată: butonul „Primește pe WhatsApp”. */
+export const sendClipToWhatsApp = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { sendPaidClipToWhatsApp } = await import("@/lib/demo-video.server");
+    const { isClipLocked } = await import("@/lib/access.server");
+    if (await isClipLocked(supabaseAdmin, context.userId)) throw new Error("Deblochează întâi clipul.");
+    return { result: await sendPaidClipToWhatsApp(supabaseAdmin, context.userId) };
   });

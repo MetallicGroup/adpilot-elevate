@@ -18,7 +18,7 @@ export type OnboardingStatus = {
   needsEmail: boolean;
   subscriptionStatus: string | null;
   trialEnd: string | null;
-  planTier: "none" | "starter" | "pro" | "premium";
+  planTier: "none" | "starter" | "clips2" | "clips6" | "pro" | "premium";
   whatsappAllowed: boolean;
   /** Planul ales la înscriere (starter/pro/premium) — fără plată la înscriere. */
   chosenPlan: string | null;
@@ -77,14 +77,8 @@ export const getOnboardingStatus = createServerFn({ method: "POST" })
       (sub.status === "canceled" && periodEnd !== null && periodEnd > now)
     );
 
-    const priceId = (sub?.price_id ?? "").toLowerCase();
-    const planTier: OnboardingStatus["planTier"] = priceId.includes("premium")
-      ? "premium"
-      : priceId.includes("pro")
-        ? "pro"
-        : priceId.includes("starter")
-          ? "starter"
-          : "none";
+    const { tierFromId } = await import("@/lib/plan.server");
+    const planTier: OnboardingStatus["planTier"] = tierFromId(sub?.price_id) ?? "none";
     // Access central: factorează și Starter gratuit (nu doar abonamentul plătit).
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { resolveAccess } = await import("@/lib/access.server");

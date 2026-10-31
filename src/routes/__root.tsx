@@ -93,7 +93,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "Lansează și optimizează reclame pe Facebook, Instagram și TikTok dintr-o singură aplicație, cu poze și clipuri generate de AI, iar fiecare lead ajunge direct pe WhatsApp. 7 zile gratuite.",
+          "Lansează și optimizează reclame pe Facebook, Instagram și TikTok dintr-o singură aplicație, cu poze și clipuri generate de AI, iar fiecare lead ajunge direct pe WhatsApp. Vezi gratuit cum începe clipul tău.",
       },
       { name: "author", content: "AdPilot" },
       { name: "google-site-verification", content: "c5wTyndeBq7gVkBTee-nP_NuFsK769W9Wv0N3GbzHC4" },
@@ -101,7 +101,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         property: "og:description",
         content:
-          "Lansează și optimizează reclame pe Facebook, Instagram și TikTok dintr-o singură aplicație, cu poze și clipuri generate de AI, iar fiecare lead ajunge direct pe WhatsApp. 7 zile gratuite.",
+          "Lansează și optimizează reclame pe Facebook, Instagram și TikTok dintr-o singură aplicație, cu poze și clipuri generate de AI, iar fiecare lead ajunge direct pe WhatsApp. Vezi gratuit cum începe clipul tău.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -110,7 +110,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "twitter:description",
         content:
-          "Lansează și optimizează reclame pe Facebook, Instagram și TikTok dintr-o singură aplicație, cu poze și clipuri generate de AI, iar fiecare lead ajunge direct pe WhatsApp. 7 zile gratuite.",
+          "Lansează și optimizează reclame pe Facebook, Instagram și TikTok dintr-o singură aplicație, cu poze și clipuri generate de AI, iar fiecare lead ajunge direct pe WhatsApp. Vezi gratuit cum începe clipul tău.",
       },
       { property: "og:image", content: `https://adpilot.ro${ogHeroAsset.url}` },
       { name: "twitter:image", content: `https://adpilot.ro${ogHeroAsset.url}` },

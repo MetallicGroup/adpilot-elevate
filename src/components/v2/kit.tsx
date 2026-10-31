@@ -67,7 +67,7 @@ export function V2Nav() {
           Intră în cont
         </Link>
         <Link to="/start" className="btn btn-s btn-w">
-          Începe gratuit
+          Fă-ți clipul
         </Link>
         <button type="button" className="burger" aria-label="Meniu" aria-expanded={open} onClick={() => setOpen(!open)}>
           <span />
@@ -152,7 +152,7 @@ export function Hero({
   );
 }
 
-export function SignupButton({ label = "Începe gratuit 7 zile", tone = "w", onClick }: { label?: string; tone?: "w" | "k" | "g"; onClick?: () => void }) {
+export function SignupButton({ label = "Fă-ți clipul", tone = "w", onClick }: { label?: string; tone?: "w" | "k" | "g"; onClick?: () => void }) {
   return (
     <Link to="/start" className={`btn btn-${tone}`} onClick={onClick}>
       {label} <span className="arr">→</span>
@@ -165,15 +165,15 @@ export function PlanCards({ onSelect }: { onSelect?: (plan: PublicPlan) => void 
   return (
     <div className="plans">
       {PUBLIC_PLANS.map((p, i) => {
-        const tone = p.featured ? "w" : p.free ? "o" : "k";
+        const tone = p.featured ? "w" : "k";
         return (
           <div key={p.id} className={`plan ${p.featured ? "hot" : ""}`} data-r style={{ ["--d" as string]: `${i * 0.08}s` }}>
             <span className="tag">{p.tag}</span>
             <div className="nm">{p.name}</div>
             <div className="pr">
-              <span className="z">0 lei</span> {p.price && <s>{p.price}</s>}
+              <span className="z">{p.price}</span>
             </div>
-            <div className="then">{p.then}</div>
+            <div className="then">pe lună</div>
             <ul>
               {p.items.map((it) => (
                 <li key={it}>{it}</li>
@@ -221,7 +221,7 @@ export function FinalCta({ title, label, onClick }: { title: ReactNode; label?: 
           <SignupButton label={label} onClick={onClick} />
         </div>
         <p className="fin-sub" data-r>
-          Primul clip și 2 poze AI, gratuite · Facebook, Instagram și TikTok
+          Vezi gratuit cum începe clipul tău · Facebook, Instagram și TikTok
         </p>
       </div>
     </section>

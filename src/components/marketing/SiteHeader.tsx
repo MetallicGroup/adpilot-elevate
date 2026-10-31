@@ -51,7 +51,7 @@ export function SiteHeader() {
             Login
           </Link>
           <Link to="/start" className="press btn-primary text-[13px] px-4 py-1.5 rounded-full font-medium">
-            Începe gratuit
+            Fă-ți clipul
           </Link>
         </div>
         <button
@@ -73,7 +73,7 @@ export function SiteHeader() {
             <div className="mt-2 pt-3 border-t border-border/60 flex flex-col gap-2">
               <Link to="/start" search={{ login: "1" } as never} onClick={() => setOpen(false)} className="text-sm py-2 px-3 rounded-lg hover:bg-white/5">Login</Link>
               <Link to="/start" onClick={() => setOpen(false)} className="press btn-primary text-sm px-4 py-2.5 rounded-xl text-center font-medium">
-                Începe gratuit
+                Fă-ți clipul
               </Link>
             </div>
           </div>

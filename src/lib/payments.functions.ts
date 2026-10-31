@@ -116,6 +116,76 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     }
   });
 
+/** Sesiune de plată pentru diferența dintre pachetul actual și cel ales. */
+export const createUpgradeSession = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { toPriceId: string; returnUrl: string; environment: StripeEnv }) => {
+    const u = new URL(data.returnUrl);
+    if (!["adpilot.ro", "www.adpilot.ro", "localhost"].includes(u.hostname)) throw new Error("Invalid returnUrl");
+    if (data.environment !== "sandbox" && data.environment !== "live") throw new Error("Invalid environment");
+    return data;
+  })
+  .handler(async ({ data, context }): Promise<CheckoutSessionResult> => {
+    try {
+      const { PLAN_CATALOG, planMonthlyLei } = await import("@/lib/plan-catalog");
+      const to = PLAN_CATALOG.find((p) => p.id === data.toPriceId);
+      if (!to) throw new Error("Pachet inexistent");
+      const { supabase, userId } = context;
+      const { data: sub } = await supabase
+        .from("subscriptions")
+        .select("price_id, status, stripe_subscription_id, stripe_customer_id")
+        .eq("user_id", userId)
+        .eq("environment", data.environment)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!sub?.stripe_subscription_id || !["active", "past_due"].includes(sub.status)) {
+        return { error: "Nu ai un pachet activ. Alege întâi un pachet." };
+      }
+      const diff = to.lei - planMonthlyLei(sub.price_id);
+      if (diff <= 0) return { error: "Poți trece doar pe un pachet mai mare." };
+
+      const stripe = createStripeClient(data.environment);
+      const session = await stripe.checkout.sessions.create({
+        mode: "payment",
+        ui_mode: "embedded_page",
+        return_url: data.returnUrl,
+        customer: sub.stripe_customer_id,
+        client_reference_id: userId,
+        line_items: [
+          {
+            quantity: 1,
+            price_data: { currency: "ron", unit_amount: diff * 100, product_data: { name: `Trecere la pachetul ${to.name}` } },
+          },
+        ],
+        metadata: { userId, kind: "upgrade", toPriceId: to.id, subscriptionId: sub.stripe_subscription_id },
+        customer_update: { address: "auto", name: "auto" },
+        tax_id_collection: { enabled: true },
+        automatic_tax: { enabled: true },
+      });
+      return { clientSecret: session.client_secret ?? "" };
+    } catch (error) {
+      console.error("createUpgradeSession error:", error);
+      return { error: getStripeErrorMessage(error) };
+    }
+  });
+
+/** La întoarcerea din plata de upgrade: trece abonamentul pe noul pachet, fără să aștepte webhook-ul. */
+export const confirmUpgrade = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { sessionId: string; environment: StripeEnv }) => {
+    if (!/^cs_[a-zA-Z0-9_]+$/.test(data.sessionId)) throw new Error("Invalid session");
+    if (data.environment !== "sandbox" && data.environment !== "live") throw new Error("Invalid environment");
+    return data;
+  })
+  .handler(async ({ data, context }) => {
+    const stripe = createStripeClient(data.environment);
+    const session = await stripe.checkout.sessions.retrieve(data.sessionId);
+    if (session.metadata?.userId !== context.userId) throw new Error("Sesiune invalidă");
+    const { applyPaidUpgrade } = await import("@/lib/upgrade.server");
+    return { upgraded: await applyPaidUpgrade(data.environment, session) };
+  });
+
 export const createPortalSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { returnUrl?: string; environment: StripeEnv }) => {

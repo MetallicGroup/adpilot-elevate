@@ -31,6 +31,7 @@ import { Route as HelpRouteImport } from './routes/help'
 import { Route as HelpCenterRouteImport } from './routes/help-center'
 import { Route as ImobiliareRouteImport } from './routes/imobiliare'
 import { Route as IntegrationsRouteImport } from './routes/integrations'
+import { Route as IntraRouteImport } from './routes/intra'
 import { Route as OfertaRouteImport } from './routes/oferta'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
@@ -56,16 +57,19 @@ import { Route as AuthenticatedProgramariRouteImport } from './routes/_authentic
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
+import { Route as AuthenticatedUpgradeRouteImport } from './routes/_authenticated/upgrade'
 import { Route as AuthenticatedWhatsappRouteImport } from './routes/_authenticated/whatsapp'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthConfirmEmailRouteImport } from './routes/auth.confirm-email'
 import { Route as AuthVerifiedRouteImport } from './routes/auth.verified'
 import { Route as AuthWelcomeRouteImport } from './routes/auth.welcome'
 import { Route as BSlugRouteImport } from './routes/b.$slug'
+import { Route as CTokenRouteImport } from './routes/c.$token'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as ConnectSlugRouteImport } from './routes/connect.$slug'
 import { Route as FbTokenRouteImport } from './routes/fb.$token'
 import { Route as PCodeRouteImport } from './routes/p.$code'
+import { Route as TtTokenRouteImport } from './routes/tt.$token'
 import { Route as AuthenticatedAgencyDashboardRouteImport } from './routes/_authenticated/agency.dashboard'
 import { Route as AuthenticatedAgencySettingsRouteImport } from './routes/_authenticated/agency.settings'
 import { Route as AuthenticatedAgencySetupRouteImport } from './routes/_authenticated/agency.setup'
@@ -206,6 +210,11 @@ const IntegrationsRoute = IntegrationsRouteImport.update({
   path: '/integrations',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IntraRoute = IntraRouteImport.update({
+  id: '/intra',
+  path: '/intra',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OfertaRoute = OfertaRouteImport.update({
   id: '/oferta',
   path: '/oferta',
@@ -331,6 +340,11 @@ const AuthenticatedSupportRoute = AuthenticatedSupportRouteImport.update({
   path: '/support',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedUpgradeRoute = AuthenticatedUpgradeRouteImport.update({
+  id: '/upgrade',
+  path: '/upgrade',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedWhatsappRoute = AuthenticatedWhatsappRouteImport.update({
   id: '/whatsapp',
   path: '/whatsapp',
@@ -361,6 +375,11 @@ const BSlugRoute = BSlugRouteImport.update({
   path: '/b/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CTokenRoute = CTokenRouteImport.update({
+  id: '/c/$token',
+  path: '/c/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   id: '/checkout/return',
   path: '/checkout/return',
@@ -379,6 +398,11 @@ const FbTokenRoute = FbTokenRouteImport.update({
 const PCodeRoute = PCodeRouteImport.update({
   id: '/p/$code',
   path: '/p/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TtTokenRoute = TtTokenRouteImport.update({
+  id: '/tt/$token',
+  path: '/tt/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAgencyDashboardRoute =
@@ -575,6 +599,7 @@ export interface FileRoutesByFullPath {
   '/help-center': typeof HelpCenterRoute
   '/imobiliare': typeof ImobiliareRoute
   '/integrations': typeof IntegrationsRoute
+  '/intra': typeof IntraRoute
   '/oferta': typeof OfertaRoute
   '/pricing': typeof PricingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -600,16 +625,19 @@ export interface FileRoutesByFullPath {
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/support': typeof AuthenticatedSupportRoute
+  '/upgrade': typeof AuthenticatedUpgradeRoute
   '/whatsapp': typeof AuthenticatedWhatsappRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/confirm-email': typeof AuthConfirmEmailRoute
   '/auth/verified': typeof AuthVerifiedRoute
   '/auth/welcome': typeof AuthWelcomeRoute
   '/b/$slug': typeof BSlugRoute
+  '/c/$token': typeof CTokenRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/connect/$slug': typeof ConnectSlugRoute
   '/fb/$token': typeof FbTokenRoute
   '/p/$code': typeof PCodeRoute
+  '/tt/$token': typeof TtTokenRoute
   '/agency/dashboard': typeof AuthenticatedAgencyDashboardRoute
   '/agency/settings': typeof AuthenticatedAgencySettingsRoute
   '/agency/setup': typeof AuthenticatedAgencySetupRoute
@@ -663,6 +691,7 @@ export interface FileRoutesByTo {
   '/help-center': typeof HelpCenterRoute
   '/imobiliare': typeof ImobiliareRoute
   '/integrations': typeof IntegrationsRoute
+  '/intra': typeof IntraRoute
   '/oferta': typeof OfertaRoute
   '/pricing': typeof PricingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -688,16 +717,19 @@ export interface FileRoutesByTo {
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/support': typeof AuthenticatedSupportRoute
+  '/upgrade': typeof AuthenticatedUpgradeRoute
   '/whatsapp': typeof AuthenticatedWhatsappRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/confirm-email': typeof AuthConfirmEmailRoute
   '/auth/verified': typeof AuthVerifiedRoute
   '/auth/welcome': typeof AuthWelcomeRoute
   '/b/$slug': typeof BSlugRoute
+  '/c/$token': typeof CTokenRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/connect/$slug': typeof ConnectSlugRoute
   '/fb/$token': typeof FbTokenRoute
   '/p/$code': typeof PCodeRoute
+  '/tt/$token': typeof TtTokenRoute
   '/agency/dashboard': typeof AuthenticatedAgencyDashboardRoute
   '/agency/settings': typeof AuthenticatedAgencySettingsRoute
   '/agency/setup': typeof AuthenticatedAgencySetupRoute
@@ -753,6 +785,7 @@ export interface FileRoutesById {
   '/help-center': typeof HelpCenterRoute
   '/imobiliare': typeof ImobiliareRoute
   '/integrations': typeof IntegrationsRoute
+  '/intra': typeof IntraRoute
   '/oferta': typeof OfertaRoute
   '/pricing': typeof PricingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -778,16 +811,19 @@ export interface FileRoutesById {
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/support': typeof AuthenticatedSupportRoute
+  '/_authenticated/upgrade': typeof AuthenticatedUpgradeRoute
   '/_authenticated/whatsapp': typeof AuthenticatedWhatsappRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/confirm-email': typeof AuthConfirmEmailRoute
   '/auth/verified': typeof AuthVerifiedRoute
   '/auth/welcome': typeof AuthWelcomeRoute
   '/b/$slug': typeof BSlugRoute
+  '/c/$token': typeof CTokenRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/connect/$slug': typeof ConnectSlugRoute
   '/fb/$token': typeof FbTokenRoute
   '/p/$code': typeof PCodeRoute
+  '/tt/$token': typeof TtTokenRoute
   '/_authenticated/agency/dashboard': typeof AuthenticatedAgencyDashboardRoute
   '/_authenticated/agency/settings': typeof AuthenticatedAgencySettingsRoute
   '/_authenticated/agency/setup': typeof AuthenticatedAgencySetupRoute
@@ -843,6 +879,7 @@ export interface FileRouteTypes {
     | '/help-center'
     | '/imobiliare'
     | '/integrations'
+    | '/intra'
     | '/oferta'
     | '/pricing'
     | '/privacy-policy'
@@ -868,16 +905,19 @@ export interface FileRouteTypes {
     | '/reports'
     | '/settings'
     | '/support'
+    | '/upgrade'
     | '/whatsapp'
     | '/auth/callback'
     | '/auth/confirm-email'
     | '/auth/verified'
     | '/auth/welcome'
     | '/b/$slug'
+    | '/c/$token'
     | '/checkout/return'
     | '/connect/$slug'
     | '/fb/$token'
     | '/p/$code'
+    | '/tt/$token'
     | '/agency/dashboard'
     | '/agency/settings'
     | '/agency/setup'
@@ -931,6 +971,7 @@ export interface FileRouteTypes {
     | '/help-center'
     | '/imobiliare'
     | '/integrations'
+    | '/intra'
     | '/oferta'
     | '/pricing'
     | '/privacy-policy'
@@ -956,16 +997,19 @@ export interface FileRouteTypes {
     | '/reports'
     | '/settings'
     | '/support'
+    | '/upgrade'
     | '/whatsapp'
     | '/auth/callback'
     | '/auth/confirm-email'
     | '/auth/verified'
     | '/auth/welcome'
     | '/b/$slug'
+    | '/c/$token'
     | '/checkout/return'
     | '/connect/$slug'
     | '/fb/$token'
     | '/p/$code'
+    | '/tt/$token'
     | '/agency/dashboard'
     | '/agency/settings'
     | '/agency/setup'
@@ -1020,6 +1064,7 @@ export interface FileRouteTypes {
     | '/help-center'
     | '/imobiliare'
     | '/integrations'
+    | '/intra'
     | '/oferta'
     | '/pricing'
     | '/privacy-policy'
@@ -1045,16 +1090,19 @@ export interface FileRouteTypes {
     | '/_authenticated/reports'
     | '/_authenticated/settings'
     | '/_authenticated/support'
+    | '/_authenticated/upgrade'
     | '/_authenticated/whatsapp'
     | '/auth/callback'
     | '/auth/confirm-email'
     | '/auth/verified'
     | '/auth/welcome'
     | '/b/$slug'
+    | '/c/$token'
     | '/checkout/return'
     | '/connect/$slug'
     | '/fb/$token'
     | '/p/$code'
+    | '/tt/$token'
     | '/_authenticated/agency/dashboard'
     | '/_authenticated/agency/settings'
     | '/_authenticated/agency/setup'
@@ -1110,6 +1158,7 @@ export interface RootRouteChildren {
   HelpCenterRoute: typeof HelpCenterRoute
   ImobiliareRoute: typeof ImobiliareRoute
   IntegrationsRoute: typeof IntegrationsRoute
+  IntraRoute: typeof IntraRoute
   OfertaRoute: typeof OfertaRoute
   PricingRoute: typeof PricingRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
@@ -1124,10 +1173,12 @@ export interface RootRouteChildren {
   StartRoute: typeof StartRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
   BSlugRoute: typeof BSlugRoute
+  CTokenRoute: typeof CTokenRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   ConnectSlugRoute: typeof ConnectSlugRoute
   FbTokenRoute: typeof FbTokenRoute
   PCodeRoute: typeof PCodeRoute
+  TtTokenRoute: typeof TtTokenRoute
   ApiAgencyConnectStartRoute: typeof ApiAgencyConnectStartRoute
   ApiMetaAuthCallbackRoute: typeof ApiMetaAuthCallbackRoute
   ApiMetaSignupStartRoute: typeof ApiMetaSignupStartRoute
@@ -1308,6 +1359,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IntegrationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/intra': {
+      id: '/intra'
+      path: '/intra'
+      fullPath: '/intra'
+      preLoaderRoute: typeof IntraRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/oferta': {
       id: '/oferta'
       path: '/oferta'
@@ -1483,6 +1541,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSupportRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/upgrade': {
+      id: '/_authenticated/upgrade'
+      path: '/upgrade'
+      fullPath: '/upgrade'
+      preLoaderRoute: typeof AuthenticatedUpgradeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/whatsapp': {
       id: '/_authenticated/whatsapp'
       path: '/whatsapp'
@@ -1525,6 +1590,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/c/$token': {
+      id: '/c/$token'
+      path: '/c/$token'
+      fullPath: '/c/$token'
+      preLoaderRoute: typeof CTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/checkout/return': {
       id: '/checkout/return'
       path: '/checkout/return'
@@ -1551,6 +1623,13 @@ declare module '@tanstack/react-router' {
       path: '/p/$code'
       fullPath: '/p/$code'
       preLoaderRoute: typeof PCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tt/$token': {
+      id: '/tt/$token'
+      path: '/tt/$token'
+      fullPath: '/tt/$token'
+      preLoaderRoute: typeof TtTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/agency/dashboard': {
@@ -1792,6 +1871,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
+  AuthenticatedUpgradeRoute: typeof AuthenticatedUpgradeRoute
   AuthenticatedWhatsappRoute: typeof AuthenticatedWhatsappRoute
   AuthenticatedAgencyDashboardRoute: typeof AuthenticatedAgencyDashboardRoute
   AuthenticatedAgencySettingsRoute: typeof AuthenticatedAgencySettingsRoute
@@ -1814,6 +1894,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSupportRoute: AuthenticatedSupportRoute,
+  AuthenticatedUpgradeRoute: AuthenticatedUpgradeRoute,
   AuthenticatedWhatsappRoute: AuthenticatedWhatsappRoute,
   AuthenticatedAgencyDashboardRoute: AuthenticatedAgencyDashboardRoute,
   AuthenticatedAgencySettingsRoute: AuthenticatedAgencySettingsRoute,
@@ -1865,6 +1946,7 @@ const rootRouteChildren: RootRouteChildren = {
   HelpCenterRoute: HelpCenterRoute,
   ImobiliareRoute: ImobiliareRoute,
   IntegrationsRoute: IntegrationsRoute,
+  IntraRoute: IntraRoute,
   OfertaRoute: OfertaRoute,
   PricingRoute: PricingRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
@@ -1879,10 +1961,12 @@ const rootRouteChildren: RootRouteChildren = {
   StartRoute: StartRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
   BSlugRoute: BSlugRoute,
+  CTokenRoute: CTokenRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   ConnectSlugRoute: ConnectSlugRoute,
   FbTokenRoute: FbTokenRoute,
   PCodeRoute: PCodeRoute,
+  TtTokenRoute: TtTokenRoute,
   ApiAgencyConnectStartRoute: ApiAgencyConnectStartRoute,
   ApiMetaAuthCallbackRoute: ApiMetaAuthCallbackRoute,
   ApiMetaSignupStartRoute: ApiMetaSignupStartRoute,

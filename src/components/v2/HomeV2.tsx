@@ -54,21 +54,21 @@ export function HomeV2() {
   <nav className="links"><a href="#cum">Cum funcționează</a><a href="#studio">Clipuri AI</a><a href="#obiectiv">Obiective</a><a href="#preturi">Prețuri</a><a href="#faq">Întrebări</a></nav>
   <span className="sp"></span>
   <button className="login btn btn-s btn-o dark" data-go="signup" data-mode="login">Intră în cont</button>
-  <button className="btn btn-s btn-w" data-go="signup">Începe gratuit</button>
+  <button className="btn btn-s btn-w" data-go="signup">Fă-ți clipul</button>
 </div></header>
 
 <section className="band dark hero" id="hero">
   <canvas className="ribbon" data-ribbon></canvas><div className="grain"></div>
   <div className="wrap">
     <div className="hero-copy">
-      <div className="pill"><i>Nou</i>7 zile gratuite, fără card</div>
+      <div className="pill"><i>Nou</i>Vezi gratuit cum începe clipul tău</div>
       <h1 className="d1">Reclamele tale, pornite <span style={css({ whiteSpace: "nowrap" })}>dintr‑un</span> <span className="gtext">mesaj.</span></h1>
       <p className="lead">Îi scrii lui AdPilot pe WhatsApp ce vrei să obții. El creează reclama, cu poze și clipuri făcute de AI, o lansează pe Facebook, Instagram și TikTok și îți trimite clienții direct în conversație.</p>
       <div className="cta">
-        <button className="btn btn-w" data-go="signup">Începe gratuit 7 zile <span className="arr">→</span></button>
+        <button className="btn btn-w" data-go="signup">Fă-ți clipul <span className="arr">→</span></button>
         <a className="btn btn-o" href="#cum">Vezi cum funcționează</a>
       </div>
-      <div className="facts"><span>Fără card</span><span>Fără agenție</span><span>Primul clip AI e gratuit</span></div>
+      <div className="facts"><span>Fără agenție</span><span>Vezi clipul înainte să plătești</span><span>De la 89 lei pe lună</span></div>
       <div className="plat" aria-label="Platforme de reclame">
         <span><svg viewBox="0 0 24 24" fill="#4c8dff"><path d="M13.500 22v-8h2.700l.400-3.200h-3.100V8.700c0-.900.300-1.600 1.600-1.600h1.700V4.200c-.300 0-1.300-.100-2.500-.100-2.500 0-4.100 1.500-4.100 4.200v2.500H7.400V14h2.800v8h3.300z"/></svg>Facebook</span>
         <span><svg viewBox="0 0 24 24" fill="none" stroke="#ff6fb5" strokeWidth="1.9"><rect x="3.500" y="3.500" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r=".8" fill="#ff6fb5"/></svg>Instagram</span>
@@ -125,7 +125,7 @@ export function HomeV2() {
         <div className="step"><span className="k">PASUL 2</span><h3>Spui ce afacere ai</h3><p>Două întrebări: ce fel de afacere ai și ce vrei să primești. Apeluri, formulare, vizite pe site sau vânzări.</p></div>
         <div className="step"><span className="k">PASUL 3</span><h3>Trimiți 2–3 poze</h3><p>Poze făcute cu telefonul, cu locul sau lucrul tău. Din ele facem clipul și pozele pentru reclamă.</p></div>
         <div className="step"><span className="k">PASUL 4</span><h3>Conectezi Facebook sau TikTok</h3><p>Unul sau amândouă. Contul de reclame rămâne al tău, pe numele tău.</p></div>
-        <div className="step"><span className="k">PASUL 5</span><h3>AI-ul face clipul și pozele</h3><p>În 10–15 minute: un clip de 20–25 de secunde cu voce în română, plus 2 poze. Poți ieși de pe pagină, primești totul pe WhatsApp.</p></div>
+        <div className="step"><span className="k">PASUL 5</span><h3>AI-ul face clipul și pozele</h3><p>În aproximativ 10 minute: un clip de 20–25 de secunde cu voce în română, plus 2 poze. Poți ieși de pe pagină, primești totul pe WhatsApp.</p></div>
         <div className="step"><span className="k">PASUL 6</span><h3>Pornești reclama din WhatsApp</h3><p>Apeși „Trimite-mi materialele”, primești clipul și pozele, răspunzi la două întrebări și scrii „da”.</p></div>
         <div className="step"><span className="k">PASUL 7</span><h3>Clienții îți scriu</h3><p>Primești fiecare contact pe WhatsApp, în secunda în care apare.</p></div>
       </div>
@@ -189,7 +189,7 @@ export function HomeV2() {
   <div className="wrap">
     <p className="ey" data-r>Studio AI</p>
     <h2 className="d2" data-r style={css({ marginTop: "16px", maxWidth: "18ch" })}>Clipuri și poze cu AI, făcute din pozele tale.</h2>
-    <p className="lead" data-r style={css({ marginTop: "22px", maxWidth: "52ch" })}>Trimiți 2–3 poze cu afacerea ta. În 10–15 minute primești un clip de 20–25 de secunde, cu voce în română, subtitrări și mai multe unghiuri, plus pozele gata de reclamă. Același clip merge pe Facebook, Instagram și TikTok.</p>
+    <p className="lead" data-r style={css({ marginTop: "22px", maxWidth: "52ch" })}>Trimiți 2–3 poze cu afacerea ta. În aproximativ 10 minute primești un clip de 20–25 de secunde, cu voce în română, subtitrări și mai multe unghiuri, plus pozele gata de reclamă. Același clip merge pe Facebook, Instagram și TikTok.</p>
     <div className="sgrid">
       <div className="sclip" data-r role="img" aria-label="Clip vertical generat cu AI pentru un cabinet stomatologic, cu subtitrări">
         <div className="ttui">
@@ -212,7 +212,7 @@ export function HomeV2() {
         <li><b>Format vertical</b><span>Reels, Stories și TikTok, fără retușuri</span></li>
       </ul>
     </div>
-    <div className="goal-out" data-r><p>Primul clip și 2 poze AI sunt gratuite, la înscriere.</p><button className="btn btn-w" data-go="signup">Fă-mi primul clip <span className="arr">→</span></button></div>
+    <div className="goal-out" data-r><p>Vezi gratuit cum începe primul tău clip.</p><button className="btn btn-w" data-go="signup">Fă-mi primul clip <span className="arr">→</span></button></div>
   </div>
 </section>
 
@@ -233,18 +233,21 @@ export function HomeV2() {
 <section className="band light" id="preturi">
   <div className="wrap">
     <p className="ey" data-r>Prețuri</p>
-    <h2 className="d2" data-r style={css({ marginTop: "16px", maxWidth: "15ch" })}>Primele 7 zile sunt gratuite. Fără card.</h2>
-    <p className="lead" data-r style={css({ marginTop: "22px" })}>Alegi planul la înscriere și îl folosești 7 zile, fără să plătești nimic. În cele 7 zile primești 1 clip și 2 poze generate cu AI; mai multe se deblochează după ce te abonezi. Bugetul de reclame îl plătești separat, direct către Meta sau TikTok.</p>
+    <h2 className="d2" data-r style={css({ marginTop: "16px", maxWidth: "15ch" })}>Vezi gratuit cum începe clipul. Plătești doar dacă îl vrei.</h2>
+    <p className="lead" data-r style={css({ marginTop: "22px" })}>Trimiți pozele, AdPilot face clipul și vezi primele secunde. Alegi un pachet ca să-l primești întreg. Bugetul de reclame îl plătești separat, direct către Meta sau TikTok.</p>
     <div className="plans">
-      <div className="plan" data-r><span className="tag">7 zile gratuite pe lună</span><div className="nm">Starter</div><div className="pr"><span className="z">0 lei</span></div><div className="then">gratuit mereu, 7 zile de rulare pe lună</div>
-        <ul><li>Asistent AdPilot pe WhatsApp</li><li>Reclame pe Facebook, Instagram și TikTok</li><li>1 clip și 2 poze generate cu AI, la înscriere</li><li>O campanie activă, 7 zile în fiecare lună</li></ul>
-        <button className="btn btn-o" data-go="signup" style={css({ justifyContent: "center" })}>Începe gratuit</button></div>
-      <div className="plan hot" data-r style={css({ "--d": ".08s" })}><span className="tag">Cel mai ales · gratis primele 7 zile</span><div className="nm">Pro</div><div className="pr"><span className="z">0 lei</span> <s>495 lei</s></div><div className="then">primele 7 zile, apoi 495 lei pe lună</div>
-        <ul><li>Campanii nelimitate, non-stop, pe Facebook, Instagram și TikTok</li><li>Primele 7 zile: 1 clip și 2 poze generate cu AI</li><li>După abonare: 4 clipuri și 10 poze AI pe lună</li><li>Asistent AdPilot pe WhatsApp</li><li>Suport prioritar</li></ul>
-        <button className="btn btn-w" data-go="signup" style={css({ justifyContent: "center" })}>Începe gratuit 7 zile</button></div>
-      <div className="plan" data-r style={css({ "--d": ".16s" })}><span className="tag">Gratis primele 7 zile</span><div className="nm">Premium</div><div className="pr"><span className="z">0 lei</span> <s>995 lei</s></div><div className="then">primele 7 zile, apoi 995 lei pe lună</div>
-        <ul><li>Tot ce are Pro</li><li>Primele 7 zile: 1 clip și 2 poze generate cu AI</li><li>După abonare: 15 clipuri și poze AI nelimitate pe lună</li><li>Manager dedicat</li></ul>
-        <button className="btn btn-k" data-go="signup" style={css({ justifyContent: "center" })}>Începe gratuit 7 zile</button></div>
+      <div className="plan" data-r><span className="tag">Primele tale clipuri</span><div className="nm">Start</div><div className="pr"><span className="z">89 lei</span></div><div className="then">pe lună</div>
+        <ul><li>2 clipuri sau 20 de poze pe lună</li><li>Voce în română, subtitrări și muzică</li><li>Primești clipurile și pe WhatsApp</li></ul>
+        <button className="btn btn-o" data-go="signup" style={css({ justifyContent: "center" })}>Fă-ți clipul</button></div>
+      <div className="plan" data-r style={css({ "--d": ".08s" })}><span className="tag">Conținut în fiecare săptămână</span><div className="nm">Creator</div><div className="pr"><span className="z">249 lei</span></div><div className="then">pe lună</div>
+        <ul><li>6 clipuri sau 60 de poze pe lună</li><li>Voce în română, subtitrări și muzică</li><li>Primești clipurile și pe WhatsApp</li></ul>
+        <button className="btn btn-o" data-go="signup" style={css({ justifyContent: "center" })}>Fă-ți clipul</button></div>
+      <div className="plan hot" data-r style={css({ "--d": ".16s" })}><span className="tag">Recomandat</span><div className="nm">Afacere</div><div className="pr"><span className="z">495 lei</span></div><div className="then">pe lună</div>
+        <ul><li>16 clipuri sau 160 de poze pe lună</li><li>Reclame pe Facebook, Instagram și TikTok</li><li>Asistent AdPilot pe WhatsApp</li></ul>
+        <button className="btn btn-w" data-go="signup" style={css({ justifyContent: "center" })}>Fă-ți clipul</button></div>
+      <div className="plan" data-r style={css({ "--d": ".24s" })}><span className="tag">Un clip pe zi</span><div className="nm">Zilnic</div><div className="pr"><span className="z">949 lei</span></div><div className="then">pe lună</div>
+        <ul><li>32 de clipuri sau 320 de poze pe lună</li><li>Reclame pe Facebook, Instagram și TikTok</li><li>Asistent AdPilot pe WhatsApp</li></ul>
+        <button className="btn btn-k" data-go="signup" style={css({ justifyContent: "center" })}>Fă-ți clipul</button></div>
     </div>
     <div className="agency" data-r><div><p className="ey" style={css({ color: "#a5a2bc" })}>Pentru agenții</p><h3 className="d3" style={css({ marginTop: "10px" })}>Toți clienții tăi, într-un singur cont.</h3><p>995 lei pe lună cu 2 afaceri incluse, apoi 249 lei pentru fiecare afacere în plus. Clienții se conectează singuri, printr-un link.</p></div><button className="btn btn-w" data-go="signup" data-agency="1">AdPilot pentru agenții <span className="arr">→</span></button></div>
   </div>
@@ -254,12 +257,12 @@ export function HomeV2() {
   <div className="wrap">
     <h2 className="d2" data-r>Întrebări</h2>
     <div className="faq" data-r>
-      <details open><summary>Ce se întâmplă după cele 7 zile?</summary><p>Pe Starter rămâi gratuit, cu 7 zile de rulare în fiecare lună. Pe Pro sau Premium primești pe WhatsApp un link de plată. Plătești cu cardul și contul continuă fără întrerupere.</p></details>
+      <details open><summary>Pot vedea clipul înainte să plătesc?</summary><p>Da. AdPilot face clipul din pozele tale și vezi gratuit cum începe, cam primele 8 secunde. Clipul întreg și pozele se deblochează când alegi un pachet.</p></details>
       <details><summary>Am nevoie de experiență cu reclame?</summary><p>Nu. Răspunzi la câteva întrebări despre afacere și obiectiv, iar AdPilot creează și lansează campania.</p></details>
       <details><summary>Prețul include bugetul de reclame?</summary><p>Nu. Abonamentul acoperă platforma. Bugetul îl plătești direct către Meta (Facebook și Instagram) sau TikTok, din contul tău de reclame.</p></details>
-      <details><summary>Pot face reclame și pe TikTok?</summary><p>Da. Conectezi Facebook, TikTok sau ambele, iar AdPilot pornește reclama pe platformele alese, cu același clip și aceleași poze.</p></details>
-      <details><summary>Ce primesc gratuit, în cele 7 zile?</summary><p>Un clip de 20–25 de secunde cu voce în română și 2 poze, generate cu AI din pozele tale. Mai multe clipuri și poze se deblochează după abonare: pe Pro 4 clipuri și 10 poze pe lună, pe Premium 15 clipuri și poze nelimitate.</p></details>
-      <details><summary>Cum se face clipul?</summary><p>Trimiți 2–3 poze cu afacerea ta. AI-ul scrie textul, creează prezentatorul în spațiul tău, înregistrează vocea în română și montează clipul cu subtitrări. Durează 10–15 minute, iar îl primești și pe WhatsApp.</p></details>
+      <details><summary>Ce pachet are nevoie de reclame?</summary><p>Reclamele pe Facebook, Instagram și TikTok, împreună cu asistentul de pe WhatsApp, sunt incluse de la pachetul Afacere, 495 lei pe lună. De pe Start sau Creator treci oricând și plătești doar diferența.</p></details>
+      <details><summary>Clipurile și pozele se consumă separat?</summary><p>Nu, vin din același total lunar. Un clip consumă cât 10 poze, deci pe Start ai 2 clipuri sau 20 de poze, ori orice combinație. Totalul se reîncarcă la fiecare reînnoire.</p></details>
+      <details><summary>Cum se face clipul?</summary><p>Trimiți 2–3 poze cu afacerea ta. AI-ul scrie textul, creează prezentatorul în spațiul tău, înregistrează vocea în română și montează clipul cu subtitrări. Durează cam 10 minute, iar îl primești și pe WhatsApp.</p></details>
       <details><summary>Al cui este contul de reclame?</summary><p>Al tău. Contul Meta sau TikTok rămâne pe numele tău și poți retrage accesul AdPilot oricând.</p></details>
       <details><summary>Pot anula oricând?</summary><p>Da, din cont, în orice moment. Accesul continuă până la finalul perioadei plătite.</p></details>
     </div>
@@ -270,8 +273,8 @@ export function HomeV2() {
   <canvas className="ribbon" data-ribbon style={css({ top: "auto", bottom: "-40%" })}></canvas><div className="grain"></div>
   <div className="wrap">
     <h2 className="d1" data-r>Prima reclamă,<br />în 5 minute.</h2>
-    <div className="cta" data-r><button className="btn btn-w" data-go="signup">Începe gratuit 7 zile <span className="arr">→</span></button></div>
-    <p className="fin-sub" data-r>Primul clip și 2 poze AI, gratuite · Facebook, Instagram și TikTok</p>
+    <div className="cta" data-r><button className="btn btn-w" data-go="signup">Fă-ți clipul <span className="arr">→</span></button></div>
+    <p className="fin-sub" data-r>Vezi gratuit cum începe clipul tău · Facebook, Instagram și TikTok</p>
   </div>
 </section>
 

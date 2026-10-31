@@ -10,6 +10,10 @@ const PLAN_LABEL: Record<string, string> = {
   starter_monthly: "Starter · 249 lei/lună",
   pro_monthly: "Pro · 495 lei/lună",
   premium_monthly: "Premium · 995 lei/lună",
+  clips2_monthly: "Start · 89 lei/lună",
+  clips6_monthly: "Creator · 249 lei/lună",
+  afacere_monthly: "Afacere · 495 lei/lună",
+  zilnic_monthly: "Zilnic · 949 lei/lună",
 };
 
 function formatDate(iso?: string | null) {

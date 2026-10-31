@@ -1,3 +1,5 @@
+import { useStripeCheckout } from "@/hooks/useStripeCheckout";
+import { PLAN_CATALOG, planVolume } from "@/lib/plan-catalog";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -11,6 +13,7 @@ import {
   saveStartPhotos,
   saveStartTargets,
   startDemo,
+  sendClipToWhatsApp,
   type StartGoal,
   type StartState,
   type StartTarget,
@@ -23,6 +26,8 @@ import { tkTrack } from "@/lib/tiktok-pixel";
 import startCss from "../styles/start.css?url";
 
 type StartSearch = {
+  /** Întors de la plata clipului. */
+  paid?: string;
   login?: string;
   /** Cale internă unde ne întoarcem după login (ex. /pricing?plan=pro_monthly). */
   redirect?: string;
@@ -41,14 +46,14 @@ export const Route = createFileRoute("/start")({
   ssr: false,
   validateSearch: (s: Record<string, unknown>): StartSearch => {
     const out: StartSearch = {};
-    for (const k of ["login", "ref", "goal", "utm_source", "utm_medium", "utm_campaign", "meta", "tiktok", "nou"] as const) {
+    for (const k of ["paid", "login", "ref", "goal", "utm_source", "utm_medium", "utm_campaign", "meta", "tiktok", "nou"] as const) {
       if (typeof s[k] === "string") out[k] = s[k] as string;
     }
     if (typeof s.redirect === "string" && s.redirect.startsWith("/") && !s.redirect.startsWith("//")) out.redirect = s.redirect;
     return out;
   },
   head: () => ({
-    meta: [{ title: "Începe gratuit — AdPilot" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Clipul tău — AdPilot" }, { name: "robots", content: "noindex" }],
     links: [{ rel: "stylesheet", href: startCss }],
   }),
   component: StartPage,
@@ -357,7 +362,7 @@ function PhoneScreen(props: {
       <div className="q">
         <div className="qmain">
           <p className="eyebrow">
-            {props.noAccount ? "Nu ai încă cont" : props.login ? "Bine ai revenit" : "Începe gratuit"}
+            {props.noAccount ? "Nu ai încă cont" : props.login ? "Bine ai revenit" : "Fă-ți clipul"}
           </p>
           <h1 id="h-phone">
             {props.login ? "Intră cu numărul tău de " : "Pune numărul tău de "}
@@ -805,6 +810,7 @@ function Work(props: { state: StartState; niche: string; goal: StartGoal | null;
   const [uploading, setUploading] = useState<string[] | null>(null);
   const [connecting, setConnecting] = useState<StartTarget | null>(null);
   const [choosing, setChoosing] = useState(false);
+  const [startFailed, setStartFailed] = useState(false);
   const fileRef = useRef<HTMLInputElement | null>(null);
   const msgsRef = useRef<HTMLDivElement | null>(null);
   const startedRef = useRef(false);
@@ -817,6 +823,23 @@ function Work(props: { state: StartState; niche: string; goal: StartGoal | null;
   const allConnected = targets.length > 0 && targets.every((t) => connected[t]);
   const demoActive = demo.status === "queued" || demo.status === "running";
   const demoDone = demo.status === "ready" || demo.status === "delivered";
+  const paywall = state.paywall;
+
+  // Pe telefon, când clipul e gata, îl arătăm direct.
+  useEffect(() => {
+    if (paywall && demoDone) setTab("result");
+  }, [paywall, demoDone]);
+
+  // Întors de la plată: webhook-ul confirmă în câteva secunde.
+  useEffect(() => {
+    if (!state.locked || !new URLSearchParams(window.location.search).has("paid")) return;
+    const t = setInterval(() => void reload().catch(() => null), 3000);
+    const stop = setTimeout(() => clearInterval(t), 90_000);
+    return () => {
+      clearInterval(t);
+      clearTimeout(stop);
+    };
+  }, [state.locked, reload]);
 
   // Ambele conturi conectate fără alegere explicită → reclame pe amândouă.
   useEffect(() => {
@@ -826,18 +849,19 @@ function Work(props: { state: StartState; niche: string; goal: StartGoal | null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targets.length, connectedList.length, photos.length]);
 
-  // Totul conectat → pornim clipul.
+  // Totul conectat (sau cont cu paywall, care nu cere conectare) → pornim clipul.
   useEffect(() => {
-    if (!allConnected || !photos.length || (demo.status !== "none" && demo.status !== "failed") || startedRef.current) return;
+    if (!(allConnected || paywall) || !photos.length || (demo.status !== "none" && demo.status !== "failed") || startedRef.current) return;
     if (demo.status === "failed") return; // reluarea doar la cerere
     startedRef.current = true;
     runDemo()
       .then(reload)
       .catch((e) => {
         startedRef.current = false;
+        setStartFailed(true);
         toast.error(errMsg(e));
       });
-  }, [allConnected, photos.length, demo.status, runDemo, reload]);
+  }, [allConnected, paywall, photos.length, demo.status, runDemo, reload]);
 
   // Progres: întrebăm serverul cât timp lucrează.
   useEffect(() => {
@@ -937,6 +961,55 @@ function Work(props: { state: StartState; niche: string; goal: StartGoal | null;
     );
     if (uploading) return out;
 
+    if (paywall) {
+      bot("pw-start", "Am primit pozele. Încep să creez clipul tău.");
+      const retry = (label: string) =>
+        raw(
+          "pw-retry",
+          <div className="acts">
+            <button
+              className="btn ghost block"
+              onClick={() => {
+                setStartFailed(false);
+                void runDemo()
+                  .then(reload)
+                  .catch((e) => {
+                    setStartFailed(true);
+                    toast.error(errMsg(e));
+                  });
+              }}
+            >
+              {label}
+            </button>
+          </div>,
+        );
+      if (demo.status === "failed") {
+        bot("pw-failed", "Clipul nu a ieșit de data asta. Nu te costă nimic: apasă mai jos și îl refac.");
+        retry("Încearcă din nou");
+      } else if (demo.status === "none" && startFailed) {
+        retry("Pornește clipul");
+      } else if (demoActive) {
+        bot(
+          "pw-wait",
+          <>
+            <span className="rd" />
+            <b>Durează cam 10 minute.</b> Poți ieși de pe pagină: lucrez mai departe și îți scriu pe mail{state.email ? <> la {state.email}</> : null} când e gata.
+          </>,
+          "m warn",
+        );
+      } else if (demoDone && state.locked) {
+        bot(
+          "pw-ready",
+          <>
+            <b>Gata!</b> Vezi cum începe clipul tău. Alege un pachet ca să-l vezi întreg și să primești și pozele.
+          </>,
+        );
+      } else if (demoDone) {
+        bot("pw-paid", <>Clipul e deblocat ✓ Îl vezi aici și îl poți primi pe WhatsApp, de unde pornim și reclama.</>);
+      }
+      return out;
+    }
+
     bot(
       "connect-ask",
       <>
@@ -1026,7 +1099,7 @@ function Work(props: { state: StartState; niche: string; goal: StartGoal | null;
       "wait",
       <>
         <span className="rd" />
-        <b>Durează între 10 și 15 minute.</b> Poți ieși de pe pagină: îți trimitem clipul și pozele direct pe WhatsApp, imediat ce sunt gata.
+        <b>Durează cam 10 minute.</b> Poți ieși de pe pagină: îți trimitem clipul și pozele direct pe WhatsApp, imediat ce sunt gata.
       </>,
       demoDone ? "m cool" : "m warn",
     );
@@ -1048,7 +1121,7 @@ function Work(props: { state: StartState; niche: string; goal: StartGoal | null;
     }
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [niche, goal, photos, uploading, connected, connecting, targets, demo.status, demoDone, choosing]);
+  }, [niche, goal, photos, uploading, connected, connecting, targets, demo.status, demoDone, choosing, paywall, state.locked, state.email, startFailed]);
 
   // Mesajele noi apar pe rând, cu „scrie…” înainte; la revenire pe pagină apar toate deodată.
   const [shown, setShown] = useState(() => (photos.length ? items.length : 0));
@@ -1180,9 +1253,89 @@ function ConnectBlock(props: {
   );
 }
 
+/** Clipul blocat: clar până la tăietură, apoi blurat (fișierul e deja așa), cu pachetele alături. */
+function ClipPaywall(props: { state: StartState }) {
+  const { demo } = props.state;
+  const [past, setPast] = useState(false);
+  const { openCheckout, closeCheckout, isOpen, checkoutElement } = useStripeCheckout();
+  const buy = (id: string) => openCheckout({ priceId: id, returnUrl: `${window.location.origin}/start?paid=1` });
+  return (
+    <div className="cv">
+      <div className="done-wrap">
+        <div className="vid pw-vid">
+          <video
+            src={demo.previewUrl ?? undefined}
+            controls
+            playsInline
+            preload="metadata"
+            onTimeUpdate={(e) => setPast(e.currentTarget.currentTime >= (demo.previewCut ?? 8))}
+          />
+          {past ? (
+            <div className="pw-lock">
+              <b>Restul clipului e blocat</b>
+              <small>Alege un pachet ca să-l vezi întreg</small>
+            </div>
+          ) : null}
+        </div>
+        <div className="side">
+          <h3>Vezi clipul întreg</h3>
+          <p>Primești clipul complet și pozele, pe care le poți folosi unde vrei.</p>
+          {demo.previewImageUrls.length ? (
+            <div className="imgs">
+              {demo.previewImageUrls.map((u) => (
+                <img key={u} src={u} alt="Poză blocată" loading="lazy" />
+              ))}
+            </div>
+          ) : null}
+          <div className="pw-plans">
+            {PLAN_CATALOG.map((p) => (
+              <button key={p.id} type="button" className={`pw-plan ${p.featured ? "hot" : ""}`} onClick={() => buy(p.id)}>
+                {p.featured ? <span className="pw-tag">Recomandat</span> : null}
+                <span className="pw-top">
+                  <b>{p.name}</b>
+                  <em>
+                    {p.lei} lei<small>/lună</small>
+                  </em>
+                </span>
+                <small>{planVolume(p)} pe lună</small>
+                <small className={p.ads ? "yes" : ""}>{p.ads ? "Reclame și asistent pe WhatsApp incluse" : "Fără reclame, doar clipuri și poze"}</small>
+              </button>
+            ))}
+          </div>
+          <small className="note">Anulezi oricând. Trecerea pe un pachet mai mare costă doar diferența.</small>
+        </div>
+      </div>
+      {isOpen ? (
+        <div className="pw-checkout">
+          <button type="button" className="pw-close" onClick={closeCheckout}>
+            ← Înapoi la pachete
+          </button>
+          {checkoutElement}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function Canvas(props: { state: StartState; active: boolean; done: boolean }) {
   const { demo, photos } = props.state;
+  const navigate = useNavigate();
   const [shownPct, setShownPct] = useState(demo.progress);
+  const sendToWa = useServerFn(sendClipToWhatsApp);
+  const [waState, setWaState] = useState<"idle" | "busy" | "sent" | "template">("idle");
+
+  async function toWhatsApp() {
+    setWaState("busy");
+    try {
+      const { result } = await sendToWa();
+      if (result === "no_phone") throw new Error("Nu găsesc numărul tău de WhatsApp. Scrie-ne și rezolvăm imediat.");
+      setWaState(result);
+    } catch (e) {
+      setWaState("idle");
+      toast.error(errMsg(e));
+    }
+  }
+
   useEffect(() => {
     if (!props.active) {
       setShownPct(demo.progress);
@@ -1194,6 +1347,49 @@ function Canvas(props: { state: StartState; active: boolean; done: boolean }) {
     }, 1000);
     return () => clearInterval(t);
   }, [props.active, demo.progress]);
+
+  if (props.done && demo.previewUrl) {
+    return <ClipPaywall state={props.state} />;
+  }
+
+  if (props.done && demo.videoUrl && props.state.paywall) {
+    return (
+      <div className="cv">
+        <div className="done-wrap">
+          <div className="vid">
+            <video src={demo.videoUrl} controls playsInline preload="metadata" />
+          </div>
+          <div className="side">
+            <h3>Clipul e al tău</h3>
+            <div className="meta">
+              <span>Voce în română</span>
+              <span>Subtitrări</span>
+              <span>9:16</span>
+            </div>
+            {demo.imageUrls.length ? (
+              <div className="imgs">
+                {demo.imageUrls.map((u) => (
+                  <img key={u} src={u} alt="Poză creată pentru reclamă" loading="lazy" />
+                ))}
+              </div>
+            ) : null}
+            {waState === "sent" ? (
+              <p>L-am trimis pe WhatsApp. Continuăm de acolo.</p>
+            ) : waState === "template" ? (
+              <p>Ți-am scris pe WhatsApp. Apasă „Trimite-mi materialele” și primești clipul și pozele.</p>
+            ) : (
+              <button className="btn block" disabled={waState === "busy"} onClick={() => void toWhatsApp()}>
+                Primește pe WhatsApp
+              </button>
+            )}
+            <button className="btn ghost block" onClick={() => navigate({ to: "/dashboard" })}>
+              Mergi în aplicație
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (props.done && demo.videoUrl) {
     return (
@@ -1251,7 +1447,11 @@ function Canvas(props: { state: StartState; active: boolean; done: boolean }) {
             <span className="lbar-fill" style={{ width: `${pct}%` }} />
           </div>
         </div>
-        <p className="gnote">Durează 10–15 minute. Poți închide pagina: îți trimitem totul pe WhatsApp.</p>
+        <p className="gnote">
+          {props.state.paywall
+            ? "Durează cam 10 minute. Poți închide pagina: lucrăm mai departe și îți scriem pe mail când e gata."
+            : "Durează cam 10 minute. Poți închide pagina: îți trimitem totul pe WhatsApp."}
+        </p>
       </div>
     );
   }

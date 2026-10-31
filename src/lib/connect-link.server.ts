@@ -1,6 +1,6 @@
 /**
- * Link personal de conectare Facebook, trimis de bot pe WhatsApp: omul îl deschide de pe
- * telefon și dă accept la Facebook, fără să intre în contul AdPilot. Linkul e semnat
+ * Link personal de conectare Facebook sau TikTok, trimis de bot pe WhatsApp: omul îl deschide de pe
+ * telefon și dă accept, fără să intre în contul AdPilot. Linkul e semnat
  * (HMAC) și expiră în 24 de ore; nu se salvează nimic în baza de date.
  */
 import { createHmac, timingSafeEqual } from "node:crypto";
@@ -28,4 +28,10 @@ export function verifyMetaConnectToken(token: string): string | null {
   const given = Buffer.from(sig);
   if (expected.length !== given.length || !timingSafeEqual(expected, given)) return null;
   return userId;
+}
+
+/** Același tip de link, pentru TikTok. */
+export function tiktokConnectLink(userId: string, origin = "https://www.adpilot.ro"): string {
+  const payload = `${userId}.${Math.floor((Date.now() + TTL_MS) / 1000).toString(36)}`;
+  return `${origin}/tt/${payload}.${sign(payload)}`;
 }

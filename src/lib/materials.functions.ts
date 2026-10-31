@@ -83,11 +83,13 @@ export const listMaterials = createServerFn({ method: "POST" })
       for (const d of data ?? []) if (d.signedUrl) urls.set(`${bucket}/${d.path}`, d.signedUrl);
     }
 
-    const { checkAiClipQuota, clipQuotaMessage, checkAiPhotoQuota } = await import("@/lib/plan.server");
-    const [cq, pq] = await Promise.all([checkAiClipQuota(db, userId), checkAiPhotoQuota(db, userId)]);
+    const { checkAiClipQuota, clipQuotaMessage, checkAiPhotoQuota, photoQuotaMessage } = await import("@/lib/plan.server");
+    const { isClipLocked } = await import("@/lib/access.server");
+    const [cq, pq, locked] = await Promise.all([checkAiClipQuota(db, userId), checkAiPhotoQuota(db, userId), isClipLocked(db, userId)]);
 
     return {
-      items: (assets ?? []).map((a: any) => ({
+      // Clipul de la înscriere apare aici abia după plată.
+      items: (assets ?? []).filter((a: any) => !locked || a.source !== "onboarding").map((a: any) => ({
         id: a.id,
         kind: a.kind,
         url: urls.get(`${a.bucket}/${a.path}`) ?? null,
@@ -105,11 +107,7 @@ export const listMaterials = createServerFn({ method: "POST" })
           allowed: pq.allowed,
           used: pq.used,
           limit: Number.isFinite(pq.limit) ? pq.limit : null,
-          message: pq.allowed
-            ? null
-            : pq.limit === 0
-              ? "Pozele noi cu AI se deblochează după plata abonamentului: 10 pe lună pe Pro, nelimitat pe Premium."
-              : `Ai folosit cele ${pq.limit} poze AI din luna asta.`,
+          message: pq.allowed ? null : photoQuotaMessage(pq),
         },
       },
     };
@@ -157,15 +155,9 @@ export const generatePhotoFromWeb = createServerFn({ method: "POST" })
     const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
-    const { checkAiPhotoQuota, recordAiPhoto } = await import("@/lib/plan.server");
+    const { checkAiPhotoQuota, photoQuotaMessage, recordAiPhoto } = await import("@/lib/plan.server");
     const q = await checkAiPhotoQuota(db, userId);
-    if (!q.allowed) {
-      throw new Error(
-        q.limit === 0
-          ? "Pozele noi cu AI se deblochează după plata abonamentului: 10 pe lună pe Pro, nelimitat pe Premium."
-          : `Ai folosit cele ${q.limit} poze AI din luna asta.`,
-      );
-    }
+    if (!q.allowed) throw new Error(photoQuotaMessage(q));
     let reference: { bytes: Uint8Array; mime: string } | null = null;
     if (data.refPath) {
       const [p] = ownPaths(userId, [data.refPath]);

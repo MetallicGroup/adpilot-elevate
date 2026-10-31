@@ -230,6 +230,7 @@ export async function runFreePlanExpiry(): Promise<{
   const { data: trialGone } = await (supabaseAdmin as any)
     .from("profiles")
     .select("id, chosen_plan")
+    .eq("paywall", false)
     .lt("signup_trial_ends_at", nowIso)
     .is("signup_trial_notified_at", null);
   for (const p of (trialGone ?? []) as any[]) {
@@ -267,6 +268,7 @@ export async function runFreePlanExpiry(): Promise<{
   const { data: monthlyGone } = await (supabaseAdmin as any)
     .from("profiles")
     .select("id, chosen_plan")
+    .eq("paywall", false)
     .eq("free_plan_month", month)
     .not("free_plan_started_at", "is", null)
     .lt("free_plan_started_at", cutoff)

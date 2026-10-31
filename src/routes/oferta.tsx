@@ -8,7 +8,7 @@ import { fbViewContent } from "@/lib/meta-pixel";
 export const Route = createFileRoute("/oferta")({
   head: () => ({
     meta: [
-      { title: "Începe GRATUIT — AdPilot" },
+      { title: "Fă-ți clipul — AdPilot" },
       {
         name: "description",
         content:
@@ -65,21 +65,21 @@ function OfertaPage() {
   return (
     <MarketingLayout>
       <Hero
-        eyebrow="7 zile gratuite · fără card"
+        eyebrow="Vezi gratuit cum începe clipul tău"
         title={
           <>
-            Începe <span className="gtext">gratuit.</span>
+            Clipul tău, <span className="gtext">din poze.</span>
           </>
         }
         sub="Spune-i ce vrei să obții. AdPilot creează pozele și clipurile, lansează și optimizează reclamele tale pe Facebook, Instagram și TikTok, fără agenție și fără experiență."
         aside={<ChatPhone lines={DEMO} />}
       >
         <div className="cta">
-          <SignupButton label="Începe gratuit acum" onClick={track("hero")} />
+          <SignupButton label="Fă-ți clipul" onClick={track("hero")} />
         </div>
         <div className="facts">
           <span>Asistent pe WhatsApp inclus</span>
-          <span>Fără card</span>
+          <span>Vezi clipul înainte să plătești</span>
           <span>Fără agenție</span>
         </div>
       </Hero>
@@ -144,12 +144,12 @@ function OfertaPage() {
           Prețuri
         </p>
         <h2 className="d2" data-r style={{ marginTop: 16, maxWidth: "15ch" }}>
-          Primele 7 zile sunt gratuite. Fără card.
+          Vezi gratuit cum începe clipul. Plătești doar dacă îl vrei.
         </h2>
         <PlanCards />
       </Band>
 
-      <FinalCta title={<>Prima reclamă,<br />în 5 minute.</>} label="Începe gratuit acum" onClick={track("final")} />
+      <FinalCta title={<>Primul tău clip,<br />în 10 minute.</>} label="Fă-ți clipul" onClick={track("final")} />
     </MarketingLayout>
   );
 }

@@ -37,9 +37,9 @@ export const Route = createFileRoute("/terms-of-service")({
       </UL>
       <P>Trebuie să respecți și politicile de publicitate ale Meta și ale TikTok.</P>
 
-      <H2>5. Abonamente, facturare și perioadă de probă</H2>
-      <P>AdPilot este oferit ca abonament lunar plătit. Clienții noi beneficiază de 7 zile gratuite (fără card), de la crearea contului; planul Starter rămâne apoi gratuit 7 zile pe lună. După această perioadă, abonamentele se reînnoiesc automat lunar la prețul curent până la anulare. Poți anula oricând din contul tău; anularea intră în vigoare la finalul perioadei plătite. Rambursările sunt acordate conform Politicii de rambursare — în principal, poți solicita rambursarea completă a primei plăți în primele 7 zile. Putem modifica prețurile cu notificare de cel puțin 30 de zile; modificările se aplică doar la reînnoire.</P>
-      <P>Abonamentul acoperă doar accesul la platformă. Bugetul de reclame este facturat direct de Meta sau TikTok și nu este inclus. Perioada gratuită include un clip și 2 poze generate cu AI; limitele pentru planurile plătite sunt cele afișate pe pagina de prețuri.</P>
+      <H2>5. Abonamente și facturare</H2>
+      <P>AdPilot este oferit ca abonament lunar plătit. Clienții noi văd gratuit previzualizarea primului clip, iar clipul întreg se deblochează prin alegerea unui pachet; conturile create înainte de această schimbare își păstrează condițiile de la înscriere. Abonamentele se reînnoiesc automat lunar la prețul curent până la anulare. Poți anula oricând din contul tău; anularea intră în vigoare la finalul perioadei plătite. Rambursările sunt acordate conform Politicii de rambursare — în principal, poți solicita rambursarea completă a primei plăți în primele 7 zile. Putem modifica prețurile cu notificare de cel puțin 30 de zile; modificările se aplică doar la reînnoire.</P>
+      <P>Abonamentul acoperă doar accesul la platformă. Bugetul de reclame este facturat direct de Meta sau TikTok și nu este inclus. Limitele pentru pachete sunt cele afișate pe pagina de prețuri.</P>
 
       <H2>6. Conținutul și datele Clientului</H2>
       <P>Păstrezi toate drepturile asupra conținutului, creativelor, textelor și brandului încărcate sau generate prin Servicii („Date Client"). Acorzi AdPilot o licență limitată, internațională, non-exclusivă pentru a găzdui, prelucra, transmite și afișa Datele Client doar pentru furnizarea și îmbunătățirea Serviciilor. Răspunzi pentru deținerea drepturilor și acordurilor necesare.</P>

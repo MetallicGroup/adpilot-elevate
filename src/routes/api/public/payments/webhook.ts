@@ -254,6 +254,11 @@ async function handleWebhook(req: Request, env: StripeEnv) {
     case "customer.subscription.deleted":
       await handleSubscriptionDeleted(event.data.object, env);
       break;
+    case "checkout.session.completed": {
+      const { applyPaidUpgrade } = await import("@/lib/upgrade.server");
+      await applyPaidUpgrade(env, event.data.object);
+      break;
+    }
     default:
       console.log("[webhook] unhandled", event.type);
   }

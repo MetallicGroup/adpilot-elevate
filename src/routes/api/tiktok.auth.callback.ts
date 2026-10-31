@@ -12,7 +12,8 @@ export const Route = createFileRoute("/api/tiktok/auth/callback")({
         const url = new URL(request.url);
         const authCode = url.searchParams.get("auth_code") ?? url.searchParams.get("code");
         const state = url.searchParams.get("state");
-        const returnTo = getCookie("tiktok_oauth_return") === "/start" ? "/start" : "/settings";
+        const cookieReturn = getCookie("tiktok_oauth_return");
+        const returnTo = cookieReturn === "/start" || cookieReturn === "/conectat" ? cookieReturn : "/settings";
         deleteCookie("tiktok_oauth_return", { path: "/" });
         const back = (q: string) =>
           new Response(null, { status: 302, headers: { Location: `${returnTo}?${q}` } });
@@ -75,6 +76,17 @@ export const Route = createFileRoute("/api/tiktok/auth/callback")({
             console.warn("TikTok advertisers sync failed", e);
           }
 
+          if (returnTo === "/conectat") {
+            try {
+              const { notifyOwner } = await import("@/lib/wa-notify.server");
+              await notifyOwner(db, userId, {
+                kind: "tiktok_connected",
+                text: "Gata, TikTok-ul tău e conectat la AdPilot ✅ Continuăm cu reclama aici.",
+              });
+            } catch (e) {
+              console.error("[tiktok-callback] notify connected", (e as Error).message);
+            }
+          }
           return back("tiktok=connected");
         } catch (e) {
           console.error("TikTok OAuth callback error", e);

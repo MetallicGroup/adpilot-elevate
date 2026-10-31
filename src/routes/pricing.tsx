@@ -14,9 +14,9 @@ export const Route = createFileRoute("/pricing")({
   }),
   head: () => ({ meta: [
     { title: "Prețuri — AdPilot" },
-    { name: "description", content: "Planuri lunare simple pentru reclame pe Facebook, Instagram și TikTok, cu clipuri și poze generate cu AI. 7 zile gratuite, fără card. Anulezi oricând." },
+    { name: "description", content: "Pachete lunare de clipuri și poze generate cu AI, de la 89 lei. Reclame pe Facebook, Instagram și TikTok de la 495 lei. Anulezi oricând." },
     { property: "og:title", content: "Prețuri — AdPilot" },
-    { property: "og:description", content: "Reclame pe Facebook, Instagram și TikTok, cu clipuri și poze AI. 7 zile gratuite, fără card." },
+    { property: "og:description", content: "Clipuri și poze AI de la 89 lei pe lună. Reclame pe Facebook, Instagram și TikTok de la 495 lei." },
     { property: "og:url", content: "https://adpilot.ro/pricing" },
   ], links: [{ rel: "canonical", href: "https://adpilot.ro/pricing" }],
     scripts: [
@@ -38,10 +38,12 @@ export const Route = createFileRoute("/pricing")({
 });
 
 const faqs = [
-  { q: "Există perioadă de probă gratuită?", a: "Da — 7 zile gratuite pentru orice cont nou, fără card, de la crearea contului. Planul Starter rămâne gratuit apoi 7 zile în fiecare lună. Pentru Pro/Premium primești pe WhatsApp un link de plată când vrei să continui nelimitat." },
-  { q: "Ce clipuri și poze primesc în perioada gratuită?", a: "La înscriere, AdPilot generează cu AI din pozele tale 1 clip de 20–25 de secunde, cu voce în română și subtitrări, plus 2 poze pentru reclame. Atât include perioada gratuită, indiferent de plan. Mai multe se deblochează după ce te abonezi: pe Pro 4 clipuri și 10 poze pe lună, pe Premium 15 clipuri și poze nelimitate." },
-  { q: "Pot face reclame și pe TikTok?", a: "Da. Conectezi Facebook, TikTok sau ambele, iar AdPilot pornește reclama pe platformele alese, cu același clip și aceleași poze. Bugetul îl plătești direct către platformă." },
-  { q: "Pot anula oricând?", a: "Da. Poți anula oricând în timpul perioadei de probă fără să fii taxat, sau ulterior direct din contul tău, fără întrebări." },
+  { q: "Pot vedea clipul înainte să plătesc?", a: "Da. Trimiți pozele, AdPilot face clipul din ele și vezi gratuit cum începe, cam primele 8 secunde. Clipul întreg și pozele se deblochează când alegi un pachet." },
+  { q: "Clipurile și pozele se consumă separat?", a: "Nu, vin din același total lunar. Un clip consumă cât 10 poze, deci pe Start ai 2 clipuri sau 20 de poze, ori orice combinație între ele. Totalul se reîncarcă la fiecare reînnoire." },
+  { q: "Ce pachet are nevoie de reclame?", a: "Reclamele și asistentul de pe WhatsApp sunt incluse de la pachetul Afacere, 495 lei pe lună. Start și Creator sunt doar pentru clipuri și poze." },
+  { q: "Cât costă să trec pe un pachet mai mare?", a: "Plătești o singură dată diferența dintre pachete, iar clipurile în plus apar imediat. De exemplu, de la Start la Afacere plătești 406 lei. Reînnoirea rămâne la aceeași dată, la prețul noului pachet." },
+  { q: "Pot face reclame și pe TikTok?", a: "Da, de la pachetul Afacere. Conectezi Facebook, TikTok sau ambele, iar AdPilot pornește reclama pe platformele alese. Bugetul îl plătești direct către platformă." },
+  { q: "Pot anula oricând?", a: "Da, direct din contul tău, fără întrebări. Abonamentul rămâne activ până la finalul perioadei plătite." },
   { q: "Prețul include bugetul de reclame?", a: "Nu. Abonamentul AdPilot acoperă doar platforma. Bugetul de reclame este plătit direct către Meta (Facebook și Instagram) sau TikTok, din contul tău de reclame." },
   { q: "Ce metode de plată acceptați?", a: "Toate cardurile majore: Visa, Mastercard, Maestro. Plățile sunt procesate securizat prin Stripe." },
 ];
@@ -72,14 +74,8 @@ function PricingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleSelect = (priceId: string, free?: boolean) => {
+  const handleSelect = (priceId: string) => {
     tkClickButton(`pricing-select-${priceId}`);
-    if (free) {
-      // Starter gratuit: fără Stripe. Neautentificat → onboarding pe telefon (/start);
-      // autentificat → continuă acolo unde a rămas.
-      navigate(authed ? ({ to: "/onboarding" } as any) : ({ to: "/start" } as any));
-      return;
-    }
     if (!authed) {
       navigate({ to: "/start", search: { redirect: `/pricing?plan=${priceId}` } as any });
       return;
@@ -91,12 +87,12 @@ function PricingPage() {
     <MarketingLayout>
       <Hero
         eyebrow="Prețuri"
-        title="Primele 7 zile sunt gratuite. Fără card."
-        sub="Alegi planul la înscriere și îl folosești 7 zile, cu 1 clip și 2 poze generate cu AI. Starter rămâne gratuit 7 zile pe lună; Pro și Premium continuă nelimitat și deblochează mai multe clipuri și poze după ce te abonezi. Reclamele rulează pe Facebook, Instagram și TikTok; bugetul îl plătești separat, direct către platformă."
+        title="Vezi gratuit cum începe clipul tău. Plătești doar dacă îl vrei."
+        sub="Clipuri și poze generate cu AI de la 89 lei pe lună. Reclamele pe Facebook, Instagram și TikTok sunt incluse de la 495 lei; bugetul îl plătești separat, direct către platformă."
       />
       <Band tone="light">
         <h2 className="sr-only">Planuri și prețuri AdPilot</h2>
-        <PlanCards onSelect={(p) => handleSelect(p.id, p.free)} />
+        <PlanCards onSelect={(p) => handleSelect(p.id)} />
       </Band>
       <Band tone="light" className="tight">
         <h2 className="d2" data-r>
@@ -104,7 +100,7 @@ function PricingPage() {
         </h2>
         <Faq items={faqs} />
       </Band>
-      <FinalCta title={<>Prima reclamă,<br />în 5 minute.</>} />
+      <FinalCta title={<>Primul tău clip,<br />în 10 minute.</>} />
 
       {isOpen && (
         <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm overflow-y-auto">

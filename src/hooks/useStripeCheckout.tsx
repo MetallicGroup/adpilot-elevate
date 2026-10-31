@@ -4,6 +4,7 @@ import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 interface CheckoutOptions {
   priceId: string;
   returnUrl?: string;
+  upgrade?: boolean;
 }
 
 export function useStripeCheckout() {

@@ -90,7 +90,7 @@ function MaterialsPage() {
     try {
       const paths = clipFiles.length ? await uploadPhotos(clipFiles) : [];
       await startClip({ data: { paths, brief } });
-      toast.success("Am pornit clipul. Durează 10–15 minute; ți-l trimitem și pe WhatsApp.");
+      toast.success("Am pornit clipul. Durează cam 10 minute; ți-l trimitem și pe WhatsApp.");
       setClipFiles([]);
       setBrief("");
       await load();
@@ -132,10 +132,7 @@ function MaterialsPage() {
         {q ? (
           <div className="flex flex-wrap gap-2 text-xs">
             <span className="rounded-full border px-3 py-1.5">
-              Clipuri noi luna asta: <b>{q.clips.used}</b> / {q.clips.limit}
-            </span>
-            <span className="rounded-full border px-3 py-1.5">
-              Poze AI luna asta: <b>{q.photos.used}</b> / {q.photos.limit ?? "nelimitat"}
+              Folosit luna asta: <b>{q.clips.used}</b> / {q.clips.limit} (un clip = 10, o poză = 1)
             </span>
           </div>
         ) : null}
@@ -149,7 +146,7 @@ function MaterialsPage() {
             </span>
             <div>
               <h2 className="text-base font-semibold">Clip nou</h2>
-              <p className="text-xs text-muted-foreground">20–25 de secunde, voce în română, subtitrări, plus 2 poze. Durează 10–15 minute.</p>
+              <p className="text-xs text-muted-foreground">20–25 de secunde, voce în română, subtitrări, plus 2 poze. Durează cam 10 minute.</p>
             </div>
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-2">

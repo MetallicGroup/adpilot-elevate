@@ -13,7 +13,7 @@
  *             ElevenLabs: vocea (20–25 s) cu momentul fiecărui cuvânt → planul tăieturilor;
  *             pornesc: selfie-ul (Nano Banana Pro) și 2 poze 4:5
  *   clips   → după selfie: planul mediu, prim-planul și cadrele scenelor (selfie-ul ca referință);
- *             pe fiecare unghi gata: OmniHuman pe bucata lui din voce (Kling Avatar dacă pică); scena → Kling Turbo
+ *             pe fiecare unghi gata: Kling AI Avatar pe bucata lui din voce; scena → Kling Turbo
  *   render  → ffmpeg: cadrele lipite pe tăieturi, vocea întreagă peste muzică, subtitrări cuvânt cu cuvânt
  *   deliver → șablonul `materiale_gata`; materialele pleacă la apăsarea butonului
  *
@@ -29,16 +29,14 @@ import { kieCreate, kiePoll, kieRetryTransient, kieWaitingRetry, type KieTask } 
 
 const BUCKET = "onboarding";
 /** Fundalurile muzicale (public/music), câte unul pe stare. */
-const MUSIC_BASE = "https://www.adpilot.ro/music";
+const SITE = "https://www.adpilot.ro";
+const MUSIC_BASE = `${SITE}/music`;
 const LOCK_MS = 4 * 60 * 1000;
 const MAX_ERRORS = 4;
-/** Buzele: OmniHuman arată cel mai natural, dar e lent (~7 min pe bucată). Kling Avatar doar dacă pică de tot. */
-const AVATAR_MODEL = "omnihuman-2-0";
-const AVATAR_BACKUP_MODEL = "kling/ai-avatar-standard";
-const AVATAR_TIMEOUT_MS = 30 * 60 * 1000;
-const AVATAR_PROMPT_MAX = 300;
-/** OmniHuman refuză vocea sub 4 s; bucățile scurte primesc liniște la final, iar montajul taie cadrul la durata lui. */
-const AVATAR_MIN_AUDIO_SEC = 4;
+const AVATAR_MODEL = "kling/ai-avatar-standard";
+/** Conturile cu paywall văd clipul clar până la prima tăietură de după atâtea secunde. */
+const PREVIEW_MIN_SEC = 7;
+const PREVIEW_FALLBACK_SEC = 8;
 export const DELIVERY_TEMPLATE = "materiale_gata";
 export const DELIVERY_PAYLOAD = "materiale";
 
@@ -61,6 +59,8 @@ type DemoScript = {
   music: MusicMood;
   imagePrompts: string[];
   keywords: string[];
+  /** O frază scurtă și caldă pentru mailul „clipul e gata”. */
+  emailLine?: string;
 };
 type Job = {
   phase?: "script" | "clips" | "render" | "deliver" | "done";
@@ -78,6 +78,8 @@ type Job = {
   images?: Task[];
   errors?: number;
   lastError?: string;
+  /** Clipul a picat o dată și l-am reluat automat. */
+  autoRetried?: boolean;
 };
 
 // ───────────────────────────── planul tăieturilor ─────────────────────────────
@@ -254,11 +256,9 @@ function sceneClipInput(scene: Scene, index: number, imageUrl: string) {
   };
 }
 
-function avatarInput(model: string, script: DemoScript, angle: Angle, imageUrl: string, audioUrl: string) {
+function avatarInput(script: DemoScript, angle: Angle, imageUrl: string, audioUrl: string) {
   const cam = angle === "selfie" ? "Handheld selfie video with slight natural camera shake; the person talks to the phone camera." : "Static camera.";
-  if (model === AVATAR_BACKUP_MODEL) return { image_url: imageUrl, audio_url: audioUrl, prompt: `${script.avatarPrompt} ${cam}` };
-  const prompt = `${script.avatarPrompt.slice(0, AVATAR_PROMPT_MAX - cam.length - 1)} ${cam}`;
-  return { image_urls: [imageUrl], audio_url: audioUrl, prompt, enable_watermark: false };
+  return { image_url: imageUrl, audio_url: audioUrl, prompt: `${script.avatarPrompt} ${cam}` };
 }
 
 // ───────────────────────────── storage ─────────────────────────────
@@ -501,10 +501,11 @@ Restul câmpurilor sunt în ENGLEZĂ (pentru modelele de imagine/video):
   Locul din poze rămâne locul scenelor când munca se face acolo; dacă munca se face în altă parte (la client, pe acoperiș), descrie acel loc.
   Interzis în scene: înainte/după, sânge, ace, răni, intervenții medicale în prim-plan, gură deschisă văzută de aproape, corpuri expuse, ecrane sau afișe cu text;
 - music: alege una dintre "upbeat" (general, vesel), "calm" (sănătate, frumusețe, wellness), "confident" (servicii, firme, imobiliare), "energetic" (frizerie, sală, auto), "warm" (restaurant, magazin local, familie);
-- imagePrompts: 2 idei de poze publicitare în acest spațiu (ex. specialistul lucrând, clientul mulțumit).
+- imagePrompts: 2 idei de poze publicitare în acest spațiu (ex. specialistul lucrând, clientul mulțumit);
+- emailLine: în ROMÂNĂ, o frază caldă de cel mult 10 cuvinte despre afacere, pentru mailul „clipul e gata” (ex. la service auto: „Mașinile clienților tăi vor merge ca pe roate”).
 
 Răspunde DOAR cu JSON valid:
-{"voiceover":"...","keywords":["..."],"presenter":"female","presenterLook":"...","avatarPrompt":"...","scenes":[{"prompt":"...","motion":"...","presenter":false}],"music":"upbeat","imagePrompts":["...","..."]}`;
+{"voiceover":"...","keywords":["..."],"presenter":"female","presenterLook":"...","avatarPrompt":"...","scenes":[{"prompt":"...","motion":"...","presenter":false}],"music":"upbeat","imagePrompts":["...","..."],"emailLine":"..."}`;
 
   const { text } = await generateText({
     model: chatModel(),
@@ -541,6 +542,7 @@ Răspunde DOAR cu JSON valid:
     music: MUSIC_MOODS.includes(j.music) ? j.music : "upbeat",
     imagePrompts: arr(j.imagePrompts, 2),
     keywords: arr(j.keywords, 5),
+    emailLine: String(j.emailLine ?? "").replace(/\s+/g, " ").trim().slice(0, 120) || undefined,
   };
   while (script.scenes.length < 4) {
     script.scenes.push({
@@ -563,8 +565,7 @@ async function cutAudio(voice: Uint8Array, t0: number, t1: number, work: string,
   const inp = join(work, "voice.mp3");
   await writeFile(inp, voice);
   const out = join(work, `seg${i}.mp3`);
-  const cut = `atrim=${t0.toFixed(3)}:${t1.toFixed(3)},asetpts=PTS-STARTPTS,apad=whole_dur=${AVATAR_MIN_AUDIO_SEC}`;
-  await run(bin, ["-y", "-i", inp, "-af", cut, "-c:a", "libmp3lame", "-q:a", "2", out]);
+  await run(bin, ["-y", "-i", inp, "-ss", t0.toFixed(3), "-to", t1.toFixed(3), "-c:a", "libmp3lame", "-q:a", "2", out]);
   return new Uint8Array(await readFile(out));
 }
 
@@ -578,6 +579,8 @@ const isOnb = (ref: JobRef) => ref.table === "onboarding_sessions";
 const upd = (db: any, ref: JobRef, patch: Record<string, unknown>) => db.from(ref.table).update(patch).eq(ref.key, ref.id);
 /** Unde salvăm fișierele: demo-ul în <user>/demo, clipurile noi fiecare în folderul lor. */
 const prefixOf = (ref: JobRef, uid: string) => (isOnb(ref) ? `${uid}/demo` : `${uid}/clips/${ref.id}`);
+/** Clipul întreg al contului cu paywall stă în afara folderului lui, pe care îl poate citi din browser. */
+const lockedPrefix = (uid: string) => `locked/${uid}/demo`;
 /** Pozele de pornire: la onboarding sunt în bucket-ul nostru; la clipurile noi pot fi și în wa-media. */
 function photoRefsOf(s: any): Array<{ bucket: string; path: string }> {
   if (Array.isArray(s.photo_refs) && s.photo_refs.length) return s.photo_refs;
@@ -726,18 +729,12 @@ async function stepClips(db: any, s: any, job: Job): Promise<void> {
     if (shot.kind !== "talk") continue;
     const frame = frames[shot.angle]?.url;
     const key = String(i);
-    const makeAvatar = async (model: string) =>
-      kieCreate(model, avatarInput(model, script, shot.angle, frame!, await signedUrl(db, shot.audio!)));
-    if (frame && !avatars[key]) avatars[key] = await makeAvatar(AVATAR_MODEL);
-    avatars[key] = (await kiePoll(avatars[key], AVATAR_TIMEOUT_MS))!;
+    const makeAvatar = async () => kieCreate(AVATAR_MODEL, avatarInput(script, shot.angle, frame!, await signedUrl(db, shot.audio!)));
+    if (frame && !avatars[key]) avatars[key] = await makeAvatar();
+    avatars[key] = (await kiePoll(avatars[key]))!;
     if (avatars[key]?.failed && !avatars[key]?.fallback && frame) {
-      const model = avatars[key].model ?? AVATAR_BACKUP_MODEL;
-      let r = await retryOnce(avatars[key], () => makeAvatar(model));
-      if (!r && model !== AVATAR_BACKUP_MODEL) {
-        console.warn(`[clip] avatar ${i}: ${model} a picat (${avatars[key].failMsg ?? "fără motiv"}), trec pe ${AVATAR_BACKUP_MODEL}`);
-        r = await makeAvatar(AVATAR_BACKUP_MODEL);
-      }
-      // Avatarul a picat definitiv pe ambele modele: montajul pune o scenă peste voce.
+      const r = await retryOnce(avatars[key], makeAvatar);
+      // Avatarul a picat definitiv (ex. Kling în pană mult timp): montajul pune o scenă peste voce.
       if (!r) console.warn(`[clip] avatar ${i} failed, îl acopăr cu o scenă`);
       avatars[key] = r ?? { ...avatars[key], fallback: true };
     }
@@ -903,9 +900,91 @@ export async function renderDemoVideo(params: {
   return out;
 }
 
+/** Momentul de la care previzualizarea se blurează: prima tăietură de după 7 secunde. */
+export function previewCut(plan: Array<{ t1: number }> | undefined, duration: number): number {
+  const cut = (plan ?? []).map((x) => x.t1).find((t) => t >= PREVIEW_MIN_SEC && t < duration - 1);
+  return cut ?? Math.min(PREVIEW_FALLBACK_SEC, duration * 0.4);
+}
+
+/**
+ * Previzualizarea: clipul clar până la `cut`, apoi blurat (cu tot cu subtitrări) și fără voce, doar cu muzică.
+ * E un fișier separat, deci clipul întreg nu ajunge în browser.
+ */
+export async function renderPreview(params: { work: string; clip: string; musicFile: string | null; cut: number; duration: number }): Promise<string> {
+  const bin = await ffmpeg();
+  const T = params.cut.toFixed(3);
+  const D = params.duration.toFixed(3);
+  const fade = Math.max(0, params.cut - 0.15).toFixed(3);
+  const out = join(params.work, "preview.mp4");
+  const music = params.musicFile ? ["-stream_loop", "-1", "-i", params.musicFile] : ["-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo"];
+  const af = "aformat=sample_rates=44100:channel_layouts=stereo";
+  await run(bin, [
+    "-y",
+    "-i",
+    params.clip,
+    ...music,
+    "-filter_complex",
+    [
+      `[0:v]split=2[c][b]`,
+      `[c]trim=0:${T},setpts=PTS-STARTPTS[clear]`,
+      `[b]trim=${T},setpts=PTS-STARTPTS,boxblur=34:3[blur]`,
+      `[clear][blur]concat=n=2:v=1:a=0[v]`,
+      `[0:a]atrim=0:${T},asetpts=PTS-STARTPTS,${af},afade=t=out:st=${fade}:d=0.15[a0]`,
+      `[1:a]atrim=${T}:${D},asetpts=PTS-STARTPTS,${af},volume=0.32,afade=t=in:d=0.2[a1]`,
+      `[a0][a1]concat=n=2:v=0:a=1[a]`,
+    ].join(";"),
+    "-map",
+    "[v]",
+    "-map",
+    "[a]",
+    "-c:v",
+    "libx264",
+    "-preset",
+    "veryfast",
+    "-crf",
+    "26",
+    "-pix_fmt",
+    "yuv420p",
+    "-c:a",
+    "aac",
+    "-b:a",
+    "128k",
+    "-movflags",
+    "+faststart",
+    "-t",
+    D,
+    out,
+  ]);
+  return out;
+}
+
+/** Imaginea din mail: un cadru din clip, cu iconița de play peste el. */
+export async function renderThumb(params: { work: string; clip: string; playIcon: string | null }): Promise<string> {
+  const bin = await ffmpeg();
+  const out = join(params.work, "thumb.jpg");
+  const base = ["-y", "-ss", "1", "-i", params.clip];
+  const args = params.playIcon
+    ? [...base, "-i", params.playIcon, "-filter_complex", "[0:v]scale=560:-2[b];[b][1:v]overlay=(W-w)/2:(H-h)/2[v]", "-map", "[v]"]
+    : [...base, "-vf", "scale=560:-2"];
+  await run(bin, [...args, "-frames:v", "1", "-q:v", "3", out]);
+  return out;
+}
+
+async function blurImage(work: string, bytes: Uint8Array, i: number): Promise<Uint8Array> {
+  const bin = await ffmpeg();
+  const inp = join(work, `pi${i}.jpg`);
+  const out = join(work, `po${i}.jpg`);
+  await writeFile(inp, bytes);
+  await run(bin, ["-y", "-i", inp, "-vf", "scale=480:-2,boxblur=26:3", "-frames:v", "1", "-q:v", "5", out]);
+  return new Uint8Array(await readFile(out));
+}
+
 async function stepRender(db: any, s: any, job: Job, ref: JobRef): Promise<void> {
   const uid = s.user_id as string;
   const pre = prefixOf(ref, uid);
+  const { isClipLocked } = await import("./access.server");
+  const locked = isOnb(ref) && (await isClipLocked(db, uid));
+  const finalPre = locked ? lockedPrefix(uid) : pre;
   const work = await mkdtemp(join(tmpdir(), "render-"));
   try {
     const voiceFile = join(work, "voice.mp3");
@@ -944,19 +1023,51 @@ async function stepRender(db: any, s: any, job: Job, ref: JobRef): Promise<void>
       keywords: job.script?.keywords,
       duration: job.voice!.duration,
     });
-    const videoPath = `${pre}/clip.mp4`;
+    const videoPath = `${finalPre}/clip.mp4`;
     await upload(db, videoPath, new Uint8Array(await readFile(out)), "video/mp4");
 
     const imagePaths: string[] = [];
+    const previewImagePaths: string[] = [];
     for (const [i, t] of (job.images ?? []).entries()) {
       if (!t.url) continue;
-      const p = `${pre}/image_${i}.jpg`;
-      await upload(db, p, await download(t.url), "image/jpeg");
+      const bytes = await download(t.url);
+      const p = `${finalPre}/image_${i}.jpg`;
+      await upload(db, p, bytes, "image/jpeg");
       imagePaths.push(p);
+      if (locked) {
+        const q = `${pre}/preview_image_${i}.jpg`;
+        await upload(db, q, await blurImage(work, bytes, i), "image/jpeg");
+        previewImagePaths.push(q);
+      }
+    }
+
+    const preview: Record<string, unknown> = {};
+    if (locked) {
+      const previewFile = await renderPreview({
+        work,
+        clip: out,
+        musicFile,
+        cut: previewCut(job.plan, job.voice!.duration),
+        duration: job.voice!.duration,
+      });
+      const previewPath = `${pre}/preview.mp4`;
+      await upload(db, previewPath, new Uint8Array(await readFile(previewFile)), "video/mp4");
+
+      let playIcon: string | null = null;
+      try {
+        playIcon = join(work, "play.png");
+        await writeFile(playIcon, await download(`${SITE}/email/play.png`));
+      } catch {
+        playIcon = null;
+      }
+      const thumbPath = `${pre}/thumb.jpg`;
+      await upload(db, thumbPath, new Uint8Array(await readFile(await renderThumb({ work, clip: out, playIcon }))), "image/jpeg");
+      Object.assign(preview, { demo_preview_path: previewPath, demo_preview_image_paths: previewImagePaths, demo_thumb_path: thumbPath });
+      Object.assign(s, preview);
     }
 
     const now = new Date().toISOString();
-    await upd(db, ref, { demo_video_path: videoPath, demo_image_paths: imagePaths, demo_status: "ready", demo_ready_at: now });
+    await upd(db, ref, { demo_video_path: videoPath, demo_image_paths: imagePaths, demo_status: "ready", demo_ready_at: now, ...preview });
     // Istoricul din pagina „Materiale”.
     const source = isOnb(ref) ? "onboarding" : (s.source ?? "whatsapp");
     const jobId = isOnb(ref) ? null : ref.id;
@@ -972,6 +1083,23 @@ async function stepRender(db: any, s: any, job: Job, ref: JobRef): Promise<void>
 }
 
 async function stepDeliver(db: any, s: any, job: Job, ref: JobRef): Promise<void> {
+  // Cont cu paywall: până la plată omul primește doar mailul, iar clipul îl vede pe platformă.
+  if (isOnb(ref)) {
+    const { isClipLocked } = await import("./access.server");
+    if (await isClipLocked(db, s.user_id)) {
+      const { sendClipEmail } = await import("./clip-email.server");
+      await sendClipEmail(db, {
+        userId: s.user_id,
+        kind: "ready",
+        niche: s.niche,
+        line: job.script?.emailLine,
+        thumbUrl: s.demo_thumb_path ? await signedUrl(db, s.demo_thumb_path, 60 * 60 * 24 * 30) : null,
+      });
+      await upd(db, ref, { template_sent_at: new Date().toISOString() });
+      job.phase = "done";
+      return;
+    }
+  }
   const { getCentralWhatsApp, sendWhatsAppTemplate } = await import("./whatsapp.server");
   const central = getCentralWhatsApp();
   if (!central) throw new Error("WhatsApp central lipsește");
@@ -1045,6 +1173,19 @@ async function advanceJob(db: any, ref: JobRef): Promise<void> {
     job.lastError = (e as Error).message.slice(0, 500);
     console.error("[clip]", ref.table, ref.id, job.phase, job.lastError);
     failed = job.errors >= MAX_ERRORS && job.phase !== "deliver";
+    if (failed && isOnb(ref)) {
+      const { isClipLocked } = await import("./access.server");
+      if (await isClipLocked(db, s.user_id)) {
+        if (!job.autoRetried) {
+          // Omul poate fi plecat de pe pagină: mai încercăm o dată singuri, cu ce a ieșit deja.
+          job = { ...((reusableDemoJob(job, new Date().toISOString()) as Job | null) ?? {}), autoRetried: true };
+          failed = false;
+        } else {
+          const { sendClipEmail } = await import("./clip-email.server");
+          await sendClipEmail(db, { userId: s.user_id, kind: "failed", niche: s.niche });
+        }
+      }
+    }
   } finally {
     await upd(db, ref, {
       demo_job: job,
@@ -1069,26 +1210,69 @@ export async function advanceClipJob(db: any, jobId: string): Promise<void> {
 export async function tickDemos(): Promise<{ processed: number }> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const db = supabaseAdmin as any;
-  const pending = (r: any) => r.demo_status !== "ready" || !r.template_sent_at;
-  const [{ data: onb }, { data: jobs }] = await Promise.all([
-    db
-      .from("onboarding_sessions")
-      .select("user_id, demo_status, template_sent_at")
-      .in("demo_status", ["queued", "running", "ready"])
-      .order("demo_started_at", { ascending: true })
-      .limit(10),
-    db
-      .from("ai_clip_jobs")
-      .select("id, demo_status, template_sent_at")
-      .in("demo_status", ["queued", "running", "ready"])
-      .order("demo_started_at", { ascending: true })
-      .limit(10),
+  // Clipurile gata și anunțate pot sta aici mult până la plată; nu trebuie să ocupe locul celor în lucru.
+  const active = "demo_status.in.(queued,running),and(demo_status.eq.ready,template_sent_at.is.null)";
+  const [{ data: a }, { data: b }] = await Promise.all([
+    db.from("onboarding_sessions").select("user_id").or(active).order("demo_started_at", { ascending: true }).limit(10),
+    db.from("ai_clip_jobs").select("id").or(active).order("demo_started_at", { ascending: true }).limit(10),
   ]);
-  const a = (onb ?? []).filter(pending);
-  const b = (jobs ?? []).filter(pending);
-  for (const r of a) await advanceDemo(db, r.user_id);
-  for (const r of b) await advanceClipJob(db, r.id);
-  return { processed: a.length + b.length };
+  for (const r of a ?? []) await advanceDemo(db, r.user_id);
+  for (const r of b ?? []) await advanceClipJob(db, r.id);
+  await remindUnpaidClips(db);
+  return { processed: (a ?? []).length + (b ?? []).length };
+}
+
+/** O singură reamintire pe mail, la 24 de ore după ce clipul a fost gata, dacă n-a plătit. */
+async function remindUnpaidClips(db: any): Promise<void> {
+  const { data: rows } = await db
+    .from("onboarding_sessions")
+    .select("user_id, niche, demo_thumb_path")
+    .eq("demo_status", "ready")
+    .is("demo_reminder_sent_at", null)
+    .not("demo_preview_path", "is", null)
+    .lt("demo_ready_at", new Date(Date.now() - 24 * 3600_000).toISOString())
+    .limit(10);
+  if (!rows?.length) return;
+  const { isClipLocked } = await import("./access.server");
+  const { sendClipEmail } = await import("./clip-email.server");
+  for (const r of rows) {
+    await db.from("onboarding_sessions").update({ demo_reminder_sent_at: new Date().toISOString() }).eq("user_id", r.user_id);
+    if (!(await isClipLocked(db, r.user_id))) continue;
+    await sendClipEmail(db, {
+      userId: r.user_id,
+      kind: "reminder",
+      niche: r.niche,
+      thumbUrl: r.demo_thumb_path ? await signedUrl(db, r.demo_thumb_path, 60 * 60 * 24 * 30) : null,
+    });
+  }
+}
+
+/** Butonul „Primește pe WhatsApp” de după plată: direct dacă fereastra e deschisă, altfel prin șablon. */
+export async function sendPaidClipToWhatsApp(db: any, userId: string): Promise<"sent" | "template" | "no_phone"> {
+  const { data: wa } = await db.from("whatsapp_connections").select("id, user_phone").eq("user_id", userId).eq("status", "active").maybeSingle();
+  const phone = String(wa?.user_phone ?? "").replace(/\D/g, "");
+  if (!wa || !phone) return "no_phone";
+  const { isWindowOpen } = await import("./wa-notify.server");
+  if (await isWindowOpen(db, userId)) {
+    const ok = await deliverMaterials(db, ONB(userId), { userId, connectionId: wa.id, toPhone: phone });
+    if (!ok) throw new Error("Clipul nu e gata încă.");
+    return "sent";
+  }
+  const { getCentralWhatsApp, sendWhatsAppTemplate } = await import("./whatsapp.server");
+  const central = getCentralWhatsApp();
+  if (!central) throw new Error("WhatsApp central lipsește");
+  const { data: s } = await db.from("onboarding_sessions").select("niche").eq("user_id", userId).maybeSingle();
+  await sendWhatsAppTemplate(
+    central.phoneNumberId,
+    central.accessToken,
+    phone,
+    DELIVERY_TEMPLATE,
+    "ro",
+    [String(s?.niche ?? "afacerea ta").toLowerCase()],
+    undefined,
+    [{ subType: "quick_reply", index: 0, param: { type: "payload", payload: DELIVERY_PAYLOAD } }],
+  );
+  return "template";
 }
 
 /** Creează un clip nou (după verificarea limitei lunare, făcută de cel care cheamă). */
@@ -1169,6 +1353,10 @@ async function deliverMaterials(
   const { data: s } = await db.from(ref.table).select("*").eq(ref.key, ref.id).maybeSingle();
   if (!s || s.user_id !== params.userId) return false;
   if (!s?.demo_video_path || !["ready", "delivered"].includes(s.demo_status)) return false;
+  if (isOnb(ref)) {
+    const { isClipLocked } = await import("./access.server");
+    if (await isClipLocked(db, params.userId)) return false;
+  }
   const { getCentralWhatsApp, sendWhatsAppMessage } = await import("./whatsapp.server");
   const central = getCentralWhatsApp();
   if (!central) return false;
@@ -1209,19 +1397,31 @@ async function deliverMaterials(
     await log(r.id, "image", "Poză (demo)");
   }
 
-  const targets: string[] = s.targets?.length ? s.targets : ["fb"];
-  const conn =
-    targets.length === 2
-      ? "Conturile tale de Facebook, Instagram și TikTok sunt deja conectate."
-      : `Contul tău de ${TARGET_NAMES[targets[0]] ?? "Facebook"} e deja conectat.`;
-  const q = isOnb(ref) ? `Vrei să pornesc și o reclamă cu ele? ${conn}` : "Vrei să pornesc o reclamă cu clipul ăsta?";
+  const { data: profile } = await db.from("profiles").select("paywall").eq("id", params.userId).maybeSingle();
+  let q: string;
+  let buttons: Array<{ id: string; title: string }>;
+  if (profile?.paywall) {
+    q = "Ce facem mai departe?";
+    buttons = [
+      { id: "demo_ad_yes", title: "Pornește reclama" },
+      { id: "demo_more", title: "Mai vreau un clip" },
+    ];
+  } else {
+    const targets: string[] = s.targets?.length ? s.targets : ["fb"];
+    const conn =
+      targets.length === 2
+        ? "Conturile tale de Facebook, Instagram și TikTok sunt deja conectate."
+        : `Contul tău de ${TARGET_NAMES[targets[0]] ?? "Facebook"} e deja conectat.`;
+    q = isOnb(ref) ? `Vrei să pornesc și o reclamă cu ele? ${conn}` : "Vrei să pornesc o reclamă cu clipul ăsta?";
+    buttons = [
+      { id: "demo_ad_yes", title: "Da, pornim" },
+      { id: "demo_ad_no", title: "Nu acum" },
+    ];
+  }
   const b = await sendWhatsAppMessage(central.phoneNumberId, central.accessToken, params.toPhone, {
     type: "buttons",
     text: q,
-    buttons: [
-      { id: "demo_ad_yes", title: "Da, pornim" },
-      { id: "demo_ad_no", title: "Nu acum" },
-    ],
+    buttons,
   });
   await log(b.id, "interactive", q);
   await upd(db, ref, { demo_status: "delivered", delivered_at: new Date().toISOString() });
@@ -1264,6 +1464,17 @@ export async function onboardingHint(db: any, userId: string): Promise<string | 
   if (s.demo_status === "delivered") {
     lines.push(
       "- I-am trimis deja pe WhatsApp clipul demo și pozele generate. Dacă răspunde „Da, pornim”: ÎNTÂI întreabă pe ce platformă pornim, Facebook (cu Instagram) sau TikTok, și lasă-l să scrie el răspunsul. Apoi, pe rând: orașul/zona, vârsta clientului ideal și ce folosim în reclamă (clipul din chat, pozele din chat sau altceva). Clipul din chat e media disponibilă pentru campanie.",
+    );
+  }
+  const [{ data: profile }, { data: meta }, { data: tt }] = await Promise.all([
+    db.from("profiles").select("paywall").eq("id", userId).maybeSingle(),
+    db.from("meta_connections").select("id").eq("user_id", userId).eq("is_active", true).limit(1).maybeSingle(),
+    db.from("tiktok_connections").select("id").eq("user_id", userId).eq("is_active", true).limit(1).maybeSingle(),
+  ]);
+  if (profile?.paywall && !meta && !tt) {
+    const { metaConnectLink, tiktokConnectLink } = await import("./connect-link.server");
+    lines.push(
+      `- N-a conectat încă niciun cont de reclame. Când vrea reclamă, întreabă-l ÎNTÂI: Facebook și Instagram, TikTok sau ambele. Apoi trimite-i linkul potrivit, personal, care se deschide direct pe telefon (valabil 24h). Facebook: ${metaConnectLink(userId)} TikTok: ${tiktokConnectLink(userId)}. După conectare primește automat un mesaj și continuați cu bugetul și campania.`,
     );
   }
   return lines.join("\n");

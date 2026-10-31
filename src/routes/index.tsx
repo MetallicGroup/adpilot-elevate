@@ -9,9 +9,9 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "AdPilot — Tu conduci afacerea. AdPilot conduce reclamele." },
-      { name: "description", content: "Tu conduci afacerea. AdPilot conduce reclamele: face pozele și clipurile cu AI, lansează și optimizează campanii pe Facebook, Instagram și TikTok, iar lead-urile vin pe WhatsApp. 7 zile gratuite, fără card." },
+      { name: "description", content: "Tu conduci afacerea. AdPilot conduce reclamele: face pozele și clipurile cu AI, lansează și optimizează campanii pe Facebook, Instagram și TikTok, iar lead-urile vin pe WhatsApp. Vezi gratuit cum începe clipul tău." },
       { property: "og:title", content: "AdPilot — Tu conduci afacerea. AdPilot conduce reclamele." },
-      { property: "og:description", content: "Spune-i ce vrei să obții. AdPilot face pozele și clipurile cu AI și lansează reclamele tale pe Facebook, Instagram și TikTok. 7 zile gratuite, fără card." },
+      { property: "og:description", content: "Spune-i ce vrei să obții. AdPilot face pozele și clipurile cu AI și lansează reclamele tale pe Facebook, Instagram și TikTok. Vezi gratuit cum începe clipul tău." },
       { property: "og:url", content: "https://adpilot.ro/" },
     ],
     links: [{ rel: "canonical", href: "https://adpilot.ro/" }],

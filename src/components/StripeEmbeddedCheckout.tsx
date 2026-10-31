@@ -1,15 +1,18 @@
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 import { useServerFn } from "@tanstack/react-start";
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
-import { createCheckoutSession } from "@/lib/payments.functions";
+import { createCheckoutSession, createUpgradeSession } from "@/lib/payments.functions";
 
 interface Props {
   priceId: string;
   returnUrl?: string;
+  /** Plătește doar diferența până la `priceId`, pe abonamentul existent. */
+  upgrade?: boolean;
 }
 
-export function StripeEmbeddedCheckout({ priceId, returnUrl }: Props) {
+export function StripeEmbeddedCheckout({ priceId, returnUrl, upgrade }: Props) {
   const createSession = useServerFn(createCheckoutSession);
+  const createUpgrade = useServerFn(createUpgradeSession);
 
   const fetchClientSecret = async (): Promise<string> => {
     // TikTok Pixel: userul a deschis checkout-ul (funnel — InitiateCheckout).
@@ -21,13 +24,10 @@ export function StripeEmbeddedCheckout({ priceId, returnUrl }: Props) {
     } catch {
       /* ignore */
     }
-    const result = await createSession({
-      data: {
-        priceId,
-        returnUrl: returnUrl || `${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
-        environment: getStripeEnvironment(),
-      },
-    });
+    const back = returnUrl || `${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`;
+    const result = upgrade
+      ? await createUpgrade({ data: { toPriceId: priceId, returnUrl: back, environment: getStripeEnvironment() } })
+      : await createSession({ data: { priceId, returnUrl: back, environment: getStripeEnvironment() } });
     if ("error" in result) throw new Error(result.error);
     if (!result.clientSecret) throw new Error("Stripe nu a returnat un client secret");
     return result.clientSecret;
