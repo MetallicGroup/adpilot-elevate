@@ -13,7 +13,7 @@ export const Route = createFileRoute("/api/tiktok/auth/callback")({
         const authCode = url.searchParams.get("auth_code") ?? url.searchParams.get("code");
         const state = url.searchParams.get("state");
         const cookieReturn = getCookie("tiktok_oauth_return");
-        const returnTo = cookieReturn === "/start" || cookieReturn === "/conectat" ? cookieReturn : "/settings";
+        const returnTo = cookieReturn === "/start" || cookieReturn === "/conectat" || cookieReturn === "/verificare" ? cookieReturn : "/settings";
         deleteCookie("tiktok_oauth_return", { path: "/" });
         const back = (q: string) =>
           new Response(null, { status: 302, headers: { Location: `${returnTo}?${q}` } });

@@ -2,20 +2,28 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { resolvePostAuthPath } from "@/lib/post-auth";
-import { HomeV2 } from "@/components/v2/HomeV2";
+import { HomeV3 } from "@/components/v3/HomeV3";
+import { v3Head } from "@/components/v3/ui";
+import { getFlowState } from "@/lib/v3.functions";
 import { tkViewContent } from "@/lib/tiktok-pixel";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "AdPilot — Tu conduci afacerea. AdPilot conduce reclamele." },
-      { name: "description", content: "Tu conduci afacerea. AdPilot conduce reclamele: face pozele și clipurile cu AI, lansează și optimizează campanii pe Facebook, Instagram și TikTok, iar lead-urile vin pe WhatsApp. Vezi gratuit cum începe clipul tău." },
-      { property: "og:title", content: "AdPilot — Tu conduci afacerea. AdPilot conduce reclamele." },
-      { property: "og:description", content: "Spune-i ce vrei să obții. AdPilot face pozele și clipurile cu AI și lansează reclamele tale pe Facebook, Instagram și TikTok. Vezi gratuit cum începe clipul tău." },
-      { property: "og:url", content: "https://adpilot.ro/" },
-    ],
-    links: [{ rel: "canonical", href: "https://adpilot.ro/" }],
-  }),
+  head: () => {
+    const h = v3Head(
+      "AdPilot — Clienți noi, direct pe WhatsApp",
+      "Spui ce vrei să promovezi. AdPilot face reclama pe Facebook, Instagram sau TikTok și o pornește azi. Fiecare om interesat îți apare pe WhatsApp, cu nume și telefon. 495 lei pe lună.",
+      [
+        { property: "og:title", content: "AdPilot — Clienți noi, direct pe WhatsApp" },
+        {
+          property: "og:description",
+          content:
+            "Reclame pe Facebook, Instagram și TikTok pornite azi. Cererile îți vin pe WhatsApp în câteva minute.",
+        },
+        { property: "og:url", content: "https://adpilot.ro/" },
+      ],
+    );
+    return { ...h, links: [...h.links, { rel: "canonical", href: "https://adpilot.ro/" }] };
+  },
   component: Index,
 });
 
@@ -54,13 +62,30 @@ function Index() {
 
       const { data } = await supabase.auth.getSession();
       if (!data.session || cancelled) return;
+      // Agențiile rămân în panoul lor; afacerile merg în fluxul nou (panou dacă au deja campanii sau pachet).
       const dest = await resolvePostAuthPath();
-      if (!cancelled) navigate({ to: dest, replace: true });
+      if (cancelled) return;
+      if (dest === "/agency/dashboard") return navigate({ to: dest, replace: true });
+      try {
+        const f = await getFlowState();
+        if (cancelled) return;
+        const to =
+          f.liveCount > 0 || f.hasAdsPlan
+            ? "/panou"
+            : f.metaConnected || f.tiktokConnected
+              ? "/campanie"
+              : "/conectare";
+        window.location.replace(to);
+      } catch {
+        navigate({ to: dest, replace: true });
+      }
     }
 
     redirectSignedInUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN") return;
       void redirectSignedInUser();
     });
@@ -71,5 +96,5 @@ function Index() {
     };
   }, [navigate]);
 
-  return <HomeV2 />;
+  return <HomeV3 />;
 }

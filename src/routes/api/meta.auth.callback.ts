@@ -11,7 +11,7 @@ export const Route = createFileRoute("/api/meta/auth/callback")({
         const error = url.searchParams.get("error");
 
         const returnTo = getCookie("meta_oauth_return") ?? "/settings";
-        const safeReturn = ["/onboarding", "/start", "/conectat"].includes(returnTo) ? returnTo : "/settings";
+        const safeReturn = ["/onboarding", "/start", "/conectat", "/verificare"].includes(returnTo) ? returnTo : "/settings";
         // /conectat = linkul personal trimis pe WhatsApp (fără sesiune în browser).
         const viaLink = safeReturn === "/conectat";
         deleteCookie("meta_oauth_return", { path: "/" });

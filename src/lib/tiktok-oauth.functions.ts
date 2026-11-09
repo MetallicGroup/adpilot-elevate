@@ -47,7 +47,7 @@ export const startTikTokOAuth = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) => {
     const d = (raw ?? {}) as { returnTo?: string };
-    return { returnTo: d.returnTo === "/start" ? "/start" : "/settings" };
+    return { returnTo: d.returnTo === "/start" || d.returnTo === "/verificare" ? d.returnTo : "/settings" };
   })
   .handler(async ({ context, data }): Promise<{ url: string }> => {
     const { buildTikTokAuthorizeUrl } = await import("@/lib/tiktok.server");

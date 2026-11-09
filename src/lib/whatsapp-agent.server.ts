@@ -1820,7 +1820,8 @@ async function resolveCityKeys(accessToken: string, cities: string[] | undefined
   return cityKeys;
 }
 
-async function publishCampaignToMeta(
+/** Publicarea reală la Meta (formular, mesaje, trafic, vânzări). Exportată și pentru fluxul din site (v3-campaign.server.ts). */
+export async function publishCampaignToMeta(
   supabaseAdmin: any,
   input: {
     campaignRowId: string;

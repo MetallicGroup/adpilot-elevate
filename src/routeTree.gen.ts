@@ -12,12 +12,16 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as ActivareWhatsappRouteImport } from './routes/activare-whatsapp'
 import { Route as AgentieRouteImport } from './routes/agentie'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BeautyRouteImport } from './routes/beauty'
+import { Route as CampanieRouteImport } from './routes/campanie'
 import { Route as CliniciRouteImport } from './routes/clinici'
+import { Route as ConectareRouteImport } from './routes/conectare'
 import { Route as ConectatRouteImport } from './routes/conectat'
 import { Route as ConstructiiRouteImport } from './routes/constructii'
+import { Route as ContNouRouteImport } from './routes/cont-nou'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CookiePolicyRouteImport } from './routes/cookie-policy'
 import { Route as CursuriRouteImport } from './routes/cursuri'
@@ -33,6 +37,8 @@ import { Route as ImobiliareRouteImport } from './routes/imobiliare'
 import { Route as IntegrationsRouteImport } from './routes/integrations'
 import { Route as IntraRouteImport } from './routes/intra'
 import { Route as OfertaRouteImport } from './routes/oferta'
+import { Route as PanouRouteImport } from './routes/panou'
+import { Route as PlataRouteImport } from './routes/plata'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as RefundPolicyRouteImport } from './routes/refund-policy'
@@ -45,6 +51,7 @@ import { Route as ServiceAutoRouteImport } from './routes/service-auto'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as StartRouteImport } from './routes/start'
 import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
+import { Route as VerificareRouteImport } from './routes/verificare'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticated/bookings'
 import { Route as AuthenticatedCreateRouteImport } from './routes/_authenticated/create'
@@ -115,6 +122,11 @@ const AboutRoute = AboutRouteImport.update({
   path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ActivareWhatsappRoute = ActivareWhatsappRouteImport.update({
+  id: '/activare-whatsapp',
+  path: '/activare-whatsapp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AgentieRoute = AgentieRouteImport.update({
   id: '/agentie',
   path: '/agentie',
@@ -130,9 +142,19 @@ const BeautyRoute = BeautyRouteImport.update({
   path: '/beauty',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CampanieRoute = CampanieRouteImport.update({
+  id: '/campanie',
+  path: '/campanie',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CliniciRoute = CliniciRouteImport.update({
   id: '/clinici',
   path: '/clinici',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConectareRoute = ConectareRouteImport.update({
+  id: '/conectare',
+  path: '/conectare',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConectatRoute = ConectatRouteImport.update({
@@ -143,6 +165,11 @@ const ConectatRoute = ConectatRouteImport.update({
 const ConstructiiRoute = ConstructiiRouteImport.update({
   id: '/constructii',
   path: '/constructii',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContNouRoute = ContNouRouteImport.update({
+  id: '/cont-nou',
+  path: '/cont-nou',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -220,6 +247,16 @@ const OfertaRoute = OfertaRouteImport.update({
   path: '/oferta',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PanouRoute = PanouRouteImport.update({
+  id: '/panou',
+  path: '/panou',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlataRoute = PlataRouteImport.update({
+  id: '/plata',
+  path: '/plata',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
@@ -278,6 +315,11 @@ const StartRoute = StartRouteImport.update({
 const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
   id: '/terms-of-service',
   path: '/terms-of-service',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerificareRoute = VerificareRouteImport.update({
+  id: '/verificare',
+  path: '/verificare',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
@@ -580,12 +622,16 @@ const LovableEmailQueueProcessRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/activare-whatsapp': typeof ActivareWhatsappRoute
   '/agentie': typeof AgentieRoute
   '/auth': typeof AuthRouteWithChildren
   '/beauty': typeof BeautyRoute
+  '/campanie': typeof CampanieRoute
   '/clinici': typeof CliniciRoute
+  '/conectare': typeof ConectareRoute
   '/conectat': typeof ConectatRoute
   '/constructii': typeof ConstructiiRoute
+  '/cont-nou': typeof ContNouRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
   '/cursuri': typeof CursuriRoute
@@ -601,6 +647,8 @@ export interface FileRoutesByFullPath {
   '/integrations': typeof IntegrationsRoute
   '/intra': typeof IntraRoute
   '/oferta': typeof OfertaRoute
+  '/panou': typeof PanouRoute
+  '/plata': typeof PlataRoute
   '/pricing': typeof PricingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/refund-policy': typeof RefundPolicyRoute
@@ -613,6 +661,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/start': typeof StartRoute
   '/terms-of-service': typeof TermsOfServiceRoute
+  '/verificare': typeof VerificareRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/bookings': typeof AuthenticatedBookingsRoute
   '/create': typeof AuthenticatedCreateRoute
@@ -672,12 +721,16 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/activare-whatsapp': typeof ActivareWhatsappRoute
   '/agentie': typeof AgentieRoute
   '/auth': typeof AuthRouteWithChildren
   '/beauty': typeof BeautyRoute
+  '/campanie': typeof CampanieRoute
   '/clinici': typeof CliniciRoute
+  '/conectare': typeof ConectareRoute
   '/conectat': typeof ConectatRoute
   '/constructii': typeof ConstructiiRoute
+  '/cont-nou': typeof ContNouRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
   '/cursuri': typeof CursuriRoute
@@ -693,6 +746,8 @@ export interface FileRoutesByTo {
   '/integrations': typeof IntegrationsRoute
   '/intra': typeof IntraRoute
   '/oferta': typeof OfertaRoute
+  '/panou': typeof PanouRoute
+  '/plata': typeof PlataRoute
   '/pricing': typeof PricingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/refund-policy': typeof RefundPolicyRoute
@@ -705,6 +760,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/start': typeof StartRoute
   '/terms-of-service': typeof TermsOfServiceRoute
+  '/verificare': typeof VerificareRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/bookings': typeof AuthenticatedBookingsRoute
   '/create': typeof AuthenticatedCreateRoute
@@ -766,12 +822,16 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/about': typeof AboutRoute
+  '/activare-whatsapp': typeof ActivareWhatsappRoute
   '/agentie': typeof AgentieRoute
   '/auth': typeof AuthRouteWithChildren
   '/beauty': typeof BeautyRoute
+  '/campanie': typeof CampanieRoute
   '/clinici': typeof CliniciRoute
+  '/conectare': typeof ConectareRoute
   '/conectat': typeof ConectatRoute
   '/constructii': typeof ConstructiiRoute
+  '/cont-nou': typeof ContNouRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
   '/cursuri': typeof CursuriRoute
@@ -787,6 +847,8 @@ export interface FileRoutesById {
   '/integrations': typeof IntegrationsRoute
   '/intra': typeof IntraRoute
   '/oferta': typeof OfertaRoute
+  '/panou': typeof PanouRoute
+  '/plata': typeof PlataRoute
   '/pricing': typeof PricingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/refund-policy': typeof RefundPolicyRoute
@@ -799,6 +861,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/start': typeof StartRoute
   '/terms-of-service': typeof TermsOfServiceRoute
+  '/verificare': typeof VerificareRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/bookings': typeof AuthenticatedBookingsRoute
   '/_authenticated/create': typeof AuthenticatedCreateRoute
@@ -860,12 +923,16 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/activare-whatsapp'
     | '/agentie'
     | '/auth'
     | '/beauty'
+    | '/campanie'
     | '/clinici'
+    | '/conectare'
     | '/conectat'
     | '/constructii'
+    | '/cont-nou'
     | '/contact'
     | '/cookie-policy'
     | '/cursuri'
@@ -881,6 +948,8 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/intra'
     | '/oferta'
+    | '/panou'
+    | '/plata'
     | '/pricing'
     | '/privacy-policy'
     | '/refund-policy'
@@ -893,6 +962,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/start'
     | '/terms-of-service'
+    | '/verificare'
     | '/admin'
     | '/bookings'
     | '/create'
@@ -952,12 +1022,16 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/activare-whatsapp'
     | '/agentie'
     | '/auth'
     | '/beauty'
+    | '/campanie'
     | '/clinici'
+    | '/conectare'
     | '/conectat'
     | '/constructii'
+    | '/cont-nou'
     | '/contact'
     | '/cookie-policy'
     | '/cursuri'
@@ -973,6 +1047,8 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/intra'
     | '/oferta'
+    | '/panou'
+    | '/plata'
     | '/pricing'
     | '/privacy-policy'
     | '/refund-policy'
@@ -985,6 +1061,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/start'
     | '/terms-of-service'
+    | '/verificare'
     | '/admin'
     | '/bookings'
     | '/create'
@@ -1045,12 +1122,16 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/about'
+    | '/activare-whatsapp'
     | '/agentie'
     | '/auth'
     | '/beauty'
+    | '/campanie'
     | '/clinici'
+    | '/conectare'
     | '/conectat'
     | '/constructii'
+    | '/cont-nou'
     | '/contact'
     | '/cookie-policy'
     | '/cursuri'
@@ -1066,6 +1147,8 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/intra'
     | '/oferta'
+    | '/panou'
+    | '/plata'
     | '/pricing'
     | '/privacy-policy'
     | '/refund-policy'
@@ -1078,6 +1161,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/start'
     | '/terms-of-service'
+    | '/verificare'
     | '/_authenticated/admin'
     | '/_authenticated/bookings'
     | '/_authenticated/create'
@@ -1139,12 +1223,16 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
+  ActivareWhatsappRoute: typeof ActivareWhatsappRoute
   AgentieRoute: typeof AgentieRoute
   AuthRoute: typeof AuthRouteWithChildren
   BeautyRoute: typeof BeautyRoute
+  CampanieRoute: typeof CampanieRoute
   CliniciRoute: typeof CliniciRoute
+  ConectareRoute: typeof ConectareRoute
   ConectatRoute: typeof ConectatRoute
   ConstructiiRoute: typeof ConstructiiRoute
+  ContNouRoute: typeof ContNouRoute
   ContactRoute: typeof ContactRoute
   CookiePolicyRoute: typeof CookiePolicyRoute
   CursuriRoute: typeof CursuriRoute
@@ -1160,6 +1248,8 @@ export interface RootRouteChildren {
   IntegrationsRoute: typeof IntegrationsRoute
   IntraRoute: typeof IntraRoute
   OfertaRoute: typeof OfertaRoute
+  PanouRoute: typeof PanouRoute
+  PlataRoute: typeof PlataRoute
   PricingRoute: typeof PricingRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   RefundPolicyRoute: typeof RefundPolicyRoute
@@ -1172,6 +1262,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StartRoute: typeof StartRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
+  VerificareRoute: typeof VerificareRoute
   BSlugRoute: typeof BSlugRoute
   CTokenRoute: typeof CTokenRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
@@ -1226,6 +1317,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/activare-whatsapp': {
+      id: '/activare-whatsapp'
+      path: '/activare-whatsapp'
+      fullPath: '/activare-whatsapp'
+      preLoaderRoute: typeof ActivareWhatsappRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/agentie': {
       id: '/agentie'
       path: '/agentie'
@@ -1247,11 +1345,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BeautyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/campanie': {
+      id: '/campanie'
+      path: '/campanie'
+      fullPath: '/campanie'
+      preLoaderRoute: typeof CampanieRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/clinici': {
       id: '/clinici'
       path: '/clinici'
       fullPath: '/clinici'
       preLoaderRoute: typeof CliniciRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conectare': {
+      id: '/conectare'
+      path: '/conectare'
+      fullPath: '/conectare'
+      preLoaderRoute: typeof ConectareRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/conectat': {
@@ -1266,6 +1378,13 @@ declare module '@tanstack/react-router' {
       path: '/constructii'
       fullPath: '/constructii'
       preLoaderRoute: typeof ConstructiiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cont-nou': {
+      id: '/cont-nou'
+      path: '/cont-nou'
+      fullPath: '/cont-nou'
+      preLoaderRoute: typeof ContNouRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -1373,6 +1492,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OfertaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/panou': {
+      id: '/panou'
+      path: '/panou'
+      fullPath: '/panou'
+      preLoaderRoute: typeof PanouRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/plata': {
+      id: '/plata'
+      path: '/plata'
+      fullPath: '/plata'
+      preLoaderRoute: typeof PlataRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pricing': {
       id: '/pricing'
       path: '/pricing'
@@ -1455,6 +1588,13 @@ declare module '@tanstack/react-router' {
       path: '/terms-of-service'
       fullPath: '/terms-of-service'
       preLoaderRoute: typeof TermsOfServiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verificare': {
+      id: '/verificare'
+      path: '/verificare'
+      fullPath: '/verificare'
+      preLoaderRoute: typeof VerificareRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin': {
@@ -1927,12 +2067,16 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
+  ActivareWhatsappRoute: ActivareWhatsappRoute,
   AgentieRoute: AgentieRoute,
   AuthRoute: AuthRouteWithChildren,
   BeautyRoute: BeautyRoute,
+  CampanieRoute: CampanieRoute,
   CliniciRoute: CliniciRoute,
+  ConectareRoute: ConectareRoute,
   ConectatRoute: ConectatRoute,
   ConstructiiRoute: ConstructiiRoute,
+  ContNouRoute: ContNouRoute,
   ContactRoute: ContactRoute,
   CookiePolicyRoute: CookiePolicyRoute,
   CursuriRoute: CursuriRoute,
@@ -1948,6 +2092,8 @@ const rootRouteChildren: RootRouteChildren = {
   IntegrationsRoute: IntegrationsRoute,
   IntraRoute: IntraRoute,
   OfertaRoute: OfertaRoute,
+  PanouRoute: PanouRoute,
+  PlataRoute: PlataRoute,
   PricingRoute: PricingRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   RefundPolicyRoute: RefundPolicyRoute,
@@ -1960,6 +2106,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StartRoute: StartRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
+  VerificareRoute: VerificareRoute,
   BSlugRoute: BSlugRoute,
   CTokenRoute: CTokenRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,

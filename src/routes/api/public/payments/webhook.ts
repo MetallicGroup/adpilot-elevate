@@ -122,6 +122,16 @@ async function handleSubscriptionCreated(subscription: any, env: StripeEnv) {
   await verifyCardWithOneLeu(subscription, env);
   await notifyOwnerOfSubscription(subscription, env, userId, priceId, item);
 
+  // Fluxul din site: campania făcută înainte de plată pleacă la Facebook imediat după abonament.
+  if (["active", "trialing"].includes(subscription.status)) {
+    try {
+      const { launchPendingV3Campaigns } = await import("@/lib/v3-campaign.server");
+      await launchPendingV3Campaigns(sb, userId);
+    } catch (e) {
+      console.error("[webhook] v3 launch failed", (e as Error).message);
+    }
+  }
+
   // TikTok Events API — conversie „Purchase" (abonament nou) pentru reclamele AdPilot pe TikTok.
   try {
     const { sendTikTokEvent } = await import("@/lib/tiktok-events.server");
