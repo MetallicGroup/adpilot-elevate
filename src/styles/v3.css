@@ -767,19 +767,27 @@
 .v3 .proto { font-size: 12px; }
 
 }
-.v3 .stage.mob { width: 380px; height: 610px; }
+.v3 .stage.mob { width: 380px; height: 742px; }
 .v3 .stage.mob .brief { left: 0; top: 0; width: 380px; }
-.v3 .stage.mob .adcard { left: 0; top: 84px; width: 250px; transform-origin: top left; transform: translateY(18px) rotate(-3deg) scale(.86); }
-.v3 .stage.mob .adcard.on { transform: rotate(-3deg) scale(.86); }
-.v3 .stage.mob .ad-text { font-size: 13px; }
-.v3 .stage.mob .phone { left: 146px; top: 74px; width: 234px; height: 532px; border-radius: 38px; padding: 8px; z-index: 2; }
-.v3 .stage.mob .phone-screen { border-radius: 31px; }
-.v3 .stage.mob .phone::before { top: 15px; width: 70px; height: 20px; }
-.v3 .stage.mob .wa-top { padding-top: 42px; }
-.v3 .stage.mob .msg { font-size: 12.4px; }
-.v3 .stage.mob .toast { left: 120px; top: 66px; width: 260px; z-index: 3; }
+.v3 .stage.mob .adcard { left: 0; top: 92px; width: 300px; transform-origin: top left; transform: translateY(14px) rotate(-2deg); }
+.v3 .stage.mob .adcard.on { transform: rotate(-2deg); }
+.v3 .stage.mob .ad-text { font-size: 13.5px; padding-bottom: 10px; }
+.v3 .stage.mob .ad-img { aspect-ratio: 1.9 / 1; }
+.v3 .stage.mob .phone { left: 58px; top: 410px; width: 322px; height: 328px; border-radius: 26px; padding: 6px; z-index: 2; }
+.v3 .stage.mob .phone::before { display: none; }
+.v3 .stage.mob .phone-screen { border-radius: 21px; }
+.v3 .stage.mob .wa-top { padding: 11px 12px 9px; }
+.v3 .stage.mob .wa-chat { justify-content: flex-end; padding: 10px; }
+.v3 .stage.mob .msg { display: none; font-size: 13px; max-width: 92%; flex: none; }
+.v3 .stage.mob .msg.on { display: block; animation: v3msgin .45s cubic-bezier(.2, .9, .3, 1.2) both; }
+@keyframes v3msgin { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: none; } }
+.v3 .stage.mob .toast { left: 30px; top: 352px; width: 320px; z-index: 3; }
 .v3 .stage.mob .route, .v3 .stage.mob .route-dot, .v3 .stage.mob .kpi-float { display: none; }
 .v3 .stage.mob::before { left: 0; right: 0; }
+@media (max-width: 640px) {
+.v3 .hero-facts { flex-direction: column; align-items: center; gap: 10px; font-size: 15px; margin-top: 22px; }
+.v3 .nav .btn-sm { padding-left: 16px; padding-right: 16px; font-size: 14px; }
+}
 
 
 .v3 .foot-btn { background: none; border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer; }

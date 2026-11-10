@@ -72,7 +72,7 @@ export function HomeV3() {
       st.classList.toggle("compact", compact);
       st.classList.toggle("mob", mob);
       const W = mob ? 380 : compact ? 640 : 1120;
-      const H = mob ? 610 : 600;
+      const H = mob ? 742 : 600;
       const s = Math.min(1, fit.clientWidth / W);
       st.style.transform = `scale(${s})`;
       fit.style.height = `${H * s}px`;
