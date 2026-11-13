@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { useStripeCheckout } from "@/hooks/useStripeCheckout";
+import { supabase } from "@/integrations/supabase/client";
+import { fbPurchase, fbTrack } from "@/lib/meta-pixel";
 import { getPayState, launchCampaign, setCampaignDest, type PayState } from "@/lib/v3.functions";
 import {
   FlowShell,
@@ -61,6 +63,7 @@ function PayPage() {
       tries += 1;
       const s = await stateFn({ data: { id: c } }).catch(() => null);
       if (s) setSt(s);
+      if (s?.hasAdsPlan || s?.draft?.status === "active") void trackPurchase();
       if (s?.draft?.status === "active") return setPhase("done");
       if (s?.hasAdsPlan) return void launch();
       if (tries < 30) setTimeout(() => void tick(), 2000);
@@ -74,6 +77,15 @@ function PayPage() {
     void tick();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, c, paid]);
+
+  const purchaseSent = useRef(false);
+  async function trackPurchase() {
+    if (purchaseSent.current) return;
+    purchaseSent.current = true;
+    const { data } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
+    const uid = data.session?.user?.id;
+    if (uid) fbPurchase(495, "RON", `purchase_${uid}`);
+  }
 
   async function chooseDest(d: "form" | "wa") {
     setDest(d);
@@ -109,6 +121,7 @@ function PayPage() {
       );
     setError(null);
     await destFn({ data: { id: c, dest, pending: true } }).catch(() => {});
+    fbTrack("InitiateCheckout", { value: 495, currency: "RON" });
     openCheckout({
       priceId: "afacere_monthly",
       returnUrl: `${window.location.origin}/plata?c=${c}&paid=1`,

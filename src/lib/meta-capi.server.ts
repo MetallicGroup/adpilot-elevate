@@ -24,6 +24,8 @@ export async function sendMetaCapiEvent(
     externalId?: string | null;
     eventId?: string;
     eventSourceUrl?: string;
+    /** Ex. { value: 495, currency: "RON" } pentru Purchase. */
+    customData?: Record<string, unknown>;
   } = {},
 ): Promise<{ sent: boolean; error?: string }> {
   const token = process.env.META_CAPI_TOKEN;
@@ -49,6 +51,7 @@ export async function sendMetaCapiEvent(
           ...(opts.eventId ? { event_id: opts.eventId } : {}),
           ...(opts.eventSourceUrl ? { event_source_url: opts.eventSourceUrl } : {}),
           user_data,
+          ...(opts.customData ? { custom_data: opts.customData } : {}),
         },
       ],
     };

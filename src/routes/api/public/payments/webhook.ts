@@ -132,6 +132,31 @@ async function handleSubscriptionCreated(subscription: any, env: StripeEnv) {
     }
   }
 
+  // Meta Conversions API — „Purchase” pentru reclamele AdPilot pe Facebook/Instagram.
+  // event_id = același ca pe /plata (purchase_<userId>), ca Meta să numere plata o singură dată.
+  if (env === "live" && ["active", "trialing"].includes(subscription.status)) {
+    try {
+      const { sendMetaCapiEvent } = await import("@/lib/meta-capi.server");
+      const unit = item?.price?.unit_amount;
+      const { data: u } = await sb.auth.admin.getUserById(userId);
+      await sendMetaCapiEvent("Purchase", {
+        email: u?.user?.email ?? null,
+        phone: u?.user?.phone ?? null,
+        externalId: userId,
+        eventId: `purchase_${userId}`,
+        eventSourceUrl: "https://www.adpilot.ro/plata",
+        customData: {
+          value: typeof unit === "number" ? unit / 100 : 495,
+          currency: (item?.price?.currency ?? "ron").toUpperCase(),
+          content_ids: [priceId],
+          content_type: "product",
+        },
+      });
+    } catch (e) {
+      console.error("[webhook] meta purchase event failed", e);
+    }
+  }
+
   // TikTok Events API — conversie „Purchase" (abonament nou) pentru reclamele AdPilot pe TikTok.
   try {
     const { sendTikTokEvent } = await import("@/lib/tiktok-events.server");

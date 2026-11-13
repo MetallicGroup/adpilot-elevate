@@ -54,3 +54,14 @@ export function fbTrackCustom(event: string, params?: Record<string, unknown>): 
 export function fbConnectedFacebook(): void {
   fbTrackCustom("ConnectedFacebook");
 }
+
+/** Plata abonamentului (eventID = cel de pe server, purchase_<userId>, ca să nu se numere de două ori). */
+export function fbPurchase(value: number, currency: string, eventId: string): void {
+  const f = fbq();
+  if (!f) return;
+  try {
+    f("track", "Purchase", { value, currency }, { eventID: eventId });
+  } catch {
+    /* no-op */
+  }
+}
