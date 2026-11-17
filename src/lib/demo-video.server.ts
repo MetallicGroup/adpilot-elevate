@@ -26,6 +26,7 @@ import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { kieCreate, kiePoll, kieRetryTransient, kieWaitingRetry, type KieTask } from "./kie.server";
+import { castUrl, pickCast, type CastPick, type ExtrasMode } from "./cast";
 
 const BUCKET = "onboarding";
 /** Fundalurile muzicale (public/music), câte unul pe stare. */
@@ -47,13 +48,23 @@ type Shot =
   | { kind: "talk"; angle: Angle; t0: number; t1: number; audio?: string }
   | { kind: "broll"; src: string; t0: number; t1: number };
 /** O scenă din domeniu: cadrul de pornire și mișcarea oamenilor din el. */
-type Scene = { prompt: string; motion: string; presenter: boolean };
+type Scene = {
+  prompt: string;
+  motion: string;
+  presenter: boolean;
+  /** Ce client din distribuție apare în scenă: 1 sau 2 (figuranții din `cast.extras`), 0 = niciunul. */
+  extra?: number;
+};
 const MUSIC_MOODS = ["upbeat", "calm", "confident", "energetic", "warm"] as const;
 type MusicMood = (typeof MUSIC_MOODS)[number];
 type DemoScript = {
   voiceover: string;
   presenter: "female" | "male";
   presenterLook: string;
+  /** Oamenii din public/cast: prezentatorul și clienții din scene. Lipsește la clipurile vechi. */
+  cast?: CastPick;
+  /** Cu ce e îmbrăcat prezentatorul (fața și părul vin din foaia lui de personaj). */
+  outfit?: string;
   avatarPrompt: string;
   scenes: Scene[];
   music: MusicMood;
@@ -178,12 +189,28 @@ const ROOM_RULE =
   "Keep the room exactly as in the business photo: same walls, colors, furniture, equipment and light; do not change the layout. " +
   "Photorealistic, natural light, shot on a modern smartphone. No text, no logos, no watermark.";
 
+const SHEET_RULE =
+  "is a character reference sheet: several photos of the SAME person on a plain studio background. " +
+  "Use exactly this person: identical face, facial features, hair, skin tone, age and body build. Ignore the studio background and the sheet layout.";
+
+const SELFIE_FRAME =
+  "Selfie video frame: the person holds the phone at arm's length (the phone is not visible), face and shoulders in frame, " +
+  "camera slightly above eye level, friendly natural smile, mouth closed, the room clearly visible behind. Handheld UGC look, vertical 9:16.";
+
 function selfieInput(script: DemoScript, photoUrls: string[]) {
+  if (script.cast) {
+    return {
+      prompt:
+        `Image 1 ${SHEET_RULE} The other images show the real business location. ${ROOM_RULE} ` +
+        `Place this person in the room, wearing ${script.outfit || "clothes that fit the business"}. ${SELFIE_FRAME}`,
+      image_input: [castUrl(script.cast.presenter), ...photoUrls.slice(0, 2)],
+      aspect_ratio: "9:16",
+      resolution: "1K",
+      output_format: "jpg",
+    };
+  }
   return {
-    prompt:
-      `The attached photos show the real business location. ${ROOM_RULE} Add ${script.presenterLook}. ` +
-      "Selfie video frame: the person holds the phone at arm's length (the phone is not visible), face and shoulders in frame, " +
-      "camera slightly above eye level, friendly natural smile, mouth closed, the room clearly visible behind. Handheld UGC look, vertical 9:16.",
+    prompt: `The attached photos show the real business location. ${ROOM_RULE} Add ${script.presenterLook}. ${SELFIE_FRAME}`,
     image_input: photoUrls.slice(0, 3),
     aspect_ratio: "9:16",
     resolution: "1K",
@@ -198,7 +225,20 @@ const ANGLE_DESC: Record<"medium" | "close", string> = {
     "Close-up from the chest up at a three-quarter angle: the person looks into the camera with a warm expression, mouth closed, the room softly blurred behind.",
 };
 
-function angleInput(kind: "medium" | "close", selfieUrl: string, photoUrls: string[]) {
+function angleInput(kind: "medium" | "close", selfieUrl: string, photoUrls: string[], cast?: CastPick) {
+  if (cast) {
+    return {
+      prompt:
+        "Image 1 shows the presenter in the business; image 2 is a reference sheet of the same person (use it only to keep the face and hair exact); " +
+        "the other images show the real business location. " +
+        "Use the SAME person as in image 1: identical face, hair, skin tone, body and the clothing from image 1. " +
+        `${ROOM_RULE} ${ANGLE_DESC[kind]} Vertical 9:16.`,
+      image_input: [selfieUrl, castUrl(cast.presenter), ...photoUrls.slice(0, 2)],
+      aspect_ratio: "9:16",
+      resolution: "1K",
+      output_format: "jpg",
+    };
+  }
   return {
     prompt:
       "Image 1 shows the presenter; the other images show the real business location. " +
@@ -223,8 +263,35 @@ const SCENE_CAMERA = [
   "gentle arc around the people",
 ];
 
-function sceneInput(scene: Scene, selfieUrl: string, photoUrls: string[]) {
+function sceneInput(scene: Scene, selfieUrl: string, photoUrls: string[], cast?: CastPick) {
   const place = "When the scene happens at the business, keep the place recognizable from the location photos: same walls, colors, equipment and light.";
+  if (cast) {
+    const images: string[] = [];
+    const roles: string[] = [];
+    if (scene.presenter) {
+      images.push(selfieUrl);
+      roles.push(`Image ${images.length} shows the specialist: use the SAME person, identical face, hair and clothing.`);
+    }
+    const extra = scene.extra ? cast.extras[scene.extra - 1] : undefined;
+    if (extra) {
+      images.push(castUrl(extra));
+      roles.push(
+        `Image ${images.length} ${SHEET_RULE.replace("Use exactly this person", "This is the client; use exactly this person")} ` +
+          "The client's clothing can change to fit the scene.",
+      );
+    }
+    const n = images.length;
+    images.push(...photoUrls.slice(0, n ? 2 : 3));
+    const photosNote = n ? `The remaining images show the real business location.` : "The attached photos show the real business location.";
+    const others = n ? "Anyone else in the frame is a different, ordinary person." : "";
+    return {
+      prompt: `${roles.join(" ")} ${photosNote} ${others} ${place} ${scene.prompt} ${SCENE_RULE}`.replace(/\s+/g, " ").trim(),
+      image_input: images,
+      aspect_ratio: "9:16",
+      resolution: "1K",
+      output_format: "jpg",
+    };
+  }
   return {
     prompt: scene.presenter
       ? `Image 1 shows the specialist; the other images show the real business location. Use the SAME specialist as in image 1: identical face, hair and clothing. Everyone else is a different person. ${place} ${scene.prompt} ${SCENE_RULE}`
@@ -468,7 +535,13 @@ const GOAL_CTA: Record<string, string> = {
   shop: "îndeamnă omul să comande online",
 };
 
-async function writeScript(niche: string, goal: string | null, photoUrls: string[], fix?: string): Promise<DemoScript> {
+async function writeScript(
+  niche: string,
+  goal: string | null,
+  photoUrls: string[],
+  fix?: string,
+  avoidPresenter?: string,
+): Promise<DemoScript> {
   const { generateText } = await import("ai");
   const { chatModel } = await import("@/lib/llm.server");
   const instructions = `Ești copywriter de reclame video scurte (Reels/TikTok) pentru afaceri locale din România.
@@ -489,13 +562,15 @@ ${fix ? `\nATENȚIE: ${fix}\n` : ""}
 - keywords: 3–5 cuvinte din voiceover (exact cum apar), care poartă valorile — apar mari în subtitrări.
 
 Restul câmpurilor sunt în ENGLEZĂ (pentru modelele de imagine/video):
-- presenter: "female" sau "male", ce se potrivește afacerii;
-- presenterLook: descrierea prezentatorului (vârstă 25–40, ținută potrivită afacerii, ex. "a friendly Romanian woman in her early 30s with long brown hair, wearing teal medical scrubs");
+- presenter: "female" sau "male". Afacerile cu clientele în principal femei (salon de înfrumusețare, cosmetică, unghii, gene, sprâncene, epilare, coafor de damă, rochii, makeup) → "female"; cele cu clienți în principal bărbați (frizerie / barbershop, service auto, vulcanizare, construcții, instalații, fitness masculin) → "male"; altfel ce se potrivește mai bine;
+- extras: genul clienților care apar în scene: "female" pentru afacerile de femei, "male" pentru cele de bărbați, "mixed" pentru restul (stomatologie, restaurant, imobiliare, yoga etc.);
+- outfit: DOAR hainele prezentatorului, potrivite meseriei (ex. "teal medical scrubs", "a black barber apron over a dark t-shirt", "a white chef jacket", "a navy work polo with the sleeves rolled up"). Fără față, păr sau vârstă — oamenii vin din distribuția noastră;
 - avatarPrompt: cum vorbește (expresii calde, gesturi mici cu mâinile);
 - scenes: EXACT 4 scene realiste, în ordinea poveștii, care arată cum arată de fapt munca în acest domeniu, cu oameni în acțiune. Fără cameră goală. Fiecare scenă:
   - prompt: ce se vede în cadru (cine, ce face, unde), o singură acțiune clară;
   - motion: ce mișcare fac oamenii în cele 3 secunde (verbe concrete, nu "stays still");
-  - presenter: true dacă specialistul din scenă e chiar prezentatorul (cel mult 2 scene), altfel false.
+  - presenter: true dacă specialistul din scenă e chiar prezentatorul (cel mult 2 scene), altfel false;
+  - extra: 1 sau 2 dacă în scenă apare un client (în prompt spune-i „the client”): 1 = primul client, 2 = al doilea; folosește-i pe amândoi în clip (de ex. scenele 1 și 4 cu clientul 1, scena 2 cu clientul 2); 0 dacă scena nu are client.
   Povestea: 1) clientul ajunge sau e primit; 2) specialistul lucrează cu clientul; 3) prim-plan pe munca făcută; 4) clientul mulțumit de rezultat.
   Exemple de domeniu: stomatologie → pacient așezat în scaun, medicul îi explică pe monitor, pacientul se privește zâmbind în oglindă; frizerie → client pe scaun, foarfeca și mașina de tuns în lucru; restaurant → mese cu oameni, bucătarul aranjează farfuria; service auto → mecanicul lucrează la mașină și vorbește cu șoferul; panouri fotovoltaice → echipa montează panouri pe acoperiș, proprietarul se uită la aplicație; sală de sport sau yoga → oameni antrenându-se cu instructorul.
   Locul din poze rămâne locul scenelor când munca se face acolo; dacă munca se face în altă parte (la client, pe acoperiș), descrie acel loc.
@@ -505,7 +580,7 @@ Restul câmpurilor sunt în ENGLEZĂ (pentru modelele de imagine/video):
 - emailLine: în ROMÂNĂ, o frază caldă de cel mult 10 cuvinte despre afacere, pentru mailul „clipul e gata” (ex. la service auto: „Mașinile clienților tăi vor merge ca pe roate”).
 
 Răspunde DOAR cu JSON valid:
-{"voiceover":"...","keywords":["..."],"presenter":"female","presenterLook":"...","avatarPrompt":"...","scenes":[{"prompt":"...","motion":"...","presenter":false}],"music":"upbeat","imagePrompts":["...","..."],"emailLine":"..."}`;
+{"voiceover":"...","keywords":["..."],"presenter":"female","extras":"mixed","outfit":"...","avatarPrompt":"...","scenes":[{"prompt":"...","motion":"...","presenter":false,"extra":1}],"music":"upbeat","imagePrompts":["...","..."],"emailLine":"..."}`;
 
   const { text } = await generateText({
     model: chatModel(),
@@ -524,10 +599,15 @@ Răspunde DOAR cu JSON valid:
   const j = JSON.parse(m[0]);
   const arr = (x: unknown, n: number) =>
     (Array.isArray(x) ? x : []).filter((s): s is string => typeof s === "string" && !!s.trim()).slice(0, n);
+  const presenter: "female" | "male" = j.presenter === "male" ? "male" : "female";
+  const extras: ExtrasMode = j.extras === "female" || j.extras === "male" ? j.extras : "mixed";
+  const outfit = String(j.outfit ?? "").replace(/\s+/g, " ").trim().slice(0, 200) || "neat work clothes that fit the business";
   const script: DemoScript = {
     voiceover: String(j.voiceover ?? "").replace(/\s+/g, " ").trim(),
-    presenter: j.presenter === "male" ? "male" : "female",
-    presenterLook: String(j.presenterLook ?? "a friendly person in their early 30s in work clothes"),
+    presenter,
+    presenterLook: `a friendly person wearing ${outfit}`,
+    cast: pickCast(presenter, extras, Math.random, avoidPresenter),
+    outfit,
     avatarPrompt:
       String(j.avatarPrompt ?? "").trim() ||
       "The person talks warmly to the camera with natural expressions and small hand gestures.",
@@ -536,6 +616,7 @@ Răspunde DOAR cu JSON valid:
         prompt: String(x?.prompt ?? "").trim(),
         motion: String(x?.motion ?? "").trim() || "The people talk and move naturally.",
         presenter: x?.presenter === true,
+        extra: x?.extra === 1 || x?.extra === 2 ? x.extra : 0,
       }))
       .filter((x: Scene) => !!x.prompt)
       .slice(0, 4),
@@ -549,6 +630,7 @@ Răspunde DOAR cu JSON valid:
       prompt: "The specialist talks with a client in this space, both relaxed and smiling.",
       motion: "They talk, nod and gesture naturally.",
       presenter: false,
+      extra: 1,
     });
   }
   while (script.imagePrompts.length < 2) script.imagePrompts.push("A specialist working in this space, smiling.");
@@ -592,6 +674,25 @@ async function signedFrom(db: any, bucket: string, path: string, seconds = 60 * 
   return data.signedUrl;
 }
 
+/** Cine a fost prezentator în clipul anterior al aceluiași client (ca următorul să fie altcineva). */
+async function lastPresenter(db: any, uid: string, ref: JobRef): Promise<string | undefined> {
+  try {
+    let q = db.from("ai_clip_jobs").select("demo_job").eq("user_id", uid).order("created_at", { ascending: false }).limit(3);
+    if (!isOnb(ref)) q = q.neq("id", ref.id);
+    const { data } = await q;
+    for (const r of data ?? []) {
+      const id = r?.demo_job?.script?.cast?.presenter;
+      if (typeof id === "string") return id;
+    }
+    if (isOnb(ref)) return undefined;
+    const { data: onb } = await db.from("onboarding_sessions").select("demo_job").eq("user_id", uid).maybeSingle();
+    const id = onb?.demo_job?.script?.cast?.presenter;
+    return typeof id === "string" ? id : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 async function stepScript(db: any, s: any, job: Job, ref: JobRef): Promise<void> {
   const uid = s.user_id as string;
   const pre = prefixOf(ref, uid);
@@ -601,7 +702,8 @@ async function stepScript(db: any, s: any, job: Job, ref: JobRef): Promise<void>
   const niche = [s.niche ?? "afacere locală", s.brief ? `(ce vrea clientul în acest clip: ${s.brief})` : ""].filter(Boolean).join(" ");
 
   if (!job.script) {
-    let script = await writeScript(niche, s.goal, photoUrls);
+    const avoid = await lastPresenter(db, uid, ref);
+    let script = await writeScript(niche, s.goal, photoUrls, undefined, avoid);
     const n = wordCount(script.voiceover);
     if (n < 46 || n > 64) {
       script = await writeScript(
@@ -609,6 +711,7 @@ async function stepScript(db: any, s: any, job: Job, ref: JobRef): Promise<void>
         s.goal,
         photoUrls,
         `textul anterior avea ${n} cuvinte; scrie între 50 și 58 de cuvinte.`,
+        avoid,
       );
     }
     if (wordCount(script.voiceover) < 30) throw new Error("script: voiceover too short");
@@ -715,10 +818,10 @@ async function stepClips(db: any, s: any, job: Job): Promise<void> {
   // 2) Celelalte unghiuri pornesc din selfie (aceeași persoană). Dacă eșuează de două ori, folosim selfie-ul.
   if (selfie) {
     for (const k of ["medium", "close"] as const) {
-      if (!frames[k]) frames[k] = await kieCreate("nano-banana-pro", angleInput(k, selfie, photoUrls));
+      if (!frames[k]) frames[k] = await kieCreate("nano-banana-pro", angleInput(k, selfie, photoUrls, script.cast));
       frames[k] = await kiePoll(frames[k]);
       if (frames[k]?.failed && !frames[k]?.fallback) {
-        const r = await retryOnce(frames[k]!, () => kieCreate("nano-banana-pro", angleInput(k, selfie, photoUrls)));
+        const r = await retryOnce(frames[k]!, () => kieCreate("nano-banana-pro", angleInput(k, selfie, photoUrls, script.cast)));
         frames[k] = r ?? { ...frames[k]!, failed: false, url: selfie, fallback: true };
       }
     }
@@ -745,7 +848,7 @@ async function stepClips(db: any, s: any, job: Job): Promise<void> {
   const sceneFrames = (job.sceneFrames ??= []);
   if (selfie) {
     for (const [i, scene] of script.scenes.entries()) {
-      const make = () => kieCreate("nano-banana-pro", sceneInput(scene, selfie, photoUrls));
+      const make = () => kieCreate("nano-banana-pro", sceneInput(scene, selfie, photoUrls, script.cast));
       let frame = await kiePoll(sceneFrames[i] ?? (await make()));
       if (frame?.failed && !frame.fallback) frame = (await retryOnce(frame, make)) ?? { ...frame, fallback: true };
       sceneFrames[i] = frame!;
